@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package proto.network;
+
+message connect_info
+{
+	bytes infostring = 1;
+	bytes publickey = 2;
+	bytes signature = 3;
+}

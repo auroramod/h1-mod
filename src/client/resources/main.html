@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+
+    <title>H1-Mod</title>
+
+    <style>
+        * {
+            user-select: none;
+            -ms-user-select: none;
+            cursor: default;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            -ms-overflow-style: none;
+            margin: 0;
+            /* Also we can use image incoder https://www.base64-image.de/ */
+            background: url(https://cdn.discordapp.com/attachments/895680402142941194/935150813901365268/360_F_176672598_cJ4yPCFhxvDXm9Cu7vDLIcXpvTMQJ9zm.jpg) no-repeat center center fixed;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: white;
+            font-family: "Segoe UI Light", "Segoe UI", "Lucida Sans", Arial, sans-serif;
+            font-style: normal;
+            font-weight: lighter;
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+        }
+
+        main {
+            flex: 1 0 auto;
+            display: flex;
+        }
+
+        p {
+            font-weight: 200;
+            font-size: 1.2em;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+            a:visited {
+                color: inherit;
+            }
+
+        p a {
+            text-decoration: underline;
+        }
+
+            p a:hover {
+                color: #20c5ff;
+            }
+
+        nav {
+            padding: 0px;
+            margin-left: 15px;
+            margin-right: 15px;
+            border-bottom: 1px solid;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        #brand {
+            display: none;
+        }
+
+            #brand i {
+                font-size: 40px;
+                width: 64px;
+                vertical-align: top;
+                text-align: center;
+                cursor: pointer;
+            }
+
+            #brand span {
+                font-size: 27px;
+                margin-left: 10px;
+            }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            nav ul li {
+                display: inline-block;
+            }
+
+        nav .nav-link {
+            display: inline-block;
+            font-size: 1.3em;
+            color: white;
+            text-transform: uppercase;
+            padding: 0 10px;
+            letter-spacing: 1px;
+            padding: 10px 0px;
+            margin-right: 15px;
+            margin-bottom: -1px;
+        }
+
+            nav .nav-link.active {
+                border-bottom: 1px solid white;
+            }
+
+            nav .nav-link:hover,
+            nav .nav-link.active {
+                text-shadow: 0px 0px 8px rgba(255, 255, 255, 0.5);
+            }
+
+            nav .nav-link:first-child {
+                padding-left: 0;
+            }
+
+            nav .nav-link.not-active {
+                color: rgba(255, 255, 255, 0.25);
+                pointer-events: none;
+            }
+
+        .side-nav-container {
+            min-width: 64px;
+            border-right: 1px solid;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .side-nav {
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            padding-top: 78px;
+            box-sizing: border-box;
+            height: 100%;
+            max-height: 100vh;
+            position: fixed;
+            left: 0;
+        }
+
+            .side-nav i {
+                padding: 10px 0;
+                transition: all .1s ease;
+                cursor: pointer;
+            }
+
+                .side-nav i:hover {
+                    color: rgba(255, 255, 255, 1);
+                }
+
+        .side-nav-bottom {
+            position: absolute;
+            bottom: 0;
+        }
+
+        .main-container {
+            padding: 10px;
+            width: 100%;
+        }
+
+        .container {
+            width: 80%;
+            padding: 0 15px;
+            margin-top: 25px;
+            display: flex;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+            .container.full {
+                width: 100%;
+                /*padding: 0px;*/
+            }
+
+            .container h1,
+            .container h2,
+            .container h3 {
+                width: 100%;
+                margin-bottom: 10px;
+                margin-left: 5px;
+                margin-top: 0;
+                letter-spacing: 1px;
+                font-weight: 200;
+            }
+
+            .container h3 {
+                margin-bottom: 0px;
+                font-weight: 500;
+            }
+
+        .full-row .card {
+            flex: 2;
+        }
+
+            .full-row .card.small {
+                flex: 1;
+            }
+
+        .card {
+            display: flex;
+            width: 25%;
+            box-sizing: border-box;
+        }
+
+            .card.small {
+                width: 12.5%;
+            }
+
+            .card.full {
+                width: 100%;
+            }
+
+        @media(max-width: 1341px) {
+            .card {
+                width: 50%;
+            }
+
+                .card.small {
+                    width: 25%;
+                }
+        }
+
+        .card .card-container {
+            width: 100%;
+            /*margin: 5px;
+            margin-left: 15px;
+            margin-right: 15px;*/
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.5);
+            transition: all 0.5s ease;
+        }
+        /*.card:hover .card-container {
+            box-shadow: 0px 0px 5px 0px rgba(0,0,0,0);
+        }*/
+
+        .card .card-img {
+            overflow: hidden;
+            height: 185px;
+        }
+
+        .card img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            transition: all 0.5s ease;
+        }
+
+        .card.full .card-img {
+            height: 300px;
+        }
+
+        .card .card-content {
+            flex: 1;
+            position: relative;
+            min-height: 88px;
+            padding: 10px 20px;
+            padding-bottom: 42px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            z-index: 5;
+            transition: all 0.5s ease;
+            text-align: center;
+        }
+
+        .card:hover .card-content {
+            background-color: white;
+            color: black;
+        }
+        /*.card:hover img {
+            transform: scale(1.1);
+        }*/
+
+        .card .card-content span {
+            font-size: 1.7em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card .card-content p {
+            margin-top: 10px;
+        }
+
+        .card:hover .card-action {
+            opacity: 1;
+            bottom: 0;
+            border-color: rgba(0, 0, 0, 0.25);
+        }
+
+        .card .card-action {
+            /*opacity: 0;*/
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 100%;
+            text-align: center;
+            border-top: 1px solid;
+            border-color: rgba(255, 255, 255, 0.25);
+            text-transform: uppercase;
+            padding: 7px;
+            box-sizing: border-box;
+            font-weight: 500;
+            transition: opacity bottom 0.5s;
+        }
+
+            .card .card-action.hidden-action {
+                bottom: -43px;
+                transition: bottom 0.5s ease;
+                border-color: rgba(0, 0, 0, 0.0);
+            }
+
+        .card:hover .card-action.hidden-action {
+            bottom: 0;
+            border-color: rgba(0, 0, 0, 0.25);
+        }
+
+        a.btn {
+            display: inline-block;
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.42);
+            color: white;
+            font-weight: 600;
+            padding: 10px 100px;
+            border-radius: 1px;
+            transition: all 0.5s ease;
+            cursor: pointer;
+        }
+
+            a.btn i {
+                vertical-align: middle;
+            }
+
+            a.btn.highlight {
+                background: white;
+                color: black;
+            }
+
+            a.btn:hover {
+                background: white;
+                color: black;
+                box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.42);
+            }
+
+            a.btn.small {
+                padding: 10px 50px;
+            }
+
+        div.menus > div {
+            display: none;
+        }
+
+            div.menus > div.active {
+                display: block !important;
+            }
+
+        .progress {
+            width: 100%;
+            height: 40px;
+            padding: 0;
+            border-radius: 0px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+            .progress > .bar {
+                width: 50%;
+                height: 100%;
+                margin: 0;
+                background: rgb(121, 121, 121);
+                background: linear-gradient(145deg, rgba(121, 121, 121, 1) 0%, rgba(0, 212, 255, 1) 100%);
+                transition: all 0.2s linear;
+            }
+    </style>
+</head>
+
+<body>
+
+    <main>
+        <div class="main-container">
+            <nav class="sticky">
+                <ul>
+                    <li>
+                        <a class="nav-link _play" onClick="showMenu('play')">
+                            Gamemode
+                        </a>
+                    </li>
+                    <!--<li>
+                        <a class="nav-link _settings" onClick="showMenu('settings')">
+                            Settings
+                        </a>
+                    </li>-->
+                    <li>
+                        <a class="nav-link _about" onClick="showMenu('about')">
+                            H1 ?
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="menus">
+
+                <div class="_play">
+                    <div class="container full full-row">
+                        <div class="card" onClick="window.external.selectMode(1)">
+                            <div class="card-container">
+                                <div class="card-img">
+                                    <!-- Also we can use image incoder https://www.base64-image.de/ -->
+                                    <img src="https://cdn.discordapp.com/attachments/895680402142941194/935170394665680906/9f9e49117493b52f8a636d675c4d844a.png" />
+                                </div>
+                                <div class="card-content">
+                                    <span>Singleplayer</span>
+                                    <a>
+                                        <div class="card-action hidden-action">
+                                            Play
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="spacer" style="width: 25px"></div>
+
+                        <div class="card" onClick="window.external.selectMode(2)">
+                            <div class="card-container">
+                                <div class="card-img">
+                                    <!-- Also we can use image incoder https://www.base64-image.de/ -->
+                                    <img src="https://cdn.discordapp.com/attachments/895680402142941194/936320652389015653/call-of-duty-modern-warfare-remastered-durmaplay-wallpaper.jpg" />
+                                </div>
+                                <div class="card-content">
+                                    <span>Multiplayer</span>
+                                    <a>
+                                        <div class="card-action hidden-action">
+                                            Play
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="_settings">
+
+                    <div class="container full full-row">
+                        <h2>No settings yet!</h2>
+                    </div>
+
+                </div>
+
+                <div class="_about">
+
+                    <div class="container full full-row">
+                        <div style="text-align: center; width: 100%;">
+                            <!--<h1>H1-Mod</h1>-->
+                            <!-- Also we can use image incoder https://www.base64-image.de/ -->
+                            <center><img src="https://mstcimecbootstrapper.000webhostapp.com/h1/h1-header.png"></center>
+                            <br>Made by <a onClick="window.external.openUrl('');">Skull</a>.<br>Special thanks to <a onClick="window.external.openUrl('https://github.com/Joelrau');">quaK</a>.
+                            <p>
+                                <br>This Project based on <a onClick="window.external.openUrl('https://xlabs.dev/support_s1x_client');">XLabs-S1x</a>.
+
+                                <br>XLabsProject <a onClick="window.external.openUrl('https://xlabs.dev');">Website</a>, <a onClick="window.external.openUrl('https://xlabs.dev');">Patreon</a>, <a onClick="window.external.openUrl('https://xlabs.dev');">Github</a></br>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="_update">
+
+                    <div class="container full full-row">
+                        <div class="progress">
+                            <div class="bar">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        function activateElement(name, elements) {
+            for (var i = 0; i < elements.length; ++i) {
+                var element = elements[i];
+                var classList = element.classList;
+                var show = false;
+
+                for (var j = 0; j < classList.length; ++j) {
+                    if (classList[j] == '_' + name) {
+                        show = true;
+                        break;
+                    }
+                }
+
+                if (show) {
+                    classList.add('active');
+                } else {
+                    classList.remove('active');
+                }
+            }
+        }
+
+        function showMenu(menu) {
+            var menus = document.querySelectorAll("div.menus>div");
+            var buttons = document.querySelectorAll("nav a.nav-link");
+
+            activateElement(menu, menus);
+            activateElement(menu, buttons);
+        }
+
+        window.onload = function () {
+            showMenu("play");
+        };
+    </script>
+</body>
+
+</html>

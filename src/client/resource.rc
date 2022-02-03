@@ -1,0 +1,136 @@
+// Microsoft Visual C++ generated resource script.
+//
+#pragma code_page(65001)
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+#include "version.h"
+#include "resource.hpp"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "#include ""windows.h""\r\n"
+    "\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION VERSION_FILE_RC
+ PRODUCTVERSION VERSION_PRODUCT_RC
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS VS_FF_DEBUG
+#else
+#ifdef PRERELEASE
+ FILEFLAGS VS_FF_PRERELEASE
+#else
+#ifndef CI
+ FILEFLAGS VS_FF_PRIVATEBUILD
+#else
+ FILEFLAGS 0x0L
+#endif
+#endif
+#endif
+ FILEOS 0x40004L
+ FILETYPE VFT_DLL
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "X Labs"
+            VALUE "FileDescription", "S1x"
+            VALUE "FileVersion", VERSION_FILE
+            VALUE "InternalName", "S1x"
+            VALUE "LegalCopyright", "Copyright (C) 2021 X Labs Project. All rights reserved."
+            VALUE "Licence", "GPLv3"
+            VALUE "Info", "https://github.com/XLabsProject/s1x-client"
+            VALUE "OriginalFilename", "s1x.exe"
+            VALUE "ProductName", "s1x"
+            VALUE "ProductVersion", VERSION_PRODUCT
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Binary Data
+//
+
+ID_ICON               ICON   "resources/icon.ico"
+
+IMAGE_SPLASH          BITMAP "resources/splash.bmp"
+IMAGE_LOGO            BITMAP "resources/logo.bmp"
+
+DW_STORE_CONFIG       RCDATA "resources/dw/winStoreConfig_tu22.csv"
+DW_FASTFILE           RCDATA "resources/dw/ffotd-1.15.1.ff"
+DW_MOTD               RCDATA "resources/dw/motd-english.txt"
+DW_PLAYLISTS          RCDATA "resources/dw/playlists_tu12.aggr"
+
+MENU_MAIN             RCDATA "resources/main.html"
+
+#ifdef _DEBUG
+TLS_DLL               RCDATA "../../build/bin/x64/Debug/tlsdll.dll"
+#else
+TLS_DLL               RCDATA "../../build/bin/x64/Release/tlsdll.dll"
+#endif
+
+#ifdef _DEBUG
+RUNNER                RCDATA "../../build/bin/x64/Debug/runner.exe"
+#else
+RUNNER                RCDATA "../../build/bin/x64/Release/runner.exe"
+#endif
+
+ICON_IMAGE            RCDATA "resources/icon.png"
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
