@@ -110,16 +110,14 @@ void remove_crash_file()
 	utils::io::remove_file("__h1Exe");
 }
 
-void verify_mwr_version()
+/*void verify_mwr_version()
 {
-	const auto BuildNumMp = *reinterpret_cast<DWORD*>(0x1403F6280);
-	const auto BuildNumSp = *reinterpret_cast<DWORD*>(0x140335370);
-
-	if (BuildNumMp != 814118 && BuildNumSp != 814118)
+	const auto value = *reinterpret_cast<DWORD*>(0x140001337);
+	if (value != 0x24AFEB05 && value != 0x1D860F04) //S1
 	{
-		throw std::runtime_error("Unsupported Call of Duty: Modern Warfare Remastered version"s);
+		throw std::runtime_error("Unsupported Call of Duty: Advanced Warfare version"s);
 	}
-}
+}*/
 
 void enable_dpi_awareness()
 {
@@ -204,7 +202,7 @@ int main()
 
 			if (!component_loader::post_load()) return 0;
 
-			verify_mwr_version();
+			//verify_mwr_version();
 
 			premature_shutdown = false;
 		}
