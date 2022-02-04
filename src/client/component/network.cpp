@@ -55,11 +55,11 @@ namespace network
 			// Command handled
 			a.popad64();
 			a.mov(al, 1);
-			a.jmp(0x14020AA10);
+			a.jmp(0x140252AF8); //H1MP64(1.4)
 
 			a.bind(return_unhandled);
 			a.popad64();
-			a.jmp(0x14020A19A);
+			a.jmp(0x14025234C); //H1MP64(1.4)
 		}
 
 		int net_compare_base_address(const game::netadr_s* a1, const game::netadr_s* a2)
