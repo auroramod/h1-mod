@@ -1,42 +1,46 @@
 [submodule "deps/GSL"]
 	path = deps/GSL
-	url = git://github.com/microsoft/GSL.git
-[submodule "deps/WinToast"]
-	path = deps/WinToast
-	url = git://github.com/mohabouje/WinToast.git
-[submodule "deps/asmjit"]
-	path = deps/asmjit
-	url = git://github.com/asmjit/asmjit.git
-[submodule "deps/discord-rpc"]
-	path = deps/discord-rpc
-	url = git://github.com/discord/discord-rpc.git
-[submodule "deps/libtomcrypt"]
-	path = deps/libtomcrypt
-	url = git://github.com/libtom/libtomcrypt.git
-[submodule "deps/libtommath"]
-	path = deps/libtommath
-	url = git://github.com/libtom/libtommath.git
-[submodule "deps/lua"]
-	path = deps/lua
-	url = git://github.com/lua/lua.git
-[submodule "deps/minhook"]
-	path = deps/minhook
-	url = git://github.com/TsudaKageyu/minhook.git
-[submodule "deps/protobuf"]
-	path = deps/protobuf
-	url = git://github.com/protocolbuffers/protobuf.git
+	url = https://github.com/Microsoft/GSL.git
 [submodule "deps/rapidjson"]
 	path = deps/rapidjson
-	url = git://github.com/Tencent/rapidjson.git
-[submodule "deps/sol2"]
-	path = deps/sol2
-	url = git://github.com/ThePhD/sol2.git
-[submodule "deps/stb"]
-	path = deps/stb
-	url = git://github.com/nothings/stb.git
+	url = https://github.com/Tencent/rapidjson.git
 [submodule "deps/udis86"]
 	path = deps/udis86
-	url = git://github.com/vmt/udis86.git
+	url = https://github.com/vmt/udis86.git
+[submodule "deps/protobuf"]
+	path = deps/protobuf
+	url = https://github.com/google/protobuf.git
+	branch = 3.17.x
+[submodule "deps/minhook"]
+	path = deps/minhook
+	url = https://github.com/TsudaKageyu/minhook.git
+[submodule "deps/libtomcrypt"]
+	path = deps/libtomcrypt
+	url = https://github.com/libtom/libtomcrypt.git
+	branch = develop
+[submodule "deps/libtommath"]
+	path = deps/libtommath
+	url = https://github.com/libtom/libtommath.git
+	branch = develop
 [submodule "deps/zlib"]
 	path = deps/zlib
-	url = git://github.com/madler/zlib.git
+	url = https://github.com/madler/zlib.git
+	branch = develop
+[submodule "deps/discord-rpc"]
+	path = deps/discord-rpc
+	url = https://github.com/discord/discord-rpc.git
+[submodule "deps/asmjit"]
+	path = deps/asmjit
+	url = https://github.com/asmjit/asmjit.git
+[submodule "deps/WinToast"]
+	path = deps/WinToast
+	url = https://github.com/mohabouje/WinToast.git
+[submodule "deps/sol2"]
+	path = deps/sol2
+	url = https://github.com/ThePhD/sol2.git
+[submodule "deps/lua"]
+	path = deps/lua
+	url = https://github.com/lua/lua.git
+[submodule "deps/stb"]
+	path = deps/stb
+	url = https://github.com/nothings/stb.git
