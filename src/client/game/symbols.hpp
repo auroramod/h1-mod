@@ -23,7 +23,7 @@ namespace game
 
 	WEAK symbol<void(const char* dvar, const char* buffer)> Dvar_SetCommand{ 0x1403C72B0, 0x1404FD0A0 }; // H1(1.4)
 
-	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{ 0, 0x1400D78A0 }; // H1(1.4)
+	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{ 0x1403509C0, 0x1400D78A0 }; // H1(1.4)
 
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{ 0x1401389A0, 0x140220CC0 }; // H1(1.4)
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{ 0x140138750, 0x140220620 }; // H1(1.4)

@@ -416,13 +416,13 @@ namespace demonware
 
 		void post_unpack() override
 		{
-			utils::hook::jump(SELECT_VALUE(0, 0x1407400B0), bd_logger_stub); // H1MP64(1.4)
+			utils::hook::jump(SELECT_VALUE(0x140610320, 0x1407400B0), bd_logger_stub); // H1MP64(1.4)
 
 	   //singleplayer not supported so far.
 			if (game::environment::is_sp())
 			{
-				utils::hook::set<uint8_t>(0x1405632E0, 0xC3); // bdAuthSteam
-				utils::hook::set<uint8_t>(0x1402DF2C0, 0xC3); // dwNet
+				utils::hook::set<uint8_t>(0x1405FCA00, 0xC3); // bdAuthSteam H1(1.4)
+				utils::hook::set<uint8_t>(0x140333A00, 0xC3); // dwNet H1(1.4)
 				return;
 			}
 

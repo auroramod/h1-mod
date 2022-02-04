@@ -160,9 +160,9 @@ namespace scheduler
 			//	}
 			//});
 
-			r_end_frame_hook.create(0x1405FE470, scheduler::r_end_frame_stub); // H1MP64[1.4]
-			g_run_frame_hook.create(0x1402772D0, scheduler::server_frame_stub); // H1MP64[1.4] 
-			main_frame_hook.create(0x1401CE8D0, scheduler::main_frame_stub); // H1MP64[1.4]
+			r_end_frame_hook.create(SELECT_VALUE(0x1404F7310, 0x1405FE470), scheduler::r_end_frame_stub); // H1(1.4)
+			g_run_frame_hook.create(SELECT_VALUE(0x1402772D0, 0x1402772D0), scheduler::server_frame_stub); // H1(1.4)
+			main_frame_hook.create(SELECT_VALUE(0x1401CE8D0, 0x1401CE8D0), scheduler::main_frame_stub); // H1(1.4)
 		}
 	};
 }

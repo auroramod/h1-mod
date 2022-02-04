@@ -30,9 +30,9 @@ namespace splash
 		void post_unpack() override
 		{
 			// Disable native splash screen
-			utils::hook::nop(SELECT_VALUE(0, 0x1405123E2), 5); // H1MP64(1.4)
-			utils::hook::jump(SELECT_VALUE(0, 0x140513AF0), destroy_stub); // H1MP64(1.4)
-			utils::hook::jump(SELECT_VALUE(0, 0x140513B30), destroy_stub); // H1MP64(1.4)
+			utils::hook::nop(SELECT_VALUE(0x1403E192E, 0x1405123E2), 5); // H1(1.4)
+			utils::hook::jump(SELECT_VALUE(0x1403E2E70, 0x140513AF0), destroy_stub); // H1(1.4)
+			utils::hook::jump(SELECT_VALUE(0x1403E2EB0, 0x140513B30), destroy_stub); // H1(1.4)
 		}
 
 		void pre_destroy() override

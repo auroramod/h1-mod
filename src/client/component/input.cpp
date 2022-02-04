@@ -45,8 +45,8 @@ namespace input
 				return;
 			}
 
-			cl_char_event_hook.create(SELECT_VALUE(0x000000000, 0x14024E810), cl_char_event_stub);
-			cl_key_event_hook.create(SELECT_VALUE(0x000000000, 0x14024EA60), cl_key_event_stub);
+			cl_char_event_hook.create(SELECT_VALUE(0x1401871A0, 0x14024E810), cl_char_event_stub); // H1(1.4)
+			cl_key_event_hook.create(SELECT_VALUE(0x1401874D0, 0x14024EA60), cl_key_event_stub); // H1(1.4)
 		}
 	};
 }
