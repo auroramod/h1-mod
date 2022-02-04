@@ -7,25 +7,9 @@
 [submodule "deps/udis86"]
 	path = deps/udis86
 	url = https://github.com/vmt/udis86.git
-[submodule "deps/protobuf"]
-	path = deps/protobuf
-	url = https://github.com/google/protobuf.git
-	branch = 3.17.x
 [submodule "deps/minhook"]
 	path = deps/minhook
 	url = https://github.com/TsudaKageyu/minhook.git
-[submodule "deps/libtomcrypt"]
-	path = deps/libtomcrypt
-	url = https://github.com/libtom/libtomcrypt.git
-	branch = develop
-[submodule "deps/libtommath"]
-	path = deps/libtommath
-	url = https://github.com/libtom/libtommath.git
-	branch = develop
-[submodule "deps/zlib"]
-	path = deps/zlib
-	url = https://github.com/madler/zlib.git
-	branch = develop
 [submodule "deps/discord-rpc"]
 	path = deps/discord-rpc
 	url = https://github.com/discord/discord-rpc.git
