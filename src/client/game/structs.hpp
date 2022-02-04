@@ -932,7 +932,7 @@ namespace game
 
 	struct dvar_t
 	{
-		const char* name;
+		int hash;
 		unsigned int flags;
 		dvar_type type;
 		bool modified;

@@ -76,7 +76,7 @@ namespace command
 					const auto reset = game::Dvar_ValueToString(dvar, dvar->reset, 0);
 
 					game_console::print(game_console::con_type_info, "\"%s\" is: \"%s\" default: \"%s\" hash: %i",
-						args[0], current, reset, dvar->name);
+						args[0], current, reset, dvar->hash);
 
 					game_console::print(game_console::con_type_info, "   %s\n",
 						dvars::dvar_get_domain(dvar->type, dvar->domain).data());

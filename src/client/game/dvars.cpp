@@ -464,12 +464,24 @@ namespace dvars
 	  "custom_timelimit"
 	};
 
+	bool can_add_dvar_to_list(std::string name)
+	{
+		for (std::uint32_t i = 0; i < dvar_list.size(); i++)
+		{
+			if (dvar_list[i] == name)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
 	game::dvar_t* register_int(const std::string& name, int value, int min, int max,
 		game::DvarFlags flags, bool add_to_list)
 	{
 		const auto hash = game::generateHashValue(name.data());
 
-		if (add_to_list)
+		if (add_to_list && can_add_dvar_to_list(name))
 		{
 			dvar_list.push_back(name);
 		}
@@ -482,7 +494,7 @@ namespace dvars
 	{
 		const auto hash = game::generateHashValue(name.data());
 
-		if (add_to_list)
+		if (add_to_list && can_add_dvar_to_list(name))
 		{
 			dvar_list.push_back(name);
 		}
@@ -495,7 +507,7 @@ namespace dvars
 	{
 		const auto hash = game::generateHashValue(name.data());
 
-		if (add_to_list)
+		if (add_to_list && can_add_dvar_to_list(name))
 		{
 			dvar_list.push_back(name);
 		}
@@ -509,7 +521,7 @@ namespace dvars
 	{
 		const auto hash = game::generateHashValue(name.data());
 
-		if (add_to_list)
+		if (add_to_list && can_add_dvar_to_list(name))
 		{
 			dvar_list.push_back(name);
 		}
@@ -522,7 +534,7 @@ namespace dvars
 	{
 		const auto hash = game::generateHashValue(name.data());
 
-		if (add_to_list)
+		if (add_to_list && can_add_dvar_to_list(name))
 		{
 			dvar_list.push_back(name);
 		}
@@ -536,7 +548,7 @@ namespace dvars
 		{
 			const auto hash = game::generateHashValue(name.data());
 
-			if (add_to_list)
+			if (add_to_list && can_add_dvar_to_list(name))
 			{
 				dvar_list.push_back(name);
 			}

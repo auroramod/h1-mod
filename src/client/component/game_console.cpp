@@ -693,8 +693,6 @@ namespace game_console
 				//history.clear();
 			//});
 
-			char a2[1] = {};
-
 			// add our dvars
 			dvars::con_inputBoxColor = dvars::register_vec4(
 				"con_inputBoxColor",
