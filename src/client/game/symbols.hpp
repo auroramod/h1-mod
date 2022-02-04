@@ -8,62 +8,46 @@ namespace game
 	 * Functions
 	 **************************************************************/
 
-	WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{ 0x140342EB0, 0x1404033B0 }; // H1MP64[AYRIA]
+	WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{ 0x140342EB0, 0x1404033B0 }; // H1(1.4)
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cmd_ExecuteSingleCommand{ 0x140343980, 0x140343980 }; // H1SP64[CODEX]
 
-	WEAK symbol<void(const char* cmdName, void(), cmd_function_s* allocedCmd)> Cmd_AddCommandInternal{ 0x1403433E0, 0x140403950 }; // H1MP64[AYRIA]
+	WEAK symbol<void(const char* cmdName, void(), cmd_function_s* allocedCmd)> Cmd_AddCommandInternal{ 0x1403433E0, 0x140403950 }; // H1(1.4)
 
 	WEAK symbol<void()> Com_Frame_Try_Block_Function{ 0, 0x1400D8310 }; //H1MP MWR TEST
 
-	WEAK symbol<void(unsigned int weapon, bool isAlternate, char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{ 0x0, 0x140165580 };
+	WEAK symbol<void(unsigned int weapon, bool isAlternate, char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{ 0, 0x140165580 };
 
-	// wip
-	WEAK symbol<void()> GScr_LoadConsts{ 0x140283970, 0x1403479C0 };
-	WEAK symbol<unsigned int(unsigned int, unsigned int)> GetVariable{ 0x0, 0x1403F3730 };
-	WEAK symbol<scr_string_t(unsigned int parentId, unsigned int id)> GetVariableName{ 0x1403170E0, 0x1403F37F0 };
+	WEAK symbol<void()> Com_Quit_f{ 0x140352BE0, 0x1400DA640 }; // H1(1.4)
 
+	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{ 0, 0x1404046F0 }; // H1(1.4)
 
-	WEAK symbol<void()> Com_Quit_f{ 0, 0x1400DA640 }; //H1MP64[AYRIA]
+	WEAK symbol<void(const char* dvar, const char* buffer)> Dvar_SetCommand{ 0x1403C72B0, 0x1404FD0A0 }; // H1(1.4)
 
-	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{ 0, 0x1404046F0 }; //H1MP64[AYRIA]
+	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{ 0, 0x1400D78A0 }; // H1(1.4)
 
-	WEAK symbol<void(const char* dvar, const char* buffer)> Dvar_SetCommand{ 0x1403C72B0, 0x1404FD0A0 }; //H1MP64[AYRIA] NOT_SURE
+	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{ 0x1401389A0, 0x140220CC0 }; // H1(1.4)
+	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{ 0x140138750, 0x140220620 }; // H1(1.4)
+	WEAK symbol<void(const char* message)> Conbuf_AppendText{ 0, 0x140513FF0 }; // H1(1.4)
 
-	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{ 0, 0x1400D78A0 }; //H1MP64[AYRIA]
+	WEAK symbol<void()> Cmd_EndTokenizeString{ 0, 0x140403C20 }; // H1(1.4)
 
-	// WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{ 0x1389A0 }; // H1SP64[CODEX]
-	// WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{ 0x138750 }; // H1SP64[CODEX]
-
-	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{ 0x1401389A0, 0x140220CC0 }; // H1MP64[AYRIA]
-	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{ 0x140138750, 0x140220620 }; // H1MP64[AYRIA]
-	WEAK symbol<void(const char* message)> Conbuf_AppendText{ 0, 0x140513FF0 }; // H1MP64[AYRIA]
-
-	WEAK symbol<char* (int start)> ConcatArgs{ 0x14021A7E0, 0x1402E9670 };
-
-	WEAK symbol<void()> Cmd_EndTokenizeString{ 0, 0x140403C20 }; // H1MP64[AYRIA]
-
-	WEAK symbol<dvar_t* (const char* name)> Dvar_FindVar{ 0x1403C5D50, 0x1404FBB00 }; // H1MP64[AYRIA]
-	WEAK symbol<const char* (const dvar_t* dvar, dvar_value value, __int64 a3)> Dvar_ValueToString{ 0x1403C8560,0x1404FE660 };  // H1MP64[AYRIA]; different typedef from previous titles
-	//WEAK symbol<void(int hash, const char* name, const char* buffer)> Dvar_SetCommand{ 0, 0x1404FD0A0 }; // H1MP64[AYRIA]
+	WEAK symbol<dvar_t* (const char* name)> Dvar_FindVar{ 0x1403C5D50, 0x1404FBB00 }; // H1(1.4)
+	WEAK symbol<const char* (const dvar_t* dvar, dvar_value value, __int64 a3)> Dvar_ValueToString{ 0x1403C8560,0x1404FE660 };  // H1(1.4); different typedef from previous titles
+	//WEAK symbol<void(int hash, const char* name, const char* buffer)> Dvar_SetCommand{ 0, 0x1404FD0A0 }; // H1(1.4)
 
 	WEAK symbol<dvar_t* (int hash, const char* name, bool value, unsigned int flags)> Dvar_RegisterBool{ 0x1403C47E0,0x1404FA540 }; // H1
-	//WEAK symbol<dvar_t* (const char* dvarName, bool value, unsigned int flags, const char* description)>
-		//Dvar_RegisterBool{ 0, 0x1404FA540 };
-	WEAK symbol<dvar_t* (int hash, const char* name, int value, int min, int max, unsigned int flags)> Dvar_RegisterInt{ 0, 0x1404FAA20 }; // H1
-	//WEAK symbol<dvar_t* (const char* dvarName, int value, int min, int max, unsigned int flags, const char* desc)>
-		//Dvar_RegisterInt{ 0, 0x1404FAA20 };
-	WEAK symbol<dvar_t* (int hash, const char* dvarName, float value, float min, float max, unsigned int flags)> Dvar_RegisterFloat{ 0,0x1404FA910 }; // H1MP64[AYRIA]
-	WEAK symbol<dvar_t* (int hash, const char* dvarName, const char* value, unsigned int flags)> Dvar_RegisterString{ 0,0x1404FAB00 }; // H1MP64[AYRIA]
-	WEAK symbol<dvar_t* (int dvarName, const char* a2, float x, float y, float z, float w, float min, float max, unsigned int flags)> Dvar_RegisterVec4{ 0, 0x1404FAF40 }; // H1MP64[AYRIA]
+	WEAK symbol<dvar_t* (int hash, const char* name, int value, int min, int max, unsigned int flags)> Dvar_RegisterInt{ 0x1403C4CC0, 0x1404FAA20 }; // H1
+	WEAK symbol<dvar_t* (int hash, const char* dvarName, float value, float min, float max, unsigned int flags)> Dvar_RegisterFloat{ 0x1403C4BB0,0x1404FA910 }; // H1(1.4)
+	WEAK symbol<dvar_t* (int hash, const char* dvarName, const char* value, unsigned int flags)> Dvar_RegisterString{ 0x1403C4DA0,0x1404FAB00 }; // H1(1.4)
+	WEAK symbol<dvar_t* (int dvarName, const char* a2, float x, float y, float z, float w, float min, float max, unsigned int flags)> Dvar_RegisterVec4{ 0x1403C5220, 0x1404FAF40 }; // H1(1.4)
 
-	WEAK symbol<int(const char* fname)> generateHashValue{ 0x1400FE8A0, 0x1401B1010 }; // H1MP64[AYRIA]
+	WEAK symbol<int(const char* fname)> generateHashValue{ 0x1400FE8A0, 0x1401B1010 }; // H1(1.4)
 
-	//WEAK symbol<bool()> CL_IsCgameInitialized{ 0x17EE30 }; // H1SP64[CODEX]
-	WEAK symbol<bool()> CL_IsCgameInitialized{ 0, 0x140245650 }; //H1MP64[AYRIA]
-	WEAK symbol<unsigned int(int)> Live_SyncOnlineDataFlags{ 0, 0x14059A700 }; //H1MP64[AYRIA]
+	WEAK symbol<bool()> CL_IsCgameInitialized{ 0x14017EE30, 0x140245650 }; // H1(1.4)
+	WEAK symbol<unsigned int(int)> Live_SyncOnlineDataFlags{ 0, 0x14059A700 }; // H1(1.4)
 
-	WEAK symbol<void()> Sys_Milliseconds{ 0, 0x140513710 };
-	WEAK symbol<bool()> Sys_IsDatabaseReady2{ 0, 0x14042B090 }; //H1MP64[AYRIA]
+	WEAK symbol<void()> Sys_Milliseconds{ 0, 0x140513710 }; // H1(1.4)
+	WEAK symbol<bool()> Sys_IsDatabaseReady2{ 0, 0x14042B090 }; // H1(1.4)
 
 	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{ 0, 0x140480860 };
 	WEAK symbol<void(const char* text_in)> SV_Cmd_TokenizeString{ 0, 0x140404D20 };
@@ -79,46 +63,41 @@ namespace game
 
 	WEAK symbol<bool(int clientNum)> SV_BotIsBot{ 0, 0x14046E6C0 };
 
-	WEAK symbol<char* (char* string)> I_CleanStr{ 0, 0x1403CD230 }; // H1SP64[CODEX]
-	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetViewPlacement{ 0, 0x140288550 }; // H1MP64[AYRIA]
+	WEAK symbol<char* (char* string)> I_CleanStr{ 0x1403CD230, 0 }; // H1(1.4)
+	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetViewPlacement{ 0x1401981F0, 0x140288550 }; // H1(1.4)
 
-	WEAK symbol<Material* (const char* material)> Material_RegisterHandle{ 0, 0x1405EAB30 };  // H1MP64[AYRIA]
+	WEAK symbol<Material* (const char* material)> Material_RegisterHandle{ 0x1404E48B0, 0x1405EAB30 }; // H1(1.4)
 
 	WEAK symbol<void(float x, float y, float width, float height, float s0, float t0, float s1, float t1,
-		float* color, Material* material)> R_AddCmdDrawStretchPic{ 0, 0x1402443A0 }; // H1MP64[AYRIA]
+		float* color, Material* material)> R_AddCmdDrawStretchPic{ 0x14017E5C0, 0x1402443A0 }; // H1(1.4)
 
-	WEAK symbol<Font_s* (const char* font, int size)> R_RegisterFont{ 0, 0x1405D91E0 }; // H1MP64[AYRIA]
-	WEAK symbol<int(void* font)> R_GetFontHeight{ 0, 0x1405D92C0 }; // H1MP64[AYRIA]
-	WEAK symbol<void* (int a1)> JUST_DO_OUR_DIRTY_WORK{ 0, 0x1405D8890 }; // H1MP64[AYRIA]
+	WEAK symbol<Font_s* (const char* font, int size)> R_RegisterFont{ 0x1404D4100, 0x1405D91E0 }; // H1(1.4)
+	WEAK symbol<int(void* font)> R_GetFontHeight{ 0x1405EA360, 0x1405D92C0 }; // H1(1.4)
+	WEAK symbol<void* (int a1)> JUST_DO_OUR_DIRTY_WORK{ 0x1404D37B0, 0x1405D8890 }; // H1(1.4)
 
-	WEAK symbol<int(int clientNum)> G_GetClientScore{ 0, 0x140342F90 }; // H1MP64[AYRIA]
-	WEAK symbol<const char* (int clientNum)> SV_GetGuid{ 0, 0x140484B90 }; // H1MP64[AYRIA]
-	WEAK symbol<int(int clientNum)> SV_GetClientPing{ 0, 0x140484B70 }; // H1MP64[AYRIA]
+	WEAK symbol<int(int clientNum)> G_GetClientScore{ 0, 0x140342F90 }; // H1(1.4)
+	WEAK symbol<const char* (int clientNum)> SV_GetGuid{ 0, 0x140484B90 }; // H1(1.4)
+	WEAK symbol<int(int clientNum)> SV_GetClientPing{ 0, 0x140484B70 }; // H1(1.4)
 
 	WEAK symbol<void* (const char* text, int maxChars, void* font, int fontHeight, float x, float y, float xScale, float yScale,
-		float rotation, float* color, int style, int cursor_pos, char cursor_char, void* style_unk)> H1_AddBaseDrawTextCmd{ 0,0x1405FB1F0 }; // H1MP64[AYRIA]
+		float rotation, float* color, int style, int cursor_pos, char cursor_char, void* style_unk)> H1_AddBaseDrawTextCmd{ 0x1404F3DC0,0x1405FB1F0 }; // H1(1.4)
 
 #define R_AddCmdDrawText(TXT,MC,F,X,Y,XS,YS,R,C,S) H1_AddBaseDrawTextCmd(TXT,MC,F,game::R_GetFontHeight(F),X,Y,XS,YS,R,C,S,-1,0,game::JUST_DO_OUR_DIRTY_WORK(S))
 
 #define R_AddCmdDrawTextWithCursor(TXT,MC,F,UNK,X,Y,XS,YS,R,C,S,CP,CC) H1_AddBaseDrawTextCmd(TXT,MC,F,game::R_GetFontHeight(F),X,Y,XS,YS,R,C,S,CP,CC,game::JUST_DO_OUR_DIRTY_WORK(S))
 
-	WEAK symbol<int(const char* text, int maxChars, Font_s* font)> R_TextWidth{ 0, 0x1405D94A0 }; // H1MP64[AYRIA]
+	WEAK symbol<int(const char* text, int maxChars, Font_s* font)> R_TextWidth{ 0x1404D43B0, 0x1405D94A0 }; // H1(1.4)
 
-	//WEAK symbol<void()> Com_Quit_f{ 0x352BE0 }; //H1SP64[CODEX]
-
-	WEAK symbol<cmd_function_s*> cmd_functions{ 0,0x14946BAC8 }; //H1MP64[AYRIA]
-	WEAK symbol<int> keyCatchers{ 0,0x142D0BA9C }; //H1MP64[AYRIA]
-	WEAK symbol<PlayerKeyState> playerKeys{ 0,0x142C19AFC }; //H1MP64[AYRIA]
-	WEAK symbol<CmdArgs> cmd_args{ 0, 0x140000000 }; //H1SP64[CODEX]
-
-	//WEAK symbol<gentity_s> g_entities{ 0, 0x621E530 }; //H1MP64[ARYIA]
-	//WEAK symbol<gentity_s> g_entities{ 0x550DD90 }; //H1SP64[CODEX]
+	WEAK symbol<cmd_function_s*> cmd_functions{ 0x14AD99AB8,0x14946BAC8 }; // H1(1.4)
+	WEAK symbol<int> keyCatchers{ 0x14243DAF0,0x142D0BA9C }; // H1(1.4)
+	WEAK symbol<PlayerKeyState> playerKeys{ 0x1422A873C,0x142C19AFC }; // H1(1.4)
+	WEAK symbol<CmdArgs> cmd_args{ 0x140000000, 0x140000000 }; //H1SP64[CODEX]
 
 	//###########################################################################################################################################################################
 	//###########################################################################################################################################################################
 	//###########################################################################################################################################################################
 
-	WEAK symbol<void()> G_Glass_Update{ 0, 0x14033A640 }; // H1MP64[AYRIA]
+	WEAK symbol<void()> G_Glass_Update{ 0, 0x14033A640 }; // H1(1.4)
 
 	WEAK symbol<void(int type, VariableUnion u)> AddRefToValue{ 0, 0x1405C0EB0 };
 	WEAK symbol<void(unsigned int id)> AddRefToObject{ 0,0x1405C0EA0 };
@@ -200,27 +179,12 @@ namespace game
 
 	namespace mp
 	{
-		WEAK symbol<gentity_s> g_entities{ 0, 0x14621E530 }; // H1MP64[AYRIA]
-		WEAK symbol<client_t> svs_clients{ 0, 0x14B204A10 }; // H1MP64[AYRIA]
+		WEAK symbol<gentity_s> g_entities{ 0, 0x14621E530 }; // H1(1.4)
+		WEAK symbol<client_t> svs_clients{ 0, 0x14B204A10 }; // H1(1.4)
 	}
 
 	namespace sp
 	{
 		WEAK symbol<gentity_s> g_entities{ 0x14550DD90 , 0 };
-	}
-
-	namespace hks
-	{
-		WEAK symbol<lua_State*> lua_state{0, 0x1412E2B50};
-		WEAK symbol<void(lua_State* s, const char* str, unsigned int l)> hksi_lua_pushlstring{0, 0x1400290B0};
-		WEAK symbol<HksObject*(HksObject* result, lua_State* s, const HksObject* table, const HksObject* key)> hks_obj_getfield{0, 0x14009D3C0};
-		WEAK symbol<void(lua_State* s, const HksObject* tbl, const HksObject* key, const HksObject* val)> hks_obj_settable{0, 0x14009E480};
-		WEAK symbol<HksObject* (HksObject* result, lua_State* s, const HksObject* table, const HksObject* key)> hks_obj_gettable{0, 0x14009D800};
-		WEAK symbol<void(lua_State* s, int nargs, int nresults, const unsigned int* pc)> vm_call_internal{0, 0x1400C9EC0};
-		WEAK symbol<HashTable*(lua_State* s, unsigned int arraySize, unsigned int hashSize)> Hashtable_Create{0, 0x14008AAE0};
-		WEAK symbol<cclosure*(lua_State* s, lua_function function, int num_upvalues,
-			int internal_, int profilerTreatClosureAsFunc)> cclosure_Create{0, 0x14008AD00};
-		WEAK symbol<int(lua_State* s, int t)> hksi_luaL_ref{0, 0x1400A7D60};
-		WEAK symbol<void(lua_State* s, int t, int ref)> hksi_luaL_unref{0, 0x1400A0660};
 	}
 }
