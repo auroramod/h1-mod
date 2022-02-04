@@ -70,15 +70,15 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", "X Labs"
-            VALUE "FileDescription", "S1x"
+            VALUE "CompanyName", "XLabs"
+            VALUE "FileDescription", "H1-Mod"
             VALUE "FileVersion", VERSION_FILE
-            VALUE "InternalName", "S1x"
+            VALUE "InternalName", "H1-Mod"
             VALUE "LegalCopyright", "Copyright (C) 2021 X Labs Project. All rights reserved."
             VALUE "Licence", "GPLv3"
-            VALUE "Info", "https://github.com/XLabsProject/s1x-client"
-            VALUE "OriginalFilename", "s1x.exe"
-            VALUE "ProductName", "s1x"
+            VALUE "Info", "https://github.com/skkuull/h1-mod/"
+            VALUE "OriginalFilename", "h1-mod.exe"
+            VALUE "ProductName", "h1-mod"
             VALUE "ProductVersion", VERSION_PRODUCT
         END
     END
