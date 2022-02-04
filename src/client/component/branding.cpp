@@ -7,10 +7,24 @@
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
+#include <game/dvars.hpp>
+
+
+#include "version.hpp"
 
 namespace branding
 {
-	game::dvar_t* dvar_draw2d;
+	namespace
+	{
+		utils::hook::detour ui_get_formatted_build_number_hook;
+
+		const char* ui_get_formatted_build_number_stub()
+		{
+			const auto* const build_num = ui_get_formatted_build_number_hook.invoke<const char*>();
+
+			return utils::string::va("%s (%s)", VERSION, build_num);
+		}
+	}
 
 	class component final : public component_interface
 	{
@@ -27,27 +41,22 @@ namespace branding
 			{
 				localized_strings::override("LUA_MENU_MULTIPLAYER_CAPS", "H1-Mod: MULTIPLAYER\n");
 				localized_strings::override("MENU_MULTIPLAYER_CAPS", "H1-Mod: MULTIPLAYER");
-				localized_strings::override("PLATFORM_UI_HEADER_PLAY_MP_CAPS", "H1-ONLINE");
 			}
+
+			dvars::override::Dvar_SetString("version", utils::string::va("H1-Mod %s", VERSION));
+
+			ui_get_formatted_build_number_hook.create(
+				SELECT_VALUE(0x1403B1C40, 0x1404E74C0), ui_get_formatted_build_number_stub);
 
 			scheduler::loop([]()
 				{
-					if (!dvar_draw2d)
-					{
-						dvar_draw2d = game::Dvar_FindVar("cg_draw2d");
-					}
-
-					if (dvar_draw2d && !dvar_draw2d->current.enabled)
-					{
-						return;
-					}
 
 					const auto x = 4;
 					const auto y = 4;
 					const auto scale = 1.0f;
-					float color[4] = { 1.0f, 0.5f, 0.0f, 1.0f };
+					float color[4] = { 0.666f, 0.666f, 0.666f, 0.666f };
 
-					const auto* text = "H1-Mod 1.4";
+					const auto* text = "H1-Mod: " VERSION;
 
 					auto* font = game::R_RegisterFont("fonts/fira_mono_bold.ttf", 20);
 

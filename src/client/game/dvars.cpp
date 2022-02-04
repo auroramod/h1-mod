@@ -543,6 +543,8 @@ namespace dvars
 	}
 
 	namespace override {
+		static std::unordered_map<std::string, std::string> set_string_overrides;
+
 		game::dvar_t* register_int(const std::string& name, int value, int min, int max,
 			const unsigned int flags, bool add_to_list)
 		{
@@ -554,6 +556,11 @@ namespace dvars
 			}
 
 			return game::Dvar_RegisterInt(hash, "", value, min, max, flags);
+		}
+
+		void Dvar_SetString(const std::string& name, const std::string& value)
+		{
+			set_string_overrides[name] = value;
 		}
 	}
 }
