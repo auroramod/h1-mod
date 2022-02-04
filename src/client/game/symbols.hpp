@@ -19,7 +19,7 @@ namespace game
 
 	WEAK symbol<void()> Com_Quit_f{ 0x140352BE0, 0x1400DA640 }; // H1(1.4)
 
-	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{ 0, 0x1404046F0 }; // H1(1.4)
+	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{ 0x140344110, 0x1404046F0 }; // H1(1.4)
 
 	WEAK symbol<void(const char* dvar, const char* buffer)> Dvar_SetCommand{ 0x1403C72B0, 0x1404FD0A0 }; // H1(1.4)
 
@@ -27,9 +27,9 @@ namespace game
 
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{ 0x1401389A0, 0x140220CC0 }; // H1(1.4)
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{ 0x140138750, 0x140220620 }; // H1(1.4)
-	WEAK symbol<void(const char* message)> Conbuf_AppendText{ 0, 0x140513FF0 }; // H1(1.4)
+	WEAK symbol<void(const char* message)> Conbuf_AppendText{ 0x1403E3300, 0x140513FF0 }; // H1(1.4)
 
-	WEAK symbol<void()> Cmd_EndTokenizeString{ 0, 0x140403C20 }; // H1(1.4)
+	WEAK symbol<void()> Cmd_EndTokenizeString{ 0x140343630, 0x140403C20 }; // H1(1.4)
 
 	WEAK symbol<dvar_t* (const char* name)> Dvar_FindVar{ 0x1403C5D50, 0x1404FBB00 }; // H1(1.4)
 	WEAK symbol<const char* (const dvar_t* dvar, dvar_value value, __int64 a3)> Dvar_ValueToString{ 0x1403C8560,0x1404FE660 };  // H1(1.4); different typedef from previous titles
@@ -46,22 +46,24 @@ namespace game
 	WEAK symbol<bool()> CL_IsCgameInitialized{ 0x14017EE30, 0x140245650 }; // H1(1.4)
 	WEAK symbol<unsigned int(int)> Live_SyncOnlineDataFlags{ 0, 0x14059A700 }; // H1(1.4)
 
-	WEAK symbol<void()> Sys_Milliseconds{ 0, 0x140513710 }; // H1(1.4)
+	WEAK symbol<void()> Sys_Milliseconds{ 0x1403E2B10, 0x140513710 }; // H1(1.4)
 	WEAK symbol<bool()> Sys_IsDatabaseReady2{ 0, 0x14042B090 }; // H1(1.4)
 
-	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{ 0, 0x140480860 };
-	WEAK symbol<void(const char* text_in)> SV_Cmd_TokenizeString{ 0, 0x140404D20 };
-	WEAK symbol<void()> SV_Cmd_EndTokenizedString{ 0, 0x140404CE0 };
-	WEAK symbol<bool(int, void const*, const netadr_s*)> Sys_SendPacket{ 0, 0x1405133B0 };
-	WEAK symbol<void(netadr_s*, sockaddr*)> NetadrToSockadr{ 0, 0x1404F62F0 };
-	WEAK symbol<void(netsrc_t, netadr_s*, const char*)> NET_OutOfBandPrint{ 0, 0x1404255D0 };
-	WEAK symbol<SOCKET> query_socket{ 0, 0x14DDFBF98 };
-	WEAK symbol<void(netsrc_t sock, int length, const void* data, const netadr_s* to)> NET_SendLoopPacket{ 0, 0x140425790 };
+	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{ 0, 0x140480860 }; // H1(1.4)
 
-	//WEAK symbol<dvar_t* (const char* dvarName, int value, int min, int max, unsigned int flags, const char* desc)>
-		//Dvar_RegisterInt{ 0, 0x140 };
+	WEAK symbol<void(const char* text_in)> SV_Cmd_TokenizeString{ 0x1402EF050, 0x140404D20 }; // H1(1.4)
 
-	WEAK symbol<bool(int clientNum)> SV_BotIsBot{ 0, 0x14046E6C0 };
+	WEAK symbol<void()> SV_Cmd_EndTokenizedString{ 0x140344700, 0x140404CE0 }; // H1(1.4)
+
+	WEAK symbol<bool(int, void const*, const netadr_s*)> Sys_SendPacket{ 0x1403E2820, 0x1405133B0 }; // H1(1.4)
+
+	WEAK symbol<void(netadr_s*, sockaddr*)> NetadrToSockadr{ 0x1403C11C0, 0x1404F62F0 }; // H1(1.4)
+
+	WEAK symbol<void(netsrc_t, netadr_s*, const char*)> NET_OutOfBandPrint{ 0x140357560, 0x1404255D0 }; // H1(1.4)
+
+	WEAK symbol<SOCKET> query_socket{ 0, 0x14DDFBF98 }; // H1(1.4)
+
+	WEAK symbol<void(netsrc_t sock, int length, const void* data, const netadr_s* to)> NET_SendLoopPacket{ 0, 0x140425790 }; // H1(1.4)
 
 	WEAK symbol<char* (char* string)> I_CleanStr{ 0x1403CD230, 0 }; // H1(1.4)
 	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetViewPlacement{ 0x1401981F0, 0x140288550 }; // H1(1.4)
@@ -142,17 +144,17 @@ namespace game
 	WEAK symbol<void(const void* obj, void* pose, unsigned int entnum, unsigned int renderFxFlags, float* lightingOrigin,
 		float materialTime, __int64 a7, __int64 a8)> R_AddDObjToScene{ 0, 0x140775C40 };
 
-	WEAK symbol<const char* (scr_string_t stringValue)> SL_ConvertToString{ 0,0x1405BFBB0 };
-	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{ 0, 0x1405C0170 };
+	WEAK symbol<const char* (scr_string_t stringValue)> SL_ConvertToString{ 0x14036D420, 0x1405BFBB0 };
+	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{ 0x14036D9A0, 0x1405C0170 };
 
-	WEAK symbol<bool()> SV_Loaded{ 0,0x140442F60 };
+	WEAK symbol<bool()> SV_Loaded{ 0x140442F60, 0x140442F60 };
 
-	WEAK symbol<void()> Sys_ShowConsole{ 0,0x140514910 };
+	WEAK symbol<void()> Sys_ShowConsole{ 0x1403E3B90, 0x140514910 }; // H1(1.4)
 
-	WEAK symbol<const char* (const char* string)> UI_SafeTranslateString{ 0, 0x5A2930 };
+	WEAK symbol<const char* (const char* string)> UI_SafeTranslateString{ 0x140350430, 0x1405A2930 }; // H1(1.4)
 
-	WEAK symbol<void* (jmp_buf* Buf, int Value)> longjmp{ 0, 0x14089EED0 };
-	WEAK symbol<int(jmp_buf* Buf)> _setjmp{ 0, 0x1408EC2E0 };
+	WEAK symbol<void* (jmp_buf* Buf, int Value)> longjmp{ 0x140648FD4, 0x14089EED0 }; // H1(1.4)
+	WEAK symbol<int(jmp_buf* Buf)> _setjmp{ 0x1406BFDD0, 0x1408EC2E0 }; // H1(1.4)
 
 	WEAK symbol<void(int arg, char* buffer, int bufferLength)> SV_Cmd_ArgvBuffer{ 0x1402EEFD0, 0x1403B05C0 };
 

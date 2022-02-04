@@ -204,20 +204,20 @@ namespace auth
 			// Patch steam id bit check
 			if (game::environment::is_sp())
 			{
-				utils::hook::jump(0x1404267F0, 0x140426846); // S1SP
-				utils::hook::jump(0x14042760F, 0x140427650); // S1SP
-				utils::hook::jump(0x140427AB4, 0x140427B02); // S1SP
+				utils::hook::jump(0x140475C17, 0x140475C6A); // H1(1.4)
+				utils::hook::jump(0x140476AFF, 0x140476B40); // H1(1.4)
+				utils::hook::jump(0x140476FA4, 0x140476FF2); // H1(1.4)
 			}
 			else
 			{
-				utils::hook::jump(0x140571E07, 0x140571E5A); // H1MP64[1.4]
-				utils::hook::jump(0x14004B223, 0x14004B4F2); // H1MP64[1.4]
-				utils::hook::jump(0x14004B4AD, 0x140009B48); // H1MP64[1.4]
-				utils::hook::jump(0x140572F6F, 0x140572FB0); // H1MP64[1.4]
-				utils::hook::jump(0x140573470, 0x1405734B6); // H1MP64[1.4]
+				utils::hook::jump(0x140571E07, 0x140571E5A); // H1(1.4)
+				utils::hook::jump(0x14004B223, 0x14004B4F2); // H1(1.4)
+				utils::hook::jump(0x14004B4AD, 0x140009B48); // H1(1.4)
+				utils::hook::jump(0x140572F6F, 0x140572FB0); // H1(1.4)
+				utils::hook::jump(0x140573470, 0x1405734B6); // H1(1.4)
 
-				utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true); // H1MP64[1.4]
-				utils::hook::call(0x140250ED2, send_connect_data_stub); // H1MP64[1.4]
+				utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true); // H1(1.4)
+				utils::hook::call(0x140250ED2, send_connect_data_stub); // H1(1.4)
 			}
 
 			command::add("guid", []()

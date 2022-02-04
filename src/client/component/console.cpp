@@ -113,7 +113,7 @@ namespace console
 		void post_unpack() override
 		{
 			// Redirect input (]command)
-			utils::hook::jump(SELECT_VALUE(0x000000000, 0x1405141E0), append_text); // H1MP1.4
+			utils::hook::jump(SELECT_VALUE(0x1403E34C0, 0x1405141E0), append_text); // H1(1.4)
 
 			this->initialize();
 		}
@@ -202,7 +202,7 @@ namespace console
 		static void log_message(const std::string& message)
 		{
 			OutputDebugStringA(message.data());
-			game::Conbuf_AppendText(message.data()); //0x140513FF0
+			game::Conbuf_AppendText(message.data());
 			FILE* pFile = fopen("debug.log", "a");
 			fprintf(pFile, "%s\n", message.data());
 			fclose(pFile);
@@ -232,7 +232,7 @@ namespace console
 
 	HWND get_window()
 	{
-		return *reinterpret_cast<HWND*>((SELECT_VALUE(0x000000000, 0x14DDFC2D0))); // H1MP1.4    
+		return *reinterpret_cast<HWND*>((SELECT_VALUE(0x14CF56C00, 0x14DDFC2D0))); // H1(1.4)
 	}
 
 	void set_title(std::string title)
@@ -247,7 +247,7 @@ namespace console
 
 		SetWindowPos(get_window(), nullptr, rect.left, rect.top, width, height, 0);
 
-		auto* const logo_window = *reinterpret_cast<HWND*>(SELECT_VALUE(0x000000000, 0x14DDFC2E0)); // H1MP64(1.4)
+		auto* const logo_window = *reinterpret_cast<HWND*>(SELECT_VALUE(0x14CF56C10, 0x14DDFC2E0)); // H1(1.4)
 		SetWindowPos(logo_window, nullptr, 5, 5, width - 25, 60, 0);
 	}
 
