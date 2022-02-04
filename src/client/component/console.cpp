@@ -46,11 +46,11 @@ namespace console
 
 		void dispatch_message(const int type, const std::string& message)
 		{
-			/*if (rcon::message_redirect(message))
-			{
-				return;
-			}*/
-
+			game_console::print(type, message);
+			messages.access([&message](message_queue& msgs)
+				{
+					msgs.emplace(message);
+				});
 		}
 
 		void append_text(const char* text)
@@ -172,7 +172,6 @@ namespace console
 				});
 		}
 
-
 		void log_messages()
 		{
 			/*while*/
@@ -203,10 +202,6 @@ namespace console
 		{
 			OutputDebugStringA(message.data());
 			game::Conbuf_AppendText(message.data());
-			FILE* pFile = fopen("debug.log", "a");
-			fprintf(pFile, "%s\n", message.data());
-			fclose(pFile);
-
 		}
 
 		void runner()

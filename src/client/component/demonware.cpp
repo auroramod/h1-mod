@@ -416,9 +416,13 @@ namespace demonware
 
 		void post_unpack() override
 		{
+			/*
+				mwr has upgraded some networking methods and the gethostbyname import from winsock library is no longer used
+				gethostbyname has been replaced with getaddrinfo
+				btw, still you can't get online..
+			*/
 			utils::hook::jump(SELECT_VALUE(0x140610320, 0x1407400B0), bd_logger_stub); // H1MP64(1.4)
 
-	   //singleplayer not supported so far.
 			if (game::environment::is_sp())
 			{
 				utils::hook::set<uint8_t>(0x1405FCA00, 0xC3); // bdAuthSteam H1(1.4)

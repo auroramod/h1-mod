@@ -46,6 +46,26 @@ namespace dvars
 		}
 	}
 
+	namespace
+	{
+		template <typename T>
+		T* find_dvar(std::unordered_map<std::string, T>& map, const std::string& name)
+		{
+			auto i = map.find(name);
+			if (i != map.end())
+			{
+				return &i->second;
+			}
+
+			return nullptr;
+		}
+
+		bool find_dvar(std::unordered_set<std::string>& set, const std::string& name)
+		{
+			return set.find(name) != set.end();
+		}
+	}
+
 	std::string dvar_get_domain(const game::dvar_type type, const game::dvar_limits& domain)
 	{
 		std::string str;

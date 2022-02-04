@@ -46,7 +46,7 @@ namespace game
 	WEAK symbol<bool()> CL_IsCgameInitialized{ 0x14017EE30, 0x140245650 }; // H1(1.4)
 	WEAK symbol<unsigned int(int)> Live_SyncOnlineDataFlags{ 0, 0x14059A700 }; // H1(1.4)
 
-	WEAK symbol<void()> Sys_Milliseconds{ 0x1403E2B10, 0x140513710 }; // H1(1.4)
+	WEAK symbol<int()> Sys_Milliseconds{ 0x1403E2B10, 0x140513710 }; // H1(1.4)
 	WEAK symbol<bool()> Sys_IsDatabaseReady2{ 0, 0x14042B090 }; // H1(1.4)
 
 	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{ 0, 0x140480860 }; // H1(1.4)
@@ -150,6 +150,11 @@ namespace game
 	WEAK symbol<bool()> SV_Loaded{ 0x140442F60, 0x140442F60 };
 
 	WEAK symbol<void()> Sys_ShowConsole{ 0x1403E3B90, 0x140514910 }; // H1(1.4)
+
+	WEAK symbol<const char* (const char*)> UI_GetMapDisplayName{ 0, 0x140408CC0 }; // H1(1.4)
+
+	WEAK symbol<const char* (const char*)> UI_GetGameTypeDisplayName{ 0, 0x1404086A0 }; // H1(1.4)
+
 
 	WEAK symbol<const char* (const char* string)> UI_SafeTranslateString{ 0x140350430, 0x1405A2930 }; // H1(1.4)
 

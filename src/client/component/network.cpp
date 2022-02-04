@@ -9,6 +9,7 @@
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 #include <game/dvars.hpp>
+#include <component/console.hpp>
 
 namespace network
 {
@@ -268,7 +269,7 @@ namespace network
 						}
 						else
 						{
-							game_console::print(game_console::con_type_info, "%s\n", message.data());
+							console::info("%s\n", message.data()); //test
 						}
 					});
 			}
