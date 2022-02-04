@@ -17,10 +17,18 @@ namespace branding
 	public:
 		void post_unpack() override
 		{
-			//localized_strings::override("MENU_SP_CAMPAIGN", "COD DEVELOPER COMPANION");
-			localized_strings::override("LUA_MENU_MULTIPLAYER_CAPS", "H1-Mod: MULTIPLAYER\n");
-			localized_strings::override("MENU_MULTIPLAYER_CAPS", "H1-Mod: MULTIPLAYER");
-			localized_strings::override("PLATFORM_UI_HEADER_PLAY_MP_CAPS", "H1-ONLINE");
+
+			if (game::environment::is_dedi())
+			{
+				return;
+			}
+
+			if (game::environment::is_mp)
+			{
+				localized_strings::override("LUA_MENU_MULTIPLAYER_CAPS", "H1-Mod: MULTIPLAYER\n");
+				localized_strings::override("MENU_MULTIPLAYER_CAPS", "H1-Mod: MULTIPLAYER");
+				localized_strings::override("PLATFORM_UI_HEADER_PLAY_MP_CAPS", "H1-ONLINE");
+			}
 
 			scheduler::loop([]()
 				{
