@@ -161,13 +161,14 @@ namespace fps
 			// change cg_drawfps flags to saved
 			utils::hook::call(SELECT_VALUE(0x140139F48, 0x1401A4B8E), &cg_draw_fps_register_stub); //h1sp
 
-			// fix ping value
-			utils::hook::nop(0x14025AC41, 2); // H1MP(1.4)
-
 			scheduler::loop(cg_draw_fps, scheduler::pipeline::renderer);
 			if (game::environment::is_mp())
 			{
+				// fix ping value
+				utils::hook::nop(0x14025AC41, 2); // H1MP(1.4)
+
 				dvars::register_int("cg_drawPing", 0, 0, 1, game::DVAR_FLAG_SAVED, true);
+
 				scheduler::loop(cg_draw_ping, scheduler::pipeline::renderer);
 			}
 		}
