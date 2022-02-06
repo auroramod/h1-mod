@@ -35,5 +35,7 @@ namespace dvars
 	namespace override {
 		game::dvar_t* register_int(const std::string& name, int value, int min, int max, const unsigned int flags, bool add_to_list = true);
 		void Dvar_SetString(const std::string& name, const std::string& string);
+		game::dvar_t* register_float(const std::string& name, float value, float min, float max, game::DvarFlags flags, bool add_to_list = true);
+		game::dvar_t* register_string(const std::string& name, const char* value, game::DvarFlags flags, bool add_to_list = true);
 	}
 }

@@ -46,26 +46,6 @@ namespace dvars
 		}
 	}
 
-	namespace
-	{
-		template <typename T>
-		T* find_dvar(std::unordered_map<std::string, T>& map, const std::string& name)
-		{
-			auto i = map.find(name);
-			if (i != map.end())
-			{
-				return &i->second;
-			}
-
-			return nullptr;
-		}
-
-		bool find_dvar(std::unordered_set<std::string>& set, const std::string& name)
-		{
-			return set.find(name) != set.end();
-		}
-	}
-
 	std::string dvar_get_domain(const game::dvar_type type, const game::dvar_limits& domain)
 	{
 		std::string str;
@@ -82,16 +62,19 @@ namespace dvars
 				{
 					return "Domain is any number"s;
 				}
-
-				return utils::string::va("Domain is any number %g or smaller", domain.value.max);
+				else
+				{
+					return utils::string::va("Domain is any number %g or smaller", domain.value.max);
+				}
 			}
-
-			if (domain.value.max == FLT_MAX)
+			else if (domain.value.max == FLT_MAX)
 			{
 				return utils::string::va("Domain is any number %g or bigger", domain.value.min);
 			}
-
-			return utils::string::va("Domain is any number from %g to %g", domain.value.min, domain.value.max);
+			else
+			{
+				return utils::string::va("Domain is any number from %g to %g", domain.value.min, domain.value.max);
+			}
 
 		case game::dvar_type::vec2:
 			return dvar_get_vector_domain(2, domain);
@@ -110,16 +93,19 @@ namespace dvars
 				{
 					return "Domain is any integer"s;
 				}
-
-				return utils::string::va("Domain is any integer %i or smaller", domain.integer.max);
+				else
+				{
+					return utils::string::va("Domain is any integer %i or smaller", domain.integer.max);
+				}
 			}
-
-			if (domain.integer.max == INT_MAX)
+			else if (domain.integer.max == INT_MAX)
 			{
 				return utils::string::va("Domain is any integer %i or bigger", domain.integer.min);
 			}
-
-			return utils::string::va("Domain is any integer from %i to %i", domain.integer.min, domain.integer.max);
+			else
+			{
+				return utils::string::va("Domain is any integer from %i to %i", domain.integer.min, domain.integer.max);
+			}
 
 		case game::dvar_type::color:
 			return "Domain is any 4-component color, in RGBA format"s;
@@ -141,6 +127,28 @@ namespace dvars
 			return utils::string::va("unhandled dvar type '%i'", type);
 		}
 	}
+
+	namespace
+	{
+		template <typename T>
+		T* find_dvar(std::unordered_map<std::string, T>& map, const std::string& name)
+		{
+			auto i = map.find(name);
+			if (i != map.end())
+			{
+				return &i->second;
+			}
+
+			return nullptr;
+		}
+
+		bool find_dvar(std::unordered_set<std::string>& set, const std::string& name)
+		{
+			return set.find(name) != set.end();
+		}
+	}
+
+	
 
 	std::vector<std::string> dvar_list =
 	{
@@ -167,6 +175,7 @@ namespace dvars
 	  "aim_assist_min_target_distance",
 	  "aim_assist_script_disable",
 	  "cg_draw2D",
+	  "cg_drawPing",
 	  "cg_drawBigFPS",
 	  "cg_drawBreathHint",
 	  "cg_drawBuildName",
@@ -581,6 +590,32 @@ namespace dvars
 		void Dvar_SetString(const std::string& name, const std::string& value)
 		{
 			set_string_overrides[name] = value;
+		}
+
+		game::dvar_t* register_float(const std::string& name, float value, float min,
+			float max, game::DvarFlags flags, bool add_to_list)
+		{
+			const auto hash = game::generateHashValue(name.data());
+
+			if (add_to_list && can_add_dvar_to_list(name))
+			{
+				dvar_list.push_back(name);
+			}
+
+			return game::Dvar_RegisterFloat(hash, "", value, min, max, flags);
+		}
+
+		game::dvar_t* register_string(const std::string& name, const char* value,
+			game::DvarFlags flags, bool add_to_list)
+		{
+			const auto hash = game::generateHashValue(name.data());
+
+			if (add_to_list && can_add_dvar_to_list(name))
+			{
+				dvar_list.push_back(name);
+			}
+
+			return game::Dvar_RegisterString(hash, "", value, flags);
 		}
 	}
 }

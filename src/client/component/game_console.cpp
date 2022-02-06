@@ -299,10 +299,10 @@ namespace game_console
 				{
 					const auto offset = (con.screen_max[0] - con.globals.x) / 2.5f;
 
-					draw_hint_text(0, game::Dvar_ValueToString(dvar, dvar->current, 0),
+					draw_hint_text(0, game::Dvar_ValueToString(dvar, dvar->current),
 						dvars::con_inputDvarValueColor->current.vector, offset);
 					draw_hint_text(1, "  default", dvars::con_inputDvarInactiveValueColor->current.vector);
-					draw_hint_text(1, game::Dvar_ValueToString(dvar, dvar->reset, 0),
+					draw_hint_text(1, game::Dvar_ValueToString(dvar, dvar->reset),
 						dvars::con_inputDvarInactiveValueColor->current.vector, offset);
 				}
 
@@ -326,7 +326,7 @@ namespace game_console
 
 					if (dvar)
 					{
-						draw_hint_text(static_cast<int>(i), game::Dvar_ValueToString(dvar, dvar->current, 0),
+						draw_hint_text(static_cast<int>(i), game::Dvar_ValueToString(dvar, dvar->current),
 							dvars::con_inputDvarValueColor->current.vector, offset);
 					}
 				}

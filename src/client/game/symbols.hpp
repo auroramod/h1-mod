@@ -32,7 +32,9 @@ namespace game
 	WEAK symbol<void()> Cmd_EndTokenizeString{ 0x140343630, 0x140403C20 }; // H1(1.4)
 
 	WEAK symbol<dvar_t* (const char* name)> Dvar_FindVar{ 0x1403C5D50, 0x1404FBB00 }; // H1(1.4)
-	WEAK symbol<const char* (const dvar_t* dvar, dvar_value value, __int64 a3)> Dvar_ValueToString{ 0x1403C8560,0x1404FE660 };  // H1(1.4); different typedef from previous titles
+	WEAK symbol<void(char* buffer, int index)> Dvar_GetCombinedString{ 0x140354DF0, 0x14041D830 }; // H1(1.4)
+	//WEAK symbol<const char* (const dvar_t* dvar, dvar_value value, __int64 a3)> Dvar_ValueToString{ 0x1403C8560,0x1404FE660 };  // H1(1.4); different typedef from previous titles
+	WEAK symbol<const char* (dvar_t* dvar, dvar_value value)> Dvar_ValueToString{ 0x1403C8560, 0x1404FE660 }; // H1(1.4)
 	//WEAK symbol<void(int hash, const char* name, const char* buffer)> Dvar_SetCommand{ 0, 0x1404FD0A0 }; // H1(1.4)
 
 	WEAK symbol<dvar_t* (int hash, const char* name, bool value, unsigned int flags)> Dvar_RegisterBool{ 0x1403C47E0,0x1404FA540 }; // H1
@@ -40,6 +42,17 @@ namespace game
 	WEAK symbol<dvar_t* (int hash, const char* dvarName, float value, float min, float max, unsigned int flags)> Dvar_RegisterFloat{ 0x1403C4BB0,0x1404FA910 }; // H1(1.4)
 	WEAK symbol<dvar_t* (int hash, const char* dvarName, const char* value, unsigned int flags)> Dvar_RegisterString{ 0x1403C4DA0,0x1404FAB00 }; // H1(1.4)
 	WEAK symbol<dvar_t* (int dvarName, const char* a2, float x, float y, float z, float w, float min, float max, unsigned int flags)> Dvar_RegisterVec4{ 0x1403C5220, 0x1404FAF40 }; // H1(1.4)
+	WEAK symbol<dvar_t* (const char* dvarName, const char** valueList, int defaultIndex, unsigned int flags)> Dvar_RegisterEnum{ 0x1403C4AC0, 0x1404C0EC0 }; // H1(1.4)
+
+
+
+	WEAK symbol<long long(const char* qpath, char** buffer)> FS_ReadFile{ 0x1403B9020, 0x1404EE720 }; // H1(1.4)
+
+	WEAK symbol<void(void* buffer)> FS_FreeFile{ 0x1403B9010, 0x1404EE710 }; // H1(1.4)
+
+	WEAK symbol<void(const char* gameName)> FS_Startup{ 0x1403B85D0, 0x1404EDD30 }; // H1(1.4)
+
+	WEAK symbol<void(const char* path, const char* dir)> FS_AddLocalizedGameDirectory{ 0x1403B6030, 0x1404EBE20 }; // H1(1.4)
 
 	WEAK symbol<int(const char* fname)> generateHashValue{ 0x1400FE8A0, 0x1401B1010 }; // H1(1.4)
 
@@ -115,6 +128,7 @@ namespace game
 	WEAK symbol<XAssetHeader(XAssetType type, const char* name, int allowCreateDefault)> DB_FindXAssetHeader{ 0, 0x140412F60 };
 	WEAK symbol<int(const RawFile* rawfile)> DB_GetRawFileLen{ 0,0x140413D80 };
 	WEAK symbol<int(const RawFile* rawfile, char* buf, int size)> DB_GetRawBuffer{ 0,0x140413C40 };
+	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{ 0x14019A3B0, 0x14028BE70 }; // H1(1.4)
 
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int name)> FindVariable{ 0,0x1405C1D50 };
 	WEAK symbol<unsigned int(int entnum, unsigned int classnum)> FindEntityId{ 0, 0x1405C1C50 };
@@ -155,6 +169,7 @@ namespace game
 
 	WEAK symbol<const char* (const char*)> UI_GetGameTypeDisplayName{ 0, 0x1404086A0 }; // H1(1.4)
 
+	WEAK symbol<void(const char* error, ...)> Sys_Error{ 0x1403E0C40, 0x140511520 }; // H1(1.4)
 
 	WEAK symbol<const char* (const char* string)> UI_SafeTranslateString{ 0x140350430, 0x1405A2930 }; // H1(1.4)
 
@@ -183,6 +198,7 @@ namespace game
 	WEAK symbol<scrVarGlob_t> scr_VarGlob{ 0, 0x14B617C00 };
 	WEAK symbol<scrVmPub_t> scr_VmPub{ 0,0x14BA9EE40 };
 	WEAK symbol<function_stack_t> scr_function_stack{ 0,0x14BAA93C0 };
+	WEAK symbol<void*> DB_XAssetPool{ 0x140DE8C80, 0x140FEB5D0 }; // H1(1.4)
 
 	namespace mp
 	{
