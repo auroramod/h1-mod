@@ -106,7 +106,7 @@ namespace game
 	WEAK symbol<cmd_function_s*> cmd_functions{ 0x14AD99AB8,0x14946BAC8 }; // H1(1.4)
 	WEAK symbol<int> keyCatchers{ 0x14243DAF0,0x142D0BA9C }; // H1(1.4)
 	WEAK symbol<PlayerKeyState> playerKeys{ 0x1422A873C,0x142C19AFC }; // H1(1.4)
-	WEAK symbol<CmdArgs> cmd_args{ 0x140000000, 0x140000000 }; //H1SP64[CODEX]
+	WEAK symbol<CmdArgs> cmd_args{ 0x14AD99960, 0x14946B970 }; // H1(1.4)
 
 	//###########################################################################################################################################################################
 	//###########################################################################################################################################################################
@@ -135,8 +135,13 @@ namespace game
 	WEAK symbol<void(VariableValue* result, unsigned int classnum, int entnum, int offset)> GetEntityFieldValue{ 0, 0x1405C6100 };
 
 	WEAK symbol<unsigned int(const char* name)> G_GetWeaponForName{ 0, 0x14051B260 };
-	WEAK symbol<int(void* ps, unsigned int weapon, int a3, int a4, __int64 a5, int a6)>
-		G_GivePlayerWeapon{ 0, 0x14051B660 };
+	//WEAK symbol<int(void* ps, unsigned int weapon, int a3, int a4, __int64 a5, int a6)>
+		//G_GivePlayerWeapon{ 0, 0x14051B660 };
+
+	WEAK symbol<int(playerState_s* ps, unsigned int weapon, int dualWield, int startInAltMode, int, int, int, char,
+		...)>
+		G_GivePlayerWeapon{ 0x1402C2DF0, 0x14051B660 }; // h1sp
+
 	WEAK symbol<void(void* ps, const unsigned int weapon, int hadWeapon)> G_InitializeAmmo{ 0, 0x1404C4110 };
 	WEAK symbol<void(int clientNum, const unsigned int weapon)> G_SelectWeapon{ 0,0x14051C0D0 };
 

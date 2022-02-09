@@ -266,7 +266,7 @@ namespace command
 	private:
 		static void add_commands_generic()
 		{
-			add_test("quit", game::Com_Quit_f);
+			add("quit", game::Com_Quit_f);
 			add("quit_hard", utils::nt::raise_hard_exception);
 			add("crash", []()
 				{
