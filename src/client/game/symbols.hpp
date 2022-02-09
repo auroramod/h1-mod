@@ -17,7 +17,7 @@ namespace game
 
 	WEAK symbol<void(unsigned int weapon, bool isAlternate, char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{ 0, 0x140165580 };
 
-	WEAK symbol<void()> Com_Quit_f{ 0x140352BE0, 0x1400DA640 }; // H1(1.4)
+	WEAK symbol<void()> Com_Quit_f{ 0x140352BE0, 0x1400DA830 }; // H1(1.4)
 
 	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{ 0x140344110, 0x1404046F0 }; // H1(1.4)
 
