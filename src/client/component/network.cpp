@@ -3,13 +3,11 @@
 
 #include "command.hpp"
 #include "network.hpp"
-#include "game_console.hpp"
-#include "../game/game.hpp"
+#include "console.hpp"
+#include "game/dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
-#include <game/dvars.hpp>
-#include <component/console.hpp>
 
 namespace network
 {
@@ -56,11 +54,11 @@ namespace network
 			// Command handled
 			a.popad64();
 			a.mov(al, 1);
-			a.jmp(0x140252AF8); //H1MP64(1.4)
+			a.jmp(0x140252AF8); // H1MP64(1.4)
 
 			a.bind(return_unhandled);
 			a.popad64();
-			a.jmp(0x14025234C); //H1MP64(1.4)
+			a.jmp(0x14025234C); // H1MP64(1.4)
 		}
 
 		int net_compare_base_address(const game::netadr_s* a1, const game::netadr_s* a2)
@@ -105,11 +103,11 @@ namespace network
 		get_callbacks()[utils::string::to_lower(command)] = callback;
 	}
 
-	void dw_send_to_stub(const unsigned int size, const char* src, game::netadr_s* a3)
+	int dw_send_to_stub(const int size, const char* src, game::netadr_s* a3)
 	{
 		sockaddr s = {};
-		game::NetadrToSockadr(a3, &s); //0x1404F62F0
-		sendto(*game::query_socket, src, size - 2, 0, &s, 16);
+		game::NetadrToSockadr(a3, &s);
+		return sendto(*game::query_socket, src, size, 0, &s, 16) >= 0;
 	}
 
 	void send(const game::netadr_s& address, const std::string& command, const std::string& data, const char separator)
@@ -122,16 +120,23 @@ namespace network
 		send_data(address, packet);
 	}
 
-
 	void send_data(const game::netadr_s& address, const std::string& data)
 	{
+		auto size = static_cast<int>(data.size());
 		if (address.type == game::NA_LOOPBACK)
 		{
-			game::NET_SendLoopPacket(game::NS_CLIENT1, static_cast<int>(data.size()), data.data(), &address);
+			// TODO: Fix this for loopback
+			if (size > 1280)
+			{
+				console::error("Packet was too long. Truncated!\n");
+				size = 1280;
+			}
+
+			game::NET_SendLoopPacket(game::NS_CLIENT1, size, data.data(), &address);
 		}
 		else
 		{
-			game::Sys_SendPacket(static_cast<int>(data.size()), data.data(), &address);
+			game::Sys_SendPacket(size, data.data(), &address);
 		}
 	}
 
@@ -168,7 +173,8 @@ namespace network
 	game::dvar_t* register_netport_stub(const char* dvarName, int value, int min, int max, unsigned int flags,
 		const char* description)
 	{
-		auto dvar = dvars::register_int("net_port", 27016, 0, 0xFFFFu, game::DVAR_FLAG_LATCHED, "Network port");
+		game::dvar_t* dvar;
+		dvar = dvars::register_int("net_port", 27016, 0, 0xFFFFu, game::DVAR_FLAG_LATCHED);
 
 		// read net_port from command line
 		command::read_startup_variable("net_port");
@@ -190,7 +196,7 @@ namespace network
 				// redirect dw_sendto to raw socket
 				//utils::hook::jump(0x1404D850A, reinterpret_cast<void*>(0x1404D849A));
 				utils::hook::call(0x140513467, dw_send_to_stub); // H1MP64(1.4)
-				utils::hook::jump(game::Sys_SendPacket, dw_send_to_stub);
+				utils::hook::jump(game::Sys_SendPacket, dw_send_to_stub); // H1MP64(1.4)
 
 				// intercept command handling
 				utils::hook::jump(0x140252327, utils::hook::assemble(handle_command_stub), true); // H1MP64(1.4)
@@ -213,64 +219,66 @@ namespace network
 
 				// disable xuid verification
 				utils::hook::set<uint8_t>(0x14005B62D, 0xEB); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x14005B649, 0xEB); // H1MP64(1.4) NOT_SURE SHOULD JZ BUT LEA
+				utils::hook::set<uint8_t>(0x14005B649, 0xEB); // H1MP64(1.4)
 
 				// disable xuid verification
-				utils::hook::nop(0x14048382C, 2); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x140483889, 0xEB); // H1MP64(1.4) NOT_SURE
+				utils::hook::nop(0x14048382C, 2);
+				utils::hook::set<uint8_t>(0x140483889, 0xEB); // H1MP64(1.4)
 
 				// ignore configstring mismatch
 				utils::hook::set<uint8_t>(0x1402591C9, 0xEB); // H1MP64(1.4)
 
 				// ignore dw handle in SV_PacketEvent
-				utils::hook::set<uint8_t>(0x1404898E2, 0xEB); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x1404898E2, 0xEB);
 				utils::hook::call(0x1404898D6, &net_compare_address); // H1MP64(1.4)
 
 				// ignore dw handle in SV_FindClientByAddress
-				utils::hook::set<uint8_t>(0x140488EFD, 0xEB); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x140488EFD, 0xEB);
 				utils::hook::call(0x140488EF1, &net_compare_address); // H1MP64(1.4)
 
 				// ignore dw handle in SV_DirectConnect
 				utils::hook::set<uint8_t>(0x140480C58, 0xEB); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x140480CF2, 0xEB); // H1MP64(1.4) NOT_SURE
+				utils::hook::set<uint8_t>(0x140480CF2, 0xEB); // H1MP64(1.4)
 				utils::hook::call(0x140480C4B, &net_compare_address); // H1MP64(1.4)
 				utils::hook::call(0x140480E62, &net_compare_address); // H1MP64(1.4)
 
 				// increase cl_maxpackets
-				//dvars::override::Dvar_RegisterInt("cl_maxpackets", 1000, 1, 1000, 0x1);
-				dvars::override::register_int("cl_maxpackets", 1000, 1, 1000, 0x1, true);
+				dvars::override::register_int("cl_maxpackets", 1000, 1, 1000, game::DVAR_FLAG_SAVED);
+
+				// increase snaps
+				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_FLAG_NONE);
 
 				// ignore impure client
 				utils::hook::jump(0x140481B58, reinterpret_cast<void*>(0x140481BEE)); // H1MP64(1.4)
 
 				// don't send checksum
 				utils::hook::set<uint8_t>(0x140513433, 0); // H1MP64(1.4) mov: r8d, edi ; LEN
+				utils::hook::set<uint8_t>(0x14051345A, 0); // H1MP64(1.4)
 
 				// don't read checksum
-				utils::hook::jump(0x140513389, 0x14051339F); // H1MP64(1.4)
+				utils::hook::jump(0x140513389, 0x14051339F);
 
 				// don't try to reconnect client
-				utils::hook::call(0x140480DFF, reconnect_migratated_client); // H1MP64(1.4)
+				utils::hook::call(0x140480DFF, reconnect_migratated_client);
 				utils::hook::nop(0x140480DDB, 4); // H1MP64(1.4) this crashes when reconnecting for some reason
 
 				// allow server owner to modify net_port before the socket bind
 				utils::hook::call(0x140512BE5, register_netport_stub); // H1MP64(1.4)
 				utils::hook::call(0x140512D20, register_netport_stub); // H1MP64(1.4)
 
+				// increase allowed packet size
+				const auto max_packet_size = 0x20000;
+				utils::hook::set<int>(0x1404255F0, max_packet_size); // H1MP64(1.4)
+				utils::hook::set<int>(0x14042562E, max_packet_size); // H1MP64(1.4)
+				utils::hook::set<int>(0x140425521, max_packet_size); // H1MP64(1.4)
+				utils::hook::set<int>(0x140425549, max_packet_size); // H1MP64(1.4)
+
 				// ignore built in "print" oob command and add in our own
 				utils::hook::set<uint8_t>(0x14025280E, 0xEB); // H1MP64(1.4)
-				on("print", [](const game::netadr_s& addr, const std::string_view& data)
+				on("print", [](const game::netadr_s&, const std::string_view& data)
 					{
 						const std::string message{ data };
-
-						if (game::environment::is_dedi())
-						{
-							printf("%s\n", message.data());
-						}
-						else
-						{
-							console::info("%s\n", message.data()); //test
-						}
+						console::info(message.data());
 					});
 			}
 		}

@@ -267,7 +267,7 @@ namespace command
 		static void add_commands_generic()
 		{
 			add("quit", game::Com_Quit_f);
-			add("quit_hard", utils::nt::raise_hard_exception);
+			//add("quit_hard", utils::nt::raise_hard_exception); /* this command delivers you to a windows blue screen, its quit hard from windows xD */
 			add("crash", []()
 				{
 					*reinterpret_cast<int*>(1) = 0;
@@ -294,7 +294,7 @@ namespace command
 					}
 
 					console::info("Total %i matches\n", matches.size());
-				});
+				});*/
 
 			add("dvarDump", [](const params& argument)
 				{
@@ -302,7 +302,7 @@ namespace command
 					std::string filename;
 					if (argument.size() == 2)
 					{
-						filename = "s1x/";
+						filename = "h1-mod/";
 						filename.append(argument[1]);
 						if (!filename.ends_with(".txt"))
 						{
@@ -317,17 +317,17 @@ namespace command
 							if (!filename.empty())
 							{
 								const auto line = std::format("{} \"{}\"\r\n", dvar->hash,
-									game::Dvar_ValueToString(dvar, dvar->current, 0));
+									game::Dvar_ValueToString(dvar, dvar->current));
 								utils::io::write_file(filename, line, i != 0);
 							}
 							console::info("%s \"%s\"\n", dvar->hash,
-								game::Dvar_ValueToString(dvar, dvar->current, 0));
+								game::Dvar_ValueToString(dvar, dvar->current));
 						}
 					}
 					console::info("\n%i dvars\n", *game::dvarCount);
 					console::info("================================ END DVAR DUMP ====================================\n");
 				});
-
+			
 			add("commandDump", [](const params& argument)
 				{
 					console::info("================================ COMMAND DUMP =====================================\n");
@@ -335,7 +335,7 @@ namespace command
 					std::string filename;
 					if (argument.size() == 2)
 					{
-						filename = "s1x/";
+						filename = "h1-mod/";
 						filename.append(argument[1]);
 						if (!filename.ends_with(".txt"))
 						{
@@ -360,7 +360,7 @@ namespace command
 					console::info("\n%i commands\n", i);
 					console::info("================================ END COMMAND DUMP =================================\n");
 				});
-
+			/*
 			add("listassetpool", [](const params& params)
 				{
 					if (params.size() < 2)
@@ -446,7 +446,7 @@ namespace command
 						: "^1off"));
 				});
 
-			/*add("demigod", []()
+			add("demigod", []()
 				{
 					if (!game::SV_Loaded())
 					{
@@ -502,7 +502,7 @@ namespace command
 						: "^1off"));
 				});
 
-			add("give", [](const params& params)
+			/*add("give", [](const params& params)
 				{
 					if (!game::SV_Loaded())
 					{

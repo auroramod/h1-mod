@@ -148,7 +148,8 @@ namespace game
 	WEAK symbol<char* (GfxImage* image, uint32_t width, uint32_t height, uint32_t depth, uint32_t mipCount,
 		uint32_t imageFlags, DXGI_FORMAT imageFormat, int a8, const char* name, const void* initData)> Image_Setup{ 0, 0x14074B2A0 };
 
-	WEAK symbol<void(int clientNum, const char* menu, int a3, int a4, unsigned int a5)> LUI_OpenMenu{ 0, 0x1405F0EE0 };
+	WEAK symbol<void(int clientNum, const char* menu, int a3, int a4, unsigned int a5)> LUI_OpenMenu{ 0, 0x14048E450 }; //
+
 	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{ 0, 0x1405EE1A0 };
 
 	WEAK symbol<const float* (const float* v)> Scr_AllocVector{ 0, 0x1405C3220 };
@@ -178,6 +179,8 @@ namespace game
 
 	WEAK symbol<const char* (const char* string)> UI_SafeTranslateString{ 0x140350430, 0x1405A2930 }; // H1(1.4)
 
+	WEAK symbol<void(unsigned int localClientNum, const char** args)> UI_RunMenuScript{ 0, 0x1404CFE60 }; // H1(1.4)
+
 	WEAK symbol<void* (jmp_buf* Buf, int Value)> longjmp{ 0x140648FD4, 0x14089EED0 }; // H1(1.4)
 	WEAK symbol<int(jmp_buf* Buf)> _setjmp{ 0x1406BFDD0, 0x1408EC2E0 }; // H1(1.4)
 
@@ -192,8 +195,8 @@ namespace game
 
 	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{ 0,0x14EDF9E00 };
 
-	WEAK symbol<int> dvarCount{ 0, 0x14BFBB310 };
-	WEAK symbol<dvar_t*> sortedDvars{ 0,0x14BFBB320 };
+	WEAK symbol<int> dvarCount{ 0, 0x14D064CF4 }; //h1mp
+	WEAK symbol<dvar_t*> sortedDvars{ 0,0x14D064D00 }; //h1mp
 
 	WEAK symbol<unsigned int> levelEntityId{ 0,0x14B5E0B30 };
 	WEAK symbol<int> g_script_error_level{ 0,0x14BA9CC24 };

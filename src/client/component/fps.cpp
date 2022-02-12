@@ -156,7 +156,7 @@ namespace fps
 
 			// fps setup
 			cg_perf.perf_start = std::chrono::high_resolution_clock::now();
-			utils::hook::call(SELECT_VALUE(0x14018D261, 0x140213B27), &perf_update); //h1sp
+			utils::hook::call(SELECT_VALUE(0x14018D261, 0x14025B747), &perf_update); // H1(1.4)
 
 			// change cg_drawfps flags to saved
 			utils::hook::call(SELECT_VALUE(0x140139F48, 0x1401A4B8E), &cg_draw_fps_register_stub); //h1sp
