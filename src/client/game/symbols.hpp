@@ -15,6 +15,8 @@ namespace game
 
 	WEAK symbol<void()> Com_Frame_Try_Block_Function{ 0, 0x1400D8310 }; //H1MP MWR TEST
 
+	WEAK symbol<CodPlayMode()> Com_GetCurrentCoDPlayMode{ 0, 0x1405039A0 }; // H1(1.4)
+
 	WEAK symbol<void(unsigned int weapon, bool isAlternate, char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{ 0, 0x140165580 };
 
 	WEAK symbol<void()> Com_Quit_f{ 0x140352BE0, 0x1400DA830 }; // H1(1.4)
@@ -93,6 +95,7 @@ namespace game
 	WEAK symbol<int(int clientNum)> G_GetClientScore{ 0, 0x140342F90 }; // H1(1.4)
 	WEAK symbol<const char* (int clientNum)> SV_GetGuid{ 0, 0x140484B90 }; // H1(1.4)
 	WEAK symbol<int(int clientNum)> SV_GetClientPing{ 0, 0x140484B70 }; // H1(1.4)
+	WEAK symbol<playerState_s* (int num)> SV_GetPlayerstateForClientNum{ 0x1404426D0, 0 }; // H1SP(1.4)
 
 	WEAK symbol<void* (const char* text, int maxChars, void* font, int fontHeight, float x, float y, float xScale, float yScale,
 		float rotation, float* color, int style, int cursor_pos, char cursor_char, void* style_unk)> H1_AddBaseDrawTextCmd{ 0x1404F3DC0,0x1405FB1F0 }; // H1(1.4)
@@ -134,7 +137,7 @@ namespace game
 	WEAK symbol<unsigned int(int entnum, unsigned int classnum)> FindEntityId{ 0, 0x1405C1C50 };
 	WEAK symbol<void(VariableValue* result, unsigned int classnum, int entnum, int offset)> GetEntityFieldValue{ 0, 0x1405C6100 };
 
-	WEAK symbol<unsigned int(const char* name)> G_GetWeaponForName{ 0, 0x14051B260 };
+	WEAK symbol<unsigned int(const char* name)> G_GetWeaponForName{ 0x1402C2A90, 0 }; // H1SP(1.4)
 	//WEAK symbol<int(void* ps, unsigned int weapon, int a3, int a4, __int64 a5, int a6)>
 		//G_GivePlayerWeapon{ 0, 0x14051B660 };
 
@@ -144,6 +147,7 @@ namespace game
 
 	WEAK symbol<void(void* ps, const unsigned int weapon, int hadWeapon)> G_InitializeAmmo{ 0, 0x1404C4110 };
 	WEAK symbol<void(int clientNum, const unsigned int weapon)> G_SelectWeapon{ 0,0x14051C0D0 };
+	WEAK symbol<int(playerState_s* ps, unsigned int weapon)> G_TakePlayerWeapon{ 0x1402C3900, 0 }; // H1SP(1.4)
 
 	WEAK symbol<char* (GfxImage* image, uint32_t width, uint32_t height, uint32_t depth, uint32_t mipCount,
 		uint32_t imageFlags, DXGI_FORMAT imageFormat, int a8, const char* name, const void* initData)> Image_Setup{ 0, 0x14074B2A0 };
@@ -167,7 +171,9 @@ namespace game
 	WEAK symbol<const char* (scr_string_t stringValue)> SL_ConvertToString{ 0x14036D420, 0x1405BFBB0 };
 	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{ 0x14036D9A0, 0x1405C0170 };
 
-	WEAK symbol<bool()> SV_Loaded{ 0x140442F60, 0x140442F60 };
+	WEAK symbol<bool()> SV_Loaded{ 0x140442F60, 0x1404864A0 }; // H1(1.4)
+
+	WEAK symbol<bool(const char* map)> SV_MapExists{ 0, 0x14047ED60 }; // H1(1.4)
 
 	WEAK symbol<void()> Sys_ShowConsole{ 0x1403E3B90, 0x140514910 }; // H1(1.4)
 

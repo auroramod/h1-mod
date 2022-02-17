@@ -3,6 +3,7 @@
 #include "localized_strings.hpp"
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
+#include <utils/concurrency.hpp>
 #include "game/game.hpp"
 
 namespace localized_strings
@@ -11,37 +12,30 @@ namespace localized_strings
 	{
 		utils::hook::detour seh_string_ed_get_string_hook;
 
-		std::unordered_map<std::string, std::string>& get_localized_overrides()
-		{
-			static std::unordered_map<std::string, std::string> overrides;
-			return overrides;
-		}
-
-		std::mutex& get_synchronization_mutex()
-		{
-			static std::mutex mutex;
-			return mutex;
-		}
+		using localized_map = std::unordered_map<std::string, std::string>;
+		utils::concurrency::container<localized_map> localized_overrides;
 
 		const char* seh_string_ed_get_string(const char* reference)
 		{
-			std::lock_guard<std::mutex> _(get_synchronization_mutex());
+			return localized_overrides.access<const char*>([&](const localized_map& map)
+				{
+					const auto entry = map.find(reference);
+					if (entry != map.end())
+					{
+						return utils::string::va("%s", entry->second.data());
+					}
 
-			auto& overrides = get_localized_overrides();
-			const auto entry = overrides.find(reference);
-			if (entry != overrides.end())
-			{
-				return utils::string::va("%s", entry->second.data());
-			}
-
-			return seh_string_ed_get_string_hook.invoke<const char*>(reference);
+					return seh_string_ed_get_string_hook.invoke<const char*>(reference);
+				});
 		}
 	}
 
 	void override(const std::string& key, const std::string& value)
 	{
-		std::lock_guard<std::mutex> _(get_synchronization_mutex());
-		get_localized_overrides()[key] = value;
+		localized_overrides.access([&](localized_map& map)
+			{
+				map[key] = value;
+			});
 	}
 
 	class component final : public component_interface
@@ -50,7 +44,7 @@ namespace localized_strings
 		void post_unpack() override
 		{
 			// Change some localized strings
-			seh_string_ed_get_string_hook.create(SELECT_VALUE(0x1403924A0, 0x1404BB2A0), &seh_string_ed_get_string); // H1(1.4)
+			seh_string_ed_get_string_hook.create(SELECT_VALUE(0x1403924A0, 0x1404BB2A0), &seh_string_ed_get_string);
 		}
 	};
 }

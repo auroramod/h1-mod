@@ -336,6 +336,8 @@ namespace game_console
 			}
 		}
 
+
+
 		void draw_output_scrollbar(const float x, float y, const float width, const float height, output_queue& output)
 		{
 			const auto _x = (x + width) - 10.0f;

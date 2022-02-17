@@ -7,6 +7,7 @@
 #include <utils/hook.hpp>
 #include <utils/concurrency.hpp>
 #include <utils/string.hpp>
+#include <utils/thread.hpp>
 
 namespace scheduler
 {
@@ -146,23 +147,53 @@ namespace scheduler
 			}, type, delay);
 	}
 
+	void on_game_initialized(const std::function<void()>& callback, const pipeline type,
+		const std::chrono::milliseconds delay)
+	{
+		schedule([=]()
+			{
+				const auto dw_init = game::environment::is_sp() ? true : game::Live_SyncOnlineDataFlags(0) == 0;
+				if (dw_init && game::Sys_IsDatabaseReady2())
+				{
+					once(callback, type, delay);
+					return cond_end;
+				}
+
+				return cond_continue;
+			}, pipeline::main);
+	}
+
 	class component final : public component_interface
 	{
 	public:
+		void post_start() override
+		{
+			thread = utils::thread::create_named_thread("Async Scheduler", []()
+				{
+					while (!kill)
+					{
+						execute(pipeline::async);
+						std::this_thread::sleep_for(10ms);
+					}
+				});
+		}
+
 		void post_unpack() override
 		{
-			//thread = std::thread([]()
-			//{
-			//	while (!kill)
-			//	{
-			//		execute(pipeline::async);
-			//		std::this_thread::sleep_for(10ms);
-			//	}
-			//});
 
 			r_end_frame_hook.create(SELECT_VALUE(0x1404F7310, 0x1405FE470), scheduler::r_end_frame_stub); // H1(1.4)
 			g_run_frame_hook.create(SELECT_VALUE(0x1402772D0, 0x1402772D0), scheduler::server_frame_stub); // H1(1.4)
 			main_frame_hook.create(SELECT_VALUE(0x1401CE8D0, 0x1401CE8D0), scheduler::main_frame_stub); // H1(1.4)
+
+		}
+
+		void pre_destroy() override
+		{
+			kill = true;
+			if (thread.joinable())
+			{
+				thread.join();
+			}
 		}
 	};
 }

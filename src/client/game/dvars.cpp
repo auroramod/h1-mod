@@ -2,6 +2,7 @@
 #include <utils/string.hpp>
 
 #include "game.hpp"
+#include <component/console.hpp>
 
 namespace dvars
 {
@@ -217,6 +218,7 @@ namespace dvars
 	  "fs_userDocuments",
 	  "fs_usermapdir",
 	  "g_gametype",
+	  "gametype",
 	  "g_hardcore",
 	  "g_listEntity",
 	  "g_loadScripts",
@@ -325,10 +327,10 @@ namespace dvars
 	  "sv_lastSaveCommitedToDevice",
 	  "sv_local_client_snapshot_msec",
 	  "sv_mapname",
-	"mapname",
+	  "mapname",
 	  "sv_mapRotation",
 	  "sv_mapRotationCurrent",
-		  "cl_maxpackets",
+	  "cl_maxpackets",
 	  "sv_maxclients",
 	  "sv_maxPhysExplosionSpheres",
 	  "sv_maxPing",
@@ -382,6 +384,10 @@ namespace dvars
 	  "sv_wwwDownload",
 	  "sv_zlib_threshold",
 	  "sv_zombietime",
+	  "sv_mapRotation",
+	  "sv_mapRotationCurrent",
+	  "sv_autoPriority",
+	  //"xpartygo",
 	  "svwp",
 	  "syncTimeTimeout",
 	  "sys_configSum",
@@ -490,7 +496,8 @@ namespace dvars
 	  "custom_scr_team_teamkillspawndelay",
 	  "custom_scr_vehicles_enabled",
 	  "name",
-	  "custom_timelimit"
+	  "custom_timelimit",
+	  "map"
 	};
 
 	bool can_add_dvar_to_list(std::string name)
