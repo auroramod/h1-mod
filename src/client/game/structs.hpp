@@ -1405,8 +1405,8 @@ namespace game
 	{
 		struct gclient_s
 		{
-			char __pad[56135];
-			int flags; // 56136
+			char __pad[59200];
+			int flags; // 59200
 		};
 
 		struct gentity_s
