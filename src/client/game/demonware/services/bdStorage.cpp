@@ -20,7 +20,6 @@ namespace demonware
 		this->map_publisher_resource("motd-.*\\.txt", DW_MOTD);
 		this->map_publisher_resource("ffotd-.*\\.ff", DW_FASTFILE);
 		this->map_publisher_resource("playlists(_.+)?\\.aggr", DW_PLAYLISTS);
-		this->map_publisher_resource("winStoreConfig_[Tt][Uu][0-9]+\\.csv", DW_STORE_CONFIG);
 	}
 
 	void bdStorage::map_publisher_resource(const std::string& expression, const INT id)

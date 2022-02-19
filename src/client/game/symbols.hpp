@@ -197,7 +197,7 @@ namespace game
 
 
 	WEAK symbol<const char*> g_assetNames{ 0, 0x140BEF280 };
-	WEAK symbol<int> g_poolSize{ 0, 0x140BF2E40 };
+	WEAK symbol<int> g_poolSize{ 0, 0x140FEADF0 }; // H1(1.4)
 
 	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{ 0,0x14EDF9E00 };
 

@@ -98,7 +98,6 @@ ID_ICON               ICON   "resources/icon.ico"
 IMAGE_SPLASH          BITMAP "resources/splash.bmp"
 IMAGE_LOGO            BITMAP "resources/logo.bmp"
 
-DW_STORE_CONFIG       RCDATA "resources/dw/winStoreConfig_tu22.csv"
 DW_FASTFILE           RCDATA "resources/dw/ffotd-1.15.1.ff"
 DW_MOTD               RCDATA "resources/dw/motd-english.txt"
 DW_PLAYLISTS          RCDATA "resources/dw/playlists_tu12.aggr"
