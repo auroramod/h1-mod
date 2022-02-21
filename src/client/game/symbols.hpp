@@ -17,9 +17,13 @@ namespace game
 
 	WEAK symbol<CodPlayMode()> Com_GetCurrentCoDPlayMode{ 0, 0x1405039A0 }; // H1(1.4)
 
+	WEAK symbol<void(float, float, int)> Com_SetSlowMotion{ 0, 0x1400DB790 }; // H1(1.4)
+
 	WEAK symbol<void(unsigned int weapon, bool isAlternate, char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{ 0, 0x140165580 };
 
 	WEAK symbol<void()> Com_Quit_f{ 0x140352BE0, 0x1400DA830 }; // H1(1.4)
+
+	WEAK symbol<const char* (int, int, int)> Key_KeynumToString{ 0x140187CC0, 0x14024FE10 }; // H1(1.4)
 
 	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{ 0x140344110, 0x1404046F0 }; // H1(1.4)
 
@@ -46,7 +50,9 @@ namespace game
 	WEAK symbol<dvar_t* (int dvarName, const char* a2, float x, float y, float z, float w, float min, float max, unsigned int flags)> Dvar_RegisterVec4{ 0x1403C5220, 0x1404FAF40 }; // H1(1.4)
 	WEAK symbol<dvar_t* (const char* dvarName, const char** valueList, int defaultIndex, unsigned int flags)> Dvar_RegisterEnum{ 0x1403C4AC0, 0x1404C0EC0 }; // H1(1.4)
 
+	WEAK symbol<float(int index)> Scr_GetFloat{ 0x140374D20, 0x140442D10 }; // H1(1.4)
 
+	WEAK symbol<int()> Scr_GetNumParam{ 0x140374F30, 0x140442E70 }; // H1(1.4)
 
 	WEAK symbol<long long(const char* qpath, char** buffer)> FS_ReadFile{ 0x1403B9020, 0x1404EE720 }; // H1(1.4)
 
@@ -171,6 +177,8 @@ namespace game
 	WEAK symbol<const char* (scr_string_t stringValue)> SL_ConvertToString{ 0x14036D420, 0x1405BFBB0 };
 	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{ 0x14036D9A0, 0x1405C0170 };
 
+	WEAK symbol<void(int index, const char* string)> SV_SetConfigstring{ 0, 0x140486720 }; // H1(1.4)
+
 	WEAK symbol<bool()> SV_Loaded{ 0x140442F60, 0x1404864A0 }; // H1(1.4)
 
 	WEAK symbol<bool(const char* map)> SV_MapExists{ 0, 0x14047ED60 }; // H1(1.4)
@@ -192,9 +200,16 @@ namespace game
 
 	WEAK symbol<void(int arg, char* buffer, int bufferLength)> SV_Cmd_ArgvBuffer{ 0x1402EEFD0, 0x1403B05C0 };
 
-	// Variables
-	WEAK symbol<CmdArgs> sv_cmd_args{ 0, 0x14946BA20 }; // mwr maybe
+	WEAK symbol<void(char* path, int pathSize, Sys_Folder folder, const char* filename, const char* ext)>
+		Sys_BuildAbsPath{ 0x1403CFF90, 0x140507010 }; // H1(1.4)
 
+	WEAK symbol<bool(const char* path)> Sys_FileExists{ 0x1403E0CE0, 0x1405115E0 }; // H1(1.4)
+
+	// Variables
+	WEAK symbol<CmdArgs> sv_cmd_args{ 0, 0x14946BA20 }; // H1(1.4)
+
+
+	WEAK symbol<const char*> command_whitelist{ 0x141079A60, 0x14120C6D0 }; // H1(1.4)
 
 	WEAK symbol<const char*> g_assetNames{ 0, 0x140BEF280 };
 	WEAK symbol<int> g_poolSize{ 0, 0x140FEADF0 }; // H1(1.4)
@@ -214,14 +229,17 @@ namespace game
 	WEAK symbol<function_stack_t> scr_function_stack{ 0,0x14BAA93C0 };
 	WEAK symbol<void*> DB_XAssetPool{ 0x140DE8C80, 0x140FEB5D0 }; // H1(1.4)
 
+	WEAK symbol<DWORD> threadIds{0x14B19B880, 0x149810E00 }; // H1(1.4)
+
 	namespace mp
 	{
 		WEAK symbol<gentity_s> g_entities{ 0, 0x14621E530 }; // H1(1.4)
 		WEAK symbol<client_t> svs_clients{ 0, 0x14B204A10 }; // H1(1.4)
+		WEAK symbol<int> gameTime{ 0, 0x14621BDBC }; // H1(1.4)
 	}
 
 	namespace sp
 	{
-		WEAK symbol<gentity_s> g_entities{ 0x14550DD90 , 0 };
+		WEAK symbol<gentity_s> g_entities{ 0x14550DD90 , 0 }; // H1(1.4)
 	}
 }

@@ -21,6 +21,8 @@ namespace dvars
 	game::dvar_t* r_fullbright;
 	game::dvar_t* r_chams;
 
+	game::dvar_t* cg_legacyCrashHandling;
+
 	std::string dvar_get_vector_domain(const int components, const game::dvar_limits& domain)
 	{
 		if (domain.vector.min == -FLT_MAX)
@@ -188,7 +190,7 @@ namespace dvars
 	  "cg_drawVersionX",
 	  "cg_drawVersionY",
 	  "cg_drawViewpos",
-	"cg_drawgun",
+	  "cg_drawgun",
 	  "cg_fov",
 	  "cg_fov_default",
 	  "cg_fov_default_thirdperson",
@@ -196,6 +198,7 @@ namespace dvars
 	  "cg_fovExtraCam",
 	  "cg_fovMin",
 	  "cg_fovScale",
+	  "cg_legacyCrashHandling",
 	  "cl_maxpackets",
 	  "cl_maxPing",
 	  "com_introPlayed",
@@ -225,7 +228,7 @@ namespace dvars
 	  "g_log",
 	  "g_logSync",
 	  "g_logTimeStampInSeconds",
-	"timescale",  // Scale time of each frame          ---> "5401"
+	  "timescale",  // Scale time of each frame          ---> "5401"
 	  "g_motd",
 	  "g_scriptMainMenu",
 	  "g_smoothClients",

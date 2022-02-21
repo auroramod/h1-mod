@@ -243,10 +243,10 @@ namespace network
 				utils::hook::call(0x140480E62, &net_compare_address); // H1MP64(1.4)
 
 				// increase cl_maxpackets
-				dvars::override::register_int("cl_maxpackets", 1000, 1, 1000, game::DVAR_FLAG_SAVED);
+				dvars::override::register_int("cl_maxpackets", 1000, 1, 1000, game::DVAR_FLAG_SAVED, true);
 
 				// increase snaps
-				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_FLAG_NONE);
+				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_FLAG_NONE, true);
 
 				// ignore impure client
 				utils::hook::jump(0x140481B58, reinterpret_cast<void*>(0x140481BEE)); // H1MP64(1.4)
@@ -256,10 +256,10 @@ namespace network
 				utils::hook::set<uint8_t>(0x14051345A, 0); // H1MP64(1.4)
 
 				// don't read checksum
-				utils::hook::jump(0x140513389, 0x14051339F);
+				utils::hook::jump(0x140513389, 0x14051339F); // H1MP64(1.4)
 
 				// don't try to reconnect client
-				utils::hook::call(0x140480DFF, reconnect_migratated_client);
+				utils::hook::call(0x140480DFF, reconnect_migratated_client); // H1MP64(1.4)
 				utils::hook::nop(0x140480DDB, 4); // H1MP64(1.4) this crashes when reconnecting for some reason
 
 				// allow server owner to modify net_port before the socket bind
