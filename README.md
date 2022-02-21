@@ -7,8 +7,6 @@
 Proof of concept for an Modern Warfare Remastered client. <br>
 [This project is based on S1x](https://github.com/XLabsProject/s1x-client)
 
-- [h1_full_game 1.4.torrent](https://cdn.discordapp.com/attachments/895679269089448016/934624869826580530/h1_full_files.torrent)
-
 ## Compile from source
 
 - Clone the Git repo. Do NOT download it as ZIP, that won't work.
