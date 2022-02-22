@@ -209,7 +209,7 @@ namespace game
 	WEAK symbol<CmdArgs> sv_cmd_args{ 0, 0x14946BA20 }; // H1(1.4)
 
 
-	WEAK symbol<const char*> command_whitelist{ 0x141079A60, 0x14120C6D0 }; // H1(1.4)
+	WEAK symbol<const char*> command_whitelist{ 0x141079A60, 0x14120C360 }; // H1(1.4)
 
 	WEAK symbol<const char*> g_assetNames{ 0, 0x140BEF280 };
 	WEAK symbol<int> g_poolSize{ 0, 0x140FEADF0 }; // H1(1.4)
