@@ -1,6 +1,6 @@
 # H1-Mod 1.4
 
-- *This project supports only singleplayer as for now*
+- *This project supports only singleplayer for now*
 - ***YOU CAN'T** get in multiplayer, networking development is slow.*
 
 <p align="center">
