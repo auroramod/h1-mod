@@ -1,5 +1,8 @@
 # H1-Mod 1.4
 
+- *This project supports only singleplayer as for now*
+- ***YOU CAN'T** get in multiplayer, networking development is slow.*
+
 <p align="center">
   <img alig src="https://cdn.discordapp.com/attachments/895680402142941194/938488726391242842/splash.png"/>
 </p>
