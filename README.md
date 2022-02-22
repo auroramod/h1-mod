@@ -1,5 +1,8 @@
 # H1-Mod 1.4
 
+- *This project supports only singleplayer for now*
+- ***YOU CAN'T** get in multiplayer, networking development is slow.*
+
 <p align="center">
   <img alig src="https://cdn.discordapp.com/attachments/895680402142941194/938488726391242842/splash.png"/>
 </p>
@@ -20,7 +23,8 @@ Proof of concept for an Modern Warfare Remastered client. <br>
 | `--copy-to=PATH`            | Optional, copy the EXE to a custom folder after build, define the path here if wanted. |
 | `--dev-build`               | Enable development builds of the client. |
 
-<br/>
+## Credits
+Check out [Credits](https://github.com/skkuull/h1-mod/blob/main/credits.md)
 
 ## Disclaimer
 
