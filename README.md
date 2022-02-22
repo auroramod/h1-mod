@@ -20,7 +20,8 @@ Proof of concept for an Modern Warfare Remastered client. <br>
 | `--copy-to=PATH`            | Optional, copy the EXE to a custom folder after build, define the path here if wanted. |
 | `--dev-build`               | Enable development builds of the client. |
 
-<br/>
+## Credits
+Check out [Credits](https://github.com/skkuull/h1-mod/credits.md)
 
 ## Disclaimer
 
