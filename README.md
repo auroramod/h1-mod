@@ -21,7 +21,7 @@ Proof of concept for an Modern Warfare Remastered client. <br>
 | `--dev-build`               | Enable development builds of the client. |
 
 ## Credits
-Check out [Credits](https://github.com/skkuull/h1-mod/credits.md)
+Check out [Credits](https://github.com/skkuull/h1-mod/blob/main/credits.md)
 
 ## Disclaimer
 
