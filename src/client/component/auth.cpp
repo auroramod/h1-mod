@@ -37,7 +37,7 @@ namespace auth
 				return {};
 			}
 
-			return std::string{ info.szHwProfileGuid, sizeof(info.szHwProfileGuid) };
+			return std::string{info.szHwProfileGuid, sizeof(info.szHwProfileGuid)};
 		}
 
 		std::string get_protected_data()
@@ -53,7 +53,7 @@ namespace auth
 			}
 
 			const auto size = std::min(data_out.cbData, 52ul);
-			std::string result{ reinterpret_cast<char*>(data_out.pbData), size };
+			std::string result{reinterpret_cast<char*>(data_out.pbData), size};
 			LocalFree(data_out.pbData);
 
 			return result;
@@ -97,7 +97,7 @@ namespace auth
 				return false;
 			}
 
-			const utils::info_string info_string{ std::string{params[2]} };
+			const utils::info_string info_string{std::string{params[2]}};
 			const auto challenge = info_string.get("challenge");
 
 			connect_string.clear();
@@ -137,7 +137,7 @@ namespace auth
 				return;
 			}
 
-			const utils::info_string info_string{ std::string{params[2]} };
+			const utils::info_string info_string{std::string{params[2]}};
 
 			const auto steam_id = info_string.get("xuid");
 			const auto challenge = info_string.get("challenge");
@@ -221,9 +221,9 @@ namespace auth
 			}
 
 			command::add("guid", []()
-				{
-					printf("Your guid: %llX\n", steam::SteamUser()->GetSteamID().bits);
-				});
+			{
+				printf("Your guid: %llX\n", steam::SteamUser()->GetSteamID().bits);
+			});
 		}
 	};
 }

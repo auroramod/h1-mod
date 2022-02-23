@@ -118,7 +118,7 @@ namespace colors
 			}
 			else if (index == ':')
 			{
-				*color = hsv_to_rgb({ static_cast<uint8_t>((game::Sys_Milliseconds() / 100) % 256), 255, 255 });
+				*color = hsv_to_rgb({static_cast<uint8_t>((game::Sys_Milliseconds() / 100) % 256), 255, 255});
 			}
 			else if (index == ';')
 			{

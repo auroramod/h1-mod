@@ -41,16 +41,16 @@ namespace console
 			const auto count = _vsnprintf_s(buffer, sizeof(buffer), sizeof(buffer), message, *ap);
 
 			if (count < 0) return {};
-			return { buffer, static_cast<size_t>(count) };
+			return {buffer, static_cast<size_t>(count)};
 		}
 
 		void dispatch_message(const int type, const std::string& message)
 		{
 			game_console::print(type, message);
 			messages.access([&message](message_queue& msgs)
-				{
-					msgs.emplace(message);
-				});
+			{
+				msgs.emplace(message);
+			});
 		}
 
 		void append_text(const char* text)
@@ -130,46 +130,46 @@ namespace console
 		void initialize()
 		{
 			this->console_thread_ = utils::thread::create_named_thread("Console", [this]()
+			{
+				if (game::environment::is_dedi() || !utils::flags::has_flag("noconsole"))
 				{
-					if (game::environment::is_dedi() || !utils::flags::has_flag("noconsole"))
-					{
-						game::Sys_ShowConsole();
-					}
+					game::Sys_ShowConsole();
+				}
 
-					if (!game::environment::is_dedi())
-					{
-						// Hide that shit
-						ShowWindow(console::get_window(), SW_MINIMIZE);
-					}
+				if (!game::environment::is_dedi())
+				{
+					// Hide that shit
+					ShowWindow(console::get_window(), SW_MINIMIZE);
+				}
 
+				{
+					messages.access([&](message_queue&)
 					{
-						messages.access([&](message_queue&)
-							{
-								this->console_initialized_ = true;
-							});
-					}
+						this->console_initialized_ = true;
+					});
+				}
 
-					MSG msg;
-					while (!this->terminate_runner_)
+				MSG msg;
+				while (!this->terminate_runner_)
+				{
+					if (PeekMessageA(&msg, nullptr, NULL, NULL, PM_REMOVE))
 					{
-						if (PeekMessageA(&msg, nullptr, NULL, NULL, PM_REMOVE))
+						if (msg.message == WM_QUIT)
 						{
-							if (msg.message == WM_QUIT)
-							{
-								command::execute("quit", false);
-								break;
-							}
+							command::execute("quit", false);
+							break;
+						}
 
-							TranslateMessage(&msg);
-							DispatchMessage(&msg);
-						}
-						else
-						{
-							this->log_messages();
-							std::this_thread::sleep_for(1ms);
-						}
+						TranslateMessage(&msg);
+						DispatchMessage(&msg);
 					}
-				});
+					else
+					{
+						this->log_messages();
+						std::this_thread::sleep_for(1ms);
+					}
+				}
+			});
 		}
 
 		void log_messages()

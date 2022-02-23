@@ -15,7 +15,10 @@ namespace lui
 	public:
 		void post_unpack() override
 		{
-			if (!game::environment::is_mp()) return;
+			if (!game::environment::is_mp())
+			{
+				return;
+			}
 
 			// Don't show create cod account popup
 			//utils::hook::set<uint32_t>(0x14017C957, 0); // H1(1.4)
@@ -26,33 +29,33 @@ namespace lui
 //#endif
 
 			command::add("lui_open", [](const command::params& params)
+			{
+				if (params.size() <= 1)
 				{
-					if (params.size() <= 1)
-					{
-						console::info("usage: lui_open <name>\n");
-						return;
-					}
+					console::info("usage: lui_open <name>\n");
+					return;
+				}
 
-					game::LUI_OpenMenu(0, params[1], 0, 0, 0);
-				});
+				game::LUI_OpenMenu(0, params[1], 0, 0, 0);
+			});
 
 			command::add("lui_open_popup", [](const command::params& params)
+			{
+				if (params.size() <= 1)
 				{
-					if (params.size() <= 1)
-					{
-						console::info("usage: lui_open_popup <name>\n");
-						return;
-					}
+					console::info("usage: lui_open_popup <name>\n");
+					return;
+				}
 
-					game::LUI_OpenMenu(0, params[1], 1, 0, 0);
-				});
+				game::LUI_OpenMenu(0, params[1], 1, 0, 0);
+			});
 
 			command::add("runMenuScript", [](const command::params& params)
-				{
-					const auto args_str = params.join(1);
-					const auto* args = args_str.data();
-					game::UI_RunMenuScript(0, &args);
-				});
+			{
+				const auto args_str = params.join(1);
+				const auto* args = args_str.data();
+				game::UI_RunMenuScript(0, &args);
+			});
 		}
 	};
 }

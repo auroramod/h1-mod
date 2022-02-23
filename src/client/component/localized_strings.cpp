@@ -18,24 +18,24 @@ namespace localized_strings
 		const char* seh_string_ed_get_string(const char* reference)
 		{
 			return localized_overrides.access<const char*>([&](const localized_map& map)
+			{
+				const auto entry = map.find(reference);
+				if (entry != map.end())
 				{
-					const auto entry = map.find(reference);
-					if (entry != map.end())
-					{
-						return utils::string::va("%s", entry->second.data());
-					}
+					return utils::string::va("%s", entry->second.data());
+				}
 
-					return seh_string_ed_get_string_hook.invoke<const char*>(reference);
-				});
+				return seh_string_ed_get_string_hook.invoke<const char*>(reference);
+			});
 		}
 	}
 
 	void override(const std::string& key, const std::string& value)
 	{
 		localized_overrides.access([&](localized_map& map)
-			{
-				map[key] = value;
-			});
+		{
+			map[key] = value;
+		});
 	}
 
 	class component final : public component_interface

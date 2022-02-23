@@ -58,8 +58,8 @@ namespace game_console
 		std::string fixed_input{};
 		std::vector<std::string> matches{};
 
-		float color_white[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		float color_title[4] = { 0.9f, 0.9f, 0.5f, 1.0f };
+		float color_white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+		float color_title[4] = {0.9f, 0.9f, 0.5f, 1.0f};
 
 		void clear()
 		{
@@ -73,18 +73,18 @@ namespace game_console
 		void print_internal(const std::string& data)
 		{
 			con.output.access([&](output_queue& output)
+			{
+				if (con.visible_line_count > 0
+					&& con.display_line_offset == (output.size() - con.visible_line_count))
 				{
-					if (con.visible_line_count > 0
-						&& con.display_line_offset == (output.size() - con.visible_line_count))
-					{
-						con.display_line_offset++;
-					}
-					output.push_back(data);
-					if (output.size() > 512)
-					{
-						output.pop_front();
-					}
-				});
+					con.display_line_offset++;
+				}
+				output.push_back(data);
+				if (output.size() > 512)
+				{
+					output.pop_front();
+				}
+			});
 		}
 
 		void toggle_console()
@@ -243,14 +243,12 @@ namespace game_console
 			con.globals.left_x = con.globals.x;
 			con.globals.auto_complete_choice[0] = 0;
 
-
 			game::R_AddCmdDrawTextWithCursor(con.buffer, 0x7FFFFFFF, console_font, 18, con.globals.x,
 				con.globals.y + con.globals.font_height, 1.0f, 1.0f, 0, color_white, 0,
 				con.cursor, '|');
 
 			game::R_AddCmdDrawText(con.buffer, 0x7FFF, console_font, con.globals.x,
 				con.globals.y + con.globals.font_height, 1.0f, 1.0f, 0.0f, color_white, 0);
-
 
 			// check if using a prefixed '/' or not
 			const auto input = con.buffer[1] && (con.buffer[0] == '/' || con.buffer[0] == '\\')
@@ -336,8 +334,6 @@ namespace game_console
 			}
 		}
 
-
-
 		void draw_output_scrollbar(const float x, float y, const float width, const float height, output_queue& output)
 		{
 			const auto _x = (x + width) - 10.0f;
@@ -383,21 +379,21 @@ namespace game_console
 		void draw_output_window()
 		{
 			con.output.access([](output_queue& output)
-				{
-					draw_box(con.screen_min[0], con.screen_min[1] + 32.0f, con.screen_max[0] - con.screen_min[0],
-						(con.screen_max[1] - con.screen_min[1]) - 32.0f, dvars::con_outputWindowColor->current.vector);
+			{
+				draw_box(con.screen_min[0], con.screen_min[1] + 32.0f, con.screen_max[0] - con.screen_min[0],
+					(con.screen_max[1] - con.screen_min[1]) - 32.0f, dvars::con_outputWindowColor->current.vector);
 
-					const auto x = con.screen_min[0] + 6.0f;
-					const auto y = (con.screen_min[1] + 32.0f) + 6.0f;
-					const auto width = (con.screen_max[0] - con.screen_min[0]) - 12.0f;
-					const auto height = ((con.screen_max[1] - con.screen_min[1]) - 32.0f) - 12.0f;
+				const auto x = con.screen_min[0] + 6.0f;
+				const auto y = (con.screen_min[1] + 32.0f) + 6.0f;
+				const auto width = (con.screen_max[0] - con.screen_min[0]) - 12.0f;
+				const auto height = ((con.screen_max[1] - con.screen_min[1]) - 32.0f) - 12.0f;
 
-					game::R_AddCmdDrawText("H1-Mod 1.4", 0x7FFFFFFF, console_font, x,
-						((height - 16.0f) + y) + console_font->pixelHeight, 1.0f, 1.0f, 0.0f, color_title, 0);
+				game::R_AddCmdDrawText("H1-Mod 1.4", 0x7FFFFFFF, console_font, x,
+					((height - 16.0f) + y) + console_font->pixelHeight, 1.0f, 1.0f, 0.0f, color_title, 0);
 
-					draw_output_scrollbar(x, y, width, height, output);
-					draw_output_text(x, y, output);
-				});
+				draw_output_scrollbar(x, y, width, height, output);
+				draw_output_text(x, y, output);
+			});
 		}
 
 		void draw_console()
@@ -423,7 +419,7 @@ namespace game_console
 
 	void print_internal(const char* fmt, ...)
 	{
-		char va_buffer[0x200] = { 0 };
+		char va_buffer[0x200] = {0};
 
 		va_list ap;
 		va_start(ap, fmt);
@@ -516,9 +512,9 @@ namespace game_console
 				con.line_count = 0;
 				con.display_line_offset = 0;
 				con.output.access([](output_queue& output)
-					{
-						output.clear();
-					});
+				{
+					output.clear();
+				});
 				history_index = -1;
 				history.clear();
 
@@ -652,23 +648,23 @@ namespace game_console
 				if (key == game::keyNum_t::K_MWHEELUP || key == game::keyNum_t::K_PGUP)
 				{
 					con.output.access([](output_queue& output)
+					{
+						if (output.size() > con.visible_line_count && con.display_line_offset > 0)
 						{
-							if (output.size() > con.visible_line_count && con.display_line_offset > 0)
-							{
-								con.display_line_offset--;
-							}
-						});
+							con.display_line_offset--;
+						}
+					});
 				}
 				else if (key == game::keyNum_t::K_MWHEELDOWN || key == game::keyNum_t::K_PGDN)
 				{
 					con.output.access([](output_queue& output)
+					{
+						if (output.size() > con.visible_line_count
+							&& con.display_line_offset < (output.size() - con.visible_line_count))
 						{
-							if (output.size() > con.visible_line_count
-								&& con.display_line_offset < (output.size() - con.visible_line_count))
-							{
-								con.display_line_offset++;
-							}
-						});
+							con.display_line_offset++;
+						}
+					});
 				}
 
 				if (key == game::keyNum_t::K_ENTER)
@@ -746,17 +742,17 @@ namespace game_console
 
 			// add clear command
 			command::add("clear", [&]()
+			{
+				clear();
+				con.line_count = 0;
+				con.display_line_offset = 0;
+				con.output.access([](output_queue& output)
 				{
-					clear();
-					con.line_count = 0;
-					con.display_line_offset = 0;
-					con.output.access([](output_queue& output)
-						{
-							output.clear();
-						});
-					history_index = -1;
-					history.clear();
+					output.clear();
 				});
+				history_index = -1;
+				history.clear();
+			});
 
 			// add our dvars
 			dvars::con_inputBoxColor = dvars::register_vec4("con_inputBoxColor", 0.2f, 0.2f, 0.2f, 0.9f, 0.0f, 1.0f,

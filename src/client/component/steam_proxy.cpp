@@ -132,7 +132,7 @@ namespace steam_proxy
 
 			this->client_utils_.invoke<void>("SetAppIDForCurrentPipe", app_id, false);
 
-			char our_directory[MAX_PATH] = { 0 };
+			char our_directory[MAX_PATH] = {0};
 			GetCurrentDirectoryA(sizeof(our_directory), our_directory);
 
 			const auto path = runner_file.get_extracted_file();
@@ -171,7 +171,7 @@ namespace steam_proxy
 					this->steam_pipe_ = nullptr;
 					this->global_user_ = nullptr;
 
-					this->steam_client_module_ = utils::nt::library{ nullptr };
+					this->steam_client_module_ = utils::nt::library{nullptr};
 
 					return scheduler::cond_end;
 				});

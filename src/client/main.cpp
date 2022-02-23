@@ -14,7 +14,6 @@ DECLSPEC_NORETURN void WINAPI exit_hook(const int code)
 	exit(code);
 }
 
-
 BOOL WINAPI system_parameters_info_a(const UINT uiAction, const UINT uiParam, const PVOID pvParam, const UINT fWinIni)
 {
 	component_loader::post_unpack();

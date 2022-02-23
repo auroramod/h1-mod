@@ -137,15 +137,15 @@ namespace map_rotation
 		void trigger_map_rotation()
 		{
 			scheduler::schedule([]()
+			{
+				if (game::CL_IsCgameInitialized())
 				{
-					if (game::CL_IsCgameInitialized())
-					{
-						return scheduler::cond_continue;
-					}
+					return scheduler::cond_continue;
+				}
 
-					command::execute("map_rotate", false);
-					return scheduler::cond_end;
-				}, scheduler::pipeline::main, 1s);
+				command::execute("map_rotate", false);
+				return scheduler::cond_end;
+			}, scheduler::pipeline::main, 1s);
 		}
 
 	}
@@ -161,11 +161,11 @@ namespace map_rotation
 			}
 
 			scheduler::once([]()
-				{
-					dvars::register_string("sv_mapRotation", "", game::DVAR_FLAG_NONE, true);
-					dvars::register_string("sv_mapRotationCurrent", "", game::DVAR_FLAG_NONE, true);
-					dvars::register_string("sv_autoPriority", "", game::DVAR_FLAG_NONE, true);
-				}, scheduler::pipeline::main);
+			{
+				dvars::register_string("sv_mapRotation", "", game::DVAR_FLAG_NONE, true);
+				dvars::register_string("sv_mapRotationCurrent", "", game::DVAR_FLAG_NONE, true);
+				dvars::register_string("sv_autoPriority", "", game::DVAR_FLAG_NONE, true);
+			}, scheduler::pipeline::main);
 
 			command::add("map_rotate", &perform_map_rotation);
 

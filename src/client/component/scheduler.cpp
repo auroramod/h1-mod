@@ -28,9 +28,9 @@ namespace scheduler
 			void add(task&& task)
 			{
 				new_callbacks_.access([&task](task_list& tasks)
-					{
-						tasks.emplace_back(std::move(task));
-					});
+				{
+					tasks.emplace_back(std::move(task));
+				});
 			}
 
 			void execute()
@@ -72,13 +72,13 @@ namespace scheduler
 			void merge_callbacks()
 			{
 				callbacks_.access([&](task_list& tasks)
+				{
+					new_callbacks_.access([&](task_list& new_tasks)
 					{
-						new_callbacks_.access([&](task_list& new_tasks)
-							{
-								tasks.insert(tasks.end(), std::move_iterator<task_list::iterator>(new_tasks.begin()), std::move_iterator<task_list::iterator>(new_tasks.end()));
-								new_tasks = {};
-							});
+						tasks.insert(tasks.end(), std::move_iterator<task_list::iterator>(new_tasks.begin()), std::move_iterator<task_list::iterator>(new_tasks.end()));
+						new_tasks = {};
 					});
+				});
 			}
 		};
 
@@ -131,36 +131,36 @@ namespace scheduler
 		const std::chrono::milliseconds delay)
 	{
 		schedule([callback]()
-			{
-				callback();
-				return cond_continue;
-			}, type, delay);
+		{
+			callback();
+			return cond_continue;
+		}, type, delay);
 	}
 
 	void once(const std::function<void()>& callback, const pipeline type,
 		const std::chrono::milliseconds delay)
 	{
 		schedule([callback]()
-			{
-				callback();
-				return cond_end;
-			}, type, delay);
+		{
+			callback();
+			return cond_end;
+		}, type, delay);
 	}
 
 	void on_game_initialized(const std::function<void()>& callback, const pipeline type,
 		const std::chrono::milliseconds delay)
 	{
 		schedule([=]()
+		{
+			const auto dw_init = game::environment::is_sp() ? true : game::Live_SyncOnlineDataFlags(0) == 0;
+			if (dw_init && game::Sys_IsDatabaseReady2())
 			{
-				const auto dw_init = game::environment::is_sp() ? true : game::Live_SyncOnlineDataFlags(0) == 0;
-				if (dw_init && game::Sys_IsDatabaseReady2())
-				{
-					once(callback, type, delay);
-					return cond_end;
-				}
+				once(callback, type, delay);
+				return cond_end;
+			}
 
-				return cond_continue;
-			}, pipeline::main);
+			return cond_continue;
+		}, pipeline::main);
 	}
 
 	class component final : public component_interface
@@ -169,22 +169,20 @@ namespace scheduler
 		void post_start() override
 		{
 			thread = utils::thread::create_named_thread("Async Scheduler", []()
+			{
+				while (!kill)
 				{
-					while (!kill)
-					{
-						execute(pipeline::async);
-						std::this_thread::sleep_for(10ms);
-					}
-				});
+					execute(pipeline::async);
+					std::this_thread::sleep_for(10ms);
+				}
+			});
 		}
 
 		void post_unpack() override
 		{
-
 			r_end_frame_hook.create(SELECT_VALUE(0x1404F7310, 0x1405FE470), scheduler::r_end_frame_stub); // H1(1.4)
 			g_run_frame_hook.create(SELECT_VALUE(0x1402772D0, 0x1402772D0), scheduler::server_frame_stub); // H1(1.4)
 			main_frame_hook.create(SELECT_VALUE(0x1401CE8D0, 0x1401CE8D0), scheduler::main_frame_stub); // H1(1.4)
-
 		}
 
 		void pre_destroy() override

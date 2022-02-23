@@ -240,10 +240,10 @@ namespace command
 	void enum_assets(const game::XAssetType type, const std::function<void(game::XAssetHeader)>& callback, const bool includeOverride)
 	{
 		game::DB_EnumXAssets_Internal(type, static_cast<void(*)(game::XAssetHeader, void*)>([](game::XAssetHeader header, void* data)
-			{
-				const auto& cb = *static_cast<const std::function<void(game::XAssetHeader)>*>(data);
-				cb(header);
-			}), &callback, includeOverride);
+		{
+			const auto& cb = *static_cast<const std::function<void(game::XAssetHeader)>*>(data);
+			cb(header);
+		}), &callback, includeOverride);
 	}
 
 	class component final : public component_interface
@@ -261,6 +261,7 @@ namespace command
 
 				add_commands_mp();
 			}
+
 			add_commands_generic();
 		}
 
@@ -270,9 +271,9 @@ namespace command
 			add("quit", game::Com_Quit_f);
 			//add("quit_hard", utils::nt::raise_hard_exception); /* this command delivers you to a windows blue screen, its quit hard from windows xD */
 			add("crash", []()
-				{
-					*reinterpret_cast<int*>(1) = 0;
-				});
+			{
+				*reinterpret_cast<int*>(1) = 0;
+			});
 
 			/*add("consoleList", [](const params& params)
 				{
@@ -298,165 +299,164 @@ namespace command
 				});*/
 
 			add("commandDump", [](const params& argument)
+			{
+				console::info("================================ COMMAND DUMP =====================================\n");
+				game::cmd_function_s* cmd = (*game::cmd_functions);
+				std::string filename;
+				if (argument.size() == 2)
 				{
-					console::info("================================ COMMAND DUMP =====================================\n");
-					game::cmd_function_s* cmd = (*game::cmd_functions);
-					std::string filename;
-					if (argument.size() == 2)
+					filename = "h1-mod/";
+					filename.append(argument[1]);
+					if (!filename.ends_with(".txt"))
 					{
-						filename = "h1-mod/";
-						filename.append(argument[1]);
-						if (!filename.ends_with(".txt"))
-						{
-							filename.append(".txt");
-						}
+						filename.append(".txt");
 					}
-					int i = 0;
-					while (cmd)
-					{
-						if (cmd->name)
-						{
-							if (!filename.empty())
-							{
-								const auto line = std::format("{}\r\n", cmd->name);
-								utils::io::write_file(filename, line, i != 0);
-							}
-							console::info("%s\n", cmd->name);
-							i++;
-						}
-						cmd = cmd->next;
-					}
-					console::info("\n%i commands\n", i);
-					console::info("================================ END COMMAND DUMP =================================\n");
-				});
-
-			/*
-			add("listassetpool", [](const params& params)
+				}
+				int i = 0;
+				while (cmd)
 				{
-					if (params.size() < 2)
+					if (cmd->name)
 					{
-						console::info("listassetpool <poolnumber> [filter]: list all the assets in the specified pool\n");
-
-						for (auto i = 0; i < game::XAssetType::ASSET_TYPE_COUNT; i++)
+						if (!filename.empty())
 						{
-							console::info("%d %s\n", i, game::g_assetNames[i]);
+							const auto line = std::format("{}\r\n", cmd->name);
+							utils::io::write_file(filename, line, i != 0);
 						}
+						console::info("%s\n", cmd->name);
+						i++;
 					}
-					else
-					{
-						const auto type = static_cast<game::XAssetType>(atoi(params.get(1)));
+					cmd = cmd->next;
+				}
+				console::info("\n%i commands\n", i);
+				console::info("================================ END COMMAND DUMP =================================\n");
+			});
 
-						if (type < 0 || type >= game::XAssetType::ASSET_TYPE_COUNT)
+			/*add("listassetpool", [](const params& params)
+			{
+				if (params.size() < 2)
+				{
+					console::info("listassetpool <poolnumber> [filter]: list all the assets in the specified pool\n");
+
+					for (auto i = 0; i < game::XAssetType::ASSET_TYPE_COUNT; i++)
+					{
+						console::info("%d %s\n", i, game::g_assetNames[i]);
+					}
+				}
+				else
+				{
+					const auto type = static_cast<game::XAssetType>(atoi(params.get(1)));
+
+					if (type < 0 || type >= game::XAssetType::ASSET_TYPE_COUNT)
+					{
+						console::error("Invalid pool passed must be between [%d, %d]\n", 0, game::XAssetType::ASSET_TYPE_COUNT - 1);
+						return;
+					}
+
+					console::info("Listing assets in pool %s\n", game::g_assetNames[type]);
+
+					const std::string filter = params.get(2);
+					enum_assets(type, [type, filter](const game::XAssetHeader header)
+					{
+						const auto asset = game::XAsset{type, header};
+						const auto* const asset_name = game::DB_GetXAssetName(&asset);
+						//const auto entry = game::DB_FindXAssetEntry(type, asset_name);
+						//TODO: display which zone the asset is from
+
+						if (!filter.empty() && !game_console::match_compare(filter, asset_name, false))
 						{
-							console::error("Invalid pool passed must be between [%d, %d]\n", 0, game::XAssetType::ASSET_TYPE_COUNT - 1);
 							return;
 						}
 
-						console::info("Listing assets in pool %s\n", game::g_assetNames[type]);
-
-						const std::string filter = params.get(2);
-						enum_assets(type, [type, filter](const game::XAssetHeader header)
-							{
-								const auto asset = game::XAsset{ type, header };
-								const auto* const asset_name = game::DB_GetXAssetName(&asset);
-								//const auto entry = game::DB_FindXAssetEntry(type, asset_name);
-								//TODO: display which zone the asset is from
-
-								if (!filter.empty() && !game_console::match_compare(filter, asset_name, false))
-								{
-									return;
-								}
-
-								console::info("%s\n", asset_name);
-							}, true);
-					}
-				});
+						console::info("%s\n", asset_name);
+					}, true);
+				}
+			});
 
 			add("vstr", [](const params& params)
+			{
+				if (params.size() < 2)
 				{
-					if (params.size() < 2)
-					{
-						console::info("vstr <variablename> : execute a variable command\n");
-						return;
-					}
+					console::info("vstr <variablename> : execute a variable command\n");
+					return;
+				}
 
-					const auto* dvarName = params.get(1);
-					const auto* dvar = game::Dvar_FindVar(dvarName);
+				const auto* dvarName = params.get(1);
+				const auto* dvar = game::Dvar_FindVar(dvarName);
 
-					if (dvar == nullptr)
-					{
-						console::info("%s doesn't exist\n", dvarName);
-						return;
-					}
+				if (dvar == nullptr)
+				{
+					console::info("%s doesn't exist\n", dvarName);
+					return;
+				}
 
-					if (dvar->type != game::dvar_type::string
-						&& dvar->type != game::dvar_type::enumeration)
-					{
-						console::info("%s is not a string-based dvar\n", dvar->hash);
-						return;
-					}
+				if (dvar->type != game::dvar_type::string
+					&& dvar->type != game::dvar_type::enumeration)
+				{
+					console::info("%s is not a string-based dvar\n", dvar->hash);
+					return;
+				}
 
-					execute(dvar->current.string);
-				});*/
+				execute(dvar->current.string);
+			});*/
 		}
 
 		static void add_commands_sp()
 		{
 			add("god", []()
+			{
+				if (!game::SV_Loaded())
 				{
-					if (!game::SV_Loaded())
-					{
-						return;
-					}
+					return;
+				}
 
-					game::sp::g_entities[0].flags ^= 1;
-					game::CG_GameMessage(0, utils::string::va("godmode %s",
-						game::sp::g_entities[0].flags & 1
-						? "^2on"
-						: "^1off"));
-				});
+				game::sp::g_entities[0].flags ^= 1;
+				game::CG_GameMessage(0, utils::string::va("godmode %s",
+					game::sp::g_entities[0].flags & 1
+					? "^2on"
+					: "^1off"));
+			});
 
 			add("demigod", []()
+			{
+				if (!game::SV_Loaded())
 				{
-					if (!game::SV_Loaded())
-					{
-						return;
-					}
+					return;
+				}
 
-					game::sp::g_entities[0].flags ^= 2;
-					game::CG_GameMessage(0, utils::string::va("demigod mode %s",
-						game::sp::g_entities[0].flags & 2
-						? "^2on"
-						: "^1off"));
-				});
+				game::sp::g_entities[0].flags ^= 2;
+				game::CG_GameMessage(0, utils::string::va("demigod mode %s",
+					game::sp::g_entities[0].flags & 2
+					? "^2on"
+					: "^1off"));
+			});
 
 			add("notarget", []()
+			{
+				if (!game::SV_Loaded())
 				{
-					if (!game::SV_Loaded())
-					{
-						return;
-					}
+					return;
+				}
 
-					game::sp::g_entities[0].flags ^= 4;
-					game::CG_GameMessage(0, utils::string::va("notarget %s",
-						game::sp::g_entities[0].flags & 4
-						? "^2on"
-						: "^1off"));
-				});
+				game::sp::g_entities[0].flags ^= 4;
+				game::CG_GameMessage(0, utils::string::va("notarget %s",
+					game::sp::g_entities[0].flags & 4
+					? "^2on"
+					: "^1off"));
+			});
 
 			add("noclip", []()
+			{
+				if (!game::SV_Loaded())
 				{
-					if (!game::SV_Loaded())
-					{
-						return;
-					}
+					return;
+				}
 
-					game::sp::g_entities[0].client->flags ^= 1;
-					game::CG_GameMessage(0, utils::string::va("noclip %s",
-						game::sp::g_entities[0].client->flags & 1
-						? "^2on"
-						: "^1off"));
-				});
+				game::sp::g_entities[0].client->flags ^= 1;
+				game::CG_GameMessage(0, utils::string::va("noclip %s",
+					game::sp::g_entities[0].client->flags & 1
+					? "^2on"
+					: "^1off"));
+			});
 
 			add("ufo", []()
 				{
@@ -473,50 +473,50 @@ namespace command
 				});
 
 			add("give", [](const params& params)
+			{
+				if (!game::SV_Loaded())
 				{
-					if (!game::SV_Loaded())
-					{
-						return;
-					}
+					return;
+				}
 
-					if (params.size() < 2)
-					{
-						game::CG_GameMessage(0, "You did not specify a weapon name");
-						return;
-					}
+				if (params.size() < 2)
+				{
+					game::CG_GameMessage(0, "You did not specify a weapon name");
+					return;
+				}
 
-					auto ps = game::SV_GetPlayerstateForClientNum(0);
-					const auto wp = game::G_GetWeaponForName(params.get(1));
-					if (wp)
+				auto ps = game::SV_GetPlayerstateForClientNum(0);
+				const auto wp = game::G_GetWeaponForName(params.get(1));
+				if (wp)
+				{
+					if (game::G_GivePlayerWeapon(ps, wp, 0, 0, 0, 0, 0, 0))
 					{
-						if (game::G_GivePlayerWeapon(ps, wp, 0, 0, 0, 0, 0, 0))
-						{
-							game::G_InitializeAmmo(ps, wp, 0);
-							game::G_SelectWeapon(0, wp);
-						}
+						game::G_InitializeAmmo(ps, wp, 0);
+						game::G_SelectWeapon(0, wp);
 					}
-				});
+				}
+			});
 
 			add("take", [](const params& params)
+			{
+				if (!game::SV_Loaded())
 				{
-					if (!game::SV_Loaded())
-					{
-						return;
-					}
+					return;
+				}
 
-					if (params.size() < 2)
-					{
-						game::CG_GameMessage(0, "You did not specify a weapon name");
-						return;
-					}
+				if (params.size() < 2)
+				{
+					game::CG_GameMessage(0, "You did not specify a weapon name");
+					return;
+				}
 
-					auto ps = game::SV_GetPlayerstateForClientNum(0);
-					const auto wp = game::G_GetWeaponForName(params.get(1));
-					if (wp)
-					{
-						game::G_TakePlayerWeapon(ps, wp);
-					}
-				});
+				auto ps = game::SV_GetPlayerstateForClientNum(0);
+				const auto wp = game::G_GetWeaponForName(params.get(1));
+				if (wp)
+				{
+					game::G_TakePlayerWeapon(ps, wp);
+				}
+			});
 		}
 
 		static void add_commands_mp()
@@ -524,141 +524,141 @@ namespace command
 			//client_command_hook.create(0x1402E98F0, &client_command);
 
 			/*add_sv("god", [](const int client_num, const params_sv&)
+			{
+				if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
 				{
-					if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
-					{
-						game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-							"f \"Cheats are not enabled on this server\"");
-						return;
-					}
-
-					game::mp::g_entities[client_num].flags ^= 1;
 					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-						utils::string::va("f \"godmode %s\"",
-							game::mp::g_entities[client_num].flags & 1
-							? "^2on"
-							: "^1off"));
-				});
+						"f \"Cheats are not enabled on this server\"");
+					return;
+				}
+
+				game::mp::g_entities[client_num].flags ^= 1;
+				game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+					utils::string::va("f \"godmode %s\"",
+					game::mp::g_entities[client_num].flags & 1
+					? "^2on"
+					: "^1off"));
+			});
 
 			add_sv("demigod", [](const int client_num, const params_sv&)
+			{
+				if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
 				{
-					if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
-					{
-						game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-							"f \"Cheats are not enabled on this server\"");
-						return;
-					}
-
-					game::mp::g_entities[client_num].flags ^= 2;
 					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-						utils::string::va("f \"demigod mode %s\"",
-							game::mp::g_entities[client_num].flags & 2
-							? "^2on"
-							: "^1off"));
-				});
+						"f \"Cheats are not enabled on this server\"");
+					return;
+				}
+
+				game::mp::g_entities[client_num].flags ^= 2;
+				game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+					utils::string::va("f \"demigod mode %s\"",
+					game::mp::g_entities[client_num].flags & 2
+					? "^2on"
+					: "^1off"));
+			});
 
 			add_sv("notarget", [](const int client_num, const params_sv&)
+			{
+				if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
 				{
-					if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
-					{
-						game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-							"f \"Cheats are not enabled on this server\"");
-						return;
-					}
-
-					game::mp::g_entities[client_num].flags ^= 4;
 					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-						utils::string::va("f \"notarget %s\"",
-							game::mp::g_entities[client_num].flags & 4
-							? "^2on"
-							: "^1off"));
-				});
+						"f \"Cheats are not enabled on this server\"");
+					return;
+				}
+
+				game::mp::g_entities[client_num].flags ^= 4;
+				game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+					utils::string::va("f \"notarget %s\"",
+					game::mp::g_entities[client_num].flags & 4
+					? "^2on"
+					: "^1off"));
+			});
 
 			add_sv("noclip", [](const int client_num, const params_sv&)
+			{
+				if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
 				{
-					if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
-					{
-						game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-							"f \"Cheats are not enabled on this server\"");
-						return;
-					}
-
-					game::mp::g_entities[client_num].client->flags ^= 1;
 					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-						utils::string::va("f \"noclip %s\"",
-							game::mp::g_entities[client_num].client->flags & 1
-							? "^2on"
-							: "^1off"));
-				});
+						"f \"Cheats are not enabled on this server\"");
+					return;
+				}
+
+				game::mp::g_entities[client_num].client->flags ^= 1;
+				game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+					utils::string::va("f \"noclip %s\"",
+					game::mp::g_entities[client_num].client->flags & 1
+					? "^2on"
+					: "^1off"));
+			});
 
 			add_sv("ufo", [](const int client_num, const params_sv&)
+			{
+				if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
 				{
-					if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
-					{
-						game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-							"f \"Cheats are not enabled on this server\"");
-						return;
-					}
-
-					game::mp::g_entities[client_num].client->flags ^= 2;
 					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-						utils::string::va("f \"ufo %s\"",
-							game::mp::g_entities[client_num].client->flags & 2
-							? "^2on"
-							: "^1off"));
-				});
+						"f \"Cheats are not enabled on this server\"");
+					return;
+				}
+
+				game::mp::g_entities[client_num].client->flags ^= 2;
+				game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+					utils::string::va("f \"ufo %s\"",
+					game::mp::g_entities[client_num].client->flags & 2
+					? "^2on"
+					: "^1off"));
+			});
 
 			add_sv("give", [](const int client_num, const params_sv& params)
+			{
+				if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
 				{
-					if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
-					{
-						game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-							"f \"Cheats are not enabled on this server\"");
-						return;
-					}
+					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+						"f \"Cheats are not enabled on this server\"");
+					return;
+				}
 
-					if (params.size() < 2)
-					{
-						game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-							"f \"You did not specify a weapon name\"");
-						return;
-					}
+				if (params.size() < 2)
+				{
+					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+						"f \"You did not specify a weapon name\"");
+					return;
+				}
 
-					auto ps = game::SV_GetPlayerstateForClientNum(client_num);
-					const auto wp = game::G_GetWeaponForName(params.get(1));
-					if (wp)
+				auto ps = game::SV_GetPlayerstateForClientNum(client_num);
+				const auto wp = game::G_GetWeaponForName(params.get(1));
+				if (wp)
+				{
+					if (game::G_GivePlayerWeapon(ps, wp, 0, 0, 0, 0, 0, 0))
 					{
-						if (game::G_GivePlayerWeapon(ps, wp, 0, 0, 0, 0, 0, 0))
-						{
-							game::G_InitializeAmmo(ps, wp, 0);
-							game::G_SelectWeapon(client_num, wp);
-						}
+						game::G_InitializeAmmo(ps, wp, 0);
+						game::G_SelectWeapon(client_num, wp);
 					}
-				});
+				}
+			});
 
 			add_sv("take", [](const int client_num, const params_sv& params)
+			{
+				if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
 				{
-					if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
-					{
-						game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-							"f \"Cheats are not enabled on this server\"");
-						return;
-					}
+					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+						"f \"Cheats are not enabled on this server\"");
+					return;
+				}
 
-					if (params.size() < 2)
-					{
-						game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
-							"f \"You did not specify a weapon name\"");
-						return;
-					}
+				if (params.size() < 2)
+				{
+					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+						"f \"You did not specify a weapon name\"");
+					return;
+				}
 
-					auto ps = game::SV_GetPlayerstateForClientNum(client_num);
-					const auto wp = game::G_GetWeaponForName(params.get(1));
-					if (wp)
-					{
-						game::G_TakePlayerWeapon(ps, wp);
-					}
-				}); */
+				auto ps = game::SV_GetPlayerstateForClientNum(client_num);
+				const auto wp = game::G_GetWeaponForName(params.get(1));
+				if (wp)
+				{
+					game::G_TakePlayerWeapon(ps, wp);
+				}
+			});*/
 		}
 	};
 }

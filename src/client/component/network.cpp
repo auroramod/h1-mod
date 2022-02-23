@@ -276,10 +276,10 @@ namespace network
 				// ignore built in "print" oob command and add in our own
 				utils::hook::set<uint8_t>(0x14025280E, 0xEB); // H1MP64(1.4)
 				on("print", [](const game::netadr_s&, const std::string_view& data)
-					{
-						const std::string message{ data };
-						console::info(message.data());
-					});
+				{
+					const std::string message{data};
+					console::info(message.data());
+				});
 			}
 		}
 	};

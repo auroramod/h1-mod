@@ -12,12 +12,12 @@ namespace fps
 {
 	namespace
 	{
-		float fps_color_good[4] = { 0.6f, 1.0f, 0.0f, 1.0f };
-		float fps_color_ok[4] = { 1.0f, 0.7f, 0.3f, 1.0f };
-		float fps_color_bad[4] = { 1.0f, 0.3f, 0.3f, 1.0f };
+		float fps_color_good[4] = {0.6f, 1.0f, 0.0f, 1.0f};
+		float fps_color_ok[4] = {1.0f, 0.7f, 0.3f, 1.0f};
+		float fps_color_bad[4] = {1.0f, 0.3f, 0.3f, 1.0f};
 
-		//float origin_color[4] = { 1.0f, 0.67f, 0.13f, 1.0f };
-		float ping_color[4] = { 1.0f, 1.0f, 1.0f, 0.65f };
+		//float origin_color[4] = {1.0f, 0.67f, 0.13f, 1.0f};
+		float ping_color[4] = {1.0f, 1.0f, 1.0f, 0.65f};
 
 		struct cg_perf_data
 		{
@@ -36,7 +36,7 @@ namespace fps
 			std::int32_t max{};
 		};
 
-		cg_perf_data cg_perf = cg_perf_data();
+		cg_perf_data cg_perf{};
 
 		void perf_calc_fps(cg_perf_data* data, const std::int32_t value)
 		{

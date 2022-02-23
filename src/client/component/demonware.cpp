@@ -29,15 +29,15 @@ namespace demonware
 		tcp_server* find_server(const SOCKET socket)
 		{
 			return socket_map.access<tcp_server*>([&](const std::unordered_map<SOCKET, tcp_server*>& map) -> tcp_server*
+			{
+				const auto entry = map.find(socket);
+				if (entry == map.end())
 				{
-					const auto entry = map.find(socket);
-					if (entry == map.end())
-					{
-						return nullptr;
-					}
+					return nullptr;
+				}
 
-					return entry->second;
-				});
+				return entry->second;
+			});
 		}
 
 		bool socket_link(const SOCKET socket, const uint32_t address)
@@ -49,9 +49,9 @@ namespace demonware
 			}
 
 			socket_map.access([&](std::unordered_map<SOCKET, tcp_server*>& map)
-				{
-					map[socket] = server;
-				});
+			{
+				map[socket] = server;
+			});
 
 			return true;
 		}
@@ -59,47 +59,47 @@ namespace demonware
 		void socket_unlink(const SOCKET socket)
 		{
 			socket_map.access([&](std::unordered_map<SOCKET, tcp_server*>& map)
+			{
+				const auto entry = map.find(socket);
+				if (entry != map.end())
 				{
-					const auto entry = map.find(socket);
-					if (entry != map.end())
-					{
-						map.erase(entry);
-					}
-				});
+					map.erase(entry);
+				}
+			});
 		}
 
 		bool is_socket_blocking(const SOCKET socket, const bool def)
 		{
 			return blocking_sockets.access<bool>([&](std::unordered_map<SOCKET, bool>& map)
+			{
+				const auto entry = map.find(socket);
+				if (entry == map.end())
 				{
-					const auto entry = map.find(socket);
-					if (entry == map.end())
-					{
-						return def;
-					}
+					return def;
+				}
 
-					return entry->second;
-				});
+				return entry->second;
+			});
 		}
 
 		void remove_blocking_socket(const SOCKET socket)
 		{
 			blocking_sockets.access([&](std::unordered_map<SOCKET, bool>& map)
+			{
+				const auto entry = map.find(socket);
+				if (entry != map.end())
 				{
-					const auto entry = map.find(socket);
-					if (entry != map.end())
-					{
-						map.erase(entry);
-					}
-				});
+					map.erase(entry);
+				}
+			});
 		}
 
 		void add_blocking_socket(const SOCKET socket, const bool block)
 		{
 			blocking_sockets.access([&](std::unordered_map<SOCKET, bool>& map)
-				{
-					map[socket] = block;
-				});
+			{
+				map[socket] = block;
+			});
 		}
 
 		void server_main()
@@ -213,7 +213,7 @@ namespace demonware
 
 				if (server)
 				{
-					server->handle_input(buf, len, { s, to, tolen });
+					server->handle_input(buf, len, {s, to, tolen});
 					return len;
 				}
 
@@ -231,13 +231,13 @@ namespace demonware
 
 				size_t result = 0;
 				udp_servers.for_each([&](udp_server& server)
+				{
+					if (server.pending_data(s))
 					{
-						if (server.pending_data(s))
-						{
-							result = server.handle_output(
-								s, buf, static_cast<size_t>(len), from, fromlen);
-						}
-					});
+						result = server.handle_output(
+							s, buf, static_cast<size_t>(len), from, fromlen);
+					}
+				});
 
 				if (result)
 				{
@@ -260,39 +260,39 @@ namespace demonware
 				std::vector<SOCKET> write_sockets;
 
 				socket_map.access([&](std::unordered_map<SOCKET, tcp_server*>& sockets)
+				{
+					for (auto& s : sockets)
 					{
-						for (auto& s : sockets)
+						if (readfds)
 						{
-							if (readfds)
+							if (FD_ISSET(s.first, readfds))
 							{
-								if (FD_ISSET(s.first, readfds))
+								if (s.second->pending_data())
 								{
-									if (s.second->pending_data())
-									{
-										read_sockets.push_back(s.first);
-										FD_CLR(s.first, readfds);
-									}
-								}
-							}
-
-							if (writefds)
-							{
-								if (FD_ISSET(s.first, writefds))
-								{
-									write_sockets.push_back(s.first);
-									FD_CLR(s.first, writefds);
-								}
-							}
-
-							if (exceptfds)
-							{
-								if (FD_ISSET(s.first, exceptfds))
-								{
-									FD_CLR(s.first, exceptfds);
+									read_sockets.push_back(s.first);
+									FD_CLR(s.first, readfds);
 								}
 							}
 						}
-					});
+
+						if (writefds)
+						{
+							if (FD_ISSET(s.first, writefds))
+							{
+								write_sockets.push_back(s.first);
+								FD_CLR(s.first, writefds);
+							}
+						}
+
+						if (exceptfds)
+						{
+							if (FD_ISSET(s.first, exceptfds))
+							{
+								FD_CLR(s.first, exceptfds);
+							}
+						}
+					}
+				});
 
 				if ((!readfds || readfds->fd_count == 0) && (!writefds || writefds->fd_count == 0))
 				{

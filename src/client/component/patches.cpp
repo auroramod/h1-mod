@@ -59,9 +59,9 @@ namespace patches
 			// Fix mouse lag
 			utils::hook::nop(SELECT_VALUE(0x1403E3C05, 0x1404DB1AF), 6);
 			scheduler::loop([]()
-				{
-					SetThreadExecutionState(ES_DISPLAY_REQUIRED);
-				}, scheduler::pipeline::main);
+			{
+				SetThreadExecutionState(ES_DISPLAY_REQUIRED);
+			}, scheduler::pipeline::main);
 
 			// Prevent game from overriding cg_fov and cg_fovscale values
 			gscr_set_save_dvar_hook.create(SELECT_VALUE(0x1402AE020, 0x14036B600), &gscr_set_save_dvar_stub);

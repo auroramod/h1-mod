@@ -90,7 +90,7 @@ namespace game_module
 
 	utils::nt::library get_game_module()
 	{
-		static utils::nt::library game{ HMODULE(0x140000000) };
+		static utils::nt::library game{HMODULE(0x140000000)};
 		return game;
 	}
 
