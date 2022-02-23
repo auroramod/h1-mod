@@ -23,8 +23,12 @@ Proof of concept for an Modern Warfare Remastered client. <br>
 | `--copy-to=PATH`            | Optional, copy the EXE to a custom folder after build, define the path here if wanted. |
 | `--dev-build`               | Enable development builds of the client. |
 
-## Credits
-Check out [Credits](https://github.com/skkuull/h1-mod/blob/main/credits.md)
+## Credits:
+
+- [XLabsProject - S1x](https://github.com/XLabsProject/s1x-client), Project base.
+- [quaK](https://github.com/Joelrau), Helping in alot of stuff.
+- [fed - h2-mod](https://github.com/fedddddd/h2-mod), [Dvars](https://github.com/skkuull/h1-mod/blob/main/src/client/game/dvars.cpp) and [patches](https://github.com/skkuull/h1-mod/blob/main/src/client/component/patches.cpp).
+
 
 ## Disclaimer
 
