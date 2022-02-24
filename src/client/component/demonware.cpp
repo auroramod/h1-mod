@@ -116,6 +116,32 @@ namespace demonware
 
 		namespace io
 		{
+			int getaddrinfo_stub(const char* name, const char* service,
+				const addrinfo* hints, addrinfo** res)
+			{
+#ifdef DEBUG
+				printf("[ network ]: [getaddrinfo]: \"%s\" \"%s\"\n", name, service);
+#endif
+
+				base_server* server = tcp_servers.find(name);
+				if (!server)
+				{
+					server = udp_servers.find(name);
+				}
+
+				const auto result = getaddrinfo(name, service, hints, res);
+
+				if (!server)
+				{
+					return result;
+				}
+
+				auto address = reinterpret_cast<sockaddr_in*>(res[0]->ai_addr);
+				address->sin_addr.s_addr = server->get_address();
+
+				return 0;
+			}
+
 			hostent* gethostbyname_stub(const char* name)
 			{
 #ifdef DEBUG
@@ -341,20 +367,16 @@ namespace demonware
 			}
 		}
 
-		void bd_logger_stub(const char* const function, const char* const msg, ...)
+		void bd_logger_stub(char* a1, void* a2, void* a3, void* a4, const char* function, ...)
 		{
-			game::dvar_t* enabled;
+			static const auto* enabled = dvars::register_bool("bd_logger_enabled", false, game::DVAR_FLAG_SAVED, true);
 
-			enabled = dvars::register_bool("bd_logger_enabled", false, game::DVAR_FLAG_SAVED, true);
-
-
-			//game::Dvar_RegisterBool("bd_logger_enabled", false, game::DVAR_FLAG_SAVED, "bdLogger")
 			if (!enabled->current.enabled)
 			{
 				return;
 			}
 
-			char buffer[2048];
+			/*char buffer[2048];
 
 			va_list ap;
 			va_start(ap, msg);
@@ -362,7 +384,7 @@ namespace demonware
 			vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, msg, ap);
 			printf("%s: %s\n", function, buffer);
 
-			va_end(ap);
+			va_end(ap);*/
 		}
 	}
 
@@ -404,6 +426,7 @@ namespace demonware
 				if (function == "#19") return io::send_stub;
 				if (function == "#20") return io::sendto_stub;
 				if (function == "#52") return io::gethostbyname_stub;
+				if (function == "getaddrinfo") return io::getaddrinfo_stub;
 			}
 
 			if (function == "InternetGetConnectedState")
@@ -430,14 +453,15 @@ namespace demonware
 				return;
 			}
 
-			utils::hook::set<uint8_t>(0x140715039, 0x0); // CURLOPT_SSL_VERIFYPEER H1MP64(1.4)
+			utils::hook::set<uint8_t>(0x140715039, 0x0);  // CURLOPT_SSL_VERIFYPEER H1MP64(1.4)
 			utils::hook::set<uint8_t>(0x140715025, 0xAF); // CURLOPT_SSL_VERIFYHOST H1MP64(1.4)
-			utils::hook::set<uint8_t>(0x14095433C, 0x0); // HTTPS -> HTTP              [MWR OK][S1X: 0x14088D0E8]
+			utils::hook::set<uint8_t>(0x14095433C, 0x0);  // HTTPS -> HTTP              [MWR OK][S1X: 0x14088D0E8]
 
 			//HTTPS -> HTTP
 			utils::hook::inject(0x14006DDA9, "http://prod.umbrella.demonware.net/v1.0/"); // --->  [H1MP1.4 - S1X: 0x14003852E]
 			utils::hook::inject(0x14006E11C, "http://prod.umbrella.demonware.net/v1.0/"); // --->  [H1MP1.4 - S1X: 0x14003884F]
 			utils::hook::inject(0x14006E2FB, "http://prod.umbrella.demonware.net/v1.0/"); // --->  [H1MP1.4 - S1X: 0x140038A07]
+			utils::hook::inject(0x140728170, "http://%s:%d/auth/");
 
 			utils::hook::set<uint8_t>(0x14047F290, 0xC3); // SV_SendMatchData H1MP64(1.4)
 			utils::hook::set<uint8_t>(0x140598990, 0xC3); // Live_CheckForFullDisconnect H1MP64(1.4)
