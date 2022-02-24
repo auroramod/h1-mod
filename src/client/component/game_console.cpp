@@ -151,8 +151,6 @@ namespace game_console
 				color);
 		}
 
-
-
 		void draw_input_text_and_over(const char* str, float* color)
 		{
 			game::R_AddCmdDrawText(str, 0x7FFFFFFF, console_font, con.globals.x,
@@ -177,7 +175,6 @@ namespace game_console
 
 			game::R_AddCmdDrawText(text, 0x7FFFFFFF, console_font, con.globals.x + offset, _y, 1.0f, 1.0f, 0.0f, color, 0);
 		}
-
 
 		bool match_compare(const std::string& input, const std::string& text, const bool exact)
 		{
@@ -226,6 +223,7 @@ namespace game_console
 						return;
 					}
 				}
+
 				cmd = cmd->next;
 			}
 		}
