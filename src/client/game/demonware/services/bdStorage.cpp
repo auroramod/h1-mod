@@ -11,10 +11,10 @@ namespace demonware
 {
 	bdStorage::bdStorage() : service(10, "bdStorage")
 	{
-		this->register_task(6, &bdStorage::list_publisher_files);
-		this->register_task(7, &bdStorage::get_publisher_file);
-		this->register_task(10, &bdStorage::set_user_file);
-		this->register_task(12, &bdStorage::get_user_file);
+		this->register_task(20, &bdStorage::list_publisher_files);
+		this->register_task(21, &bdStorage::get_publisher_file);
+		//this->register_task(10, &bdStorage::set_user_file);
+		this->register_task(16, &bdStorage::get_user_file);
 		this->register_task(13, &bdStorage::unk13);
 
 		this->map_publisher_resource("motd-.*\\.txt", DW_MOTD);
@@ -70,6 +70,8 @@ namespace demonware
 		uint16_t num_results, offset;
 		std::string filename, data;
 
+		int out{};
+		buffer->read(2, &out);
 		buffer->read_uint32(&date);
 		buffer->read_uint16(&num_results);
 		buffer->read_uint16(&offset);
@@ -98,6 +100,8 @@ namespace demonware
 	void bdStorage::get_publisher_file(service_server* server, byte_buffer* buffer)
 	{
 		std::string filename;
+		int out{};
+		buffer->read(2, &out);
 		buffer->read_string(&filename);
 
 #ifdef DEBUG
@@ -162,6 +166,8 @@ namespace demonware
 		uint64_t owner{};
 		std::string game, filename, platform, data;
 
+		int out{};
+		buffer->read(2, &out);
 		buffer->read_string(&game);
 		buffer->read_string(&filename);
 		buffer->read_uint64(&owner);

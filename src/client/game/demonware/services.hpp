@@ -28,6 +28,7 @@
 #include "services/bdRichPresence.hpp"      // 68
 //#include "services/bdTitleUtilities2.hpp" // 72
 #include "services/bdUNK80.hpp"
+#include "services/bdUNK95.hpp"
 // AccountLinking                           // 86
 #include "services/bdPresence.hpp"          //103
 #include "services/bdMarketingComms.hpp"    //104

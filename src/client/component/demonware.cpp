@@ -488,7 +488,6 @@ namespace demonware
 		{
 			if (library == "WS2_32.dll")
 			{
-				printf("%s\n", function.data());
 				if (function == "#3") return io::closesocket_stub;
 				if (function == "#4") return io::connect_stub;
 				if (function == "#5") return io::getpeername_stub;
@@ -559,6 +558,8 @@ namespace demonware
 			utils::hook::set(0x140728380, 0xC301B0);
 			// Checks extended_data and extra_data in json object
 			utils::hook::set(0x140728E90, 0xC301B0);
+			// Update check
+			utils::hook::set(0x1403A5390, 0xC301B0);
 		}
 
 		void pre_destroy() override

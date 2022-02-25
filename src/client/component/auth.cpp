@@ -82,14 +82,21 @@ namespace auth
 			return key;
 		}
 
+		// need to move this somewhere else probably
+		std::string hash_string(const std::string& str)
+		{
+			const auto value = game::generateHashValue(str.data());
+			return utils::string::va("0x%lX", value);
+		}
+
 		int send_connect_data_stub(game::netsrc_t sock, game::netadr_s* adr, const char* format, const int len)
 		{
 			std::string connect_string(format, len);
 			game::SV_Cmd_TokenizeString(connect_string.data());
 			const auto _ = gsl::finally([]()
-				{
-					game::SV_Cmd_EndTokenizedString();
-				});
+			{
+				game::SV_Cmd_EndTokenizedString();
+			});
 
 			const command::params_sv params;
 			if (params.size() < 3)
@@ -98,7 +105,7 @@ namespace auth
 			}
 
 			const utils::info_string info_string{std::string{params[2]}};
-			const auto challenge = info_string.get("challenge");
+			const auto challenge = info_string.get(hash_string("challenge"));
 
 			connect_string.clear();
 			connect_string.append(params[0]);
@@ -139,8 +146,8 @@ namespace auth
 
 			const utils::info_string info_string{std::string{params[2]}};
 
-			const auto steam_id = info_string.get("xuid");
-			const auto challenge = info_string.get("challenge");
+			const auto steam_id = info_string.get(hash_string("xuid"));
+			const auto challenge = info_string.get(hash_string("challenge"));
 
 			if (steam_id.empty() || challenge.empty())
 			{
@@ -172,17 +179,17 @@ namespace auth
 		void* get_direct_connect_stub()
 		{
 			return utils::hook::assemble([](utils::hook::assembler& a)
-				{
-					a.lea(rcx, qword_ptr(rsp, 0x20));
-					a.movaps(xmmword_ptr(rsp, 0x20), xmm0);
+			{
+				a.lea(rcx, qword_ptr(rsp, 0x20));
+				a.movaps(xmmword_ptr(rsp, 0x20), xmm0);
 
-					a.pushad64();
-					a.mov(rdx, rdi);
-					a.call_aligned(direct_connect);
-					a.popad64();
+				a.pushad64();
+				a.mov(rdx, rsi);
+				a.call_aligned(direct_connect);
+				a.popad64();
 
-					a.jmp(0x140488CE2); // H1MP64(1.4)
-				});
+				a.jmp(0x140488CE2); // H1MP64(1.4)
+			});
 		}
 	}
 

@@ -169,6 +169,7 @@ namespace demonware
 #ifdef DEBUG
 		printf("sending reply: %s\n", result.data());
 #endif
+
 		this->send_reply(&reply);
 
 #ifdef DEBUG

@@ -268,10 +268,10 @@ namespace network
 
 				// increase allowed packet size
 				const auto max_packet_size = 0x20000;
-				utils::hook::set<int>(0x1404255F0, max_packet_size); // H1MP64(1.4)
-				utils::hook::set<int>(0x14042562E, max_packet_size); // H1MP64(1.4)
-				utils::hook::set<int>(0x140425521, max_packet_size); // H1MP64(1.4)
-				utils::hook::set<int>(0x140425549, max_packet_size); // H1MP64(1.4)
+				utils::hook::set<int>(0x1404255F1, max_packet_size); // H1MP64(1.4)
+				utils::hook::set<int>(0x140425630, max_packet_size); // H1MP64(1.4)
+				utils::hook::set<int>(0x140425522, max_packet_size); // H1MP64(1.4)
+				utils::hook::set<int>(0x140425545, max_packet_size); // H1MP64(1.4)
 
 				// ignore built in "print" oob command and add in our own
 				utils::hook::set<uint8_t>(0x14025280E, 0xEB); // H1MP64(1.4)
