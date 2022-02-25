@@ -212,7 +212,7 @@ namespace auth
 			{
 				utils::hook::jump(0x140571E07, 0x140571E5A); // H1(1.4)
 				utils::hook::jump(0x14004B223, 0x14004B4F2); // H1(1.4)
-				utils::hook::jump(0x14004B4AD, 0x140009B48); // H1(1.4)
+				utils::hook::jump(0x14004B4AD, 0x14004B4F2); // H1(1.4)
 				utils::hook::jump(0x140572F6F, 0x140572FB0); // H1(1.4)
 				utils::hook::jump(0x140573470, 0x1405734B6); // H1(1.4)
 
