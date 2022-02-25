@@ -49,6 +49,10 @@ namespace demonware
 		std::string identity{};
 		std::string token{};
 
+#ifdef DEBUG
+		printf("%s\n", packet.data());
+#endif
+
 		rapidjson::Document j;
 		j.Parse(packet.data(), packet.size());
 
@@ -60,6 +64,11 @@ namespace demonware
 		if (j.HasMember("iv_seed") && j["iv_seed"].IsString())
 		{
 			iv_seed = std::stoul(j["iv_seed"].GetString());
+		}
+
+		if (j.HasMember("identity") && j["identity"].IsString())
+		{
+			identity = j["identity"].GetString();
 		}
 
 		if (j.HasMember("extra_data") && j["extra_data"].IsString())
@@ -127,6 +136,9 @@ namespace demonware
 
 		auto seed = std::to_string(iv_seed);
 		doc.AddMember("iv_seed", rapidjson::StringRef(seed.data(), seed.size()), doc.GetAllocator());
+#ifndef DEBUG
+		doc.AddMember("identity", rapidjson::StringRef(identity.data(), identity.size()), doc.GetAllocator());
+#endif
 		doc.AddMember("client_ticket", rapidjson::StringRef(ticket_b64.data(), ticket_b64.size()), doc.GetAllocator());
 		doc.AddMember("server_ticket", rapidjson::StringRef(auth_data_b64.data(), auth_data_b64.size()),
 		              doc.GetAllocator());
@@ -153,6 +165,10 @@ namespace demonware
 		result.append(buffer.GetString(), buffer.GetLength());
 
 		raw_reply reply(result);
+
+#ifdef DEBUG
+		printf("sending reply: %s\n", result.data());
+#endif
 		this->send_reply(&reply);
 
 #ifdef DEBUG

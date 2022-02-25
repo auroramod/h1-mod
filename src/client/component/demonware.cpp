@@ -142,6 +142,40 @@ namespace demonware
 				return 0;
 			}
 
+			int getpeername_stub(const SOCKET s, sockaddr* addr, socklen_t* addrlen)
+			{
+				auto* server = find_server(s);
+
+				if (server)
+				{
+					auto in_addr = reinterpret_cast<sockaddr_in*>(addr);
+					in_addr->sin_addr.s_addr = server->get_address();
+					in_addr->sin_family = AF_INET;
+					*addrlen = sizeof(sockaddr);
+
+					return 0;
+				}
+
+				return getpeername(s, addr, addrlen);
+			}
+
+			int getsockname_stub(const SOCKET s, sockaddr* addr, socklen_t* addrlen)
+			{
+				auto* server = find_server(s);
+
+				if (server)
+				{
+					auto in_addr = reinterpret_cast<sockaddr_in*>(addr);
+					in_addr->sin_addr.s_addr = server->get_address();
+					in_addr->sin_family = AF_INET;
+					*addrlen = sizeof(sockaddr);
+
+					return 0;
+				}
+
+				return getsockname(s, addr, addrlen);
+			}
+
 			hostent* gethostbyname_stub(const char* name)
 			{
 #ifdef DEBUG
@@ -369,23 +403,60 @@ namespace demonware
 
 		void bd_logger_stub(char* a1, void* a2, void* a3, void* a4, const char* function, ...)
 		{
-			static const auto* enabled = dvars::register_bool("bd_logger_enabled", false, game::DVAR_FLAG_SAVED, true);
 
-			if (!enabled->current.enabled)
-			{
-				return;
-			}
-
-			/*char buffer[2048];
-
-			va_list ap;
-			va_start(ap, msg);
-
-			vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, msg, ap);
-			printf("%s: %s\n", function, buffer);
-
-			va_end(ap);*/
 		}
+
+#ifdef DEBUG
+		void a(unsigned int n)
+		{
+			printf("bdAuth: Auth task failed with HTTP code [%u]\n", n);
+		}
+
+		void b(unsigned int n)
+		{
+			printf("bdAuth: Decoded client ticket of unexpected size [%u]\n", n);
+		}
+
+		void c(unsigned int n)
+		{
+			printf("bdAuth: Decoded server ticket of unexpected size [%u]\n", n);
+		}
+
+		void d()
+		{
+			printf("bdAuth: Auth ticket magic number mismatch\n");
+		}
+
+		void e()
+		{
+			printf("bdAuth: Cross Authentication completed\n");
+		}
+
+		void f()
+		{
+			printf("bdAuth: Auth task reply contains invalid data / format\n");
+		}
+
+		void g(unsigned int n)
+		{
+			printf("bdAuth: Auth task returned with error code [%u]\n", n);
+		}
+
+		void h(unsigned int n)
+		{
+			printf("bdAuth: Invalid or No Task ID [%u] in Auth reply\n", n);
+		}
+
+		void i()
+		{
+			printf("bdAuth: Received reply from DemonWare Auth server\n");
+		}
+
+		void l()
+		{
+			printf("bdAuth: Unknown error\n");
+		}
+#endif
 	}
 
 	class component final : public component_interface
@@ -417,8 +488,11 @@ namespace demonware
 		{
 			if (library == "WS2_32.dll")
 			{
+				printf("%s\n", function.data());
 				if (function == "#3") return io::closesocket_stub;
 				if (function == "#4") return io::connect_stub;
+				if (function == "#5") return io::getpeername_stub;
+				if (function == "#6") return io::getsockname_stub;
 				if (function == "#10") return io::ioctlsocket_stub;
 				if (function == "#16") return io::recv_stub;
 				if (function == "#17") return io::recvfrom_stub;
@@ -461,10 +535,30 @@ namespace demonware
 			utils::hook::inject(0x14006DDA9, "http://prod.umbrella.demonware.net/v1.0/"); // --->  [H1MP1.4 - S1X: 0x14003852E]
 			utils::hook::inject(0x14006E11C, "http://prod.umbrella.demonware.net/v1.0/"); // --->  [H1MP1.4 - S1X: 0x14003884F]
 			utils::hook::inject(0x14006E2FB, "http://prod.umbrella.demonware.net/v1.0/"); // --->  [H1MP1.4 - S1X: 0x140038A07]
+			utils::hook::inject(0x14006E9A9, "http://prod.uno.demonware.net/v1.0/");
+			utils::hook::inject(0x14006ED49, "http://prod.uno.demonware.net/v1.0/");
 			utils::hook::inject(0x140728170, "http://%s:%d/auth/");
 
 			utils::hook::set<uint8_t>(0x14047F290, 0xC3); // SV_SendMatchData H1MP64(1.4)
 			utils::hook::set<uint8_t>(0x140598990, 0xC3); // Live_CheckForFullDisconnect H1MP64(1.4)
+
+#ifdef DEBUG
+			// yes
+			utils::hook::call(0x140727BEB, l);
+			utils::hook::call(0x140727AFC, i);
+			utils::hook::call(0x140727E49, h);
+			utils::hook::call(0x140727E30, g);
+			utils::hook::call(0x140727E37, f);
+			utils::hook::call(0x140727DF2, e);
+			utils::hook::call(0x140727DF9, d);
+			utils::hook::call(0x140727CFC, c);
+			utils::hook::call(0x140727C82, b);
+			utils::hook::call(0x140727E6A, a);
+#endif
+			// Checks X-Signature header or something
+			utils::hook::set(0x140728380, 0xC301B0);
+			// Checks extended_data and extra_data in json object
+			utils::hook::set(0x140728E90, 0xC301B0);
 		}
 
 		void pre_destroy() override
