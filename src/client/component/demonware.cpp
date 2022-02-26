@@ -129,17 +129,41 @@ namespace demonware
 					server = udp_servers.find(name);
 				}
 
-				const auto result = getaddrinfo(name, service, hints, res);
-
 				if (!server)
 				{
-					return result;
+					return getaddrinfo(name, service, hints, res);
 				}
 
-				auto address = reinterpret_cast<sockaddr_in*>(res[0]->ai_addr);
-				address->sin_addr.s_addr = server->get_address();
+				const auto address = utils::memory::get_allocator()->allocate<sockaddr>();
+				const auto ai = utils::memory::get_allocator()->allocate<addrinfo>();
+
+				auto in_addr = reinterpret_cast<sockaddr_in*>(address);
+				in_addr->sin_addr.s_addr = server->get_address();
+				in_addr->sin_family = AF_INET;
+
+				ai->ai_family = AF_INET;
+				ai->ai_socktype = SOCK_STREAM;
+				ai->ai_addr = address;
+				ai->ai_addrlen = sizeof(sockaddr);
+				ai->ai_next = nullptr;
+				ai->ai_flags = 0;
+				ai->ai_protocol = 0;
+				ai->ai_canonname = const_cast<char*>(name);
+
+				*res = ai;
 
 				return 0;
+			}
+
+			void freeaddrinfo_stub(addrinfo* ai)
+			{
+				if (!utils::memory::get_allocator()->find(ai))
+				{
+					return freeaddrinfo(ai);
+				}
+
+				utils::memory::get_allocator()->free(ai->ai_addr);
+				utils::memory::get_allocator()->free(ai);
 			}
 
 			int getpeername_stub(const SOCKET s, sockaddr* addr, socklen_t* addrlen)
@@ -500,6 +524,7 @@ namespace demonware
 				if (function == "#20") return io::sendto_stub;
 				if (function == "#52") return io::gethostbyname_stub;
 				if (function == "getaddrinfo") return io::getaddrinfo_stub;
+				if (function == "freeaddrinfo") return io::freeaddrinfo_stub;
 			}
 
 			if (function == "InternetGetConnectedState")

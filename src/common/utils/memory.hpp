@@ -37,6 +37,8 @@ namespace utils
 
 			char* duplicate_string(const std::string& string);
 
+			bool find(const void* data);
+
 		private:
 			std::mutex mutex_;
 			std::vector<void*> pool_;
