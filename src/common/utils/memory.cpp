@@ -62,6 +62,14 @@ namespace utils
 		return data;
 	}
 
+	bool memory::allocator::find(const void* data)
+	{
+		std::lock_guard _(this->mutex_);
+
+		const auto j = std::find(this->pool_.begin(), this->pool_.end(), data);
+		return j != this->pool_.end();
+	}
+
 	void* memory::allocate(const size_t length)
 	{
 		return calloc(length, 1);
