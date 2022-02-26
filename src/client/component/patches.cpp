@@ -17,8 +17,6 @@ namespace patches
 {
 	namespace
 	{
-		utils::hook::detour live_get_local_client_name_hook;
-
 		const char* live_get_local_client_name()
 		{
 			return game::Dvar_FindVar("name")->current.string;
@@ -157,7 +155,7 @@ namespace patches
 				return;
 			}
 
-			reinterpret_cast<void(*)(game::mp::client_t*, game::msg_t*)>(0x14043AA90)(client, msg);
+			reinterpret_cast<void(*)(game::mp::client_t*, game::msg_t*)>(0x140481A00)(client, msg);
 		}
 	}
 
@@ -188,11 +186,7 @@ namespace patches
 
 			dvar_register_float_hook.create(game::Dvar_RegisterFloat.get(), dvar_register_float_stub);
 
-			if (game::environment::is_sp)
-			{
-				
-			}
-			else
+			if (game::environment::is_mp())
 			{
 				patch_mp();
 			}
@@ -201,7 +195,7 @@ namespace patches
 		static void patch_mp()
 		{
 			// Use name dvar
-			live_get_local_client_name_hook.create(0x14050FF90, &live_get_local_client_name); // H1(1.4)
+			utils::hook::jump(0x14050FF90, &live_get_local_client_name); // H1(1.4)
 
 			// Patch SV_KickClientNum
 			sv_kick_client_num_hook.create(0x14047ED00, &sv_kick_client_num); // H1(1.4)

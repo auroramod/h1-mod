@@ -585,6 +585,8 @@ namespace demonware
 			utils::hook::set(0x140728E90, 0xC301B0);
 			// Update check
 			utils::hook::set(0x1403A5390, 0xC301B0);
+			
+			utils::hook::nop(0x14057DBC5, 5);
 		}
 
 		void pre_destroy() override
