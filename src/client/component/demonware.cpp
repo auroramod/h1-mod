@@ -586,6 +586,7 @@ namespace demonware
 			// Update check
 			utils::hook::set(0x1403A5390, 0xC301B0);
 			
+			// Remove some while loop in demonware that freezes the rendering for a few secs at launch
 			utils::hook::nop(0x14057DBC5, 5);
 		}
 
