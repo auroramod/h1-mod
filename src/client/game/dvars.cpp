@@ -552,7 +552,6 @@ namespace dvars
 		return game::Dvar_RegisterString(hash, "", value, flags);
 	}
 
-
 	game::dvar_t* register_float(const std::string& name, float value, float min,
 		float max, game::DvarFlags flags, bool add_to_list)
 	{

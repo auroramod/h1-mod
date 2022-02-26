@@ -93,6 +93,42 @@ namespace command
 			parse_command_line();
 			reinterpret_cast<void(*)()>(0x1400D8210)(); // mwr: test
 		}
+
+		game::dvar_t* dvar_command_stub()
+		{
+			const params args;
+
+			if (args.size() <= 0)
+			{
+				return 0;
+			}
+
+			const auto dvar = game::Dvar_FindVar(args[0]);
+
+			if (dvar)
+			{
+				if (args.size() == 1)
+				{
+					const auto current = game::Dvar_ValueToString(dvar, dvar->current);
+					const auto reset = game::Dvar_ValueToString(dvar, dvar->reset);
+
+					console::info("\"%s\" is: \"%s\" default: \"%s\" hash: 0x%08lX",
+						args[0], current, reset, dvar->hash);
+
+					console::info("   %s\n", dvars::dvar_get_domain(dvar->type, dvar->domain).data());
+				}
+				else
+				{
+					char command[0x1000] = { 0 };
+					game::Dvar_GetCombinedString(command, 1);
+					game::Dvar_SetCommand(dvar->hash, "", command);
+				}
+
+				return dvar;
+			}
+
+			return 0;
+		}
 	}
 
 	void read_startup_variable(const std::string& dvar)
@@ -110,7 +146,7 @@ namespace command
 			// only +set dvar value
 			if (game::Cmd_Argc() >= 3 && game::Cmd_Argv(0) == "set"s && game::Cmd_Argv(1) == dvar)
 			{
-				game::Dvar_SetCommand(game::Cmd_Argv(1), game::Cmd_Argv(2));
+				game::Dvar_SetCommand(game::generateHashValue(game::Cmd_Argv(1)), "", game::Cmd_Argv(2));
 			}
 
 			game::Cmd_EndTokenizeString();
@@ -258,6 +294,7 @@ namespace command
 			else
 			{
 				utils::hook::call(0x1400D728F, &parse_commandline_stub); // MWR TEST
+				utils::hook::jump(0x14041D750, dvar_command_stub);
 
 				add_commands_mp();
 			}
