@@ -190,7 +190,7 @@ namespace game_console
 			for (const auto& dvar : dvars::dvar_list)
 			{
 				auto name = utils::string::to_lower(dvar);
-				if (match_compare(input, name, exact))
+				if (game::Dvar_FindVar(name.data()) && match_compare(input, name, exact))
 				{
 					suggestions.push_back(dvar);
 				}
@@ -244,9 +244,6 @@ namespace game_console
 			game::R_AddCmdDrawTextWithCursor(con.buffer, 0x7FFFFFFF, console_font, 18, con.globals.x,
 				con.globals.y + con.globals.font_height, 1.0f, 1.0f, 0, color_white, 0,
 				con.cursor, '|');
-
-			game::R_AddCmdDrawText(con.buffer, 0x7FFF, console_font, con.globals.x,
-				con.globals.y + con.globals.font_height, 1.0f, 1.0f, 0.0f, color_white, 0);
 
 			// check if using a prefixed '/' or not
 			const auto input = con.buffer[1] && (con.buffer[0] == '/' || con.buffer[0] == '\\')
