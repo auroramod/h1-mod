@@ -204,6 +204,8 @@ namespace game
 		WEAK symbol<gentity_s> g_entities{0, 0x14621E530};
 		WEAK symbol<client_t> svs_clients{0, 0x14B204A10};
 		WEAK symbol<int> gameTime{0, 0x14621BDBC};
+
+		WEAK symbol<bool> virtualLobby_loaded{ 0, 0x142D077FD };
 	}
 
 	namespace sp
