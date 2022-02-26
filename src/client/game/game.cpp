@@ -23,6 +23,11 @@ namespace game
 		return sv_cmd_args->argv[sv_cmd_args->nesting][index];
 	}
 
+	bool VirtualLobby_Loaded()
+	{
+		return !game::environment::is_sp() && *mp::virtualLobby_loaded == 1;
+	}
+
 	namespace environment
 	{
 		launcher::mode mode = launcher::mode::none;

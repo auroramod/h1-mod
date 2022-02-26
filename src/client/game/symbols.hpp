@@ -125,6 +125,8 @@ namespace game
 	WEAK symbol<void(unsigned int id, scr_string_t stringValue, unsigned int paramcount)> Scr_NotifyId{0, 0x1405C8240};
 
 	WEAK symbol<const char* (scr_string_t stringValue)> SL_ConvertToString{0x14036D420, 0x1405BFBB0};
+	WEAK symbol<scr_string_t(const char* str)> SL_FindString{ 0x140314AF0, 0x14043B470 }; // H1(1.4)
+
 	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{0x14036D9A0, 0x1405C0170};
 
 	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{0, 0x140480860};
@@ -204,6 +206,8 @@ namespace game
 		WEAK symbol<gentity_s> g_entities{0, 0x14621E530};
 		WEAK symbol<client_t> svs_clients{0, 0x14B204A10};
 		WEAK symbol<int> gameTime{0, 0x14621BDBC};
+
+		WEAK symbol<bool> virtualLobby_loaded{ 0, 0x142D077FD };
 	}
 
 	namespace sp
