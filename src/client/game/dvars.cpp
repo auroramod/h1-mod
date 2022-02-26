@@ -496,7 +496,7 @@ namespace dvars
 		"custom_scr_team_fftype",
 		"custom_scr_team_teamkillspawndelay",
 		"custom_scr_vehicles_enabled",
-		"name",
+		//"name",
 		"custom_timelimit",
 		"map"
 	};

@@ -57,17 +57,27 @@ namespace game
 	WEAK symbol<unsigned int(int)> Live_SyncOnlineDataFlags{0, 0x14059A700}; // H1(1.4)
 
 	WEAK symbol<int()> Sys_Milliseconds{0x1403E2B10, 0x140513710}; // H1(1.4)
-	WEAK symbol<bool()> Sys_IsDatabaseReady2{0, 0x14042B090}; // H1(1.4)
+	WEAK symbol<bool()> Sys_IsDatabaseReady2{0x1403580B0, 0x14042B090}; // H1(1.4)
 
+	WEAK symbol<void(int localClientNum)> SV_FastRestart{ 0, 0x14047E990 }; // H1(1.4)
+	WEAK symbol<void(int clientNum, svscmd_type type, const char* text)> SV_GameSendServerCommand{
+	0x1403F3A70, 0x140484AD0
+	}; // H1MP(1.4)
 	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{0, 0x140480860}; // H1(1.4)
 	WEAK symbol<void(const char* text_in)> SV_Cmd_TokenizeString{0x1402EF050, 0x140404D20}; // H1(1.4)
 	WEAK symbol<void()> SV_Cmd_EndTokenizedString{0x140344700, 0x140404CE0}; // H1(1.4)
+
+	WEAK symbol<bool(int clientNum)> SV_BotIsBot{ 0, 0x14046E6C0 }; // H1(1.4)
 
 	WEAK symbol<bool(int, void const*, const netadr_s*)> Sys_SendPacket{0x1403E2820, 0x1405133B0}; // H1(1.4)
 
 	WEAK symbol<void(netadr_s*, sockaddr*)> NetadrToSockadr{0x1403C11C0, 0x1404F62F0}; // H1(1.4)
 	WEAK symbol<void(netsrc_t, netadr_s*, const char*)> NET_OutOfBandPrint{0x140357560, 0x1404255D0}; // H1(1.4)
 	WEAK symbol<void(netsrc_t sock, int length, const void* data, const netadr_s* to)> NET_SendLoopPacket{0, 0x140425790}; // H1(1.4)
+
+	WEAK symbol<bool(const char* s, netadr_s* a)> NET_StringToAdr{ 0, 0x140425870 }; // H1(1.4)
+
+	//WEAK symbol<Font_s* (const char* font)> R_RegisterFont{ 0x140481F90, 0x1405D91E0 }; // H1MP(1.4)
 
 	WEAK symbol<char* (char* string)> I_CleanStr{0x1403CD230, 0}; // H1(1.4)
 	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetViewPlacement{0x1401981F0, 0x140288550}; // H1(1.4)
@@ -164,6 +174,8 @@ namespace game
 
 	WEAK symbol<bool()> SV_Loaded{0x140442F60, 0x1404864A0}; // H1(1.4)
 
+	WEAK symbol<void(int clientNum, const char* reason)> SV_KickClientNum{ 0, 0x14047ED00 }; // H1(1.4)
+
 	WEAK symbol<bool(const char* map)> SV_MapExists{0, 0x14047ED60}; // H1(1.4)
 
 	WEAK symbol<void()> Sys_ShowConsole{0x1403E3B90, 0x140514910}; // H1(1.4)
@@ -180,6 +192,8 @@ namespace game
 
 	WEAK symbol<void* (jmp_buf* Buf, int Value)> longjmp{0x140648FD4, 0x14089EED0}; // H1(1.4)
 	WEAK symbol<int(jmp_buf* Buf)> _setjmp{0x1406BFDD0, 0x1408EC2E0}; // H1(1.4)
+
+	WEAK symbol<int(const char* text, int maxChars, Font_s* font, float scale)> UI_TextWidth{ 0, 0x1404D21A0 }; // H1(1.4)
 
 	WEAK symbol<void(int arg, char* buffer, int bufferLength)> SV_Cmd_ArgvBuffer{0x1402EEFD0, 0x1403B05C0};
 
