@@ -36,33 +36,33 @@ namespace scheduler
 			void execute()
 			{
 				callbacks_.access([&](task_list& tasks)
+				{
+					this->merge_callbacks();
+
+					for (auto i = tasks.begin(); i != tasks.end();)
 					{
-						this->merge_callbacks();
+						const auto now = std::chrono::high_resolution_clock::now();
+						const auto diff = now - i->last_call;
 
-						for (auto i = tasks.begin(); i != tasks.end();)
+						if (diff < i->interval)
 						{
-							const auto now = std::chrono::high_resolution_clock::now();
-							const auto diff = now - i->last_call;
-
-							if (diff < i->interval)
-							{
-								++i;
-								continue;
-							}
-
-							i->last_call = now;
-
-							const auto res = i->handler();
-							if (res == cond_end)
-							{
-								i = tasks.erase(i);
-							}
-							else
-							{
-								++i;
-							}
+							++i;
+							continue;
 						}
-					});
+
+						i->last_call = now;
+
+						const auto res = i->handler();
+						if (res == cond_end)
+						{
+							i = tasks.erase(i);
+						}
+						else
+						{
+							++i;
+						}
+					}
+				});
 			}
 
 		private:
@@ -181,8 +181,8 @@ namespace scheduler
 		void post_unpack() override
 		{
 			r_end_frame_hook.create(SELECT_VALUE(0x1404F7310, 0x1405FE470), scheduler::r_end_frame_stub); // H1(1.4)
-			g_run_frame_hook.create(SELECT_VALUE(0x1402772D0, 0x1402772D0), scheduler::server_frame_stub); // H1(1.4)
-			main_frame_hook.create(SELECT_VALUE(0x1401CE8D0, 0x1401CE8D0), scheduler::main_frame_stub); // H1(1.4)
+			g_run_frame_hook.create(SELECT_VALUE(0x1402772D0, 0x14033A640), scheduler::server_frame_stub); // H1(1.4)
+			main_frame_hook.create(SELECT_VALUE(0x1401CE8D0, 0x1400D82A0), scheduler::main_frame_stub); // H1(1.4)
 		}
 
 		void pre_destroy() override
