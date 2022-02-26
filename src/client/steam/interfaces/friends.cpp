@@ -7,7 +7,13 @@ namespace steam
 {
 	const char* friends::GetPersonaName()
 	{
-		return game::Dvar_FindVar("name")->current.string;
+		static const auto* name = game::Dvar_FindVar("name");
+		if (name)
+		{
+			return name->current.string;
+		}
+
+		return "1337";
 	}
 
 	unsigned long long friends::SetPersonaName(const char* pchPersonaName)
