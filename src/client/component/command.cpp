@@ -305,7 +305,7 @@ namespace command
 	private:
 		static void add_commands_generic()
 		{
-			add("quit", game::Com_Quit_f);
+			add("quit", game::Quit);
 			//add("quit_hard", utils::nt::raise_hard_exception); /* this command delivers you to a windows blue screen, its quit hard from windows xD */
 			add("crash", []()
 			{

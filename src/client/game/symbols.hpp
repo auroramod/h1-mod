@@ -29,6 +29,7 @@ namespace game
 	WEAK symbol<void(float, float, int)> Com_SetSlowMotion{0, 0x1400DB790};
 	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{0x1403509C0, 0x1400D78A0};
 	WEAK symbol<void()> Com_Quit_f{0x140352BE0, 0x1400DA830};
+	WEAK symbol<void()> Quit{0x140352D90, 0x1400DA830};
 
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{0x1401389A0, 0x140220CC0};
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{0x140138750, 0x140220620};
