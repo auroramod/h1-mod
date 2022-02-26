@@ -94,6 +94,8 @@ namespace patches
 
 				// Disable data validation error popup
 				dvars::register_int("data_validation_allow_drop", 0, 0, 0, game::DVAR_FLAG_NONE, true);
+
+				dvars::register_int("com_maxfps", 0, 10, 1000, game::DVAR_FLAG_SAVED, false);
 			}
 
 			return com_register_dvars_hook.invoke<void>();
@@ -157,7 +159,6 @@ namespace patches
 
 			reinterpret_cast<void(*)(game::mp::client_t*, game::msg_t*)>(0x14043AA90)(client, msg);
 		}
-
 	}
 
 	class component final : public component_interface

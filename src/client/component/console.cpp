@@ -30,7 +30,9 @@ namespace console
 
 			if (process == GetCurrentProcessId() || IsDebuggerPresent())
 			{
+#ifndef NATIVE_CONSOLE
 				ShowWindow(con_window, SW_HIDE);
+#endif
 			}
 		}
 
@@ -66,12 +68,14 @@ namespace console
 		{
 			hide_console();
 
+#ifdef NATIVE_CONSOLE
+			setvbuf(stdout, nullptr, _IONBF, 0);
+			setvbuf(stderr, nullptr, _IONBF, 0);
+#else
 			(void)_pipe(this->handles_, 1024, _O_TEXT);
 			(void)_dup2(this->handles_[1], 1);
 			(void)_dup2(this->handles_[1], 2);
-
-			//setvbuf(stdout, nullptr, _IONBF, 0);
-			//setvbuf(stderr, nullptr, _IONBF, 0);
+#endif
 		}
 
 		void post_start() override
@@ -79,9 +83,9 @@ namespace console
 			this->terminate_runner_ = false;
 
 			this->console_runner_ = utils::thread::create_named_thread("Console IO", [this]
-				{
-					this->runner();
-				});
+			{
+				this->runner();
+			});
 		}
 
 		void pre_destroy() override
@@ -105,9 +109,9 @@ namespace console
 			_close(this->handles_[1]);
 
 			messages.access([&](message_queue& msgs)
-				{
-					msgs = {};
-				});
+			{
+				msgs = {};
+			});
 		}
 
 		void post_unpack() override
@@ -133,7 +137,9 @@ namespace console
 			{
 				if (game::environment::is_dedi() || !utils::flags::has_flag("noconsole"))
 				{
+#ifndef NATIVE_CONSOLE
 					game::Sys_ShowConsole();
+#endif
 				}
 
 				if (!game::environment::is_dedi())
@@ -181,10 +187,10 @@ namespace console
 
 				{
 					messages.access([&](message_queue& msgs)
-						{
-							message_queue_copy = std::move(msgs);
-							msgs = {};
-						});
+					{
+						message_queue_copy = std::move(msgs);
+						msgs = {};
+					});
 				}
 
 				while (!message_queue_copy.empty())

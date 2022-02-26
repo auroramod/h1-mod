@@ -1,10 +1,18 @@
 #include <std_include.hpp>
 #include "../steam.hpp"
 
+#include <game/game.hpp>
+
 namespace steam
 {
 	const char* friends::GetPersonaName()
 	{
+		static const auto* name = game::Dvar_FindVar("name");
+		if (name)
+		{
+			return name->current.string;
+		}
+
 		return "1337";
 	}
 
