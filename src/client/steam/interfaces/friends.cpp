@@ -1,11 +1,13 @@
 #include <std_include.hpp>
 #include "../steam.hpp"
 
+#include <game/game.hpp>
+
 namespace steam
 {
 	const char* friends::GetPersonaName()
 	{
-		return "1337";
+		return game::Dvar_FindVar("name")->current.string;
 	}
 
 	unsigned long long friends::SetPersonaName(const char* pchPersonaName)
