@@ -14,5 +14,6 @@ namespace demonware
 		void unk130(service_server* server, byte_buffer* buffer) const;
 		void unk165(service_server* server, byte_buffer* buffer) const;
 		void unk193(service_server* server, byte_buffer* buffer) const;
+		void unk232(service_server* server, byte_buffer* buffer) const;
 	};
 }

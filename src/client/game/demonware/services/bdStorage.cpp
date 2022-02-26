@@ -13,9 +13,9 @@ namespace demonware
 	{
 		this->register_task(20, &bdStorage::list_publisher_files);
 		this->register_task(21, &bdStorage::get_publisher_file);
-		//this->register_task(10, &bdStorage::set_user_file);
+		this->register_task(24, &bdStorage::set_user_file);
 		this->register_task(16, &bdStorage::get_user_file);
-		this->register_task(13, &bdStorage::unk13);
+		this->register_task(12, &bdStorage::unk12);
 
 		this->map_publisher_resource("motd-.*\\.txt", DW_MOTD);
 		this->map_publisher_resource("ffotd-.*\\.ff", DW_FASTFILE);
@@ -190,7 +190,7 @@ namespace demonware
 		}
 	}
 
-	void bdStorage::unk13(service_server* server, byte_buffer* buffer) const
+	void bdStorage::unk12(service_server* server, byte_buffer* buffer) const
 	{
 		// TODO:
 		auto reply = server->create_reply(this->task_id());

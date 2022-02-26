@@ -20,7 +20,7 @@ namespace demonware
 		void get_publisher_file(service_server* server, byte_buffer* buffer);
 		void set_user_file(service_server* server, byte_buffer* buffer) const;
 		void get_user_file(service_server* server, byte_buffer* buffer) const;
-		void unk13(service_server* server, byte_buffer* buffer) const;
+		void unk12(service_server* server, byte_buffer* buffer) const;
 
 		static std::string get_user_file_path(const std::string& name);
 	};

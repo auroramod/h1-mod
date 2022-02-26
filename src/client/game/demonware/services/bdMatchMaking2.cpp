@@ -9,6 +9,7 @@ namespace demonware
 		this->register_task(2, &bdMatchMaking2::unk2);
 		this->register_task(3, &bdMatchMaking2::unk3);
 		this->register_task(5, &bdMatchMaking2::unk5);
+		this->register_task(10, &bdMatchMaking2::unk10);
 		this->register_task(16, &bdMatchMaking2::unk16);
 	}
 
@@ -34,6 +35,13 @@ namespace demonware
 	}
 
 	void bdMatchMaking2::unk5(service_server* server, byte_buffer* /*buffer*/) const
+	{
+		// TODO:
+		auto reply = server->create_reply(this->task_id());
+		reply->send();
+	}
+
+	void bdMatchMaking2::unk10(service_server* server, byte_buffer* /*buffer*/) const
 	{
 		// TODO:
 		auto reply = server->create_reply(this->task_id());

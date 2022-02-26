@@ -11,6 +11,7 @@ namespace demonware
 		this->register_task(130, &bdUNK80::unk130);
 		this->register_task(165, &bdUNK80::unk165);
 		this->register_task(193, &bdUNK80::unk193);
+		this->register_task(232, &bdUNK80::unk232);
 	}
 
 	void bdUNK80::unk42(service_server* server, byte_buffer* /*buffer*/) const
@@ -49,6 +50,13 @@ namespace demonware
 	}
 
 	void bdUNK80::unk193(service_server* server, byte_buffer* /*buffer*/) const
+	{
+		// TODO:
+		auto reply = server->create_reply(this->task_id());
+		reply->send();
+	}
+
+	void bdUNK80::unk232(service_server* server, byte_buffer* /*buffer*/) const
 	{
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
