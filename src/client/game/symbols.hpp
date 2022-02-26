@@ -166,7 +166,6 @@ namespace game
 	 * Variables
 	 **************************************************************/
 
-
 	WEAK symbol<CmdArgs> sv_cmd_args{0, 0x14946BA20};
 
 	WEAK symbol<const char*> command_whitelist{0x141079A60, 0x14120C360};
