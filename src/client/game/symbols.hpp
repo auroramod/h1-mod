@@ -168,6 +168,8 @@ namespace game
 		float materialTime, __int64 a7, __int64 a8)> R_AddDObjToScene{0, 0x140775C40};
 
 	WEAK symbol<const char* (scr_string_t stringValue)> SL_ConvertToString{0x14036D420, 0x1405BFBB0};
+	WEAK symbol<scr_string_t(const char* str)> SL_FindString{ 0x140314AF0, 0x14043B470 }; // H1(1.4)
+
 	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{0x14036D9A0, 0x1405C0170};
 
 	WEAK symbol<void(int index, const char* string)> SV_SetConfigstring{0, 0x140486720}; // H1(1.4)
