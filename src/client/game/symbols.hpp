@@ -38,6 +38,7 @@ namespace game
 
 	WEAK symbol<void(int hash, const char* name, const char* buffer)> Dvar_SetCommand{0x1403C72B0, 0x1404FD0A0};
 	WEAK symbol<dvar_t*(const char* name)> Dvar_FindVar{0x1403C5D50, 0x1404FBB00};
+	WEAK symbol<void(const dvar_t* dvar)> Dvar_ClearModified{0x0, 0x1404FB930};
 	WEAK symbol<void(char* buffer, int index)> Dvar_GetCombinedString{0x140354DF0, 0x14041D830};
 	WEAK symbol<const char*(dvar_t* dvar, dvar_value value)> Dvar_ValueToString{0x1403C8560, 0x1404FE660};
 	WEAK symbol<dvar_t*(int hash, const char* name, bool value, unsigned int flags)> Dvar_RegisterBool{0x1403C47E0, 0x1404FA540};
@@ -85,7 +86,7 @@ namespace game
 	WEAK symbol<int(const char* text, int maxChars, Font_s* font)> R_TextWidth{0x1404D43B0, 0x1405D94A0};
 	WEAK symbol<int(void* font)> R_GetFontHeight{0x1405EA360, 0x1405D92C0};
 	WEAK symbol<void* (int a1)> R_DrawSomething{0x1404D37B0, 0x1405D8890};
-	WEAK symbol<void()> R_SyncRenderThread{0, 0x14076E7D0};
+	WEAK symbol<void()> R_SyncRenderThread{0,0x1405FF3A0};
 	WEAK symbol<void(const void* obj, void* pose, unsigned int entnum, unsigned int renderFxFlags, float* lightingOrigin,
 		float materialTime, __int64 a7, __int64 a8)> R_AddDObjToScene{0, 0x140775C40};
 	WEAK symbol<void* (const char* text, int maxChars, void* font, int fontHeight, float x, float y, float xScale, float yScale,
@@ -176,7 +177,7 @@ namespace game
 	WEAK symbol<const char*> g_assetNames{0, 0x140BEF280};
 	WEAK symbol<int> g_poolSize{0, 0x140FEADF0};
 
-	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0, 0x14EDF9E00};
+	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0, 0x14FD21180};
 
 	WEAK symbol<int> dvarCount{0, 0x14D064CF4};
 	WEAK symbol<dvar_t*> sortedDvars{0, 0x14D064D00};
