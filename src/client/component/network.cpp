@@ -214,7 +214,7 @@ namespace network
 				utils::hook::set<uint8_t>(0x14025081F, 0xEB); // H1MP64(1.4)
 
 				// ignore unregistered connection
-				utils::hook::jump(0x140480F46, reinterpret_cast<void*>(0x140480EE5)); // H1MP64(1.4)
+				utils::hook::jump(0x140480F46, 0x140480EE5); // H1MP64(1.4)
 				utils::hook::set<uint8_t>(0x140480F3B, 0xEB); // H1MP64(1.4)
 
 				// disable xuid verification
@@ -237,10 +237,10 @@ namespace network
 				utils::hook::call(0x140488EF1, &net_compare_address); // H1MP64(1.4)
 
 				// ignore dw handle in SV_DirectConnect
-				utils::hook::set<uint8_t>(0x140480C58, 0xEB); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x140480CF2, 0xEB); // H1MP64(1.4)
-				utils::hook::call(0x140480C4B, &net_compare_address); // H1MP64(1.4)
-				utils::hook::call(0x140480E62, &net_compare_address); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x140480C58, 0xEB);
+				utils::hook::set<uint8_t>(0x140480E6F, 0xEB);
+				utils::hook::call(0x140480C4B, &net_compare_address);
+				utils::hook::call(0x140480E62, &net_compare_address);
 
 				// increase cl_maxpackets
 				dvars::override::register_int("cl_maxpackets", 1000, 1, 1000, game::DVAR_FLAG_SAVED, true);
