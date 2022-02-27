@@ -50,10 +50,10 @@ namespace discord
 					discord_presence.details = utils::string::va("%s on %s", gametype, mapname);
 
 					auto host_name = game::Dvar_FindVar("sv_hostname")->current.string;
-					auto max_clients = party::server_client_count();
-					if (!max_clients)
+					auto max_clients = game::Dvar_FindVar("sv_maxclients")->current.integer;
+					if (game::SV_Loaded())
 					{
-						max_clients = game::Dvar_FindVar("sv_maxclients")->current.integer;
+						max_clients = party::server_client_count();
 					}
 
 					auto clients = *(reinterpret_cast<int*>(0x14621BE00));
