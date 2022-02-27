@@ -42,9 +42,9 @@ namespace network
 
 			a.pushad64();
 
-			a.mov(r8, rsi); // message
-			a.mov(rdx, rdi); // command
-			a.mov(rcx, r14); // netaddr
+			a.mov(r8, rdi); // message
+			a.mov(rdx, rbx); // command
+			a.mov(rcx, rsi); // netaddr
 
 			a.call_aligned(handle_command);
 
