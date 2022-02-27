@@ -273,15 +273,6 @@ namespace command
 		}
 	}
 
-	void enum_assets(const game::XAssetType type, const std::function<void(game::XAssetHeader)>& callback, const bool includeOverride)
-	{
-		game::DB_EnumXAssets_Internal(type, static_cast<void(*)(game::XAssetHeader, void*)>([](game::XAssetHeader header, void* data)
-		{
-			const auto& cb = *static_cast<const std::function<void(game::XAssetHeader)>*>(data);
-			cb(header);
-		}), &callback, includeOverride);
-	}
-
 	class component final : public component_interface
 	{
 	public:
@@ -496,63 +487,17 @@ namespace command
 			});
 
 			add("ufo", []()
-				{
-					if (!game::SV_Loaded())
-					{
-						return;
-					}
-
-					game::sp::g_entities[0].client->flags ^= 2;
-					game::CG_GameMessage(0, utils::string::va("ufo %s",
-						game::sp::g_entities[0].client->flags & 2
-						? "^2on"
-						: "^1off"));
-				});
-
-			add("give", [](const params& params)
 			{
 				if (!game::SV_Loaded())
 				{
 					return;
 				}
 
-				if (params.size() < 2)
-				{
-					game::CG_GameMessage(0, "You did not specify a weapon name");
-					return;
-				}
-
-				auto ps = game::SV_GetPlayerstateForClientNum(0);
-				const auto wp = game::G_GetWeaponForName(params.get(1));
-				if (wp)
-				{
-					if (game::G_GivePlayerWeapon(ps, wp, 0, 0, 0, 0, 0, 0))
-					{
-						game::G_InitializeAmmo(ps, wp, 0);
-						game::G_SelectWeapon(0, wp);
-					}
-				}
-			});
-
-			add("take", [](const params& params)
-			{
-				if (!game::SV_Loaded())
-				{
-					return;
-				}
-
-				if (params.size() < 2)
-				{
-					game::CG_GameMessage(0, "You did not specify a weapon name");
-					return;
-				}
-
-				auto ps = game::SV_GetPlayerstateForClientNum(0);
-				const auto wp = game::G_GetWeaponForName(params.get(1));
-				if (wp)
-				{
-					game::G_TakePlayerWeapon(ps, wp);
-				}
+				game::sp::g_entities[0].client->flags ^= 2;
+				game::CG_GameMessage(0, utils::string::va("ufo %s",
+					game::sp::g_entities[0].client->flags & 2
+					? "^2on"
+					: "^1off"));
 			});
 		}
 
