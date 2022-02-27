@@ -104,6 +104,17 @@ namespace patches
 			return 0; // 0 == yes
 		}
 
+		void set_client_dvar_from_server_stub(void* a1, void* a2, const char* dvar, const char* value)
+		{
+			if (dvar == "cg_fov"s)
+			{
+				return;
+			}
+
+			// CG_SetClientDvarFromServer
+			reinterpret_cast<void(*)(void*, void*, const char*, const char*)>(0x140236120)(a1, a2, dvar, value);
+		}
+
 		/*void aim_assist_add_to_target_list(void* a1, void* a2)
 		{
 			if (!dvars::aimassist_enabled->current.enabled)
@@ -237,11 +248,11 @@ namespace patches
 			// patch "Server is different version" to show the server client version
 			utils::hook::inject(0x140480952, VERSION); // H1(1.4)
 
-			// prevent servers overriding our fov
-			//utils::hook::call(0x1401BB782, gscr_set_save_dvar_stub);
-			//utils::hook::nop(0x1403D1195, 5);
-			//utils::hook::nop(0x1400FAE36, 5);
-			//utils::hook::set<uint8_t>(0x14019B9B9, 0xEB);
+			 // prevent servers overriding our fov
+			 utils::hook::call(0x14023279E, set_client_dvar_from_server_stub);
+			 utils::hook::nop(0x1400DAF69, 5);
+			 utils::hook::nop(0x140190C16, 5);
+			 utils::hook::set<uint8_t>(0x14021D22A, 0xEB);
 
 			// some anti tamper thing that kills performance
 			dvars::override::register_int("dvl", 0, 0, 0, game::DVAR_FLAG_READ, true);
@@ -272,7 +283,7 @@ namespace patches
 			cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub); // H1(1.4)
 
 			// Prevent clients from sending invalid reliableAcknowledge
-			utils::hook::call(0x1404899C6, sv_execute_client_message_stub); // H1(1.4)
+			// utils::hook::call(0x1404899C6, sv_execute_client_message_stub); // H1(1.4)
 		}
 	};
 }
