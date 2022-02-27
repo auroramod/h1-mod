@@ -1,10 +1,12 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+
 #include "party.hpp"
 #include "console.hpp"
 #include "command.hpp"
 #include "network.hpp"
 #include "scheduler.hpp"
+#include "server_list.hpp"
 
 #include "steam/steam.hpp"
 
@@ -528,7 +530,7 @@ namespace party
 			{
 				utils::info_string info{};
 				info.set("challenge", std::string{data});
-				info.set("gamename", "H1");
+				info.set("gamename", "S1");
 				info.set("hostname", get_dvar_string("sv_hostname"));
 				info.set("gametype", get_dvar_string("g_gametype"));
 				info.set("sv_motd", get_dvar_string("sv_motd"));
@@ -549,7 +551,7 @@ namespace party
 			network::on("infoResponse", [](const game::netadr_s& target, const std::string_view& data)
 			{
 				const utils::info_string info{data};
-				// server_list::handle_info_response(target, info);
+				server_list::handle_info_response(target, info);
 
 				if (connect_state.host != target)
 				{
@@ -565,7 +567,7 @@ namespace party
 				}
 
 				const auto gamename = info.get("gamename");
-				if (gamename != "H1"s)
+				if (gamename != "S1"s)
 				{
 					const auto str = "Invalid gamename.";
 					printf("%s\n", str);

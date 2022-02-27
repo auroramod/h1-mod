@@ -92,6 +92,8 @@ namespace game
 
 	WEAK symbol<void(int clientNum, const char* menu, int a3, int a4, unsigned int a5)> LUI_OpenMenu{0, 0x1404CD210};
 
+	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0, 0x1404C7320};
+
 	WEAK symbol<scr_string_t(const char* str)> SL_FindString{0x140314AF0, 0x14043B470};
 
 	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{0, 0x140480860};
@@ -115,9 +117,6 @@ namespace game
 	WEAK symbol<void(int clientNum, svscmd_type type, const char* text)> SV_GameSendServerCommand{
 		0x1403F3A70, 0x140484AD0
 	};
-
-	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{ 0, 0x1404C7320 };
-	WEAK symbol<const char* (const char* string)> UI_SafeTranslateString{ 0x140350430, 0x1405A2930 };
 
 	WEAK symbol<void()> Sys_ShowConsole{0x1403E3B90, 0x140514910};
 	WEAK symbol<void(const char* error, ...)> Sys_Error{0x1403E0C40, 0x140511520};

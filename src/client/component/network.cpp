@@ -33,6 +33,9 @@ namespace network
 			const std::string_view data(message->data + offset, message->cursize - offset);
 
 			handler->second(*address, data);
+#ifdef DEBUG
+			console::info("[Network] Handling command %s\n", cmd_string.data());
+#endif
 			return true;
 		}
 
@@ -116,6 +119,10 @@ namespace network
 		packet.append(command);
 		packet.push_back(separator);
 		packet.append(data);
+
+#ifdef DEBUG
+		console::info("[Network] Sending command %s\n", command.data());
+#endif
 
 		send_data(address, packet);
 	}
