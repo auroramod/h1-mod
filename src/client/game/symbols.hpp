@@ -110,6 +110,9 @@ namespace game
 		0x1403F3A70, 0x140484AD0
 	};
 
+	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{ 0, 0x1404C7320 };
+	WEAK symbol<const char* (const char* string)> UI_SafeTranslateString{ 0x140350430, 0x1405A2930 };
+
 	WEAK symbol<void()> Sys_ShowConsole{0x1403E3B90, 0x140514910};
 	WEAK symbol<void(const char* error, ...)> Sys_Error{0x1403E0C40, 0x140511520};
 	WEAK symbol<void(char* path, int pathSize, Sys_Folder folder, const char* filename, const char* ext)>
