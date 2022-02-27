@@ -82,10 +82,10 @@ namespace map_rotation
 			if (dvar && dvar->current.enabled)
 			{
 				scheduler::on_game_initialized([]()
-					{
-						//printf("=======================setting OLD priority=======================\n");
-						SetPriorityClass(GetCurrentProcess(), previousPriority);
-					}, scheduler::pipeline::main, 1s);
+				{
+					//printf("=======================setting OLD priority=======================\n");
+					SetPriorityClass(GetCurrentProcess(), previousPriority);
+				}, scheduler::pipeline::main, 1s);
 
 				previousPriority = GetPriorityClass(GetCurrentProcess());
 				//printf("=======================setting NEW priority=======================\n");

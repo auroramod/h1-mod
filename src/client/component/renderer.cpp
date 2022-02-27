@@ -50,7 +50,7 @@ namespace renderer
 	public:
 		void post_unpack() override
 		{
-			if (game::environment::is_dedi())
+			if (game::environment::is_dedi() || !game::environment::is_mp())
 			{
 				return;
 			}
@@ -59,6 +59,8 @@ namespace renderer
 
 			r_init_draw_method_hook.create(SELECT_VALUE(0x1404BD140, 0x1405C46E0), &r_init_draw_method_stub);
 			r_update_front_end_dvar_options_hook.create(SELECT_VALUE(0x1404F8870, 0x1405FF9E0), &r_update_front_end_dvar_options_stub);
+
+			// TODO: find singleplayer addresses. unless they are different, i could not find it in R_RegisterDvars :|
 
 			// use "saved" flags for "r_normalMap"
 			utils::hook::set<uint8_t>(SELECT_VALUE(0x0, 0x1405D460E), game::DVAR_FLAG_SAVED);
@@ -72,4 +74,6 @@ namespace renderer
 	};
 }
 
+#ifdef DEBUG
 REGISTER_COMPONENT(renderer::component)
+#endif

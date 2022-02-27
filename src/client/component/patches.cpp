@@ -121,9 +121,9 @@ namespace patches
 			else
 			{
 				scheduler::once([]()
-					{
-						command::execute("reconnect");
-					}, scheduler::pipeline::main, 1s);
+				{
+					command::execute("reconnect");
+				}, scheduler::pipeline::main, 1s);
 				game::Com_Error(game::ERR_DROP, error, arg1);
 			}
 		}
@@ -228,7 +228,7 @@ namespace patches
 			dvars::override::register_int("elite_clan_active", 0, 0, 0, game::DVAR_FLAG_NONE);
 			utils::hook::set<uint8_t>(0x140585680, 0xC3); // don't register commands H1(1.4)
 
-			//// disable codPointStore
+			// disable codPointStore
 			dvars::override::register_int("codPointStore_enabled", 0, 0, 0, game::DVAR_FLAG_NONE, true);
 
 			// don't register every replicated dvar as a network dvar
