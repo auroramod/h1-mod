@@ -272,7 +272,7 @@ namespace patches
 			cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub); // H1(1.4)
 
 			// Prevent clients from sending invalid reliableAcknowledge
-			utils::hook::call(0x1404899C6, sv_execute_client_message_stub); // H1(1.4)
+			// utils::hook::call(0x1404899C6, sv_execute_client_message_stub); // H1(1.4)
 		}
 	};
 }

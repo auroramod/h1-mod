@@ -256,7 +256,7 @@ namespace network
 				utils::hook::set<uint8_t>(0x14051345A, 0); // H1MP64(1.4)
 
 				// don't read checksum
-				utils::hook::jump(0x140513389, 0x14051339F); // H1MP64(1.4)
+				utils::hook::set(0x1404F6620, 0xC301B0); // H1MP64(1.4)
 
 				// don't try to reconnect client
 				utils::hook::call(0x140480DFF, reconnect_migratated_client); // H1MP64(1.4)
