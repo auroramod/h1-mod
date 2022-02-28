@@ -4,6 +4,8 @@
 #include "command.hpp"
 #include "network.hpp"
 #include "console.hpp"
+#include "dvars.hpp"
+
 #include "game/dvars.hpp"
 
 #include <utils/hook.hpp>
@@ -276,10 +278,10 @@ namespace network
 				utils::hook::call(0x140480E62, &net_compare_address);
 
 				// increase cl_maxpackets
-				dvars::override::register_int("cl_maxpackets", 1000, 1, 1000, game::DVAR_FLAG_SAVED, true);
+				dvars::override::register_int("cl_maxpackets", 1000, 1, 1000, game::DVAR_FLAG_SAVED);
 
 				// increase snaps
-				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_FLAG_NONE, true);
+				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_FLAG_NONE);
 
 				// ignore impure client
 				utils::hook::jump(0x140481B58, reinterpret_cast<void*>(0x140481BEE)); // H1MP64(1.4)

@@ -1,6 +1,8 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
+#include "dvars.hpp"
+
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
@@ -35,7 +37,6 @@ namespace patches
 		}
 
 		utils::hook::detour gscr_set_save_dvar_hook;
-		utils::hook::detour dvar_register_float_hook;
 
 		void gscr_set_save_dvar_stub()
 		{
@@ -46,27 +47,6 @@ namespace patches
 			}
 
 			gscr_set_save_dvar_hook.invoke<void>();
-		}
-
-		game::dvar_t* cg_fov = nullptr;
-		game::dvar_t* cg_fovScale = nullptr;
-
-		game::dvar_t* dvar_register_float_stub(int hash, const char* dvarName, float value, float min, float max, unsigned int flags)
-		{
-			static const auto cg_fov_hash = game::generateHashValue("cg_fov");
-			static const auto cg_fov_scale_hash = game::generateHashValue("cg_fovscale");
-
-			if (hash == cg_fov_hash)
-			{
-				return cg_fov;
-			}
-
-			if (hash == cg_fov_scale_hash)
-			{
-				return cg_fovScale;
-			}
-
-			return dvar_register_float_hook.invoke<game::dvar_t*>(hash, dvarName, value, min, max, flags);
 		}
 
 		std::string get_login_username()
@@ -92,8 +72,6 @@ namespace patches
 
 				// Disable data validation error popup
 				dvars::register_int("data_validation_allow_drop", 0, 0, 0, game::DVAR_FLAG_NONE, true);
-
-				dvars::register_int("com_maxfps", 0, 10, 1000, game::DVAR_FLAG_SAVED, false);
 			}
 
 			return com_register_dvars_hook.invoke<void>();
@@ -192,10 +170,8 @@ namespace patches
 			gscr_set_save_dvar_hook.create(SELECT_VALUE(0x1402AE020, 0x14036B600), &gscr_set_save_dvar_stub);
 
 			// Make cg_fov and cg_fovscale saved dvars
-			cg_fov = dvars::register_float("cg_fov", 65.f, 40.f, 200.f, game::DvarFlags::DVAR_FLAG_SAVED, true);
-			cg_fovScale = dvars::register_float("cg_fovScale", 1.f, 0.1f, 2.f, game::DvarFlags::DVAR_FLAG_SAVED, true);
-
-			dvar_register_float_hook.create(game::Dvar_RegisterFloat.get(), dvar_register_float_stub);
+			dvars::override::register_float("cg_fov", 65.f, 40.f, 200.f, game::DvarFlags::DVAR_FLAG_SAVED);
+			dvars::override::register_float("cg_fovScale", 1.f, 0.1f, 2.f, game::DvarFlags::DVAR_FLAG_SAVED);
 
 			if (game::environment::is_mp())
 			{
@@ -232,15 +208,15 @@ namespace patches
 			utils::hook::set(0x1402877D0, 0xC3C033); // MAY BE WRONG H1(1.4)
 
 			// disable emblems
-			//dvars::override::register_int("emblems_active", 0, 0, 0, game::DVAR_FLAG_NONE);
-			//utils::hook::set<uint8_t>(0x140479590, 0xC3); // don't register commands
+			dvars::override::register_int("emblems_active", 0, 0, 0, game::DVAR_FLAG_NONE);
+			utils::hook::set<uint8_t>(0x140479590, 0xC3); // don't register commands
 
 			// disable elite_clan
 			dvars::override::register_int("elite_clan_active", 0, 0, 0, game::DVAR_FLAG_NONE);
 			utils::hook::set<uint8_t>(0x140585680, 0xC3); // don't register commands H1(1.4)
 
 			// disable codPointStore
-			dvars::override::register_int("codPointStore_enabled", 0, 0, 0, game::DVAR_FLAG_NONE, true);
+			dvars::override::register_int("codPointStore_enabled", 0, 0, 0, game::DVAR_FLAG_NONE);
 
 			// don't register every replicated dvar as a network dvar
 			utils::hook::nop(0x14039E58E, 5); // dvar_foreach H1(1.4)
@@ -254,30 +230,29 @@ namespace patches
 			 utils::hook::nop(0x140190C16, 5);
 			 utils::hook::set<uint8_t>(0x14021D22A, 0xEB);
 
-			// some anti tamper thing that kills performance
-			dvars::override::register_int("dvl", 0, 0, 0, game::DVAR_FLAG_READ, true);
-
 			// unlock safeArea_*
 			utils::hook::jump(0x1402624F5, 0x140262503); // H1(1.4)
 			utils::hook::jump(0x14026251C, 0x140262547); // H1(1.4)
-			dvars::override::register_float("safeArea_adjusted_horizontal", 1, 0, 1, game::DVAR_FLAG_SAVED, true);
-			dvars::override::register_float("safeArea_adjusted_vertical", 1, 0, 1, game::DVAR_FLAG_SAVED, true);
-			dvars::override::register_float("safeArea_horizontal", 1, 0, 1, game::DVAR_FLAG_SAVED, true);
-			dvars::override::register_float("safeArea_vertical", 1, 0, 1, game::DVAR_FLAG_SAVED, true);
+			dvars::override::register_int("safeArea_adjusted_horizontal", 1, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_int("safeArea_adjusted_vertical", 1, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_int("safeArea_horizontal", 1, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_int("safeArea_vertical", 1, 0, 1, game::DVAR_FLAG_SAVED);
 
 			// move chat position on the screen above menu splashes
-			//dvars::override::Dvar_RegisterVector2("cg_hudChatPosition", 5, 170, 0, 640, game::DVAR_FLAG_SAVED);
+			dvars::override::register_vec2("cg_hudChatPosition", 5, 170, 0, 640, game::DVAR_FLAG_SAVED);
 
 			// allow servers to check for new packages more often
-			dvars::override::register_int("sv_network_fps", 1000, 20, 1000, game::DVAR_FLAG_SAVED, true);
+			dvars::override::register_int("sv_network_fps", 1000, 20, 1000, game::DVAR_FLAG_SAVED);
 
 			// Massively increate timeouts
-			dvars::override::register_int("cl_timeout", 90, 90, 1800, game::DVAR_FLAG_NONE, true); // Seems unused
-			dvars::override::register_int("sv_timeout", 90, 90, 1800, game::DVAR_FLAG_NONE, true); // 30 - 0 - 1800
-			dvars::override::register_int("cl_connectTimeout", 120, 120, 1800, game::DVAR_FLAG_NONE, true); // Seems unused
-			dvars::override::register_int("sv_connectTimeout", 120, 120, 1800, game::DVAR_FLAG_NONE, true); // 60 - 0 - 1800
+			dvars::override::register_int("cl_timeout", 90, 90, 1800, game::DVAR_FLAG_NONE); // Seems unused
+			dvars::override::register_int("sv_timeout", 90, 90, 1800, game::DVAR_FLAG_NONE); // 30 - 0 - 1800
+			dvars::override::register_int("cl_connectTimeout", 120, 120, 1800, game::DVAR_FLAG_NONE); // Seems unused
+			dvars::override::register_int("sv_connectTimeout", 120, 120, 1800, game::DVAR_FLAG_NONE); // 60 - 0 - 1800
 
-			game::Dvar_RegisterInt(0, "scr_game_spectatetype", 1, 0, 99, game::DVAR_FLAG_REPLICATED);
+			dvars::register_int("scr_game_spectatetype", 1, 0, 99, game::DVAR_FLAG_REPLICATED);
+
+			dvars::override::register_int("com_maxfps", 0, 10, 1000, game::DVAR_FLAG_SAVED);
 
 			// Prevent clients from ending the game as non host by sending 'end_game' lui notification
 			// cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub); // H1(1.4)
