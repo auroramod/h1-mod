@@ -152,7 +152,7 @@ namespace scheduler
 	{
 		schedule([=]()
 		{
-			const auto dw_init = game::environment::is_sp() ? true : game::Live_SyncOnlineDataFlags(0) == 32;
+			const auto dw_init = game::environment::is_sp() ? true : game::Live_SyncOnlineDataFlags(0) == 0;
 			if (dw_init && game::Sys_IsDatabaseReady2())
 			{
 				once(callback, type, delay);
