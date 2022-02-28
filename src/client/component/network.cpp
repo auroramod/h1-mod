@@ -11,8 +11,11 @@
 
 namespace network
 {
+	SOCKET sock;
+
 	namespace
 	{
+
 		std::unordered_map<std::string, callback>& get_callbacks()
 		{
 			static std::unordered_map<std::string, callback> callbacks{};
@@ -33,6 +36,9 @@ namespace network
 			const std::string_view data(message->data + offset, message->cursize - offset);
 
 			handler->second(*address, data);
+#ifdef DEBUG
+			console::info("[Network] Handling command %s\n", cmd_string.data());
+#endif
 			return true;
 		}
 
@@ -107,7 +113,7 @@ namespace network
 	{
 		sockaddr s = {};
 		game::NetadrToSockadr(a3, &s);
-		return sendto(*game::query_socket, src, size, 0, &s, 16) >= 0;
+		return sendto(sock, src, size, 0, &s, 16) >= 0;
 	}
 
 	void send(const game::netadr_s& address, const std::string& command, const std::string& data, const char separator)
@@ -116,6 +122,10 @@ namespace network
 		packet.append(command);
 		packet.push_back(separator);
 		packet.append(data);
+
+#ifdef DEBUG
+		console::info("[Network] Sending command %s\n", command.data());
+#endif
 
 		send_data(address, packet);
 	}
@@ -182,6 +192,53 @@ namespace network
 		return dvar;
 	}
 
+	utils::hook::detour bind_socket_hook;
+
+	SOCKET bind_socket_stub(const char* net_interface, u_short port, int protocol)
+	{
+#ifdef DEBUG
+		printf("[Socket] Attempting to create socket\n");
+#endif
+
+		sock = socket(2, 2, protocol);
+		u_long argp;
+		char optval;
+		struct sockaddr name;
+
+		memset(&name, 0, sizeof(name));
+		name.sa_family = 2;
+
+		if (sock == -1)
+		{
+#ifdef DEBUG
+			printf("[Socket] Error creating socket\n");
+#endif
+			WSAGetLastError();
+			return 0;
+		}
+
+		argp = 1;
+		optval = 1;
+		if (ioctlsocket(sock, -2147195266, &argp) == -1 || setsockopt(sock, 0xFFFF, 32, &optval, 4) == -1)
+			return 0;
+
+		*(WORD*)name.sa_data = ntohs(port);
+
+		if (bind(sock, &name, 16) != -1)
+		{
+#ifdef DEBUG
+			printf("[Socket] Socket binded!\n");
+#endif
+			return sock;
+		}
+
+#ifdef DEBUG
+		printf("[Socket] Closing socket\n");
+#endif
+		closesocket(sock);
+		return 0;
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -192,6 +249,9 @@ namespace network
 				{
 					return;
 				}
+
+				// creating our own variable for socket use
+				bind_socket_hook.create(0x140512B40, bind_socket_stub);
 
 				// redirect dw_sendto to raw socket
 				//utils::hook::jump(0x1404D850A, reinterpret_cast<void*>(0x1404D849A));
