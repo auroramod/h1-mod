@@ -160,12 +160,6 @@ namespace auth
 
 			const auto xuid = strtoull(steam_id.data(), nullptr, 16);
 
-			if (xuid == auth::get_guid())
-			{
-				network::send(*from, "error", "You are already connected to this server!", '\n');
-				return;
-			}
-
 			if (xuid != key.get_hash())
 			{
 				//MessageBoxA(nullptr, steam_id.data(), std::to_string(key.get_hash()).data(), 0);
