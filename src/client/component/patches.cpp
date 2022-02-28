@@ -280,7 +280,7 @@ namespace patches
 			game::Dvar_RegisterInt(0, "scr_game_spectatetype", 1, 0, 99, game::DVAR_FLAG_REPLICATED);
 
 			// Prevent clients from ending the game as non host by sending 'end_game' lui notification
-			cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub); // H1(1.4)
+			// cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub); // H1(1.4)
 
 			// Prevent clients from sending invalid reliableAcknowledge
 			// utils::hook::call(0x1404899C6, sv_execute_client_message_stub); // H1(1.4)
