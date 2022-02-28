@@ -152,6 +152,12 @@ namespace party
 			a.mov(ecx, 2);
 			a.jmp(0x140251F78);
 		});
+
+		void menu_error(const std::string& error)
+		{
+			utils::hook::invoke<void>(0x1400DACC0, error.data(), "MENU_NOTICE");
+			utils::hook::set(0x142C1DA98, 1);
+		}
 	}
 
 	int get_client_num_by_name(const std::string& name)
@@ -562,7 +568,7 @@ namespace party
 				{
 					const auto str = "Invalid challenge.";
 					printf("%s\n", str);
-					game::Com_Error(game::ERR_DROP, str);
+					menu_error(str);
 					return;
 				}
 
@@ -571,7 +577,7 @@ namespace party
 				{
 					const auto str = "Invalid gamename.";
 					printf("%s\n", str);
-					game::Com_Error(game::ERR_DROP, str);
+					menu_error(str);
 					return;
 				}
 
@@ -580,7 +586,7 @@ namespace party
 				{
 					const auto str = "Invalid playmode.";
 					printf("%s\n", str);
-					game::Com_Error(game::ERR_DROP, str);
+					menu_error(str);
 					return;
 				}
 
@@ -589,7 +595,7 @@ namespace party
 				{
 					const auto str = "Server not running.";
 					printf("%s\n", str);
-					game::Com_Error(game::ERR_DROP, str);
+					menu_error(str);
 					return;
 				}
 
@@ -598,7 +604,7 @@ namespace party
 				{
 					const auto str = "Invalid map.";
 					printf("%s\n", str);
-					game::Com_Error(game::ERR_DROP, str);
+					menu_error(str);
 					return;
 				}
 
@@ -607,7 +613,7 @@ namespace party
 				{
 					const auto str = "Invalid gametype.";
 					printf("%s\n", str);
-					game::Com_Error(game::ERR_DROP, str);
+					menu_error(str);
 					return;
 				}
 
