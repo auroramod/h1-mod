@@ -96,6 +96,33 @@ namespace network
 			// Rather than try and let the player in, just tell them they are a duplicate player and reject connection
 			game::NET_OutOfBandPrint(game::NS_SERVER, from, "error\nYou are already connected to the server.");
 		}
+	SOCKET create_socket(const char* net_interface, int port, int protocol)
+	{
+		sockaddr_in address{};
+
+		if (net_interface && net_interface != "localhost"s)
+		{
+			// Sys_StringToSockaddr
+			utils::hook::invoke<void>(0x1404F6580, net_interface, &address);
+		}
+
+		address.sin_family = AF_INET;
+		address.sin_port = ntohs(port);
+
+		const auto sock = ::socket(AF_INET, SOCK_DGRAM, protocol);
+
+		u_long arg = 1;
+		ioctlsocket(sock, FIONBIO, &arg);
+		char optval[4] = {1};
+		setsockopt(sock, 0xFFFF, 32, optval, 4);
+
+		if (bind(sock, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != -1)
+		{
+			return sock;
+		}
+
+		closesocket(sock);
+		return 0;
 	}
 
 	void on(const std::string& command, const callback& callback)
@@ -280,6 +307,10 @@ namespace network
 					const std::string message{data};
 					console::info(message.data());
 				});
+
+				// Use our own socket since the game's socket doesn't work with non localhost addresses
+				// why? no idea
+				utils::hook::jump(0x140512B40, create_socket);
 			}
 		}
 	};
