@@ -11,8 +11,6 @@
 
 namespace network
 {
-	SOCKET sock;
-
 	namespace
 	{
 
@@ -102,6 +100,35 @@ namespace network
 			// Rather than try and let the player in, just tell them they are a duplicate player and reject connection
 			game::NET_OutOfBandPrint(game::NS_SERVER, from, "error\nYou are already connected to the server.");
 		}
+
+		SOCKET create_socket(const char* net_interface, int port, int protocol)
+		{
+			sockaddr_in address{};
+
+			if (net_interface && net_interface != "localhost"s)
+			{
+				// Sys_StringToSockaddr
+				utils::hook::invoke<void>(0x1404F6580, net_interface, &address);
+			}
+
+			address.sin_family = AF_INET;
+			address.sin_port = ntohs(static_cast<short>(port));
+
+			const auto sock = ::socket(AF_INET, SOCK_DGRAM, protocol);
+
+			u_long arg = 1;
+			ioctlsocket(sock, FIONBIO, &arg);
+			char optval[4] = { 1 };
+			setsockopt(sock, 0xFFFF, 32, optval, 4);
+
+			if (bind(sock, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != -1)
+			{
+				return sock;
+			}
+
+			closesocket(sock);
+			return 0;
+		}
 	}
 
 	void on(const std::string& command, const callback& callback)
@@ -113,7 +140,7 @@ namespace network
 	{
 		sockaddr s = {};
 		game::NetadrToSockadr(a3, &s);
-		return sendto(sock, src, size, 0, &s, 16) >= 0;
+		return sendto(*game::query_socket, src, size, 0, &s, 16) >= 0;
 	}
 
 	void send(const game::netadr_s& address, const std::string& command, const std::string& data, const char separator)
@@ -122,10 +149,6 @@ namespace network
 		packet.append(command);
 		packet.push_back(separator);
 		packet.append(data);
-
-#ifdef DEBUG
-		console::info("[Network] Sending command %s\n", command.data());
-#endif
 
 		send_data(address, packet);
 	}
@@ -192,53 +215,6 @@ namespace network
 		return dvar;
 	}
 
-	utils::hook::detour bind_socket_hook;
-
-	SOCKET bind_socket_stub(const char* net_interface, u_short port, int protocol)
-	{
-#ifdef DEBUG
-		printf("[Socket] Attempting to create socket\n");
-#endif
-
-		sock = socket(2, 2, protocol);
-		u_long argp;
-		char optval;
-		struct sockaddr name;
-
-		memset(&name, 0, sizeof(name));
-		name.sa_family = 2;
-
-		if (sock == -1)
-		{
-#ifdef DEBUG
-			printf("[Socket] Error creating socket\n");
-#endif
-			WSAGetLastError();
-			return 0;
-		}
-
-		argp = 1;
-		optval = 1;
-		if (ioctlsocket(sock, -2147195266, &argp) == -1 || setsockopt(sock, 0xFFFF, 32, &optval, 4) == -1)
-			return 0;
-
-		*(WORD*)name.sa_data = ntohs(port);
-
-		if (bind(sock, &name, 16) != -1)
-		{
-#ifdef DEBUG
-			printf("[Socket] Socket binded!\n");
-#endif
-			return sock;
-		}
-
-#ifdef DEBUG
-		printf("[Socket] Closing socket\n");
-#endif
-		closesocket(sock);
-		return 0;
-	}
-
 	class component final : public component_interface
 	{
 	public:
@@ -249,9 +225,6 @@ namespace network
 				{
 					return;
 				}
-
-				// creating our own variable for socket use
-				bind_socket_hook.create(0x140512B40, bind_socket_stub);
 
 				// redirect dw_sendto to raw socket
 				//utils::hook::jump(0x1404D850A, reinterpret_cast<void*>(0x1404D849A));
@@ -340,6 +313,10 @@ namespace network
 					const std::string message{data};
 					console::info(message.data());
 				});
+
+				// Use our own socket since the game's socket doesn't work with non localhost addresses
+				// why? no idea
+				utils::hook::jump(0x140512B40, create_socket);
 			}
 		}
 	};

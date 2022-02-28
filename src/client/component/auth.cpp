@@ -128,7 +128,7 @@ namespace auth
 			const auto offset = sizeof("connect") + 4;
 
 			proto::network::connect_info info;
-			if (!info.ParseFromArray(msg->data + offset, msg->cursize - offset))
+			if (msg->cursize < offset || !info.ParseFromArray(msg->data + offset, msg->cursize - offset))
 			{
 				network::send(*from, "error", "Invalid connect data!", '\n');
 				return;
@@ -159,6 +159,7 @@ namespace auth
 			key.set(info.publickey());
 
 			const auto xuid = strtoull(steam_id.data(), nullptr, 16);
+
 			if (xuid != key.get_hash())
 			{
 				//MessageBoxA(nullptr, steam_id.data(), std::to_string(key.get_hash()).data(), 0);
@@ -228,6 +229,8 @@ namespace auth
 
 				// Check for sending connect packet
 				utils::hook::set(0x14059A6E0, 0xC301B0);
+				// Don't instantly timeout the connecting client ? not sure about this
+				utils::hook::set(0x14025136B, 0xC3);
 			}
 
 			command::add("guid", []()
