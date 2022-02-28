@@ -103,7 +103,7 @@ namespace game
 	WEAK symbol<mp::gentity_s*(const char* name)> SV_AddBot{0, 0x140480190};
 	WEAK symbol<bool(int clientNum)> SV_BotIsBot{0, 0x14046E6C0};
 	WEAK symbol<const char* ()> SV_BotGetRandomName{0, 0x14046DBA0};
-	WEAK symbol<int(mp::gentity_s* ent)> SV_SpawnTestClient{ 0, 0x1404832A0 };
+	WEAK symbol<int(mp::gentity_s* ent)> SV_SpawnTestClient{0, 0x1404832A0};
 
 	WEAK symbol<const char* (int clientNum)> SV_GetGuid{0, 0x140484B90};
 	WEAK symbol<int(int clientNum)> SV_GetClientPing{0, 0x140484B70};

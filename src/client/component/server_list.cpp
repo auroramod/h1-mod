@@ -303,9 +303,7 @@ namespace server_list
 
 	bool get_master_server(game::netadr_s& address)
 	{
-		return game::NET_StringToAdr("master.xlabs.dev:20810", &address); // localhost works, but not outside localhost
-		// return game::NET_StringToAdr("master.xlabs.dev:20810", &address);
-		// return game::NET_StringToAdr("master.ff.h1p.co:20180", &address);
+		return game::NET_StringToAdr("master.xlabs.dev:20810", &address);
 	}
 
 	void handle_info_response(const game::netadr_s& address, const utils::info_string& info)
@@ -374,11 +372,6 @@ namespace server_list
 			if (!game::environment::is_mp()) return;
 
 			localized_strings::override("PLATFORM_SYSTEM_LINK_TITLE", "SERVER LIST");
-			localized_strings::override("LUA_MENU_STORE", "Server List");
-			localized_strings::override("LUA_MENU_STORE_DESC", "Browse available servers.");
-
-			// shitty ping workaround
-			// localized_strings::override("MENU_NUMPLAYERS", "Type");
 
 			// hook LUI_OpenMenu to refresh server list for system link menu
 			lui_open_menu_hook.create(game::LUI_OpenMenu, lui_open_menu_stub);
@@ -396,7 +389,6 @@ namespace server_list
 
 			network::on("getServersResponse", [](const game::netadr_s& target, const std::string_view& data)
 			{
-				console::info("getServersResponse\n");
 				{
 					std::lock_guard<std::mutex> _(mutex);
 					if (!master_state.requesting || master_state.address != target)
