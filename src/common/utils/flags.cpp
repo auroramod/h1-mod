@@ -37,6 +37,7 @@ namespace utils::flags
 		if (!parsed)
 		{
 			parse_flags(enabled_flags);
+			parsed = true;
 		}
 
 		for (const auto& entry : enabled_flags)
