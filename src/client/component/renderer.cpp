@@ -72,6 +72,6 @@ namespace renderer
 	};
 }
 
-#ifdef DEUBG
+#ifdef DEBUG
 REGISTER_COMPONENT(renderer::component)
 #endif
