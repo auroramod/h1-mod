@@ -6,6 +6,8 @@
 #include "command.hpp"
 #include "game/game.hpp"
 #include "game/dvars.hpp"
+#include "dvars.hpp"
+#include "console.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
@@ -178,6 +180,10 @@ namespace dedicated
 				return;
 			}
 
+#ifdef DEBUG
+			printf("Starting dedicated server\n");
+#endif
+
 			// Register dedicated dvar
 			dvars::register_bool("dedicated", true, game::DVAR_FLAG_READ);
 
@@ -191,8 +197,7 @@ namespace dedicated
 			dvars::override::register_bool("r_preloadShaders", false, game::DVAR_FLAG_READ);
 
 			// Don't allow sv_hostname to be changed by the game
-			const auto sv_hostname = std::to_string(game::generateHashValue("sv_hostname")).c_str();
-			dvars::disable::Dvar_SetString(sv_hostname);
+			dvars::disable::set_string("sv_hostname");
 
 			// Stop crashing from sys_errors
 			utils::hook::jump(0x140511520, sys_error_stub);
@@ -260,35 +265,30 @@ namespace dedicated
 			utils::hook::set<uint8_t>(0x140091610, 0xC3); // ^
 			utils::hook::set<uint8_t>(0x14061ACC0, 0xC3); // ^ - mutex
 
-			/*
-				everything above has some sort of addresses, they are prob wrong : |
-			*/
+			utils::hook::set<uint8_t>(0x140516080, 0xC3); // idk
+			utils::hook::set<uint8_t>(0x1405AE5F0, 0xC3); // ^
 
-			utils::hook::set<uint8_t>(0x1404DAF30, 0xC3); // idk
-			utils::hook::set<uint8_t>(0x1405736B0, 0xC3); // ^
+			utils::hook::set<uint8_t>(0x1405E0B30, 0xC3); // R_Shutdown
+			utils::hook::set<uint8_t>(0x1405AE400, 0xC3); // shutdown stuff
+			utils::hook::set<uint8_t>(0x1405E0C00, 0xC3); // ^
+			utils::hook::set<uint8_t>(0x1405DFE50, 0xC3); // ^
 
-			utils::hook::set<uint8_t>(0x1405A6E70, 0xC3); // R_Shutdown
-			utils::hook::set<uint8_t>(0x1405732D0, 0xC3); // shutdown stuff
-			utils::hook::set<uint8_t>(0x1405A6F40, 0xC3); // ^
-			utils::hook::set<uint8_t>(0x1405A61A0, 0xC3); // ^
+			utils::hook::set<uint8_t>(0x1404B67E0, 0xC3); // sound crashes (H1 - questionable, function looks way different)
 
-			utils::hook::set<uint8_t>(0x14062C550, 0xC3); // sound crashes
+			utils::hook::set<uint8_t>(0x14048B660, 0xC3); // disable host migration
 
-			utils::hook::set<uint8_t>(0x140445070, 0xC3); // disable host migration
+			utils::hook::set<uint8_t>(0x14042B2E0, 0xC3); // render synchronization lock
+			utils::hook::set<uint8_t>(0x14042B210, 0xC3); // render synchronization unlock
 
-			utils::hook::set<uint8_t>(0x1403E1A50, 0xC3); // render synchronization lock
-			utils::hook::set<uint8_t>(0x1403E1990, 0xC3); // render synchronization unlock
-
-			utils::hook::set<uint8_t>(0x1400E517B, 0xEB);
+			utils::hook::set<uint8_t>(0x140176D2D, 0xEB);
 			// LUI: Unable to start the LUI system due to errors in main.lua
 
-			utils::hook::nop(0x1404CC482, 5); // Disable sound pak file loading
-			utils::hook::nop(0x1404CC471, 2); // ^
-			utils::hook::set<uint8_t>(0x140279B80, 0xC3); // Disable image pak file loading
+			utils::hook::nop(0x140506ECE, 5); // Disable sound pak file loading
+			utils::hook::nop(0x140506ED6, 2); // ^
+			utils::hook::set<uint8_t>(0x1402C5910, 0xC3); // Disable image pak file loading
 
 			// Reduce min required memory
-			utils::hook::set<uint64_t>(0x1404D140D, 0x80000000);
-			utils::hook::set<uint64_t>(0x1404D14BF, 0x80000000);
+			utils::hook::set<uint64_t>(0x14050C715, 0x80000000);
 
 			// initialize the game after onlinedataflags is 32 (workaround)
 			scheduler::schedule([=]()
@@ -310,9 +310,9 @@ namespace dedicated
 			{
 				initialize();
 
-				printf("==================================\n");
-				printf("Server started!\n");
-				printf("==================================\n");
+				console::info("==================================\n");
+				console::info("Server started!\n");
+				console::info("==================================\n");
 
 				// remove disconnect command
 				game::Cmd_RemoveCommand(reinterpret_cast<const char*>(751));
@@ -327,7 +327,7 @@ namespace dedicated
 			}, scheduler::pipeline::main, 1s);
 
 			command::add("killserver", kill_server);
-			com_quit_f_hook.create(0x1403D08C0, &kill_server);
+			com_quit_f_hook.create(0x1400DA640, &kill_server);
 		}
 	};
 }
