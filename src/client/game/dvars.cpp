@@ -6,6 +6,8 @@
 
 namespace dvars
 {
+	game::dvar_t* aimassist_enabled = nullptr;
+
 	game::dvar_t* con_inputBoxColor = nullptr;
 	game::dvar_t* con_inputHintBoxColor = nullptr;
 	game::dvar_t* con_outputBarColor = nullptr;
