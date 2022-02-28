@@ -92,12 +92,19 @@ namespace game
 
 	WEAK symbol<void(int clientNum, const char* menu, int a3, int a4, unsigned int a5)> LUI_OpenMenu{0, 0x1404CD210};
 
+	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0, 0x1404C7320};
+
 	WEAK symbol<scr_string_t(const char* str)> SL_FindString{0x140314AF0, 0x14043B470};
 
 	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{0, 0x140480860};
 	WEAK symbol<void(const char* text_in)> SV_Cmd_TokenizeString{0x1402EF050, 0x140404D20};
 	WEAK symbol<void()> SV_Cmd_EndTokenizedString{0x140344700, 0x140404CE0};
+
+	WEAK symbol<mp::gentity_s*(const char* name)> SV_AddBot{0, 0x140480190};
 	WEAK symbol<bool(int clientNum)> SV_BotIsBot{0, 0x14046E6C0};
+	WEAK symbol<const char* ()> SV_BotGetRandomName{0, 0x14046DBA0};
+	WEAK symbol<int(mp::gentity_s* ent)> SV_SpawnTestClient{0, 0x1404832A0};
+
 	WEAK symbol<const char* (int clientNum)> SV_GetGuid{0, 0x140484B90};
 	WEAK symbol<int(int clientNum)> SV_GetClientPing{0, 0x140484B70};
 	WEAK symbol<playerState_s* (int num)> SV_GetPlayerstateForClientNum{0x1404426D0, 0x140484C10};
@@ -105,13 +112,11 @@ namespace game
 	WEAK symbol<bool()> SV_Loaded{0x140442F60, 0x1404864A0};
 	WEAK symbol<void(int clientNum, const char* reason)> SV_KickClientNum{0, 0x14047ED00};
 	WEAK symbol<bool(const char* map)> SV_MapExists{0, 0x14047ED60};
+	WEAK symbol<void(mp::client_t*, const char*, int)> SV_ExecuteClientCommand{0, 0x140481870};
 	WEAK symbol<void(int localClientNum)> SV_FastRestart{0, 0x14047E990};
 	WEAK symbol<void(int clientNum, svscmd_type type, const char* text)> SV_GameSendServerCommand{
 		0x1403F3A70, 0x140484AD0
 	};
-
-	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{ 0, 0x1404C7320 };
-	WEAK symbol<const char* (const char* string)> UI_SafeTranslateString{ 0x140350430, 0x1405A2930 };
 
 	WEAK symbol<void()> Sys_ShowConsole{0x1403E3B90, 0x140514910};
 	WEAK symbol<void(const char* error, ...)> Sys_Error{0x1403E0C40, 0x140511520};
@@ -126,6 +131,8 @@ namespace game
 	WEAK symbol<const char* (const char*)> UI_GetGameTypeDisplayName{0, 0x1404086A0};
 	WEAK symbol<void(unsigned int localClientNum, const char** args)> UI_RunMenuScript{0, 0x1404CFE60};
 	WEAK symbol<int(const char* text, int maxChars, Font_s* font, float scale)> UI_TextWidth{0, 0x1404D21A0};
+
+	WEAK symbol<const char*(const char* string)> UI_SafeTranslateString{0x140350430, 0x14041C580};
 
 	/***************************************************************
 	 * Variables
@@ -159,6 +166,8 @@ namespace game
 		WEAK symbol<client_t> svs_clients{0, 0x14B204A10};
 		WEAK symbol<int> svs_numclients{0, 0x14B204A0C};
 		WEAK symbol<int> gameTime{0, 0x14621BDBC};
+
+		WEAK symbol<int> sv_serverId_value{0, 0x14A3E99B8};
 
 		WEAK symbol<bool> virtualLobby_loaded{0, 0x142D077FD};
 	}
