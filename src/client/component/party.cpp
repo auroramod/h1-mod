@@ -71,12 +71,11 @@ namespace party
 			perform_game_initialization();
 
 			// exit from virtuallobby
-			reinterpret_cast<void(*)()>(0x140256D40)();
+			utils::hook::invoke<void>(0x140256D40, 1);
 
 			// CL_ConnectFromParty
 			char session_info[0x100] = {};
-			reinterpret_cast<void(*)(int, char*, const game::netadr_s*, const char*, const char*)>(0x140251560)(
-				0, session_info, &target, mapname.data(), gametype.data());
+			utils::hook::invoke<void>(0x140251560, 0, session_info, &target, mapname.data(), gametype.data());
 		}
 
 		std::string get_dvar_string(const std::string& dvar)
@@ -141,7 +140,7 @@ namespace party
 
 		utils::hook::detour cldisconnect_hook;
 
-		void cldisconnect_stub(int a1)
+		void cl_disconnect_stub(int a1)
 		{
 			party::sv_motd.clear();
 			cldisconnect_hook.invoke<void>(a1);
@@ -301,7 +300,7 @@ namespace party
 			utils::hook::jump(0x1402521C7, disconnect_stub);
 
 			// detour CL_Disconnect to clear motd
-			cldisconnect_hook.create(0x140252060, cldisconnect_stub);
+			cldisconnect_hook.create(0x140252060, cl_disconnect_stub);
 
 			if (game::environment::is_mp())
 			{
@@ -309,6 +308,7 @@ namespace party
 				utils::hook::nop(0x140251EFB, 13);
 				utils::hook::jump(0x140251EFB, drop_reason_stub, true);
 			}
+
 			// enable custom kick reason in GScr_KickPlayer
 			utils::hook::set<uint8_t>(0x140376A1D, 0xEB);
 
@@ -530,7 +530,7 @@ namespace party
 			{
 				utils::info_string info{};
 				info.set("challenge", std::string{data});
-				info.set("gamename", "S1");
+				info.set("gamename", "H1");
 				info.set("hostname", get_dvar_string("sv_hostname"));
 				info.set("gametype", get_dvar_string("g_gametype"));
 				info.set("sv_motd", get_dvar_string("sv_motd"));
@@ -567,7 +567,7 @@ namespace party
 				}
 
 				const auto gamename = info.get("gamename");
-				if (gamename != "S1"s)
+				if (gamename != "H1"s)
 				{
 					const auto str = "Invalid gamename.";
 					printf("%s\n", str);
