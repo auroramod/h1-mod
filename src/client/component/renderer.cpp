@@ -60,20 +60,18 @@ namespace renderer
 			r_init_draw_method_hook.create(SELECT_VALUE(0x1404BD140, 0x1405C46E0), &r_init_draw_method_stub);
 			r_update_front_end_dvar_options_hook.create(SELECT_VALUE(0x1404F8870, 0x1405FF9E0), &r_update_front_end_dvar_options_stub);
 
-			// TODO: find singleplayer addresses. unless they are different, i could not find it in R_RegisterDvars :|
-
 			// use "saved" flags for "r_normalMap"
-			utils::hook::set<uint8_t>(SELECT_VALUE(0x0, 0x1405D460E), game::DVAR_FLAG_SAVED);
+			utils::hook::set<uint8_t>(SELECT_VALUE(0x1404CF5CA, 0x1405D460E), game::DVAR_FLAG_SAVED);
 
 			// use "saved" flags for "r_specularMap"
-			utils::hook::set<uint8_t>(SELECT_VALUE(0x0, 0x1405D4639), game::DVAR_FLAG_SAVED);
+			utils::hook::set<uint8_t>(SELECT_VALUE(0x1404CF5F5, 0x1405D4639), game::DVAR_FLAG_SAVED);
 
 			// use "saved" flags for "r_specOccMap"
-			utils::hook::set<uint8_t>(SELECT_VALUE(0x0, 0x1405D4664), game::DVAR_FLAG_SAVED);
+			utils::hook::set<uint8_t>(SELECT_VALUE(0x1404CF620, 0x1405D4664), game::DVAR_FLAG_SAVED);
 		}
 	};
 }
 
-#ifdef DEBUG
+#ifdef DEUBG
 REGISTER_COMPONENT(renderer::component)
 #endif
