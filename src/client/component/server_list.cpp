@@ -74,7 +74,7 @@ namespace server_list
 			{
 				master_state.requesting = true;
 
-				network::send(master_state.address, "getservers", utils::string::va("S1 %i full empty", PROTOCOL));
+				network::send(master_state.address, "getservers", utils::string::va("H1 %i full empty", PROTOCOL));
 			}
 		}
 
@@ -303,7 +303,8 @@ namespace server_list
 
 	bool get_master_server(game::netadr_s& address)
 	{
-		return game::NET_StringToAdr("master.xlabs.dev:20810", &address);
+		return game::NET_StringToAdr("135.148.53.121:20810", &address);
+		// return game::NET_StringToAdr("master.xlabs.dev:20810", &address);
 	}
 
 	void handle_info_response(const game::netadr_s& address, const utils::info_string& info)

@@ -9,6 +9,8 @@ namespace game
 	 **************************************************************/
 
 	WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{0x140342EB0, 0x1404033B0};
+	WEAK symbol<void(int localClientNum, int controllerIndex, const char* buffer,
+		void (int, int, const char*))> Cbuf_ExecuteBufferInternal{0, 0x1404034C0};
 	WEAK symbol<void(const char* message)> Conbuf_AppendText{0x1403E3300, 0x140513FF0};
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cmd_ExecuteSingleCommand{0x140343980, 0x140403F60};
 	WEAK symbol<void(const char* cmdName, void(), cmd_function_s* allocedCmd)> Cmd_AddCommandInternal{0x1403433E0, 0x140403950};
@@ -84,6 +86,7 @@ namespace game
 	H1_AddBaseDrawTextCmd(TXT, MC, F, game::R_GetFontHeight(F), X, Y, XS, YS, R, C, S, CP, CC, game::R_DrawSomething(S))
 
 	WEAK symbol<float(int index)> Scr_GetFloat{0x140374D20, 0x140442D10};
+	WEAK symbol<const char*(int index)> Scr_GetString{0, 0x14032F0A0};
 	WEAK symbol<int()> Scr_GetNumParam{0x140374F30, 0x140442E70};
 
 	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetViewPlacement{0x1401981F0, 0x140288550};

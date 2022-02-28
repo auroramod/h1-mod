@@ -530,7 +530,7 @@ namespace party
 			{
 				utils::info_string info{};
 				info.set("challenge", std::string{data});
-				info.set("gamename", "S1");
+				info.set("gamename", "H1");
 				info.set("hostname", get_dvar_string("sv_hostname"));
 				info.set("gametype", get_dvar_string("g_gametype"));
 				info.set("sv_motd", get_dvar_string("sv_motd"));
@@ -567,7 +567,7 @@ namespace party
 				}
 
 				const auto gamename = info.get("gamename");
-				if (gamename != "S1"s)
+				if (gamename != "H1"s)
 				{
 					const auto str = "Invalid gamename.";
 					printf("%s\n", str);

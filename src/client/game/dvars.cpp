@@ -1,11 +1,24 @@
 #include <std_include.hpp>
+#include "loader/component_loader.hpp"
+
 #include <utils/string.hpp>
 
 #include "game.hpp"
 #include <component/console.hpp>
+#include <utils/hook.hpp>
 
 namespace dvars
 {
+	struct dvar_base
+	{
+		unsigned int flags{};
+	};
+
+	struct dvar_bool : dvar_base
+	{
+		bool value{};
+	};
+
 	game::dvar_t* con_inputBoxColor = nullptr;
 	game::dvar_t* con_inputHintBoxColor = nullptr;
 	game::dvar_t* con_outputBarColor = nullptr;
@@ -585,9 +598,19 @@ namespace dvars
 		return game::Dvar_RegisterVec4(hash, "", x, y, z, w, min, max, flags);
 	}
 
+	namespace disable
+	{
+		static std::unordered_set<std::string> set_string_disables;
+
+		void Dvar_SetString(const std::string& name)
+		{
+			set_string_disables.emplace(name);
+		}
+	}
+
 	namespace override 
 	{
-		static std::unordered_map<std::string, std::string> set_string_overrides;
+		static std::unordered_map<std::string, dvar_bool> register_bool_overrides;
 
 		game::dvar_t* register_int(const std::string& name, int value, int min, int max,
 			const unsigned int flags, bool add_to_list)
@@ -600,11 +623,6 @@ namespace dvars
 			}
 
 			return game::Dvar_RegisterInt(hash, "", value, min, max, flags);
-		}
-
-		void Dvar_SetString(const std::string& name, const std::string& value)
-		{
-			set_string_overrides[name] = value;
 		}
 
 		game::dvar_t* register_float(const std::string& name, float value, float min,
@@ -632,5 +650,57 @@ namespace dvars
 
 			return game::Dvar_RegisterString(hash, "", value, flags);
 		}
+
+		game::dvar_t* register_bool(const std::string& name, bool value, 
+			game::DvarFlags flags, bool add_to_list)
+		{
+			dvar_bool values;
+			values.value = value;
+			values.flags = flags;
+			register_bool_overrides[name] = std::move(values);
+		}
 	}
+
+	utils::hook::detour dvar_register_bool_hook;
+
+	utils::hook::detour dvar_set_string_hook;
+
+	game::dvar_t* dvar_register_bool(int hash, const char* name, bool value, unsigned int flags)
+	{
+		auto* var = find_dvar(override::register_bool_overrides, name);
+		if (var)
+		{
+			value = var->value;
+			flags = var->flags;
+		}
+
+		console::info("Overrided dvar %s\n", name);
+
+		return dvar_register_bool_hook.invoke<game::dvar_t*>(hash, name, value, flags);
+	}
+
+	void dvar_set_string(game::dvar_t* dvar, const char* string)
+	{
+		const char* hash = std::to_string(dvar->hash).c_str();
+		const auto disabled = find_dvar(disable::set_string_disables, hash);
+		if (disabled)
+		{
+			return;
+		}
+
+		return dvar_set_string_hook.invoke<void>(dvar, string);
+	}
+
+	class component final : public component_interface
+	{
+	public:
+		void post_unpack() override
+		{
+			dvar_register_bool_hook.create(game::Dvar_RegisterBool, &dvar_register_bool);
+
+			dvar_set_string_hook.create(SELECT_VALUE(0, 0x1404FD8E0), &dvar_set_string);
+		}
+	};
 }
+
+REGISTER_COMPONENT(dvars::component)
