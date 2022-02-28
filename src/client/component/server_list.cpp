@@ -17,7 +17,7 @@ namespace server_list
 {
 	namespace
 	{
-		const int server_limit = 14;
+		const int server_limit = 18;
 
 		struct server_info
 		{
@@ -303,23 +303,20 @@ namespace server_list
 
 	bool get_master_server(game::netadr_s& address)
 	{
-		return game::NET_StringToAdr("localhost:20810", &address); // localhost works, but not outside localhost
+		return game::NET_StringToAdr("master.xlabs.dev:20810", &address); // localhost works, but not outside localhost
 		// return game::NET_StringToAdr("master.xlabs.dev:20810", &address);
 		// return game::NET_StringToAdr("master.ff.h1p.co:20180", &address);
 	}
 
 	void handle_info_response(const game::netadr_s& address, const utils::info_string& info)
 	{
-		// TODO: uncomment this later, this is just to get servers showing. dedis return 0 even tho dvar exists...?
 		// Don't show servers that aren't dedicated!
-		/*
 		const auto dedicated = std::atoi(info.get("dedicated").data());
 		if (!dedicated)
 		{
 			printf("not dedi\n");
 			return;
 		}
-		*/
 
 		// Don't show servers that aren't running!
 		const auto sv_running = std::atoi(info.get("sv_running").data());
