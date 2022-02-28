@@ -7,7 +7,7 @@
 #include "version.hpp"
 
 #include "game/game.hpp"
-#include "game/dvars.hpp"
+#include "dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
@@ -46,7 +46,7 @@ namespace branding
 				localized_strings::override("MENU_MULTIPLAYER_CAPS", "H1-MOD: MULTIPLAYER");
 			}
 
-			dvars::override::Dvar_SetString("version", utils::string::va("H1-Mod %s", VERSION));
+			dvars::override::set_string("version", utils::string::va("H1-Mod %s", VERSION));
 
 			ui_get_formatted_build_number_hook.create(
 				SELECT_VALUE(0x1403B1C40, 0x1404E74C0), ui_get_formatted_build_number_stub);
