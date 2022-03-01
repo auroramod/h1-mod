@@ -564,8 +564,6 @@ namespace party
 					return;
 				}
 
-				printf("%s\n", info.build().data());
-
 				if (info.get("challenge") != connect_state.challenge)
 				{
 					const auto str = "Invalid challenge.";
