@@ -144,6 +144,7 @@ namespace dvars
 		static std::unordered_map<std::string, float> set_float_overrides;
 		static std::unordered_map<std::string, int> set_int_overrides;
 		static std::unordered_map<std::string, std::string> set_string_overrides;
+		static std::unordered_map<std::string, std::string> set_from_string_overrides;
 
 		void register_bool(const std::string& name, const bool value, const unsigned int flags)
 		{
@@ -228,6 +229,11 @@ namespace dvars
 		{
 			set_string_overrides[name] = value;
 		}
+    
+		void set_from_string(const std::string& name, const std::string& value)
+		{
+			set_from_string_overrides[name] = value;
+		}
 	}
 
 	utils::hook::detour dvar_register_bool_hook;
@@ -241,6 +247,7 @@ namespace dvars
 	utils::hook::detour dvar_set_float_hook;
 	utils::hook::detour dvar_set_int_hook;
 	utils::hook::detour dvar_set_string_hook;
+	utils::hook::detour dvar_set_from_string_hook;
 
 	game::dvar_t* dvar_register_bool(const int hash, const char* name, bool value, unsigned int flags)
 	{
@@ -395,6 +402,23 @@ namespace dvars
 		return dvar_set_string_hook.invoke<void>(dvar, string);
 	}
 
+	void dvar_set_from_string(game::dvar_t* dvar, const char* string, game::DvarSetSource source)
+	{
+		const auto disabled = find_dvar(disable::set_string_disables, dvar->hash);
+		if (disabled)
+		{
+			return;
+		}
+
+		auto* var = find_dvar(override::set_from_string_overrides, dvar->hash);
+		if (var)
+		{
+			string = var->data();
+		}
+
+		return dvar_set_from_string_hook.invoke<void>(dvar, string, source);
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -411,6 +435,7 @@ namespace dvars
 			dvar_set_float_hook.create(SELECT_VALUE(0x1403C7420, 0x1404FD360), &dvar_set_float);
 			dvar_set_int_hook.create(SELECT_VALUE(0x1403C76C0, 0x1404FD5E0), &dvar_set_int);
 			dvar_set_string_hook.create(SELECT_VALUE(0x1403C7900, 0x1404FD8D0), &dvar_set_string);
+			dvar_set_from_string_hook.create(SELECT_VALUE(0, 0x1404FD520), &dvar_set_from_string);
 		}
 	};
 }

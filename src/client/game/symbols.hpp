@@ -18,6 +18,8 @@ namespace game
 	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{0x140344110, 0x1404046F0};
 	WEAK symbol<void()> Cmd_EndTokenizeString{0x140343630, 0x140403C20};
 
+	WEAK symbol<void(void*, void*)> AimAssist_AddToTargetList{0, 0x14009D0F0};
+
 	WEAK symbol<void()> Com_Frame_Try_Block_Function{0, 0x1400D8310};
 	WEAK symbol<CodPlayMode()> Com_GetCurrentCoDPlayMode{0, 0x1405039A0};
 	WEAK symbol<void(float, float, int)> Com_SetSlowMotion{0, 0x1400DB790};

@@ -33,7 +33,6 @@ namespace patches
 			{
 				return;
 			}
-
 			return sv_kick_client_num_hook.invoke<void>(client_num, reason);
 		}
 
@@ -134,6 +133,14 @@ namespace patches
 
 			reinterpret_cast<void(*)(game::mp::client_t*, game::msg_t*)>(0x140481A00)(client, msg);
 		}
+
+		void aim_assist_add_to_target_list(void* a1, void* a2)
+		{
+			if (!dvars::aimassist_enabled->current.enabled)
+				return;
+
+			game::AimAssist_AddToTargetList(a1, a2);
+		}
 	}
 
 	class component final : public component_interface
@@ -160,6 +167,10 @@ namespace patches
 			// Make cg_fov and cg_fovscale saved dvars
 			dvars::override::register_float("cg_fov", 65.f, 40.f, 200.f, game::DvarFlags::DVAR_FLAG_SAVED);
 			dvars::override::register_float("cg_fovScale", 1.f, 0.1f, 2.f, game::DvarFlags::DVAR_FLAG_SAVED);
+			
+			// Allow kbam input when gamepad is enabled
+			utils::hook::nop(SELECT_VALUE(0x14018797E, 0x14024EF60), 2);
+			utils::hook::nop(SELECT_VALUE(0x1401856DC, 0x14024C6B0), 6);
 
 			if (game::environment::is_mp())
 			{
@@ -182,10 +193,10 @@ namespace patches
 			utils::hook::call(0x1402BA26B, bsp_sys_error_stub); // H1(1.4)
 
 			// client side aim assist dvar
-			//dvars::aimassist_enabled = game::Dvar_RegisterBool("aimassist_enabled", true,
-			//	game::DvarFlags::DVAR_FLAG_SAVED,
-			//	"Enables aim assist for controllers");
-			//utils::hook::call(0x140003609, aim_assist_add_to_target_list);
+			dvars::aimassist_enabled = dvars::register_bool("aimassist_enabled", true,
+				game::DvarFlags::DVAR_FLAG_SAVED,
+				true);
+			utils::hook::call(0x14009EE9E, aim_assist_add_to_target_list);
 
 			// unlock all items
 			utils::hook::jump(0x140413E60, is_item_unlocked); // LiveStorage_IsItemUnlockedFromTable_LocalClient H1(1.4)

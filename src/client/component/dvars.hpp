@@ -23,5 +23,6 @@ namespace dvars
 		void set_float(const std::string& name, float fl);
 		void set_int(const std::string& name, int integer);
 		void set_string(const std::string& name, const std::string& string);
+		void set_from_string(const std::string& name, const std::string& value);
 	}
 }

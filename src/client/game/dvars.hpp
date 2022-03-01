@@ -6,6 +6,8 @@
 
 namespace dvars
 {
+	extern game::dvar_t* aimassist_enabled;
+
 	extern game::dvar_t* con_inputBoxColor;
 	extern game::dvar_t* con_inputHintBoxColor;
 	extern game::dvar_t* con_outputBarColor;

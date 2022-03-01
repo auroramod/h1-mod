@@ -125,8 +125,10 @@ namespace console
 				this->console_thread_.join();
 			}
 
+#ifndef NATIVE_CONSOLE
 			_close(this->handles_[0]);
 			_close(this->handles_[1]);
+#endif
 
 			messages.access([&](message_queue& msgs)
 			{

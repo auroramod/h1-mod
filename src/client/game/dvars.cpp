@@ -9,15 +9,7 @@
 
 namespace dvars
 {
-	struct dvar_base
-	{
-		unsigned int flags{};
-	};
-
-	struct dvar_bool : dvar_base
-	{
-		bool value{};
-	};
+	game::dvar_t* aimassist_enabled = nullptr;
 
 	game::dvar_t* con_inputBoxColor = nullptr;
 	game::dvar_t* con_inputHintBoxColor = nullptr;
