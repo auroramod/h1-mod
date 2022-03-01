@@ -37,7 +37,7 @@ namespace map_rotation
 			}
 			else
 			{
-				launch_map("mp_crash_snow");
+				launch_map("mp_crash");
 			}
 		}
 
