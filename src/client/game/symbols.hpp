@@ -27,7 +27,7 @@ namespace game
 
 	WEAK symbol<void(void*, void*)> AimAssist_AddToTargetList{0, 0x14009D0F0};
 
-	WEAK symbol<void(unsigned int weapon, bool isAlternate, char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{ 0x0, 0x140165580 };
+	WEAK symbol<void(unsigned int weapon, bool isAlternate, char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{0x0, 0x140165580}; // H1MP
 
 	WEAK symbol<void()> Com_Frame_Try_Block_Function{0, 0x1400D8310};
 	WEAK symbol<CodPlayMode()> Com_GetCurrentCoDPlayMode{0, 0x1405039A0};
@@ -62,7 +62,7 @@ namespace game
 	WEAK symbol<void(const char* gameName)> FS_Startup{0x1403B85D0, 0x1404EDD30};
 	WEAK symbol<void(const char* path, const char* dir)> FS_AddLocalizedGameDirectory{0x1403B6030, 0x1404EBE20};
 
-	WEAK symbol<unsigned int(unsigned int, unsigned int)> GetVariable{ 0x0, 0x1403F3730 };
+	WEAK symbol<unsigned int(unsigned int, unsigned int)> GetVariable{0x0, 0x1403F3730}; // H1MP
 
 	WEAK symbol<void()> GScr_LoadConsts{0x1402D13E0, 0x140393810};
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int name)> FindVariable{0x1403165D0, 0x14043D430}; // H1MP
@@ -106,15 +106,13 @@ namespace game
 
 	WEAK symbol<unsigned int(unsigned int localId, const char* pos, unsigned int paramcount)> VM_Execute{0x0, 0x140444350};
 
-	WEAK symbol<void(unsigned int id, scr_string_t stringValue, unsigned int paramcount)> Scr_NotifyId{
-	0x14031CB80, 0x1404437E0
-	};
+	WEAK symbol<void(unsigned int id, scr_string_t stringValue, unsigned int paramcount)> Scr_NotifyId{0x14031CB80, 0x1404437E0};
 	WEAK symbol<const float* (const float* v)> Scr_AllocVector{0x140317D10, 0x14043E7D0}; // H1MP
 	WEAK symbol<float(int index)> Scr_GetFloat{0x140374D20, 0x140442D10};
 	WEAK symbol<const char*(int index)> Scr_GetString{0, 0x14032F0A0};
 	WEAK symbol<int()> Scr_GetNumParam{0x140374F30, 0x140442E70};
 	WEAK symbol<void()> Scr_ClearOutParams{0x14031B7C0, 0x140442510}; // H1MP
-	WEAK symbol<scr_entref_t(unsigned int entId)> Scr_GetEntityIdRef{ 0x14031A0D0, 0x1403F68A0 };
+	WEAK symbol<scr_entref_t(unsigned int entId)> Scr_GetEntityIdRef{0x14031A0D0, 0x1403F68A0}; // H1MP
 
 	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetViewPlacement{0x1401981F0, 0x140288550};
 
@@ -130,7 +128,7 @@ namespace game
 	WEAK symbol<int(unsigned int classnum, int entnum, int offset)> Scr_SetObjectField{ 0x14026B620, 0x140385330 }; // H1MP
 
 	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{0, 0x140480860};
-	WEAK symbol<void(int arg, char* buffer, int bufferLength)> SV_Cmd_ArgvBuffer{ 0x1402EEFD0, 0x1403B05C0 };
+	WEAK symbol<void(int arg, char* buffer, int bufferLength)> SV_Cmd_ArgvBuffer{0x1402EEFD0, 0x1403B05C0}; // H1MP
 	WEAK symbol<void(const char* text_in)> SV_Cmd_TokenizeString{0x1402EF050, 0x140404D20};
 	WEAK symbol<void()> SV_Cmd_EndTokenizedString{0x140344700, 0x140404CE0};
 
@@ -168,8 +166,8 @@ namespace game
 
 	WEAK symbol<const char*(const char* string)> UI_SafeTranslateString{0x140350430, 0x14041C580};
 
-	WEAK symbol<void* (jmp_buf* Buf, int Value)> longjmp{ 0x140648FD4, 0x140779F64 };
-	WEAK symbol<int(jmp_buf* Buf)> _setjmp{ 0x1406BFD30, 0x1407F5F90 };
+	WEAK symbol<void* (jmp_buf* Buf, int Value)> longjmp{0x140648FD4, 0x140779F64};
+	WEAK symbol<int(jmp_buf* Buf)> _setjmp{0x1406BFD30, 0x1407F5F90};
 
 	/***************************************************************
 	 * Variables
@@ -187,7 +185,7 @@ namespace game
 	WEAK symbol<CmdArgs> cmd_args{0x14AD99960, 0x14946B970};
 
 	WEAK symbol<int> g_poolSize{0, 0x140FEADF0};
-	WEAK symbol<scr_classStruct_t> g_classMap{ 0x14080A840, 0x1412106B0 };
+	WEAK symbol<scr_classStruct_t> g_classMap{0x14080A840, 0x1412106B0}; // H1MP
 
 	WEAK symbol<scrVarGlob_t> scr_VarGlob{0x149B1D680, 0x149CC8800}; // H1MP
 	WEAK symbol<scrVmPub_t> scr_VmPub{0x14A1938C0, 0x14A33EA40}; // H1MP
