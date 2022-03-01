@@ -313,7 +313,6 @@ namespace server_list
 		const auto dedicated = std::atoi(info.get("dedicated").data());
 		if (!dedicated)
 		{
-			printf("not dedi\n");
 			return;
 		}
 
@@ -379,7 +378,7 @@ namespace server_list
 
 			// replace UI_RunMenuScript call in LUI_CoD_LuaCall_RefreshServerList to our refresh_servers
 			utils::hook::call(0x14018A0C9, &refresh_server_list);
-			utils::hook::call(0x14018A5E3, &join_server);
+			utils::hook::call(0x14018A5DE, &join_server);
 			utils::hook::nop(0x14018A5FD, 5);
 
 			// do feeder stuff
