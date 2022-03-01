@@ -14,7 +14,7 @@ namespace game
 	WEAK symbol<void(const char* message)> Conbuf_AppendText{0x1403E3300, 0x140513FF0};
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cmd_ExecuteSingleCommand{0x140343980, 0x140403F60};
 	WEAK symbol<void(const char* cmdName, void(), cmd_function_s* allocedCmd)> Cmd_AddCommandInternal{0x1403433E0, 0x140403950};
-	WEAK symbol<void(const char*)> Cmd_RemoveCommand{0x140343FF0, 0x1403AFEF0};
+	WEAK symbol<void(const char*)> Cmd_RemoveCommand{0x140343FF0, 0x1404045D0};
 	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{0x140344110, 0x1404046F0};
 	WEAK symbol<void()> Cmd_EndTokenizeString{0x140343630, 0x140403C20};
 

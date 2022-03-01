@@ -226,13 +226,12 @@ namespace dedicated
 			utils::hook::set<uint8_t>(0x140620D10, 0xC3); // render thread
 			utils::hook::set<uint8_t>(0x14025B850, 0xC3); // called from Com_Frame, seems to do renderer stuff
 			utils::hook::set<uint8_t>(0x1402507B0, 0xC3); // CL_CheckForResend, which tries to connect to the local server constantly
-			utils::hook::set<uint8_t>(0x1405D5176, 0); // r_loadForRenderer default to 0
+			utils::hook::set<uint8_t>(0x1405D5178, 0x00); // r_loadForRenderer default to 0
 			utils::hook::set<uint8_t>(0x14050C2D0, 0xC3); // recommended settings check - TODO: Check hook
 			utils::hook::set<uint8_t>(0x140514C00, 0xC3); // some mixer-related function called on shutdown
 			utils::hook::set<uint8_t>(0x140409830, 0xC3); // dont load ui gametype stuff
 
-			// (COULD NOT FIND IN H1)
-			// utils::hook::nop(0x14043ABB8, 6); // unknown check in SV_ExecuteClientMessage // ??
+			utils::hook::nop(0x140481B06, 6); // unknown check in SV_ExecuteClientMessage
 			utils::hook::nop(0x140480FAC, 4); // allow first slot to be occupied
 			utils::hook::nop(0x14025619B, 2); // properly shut down dedicated servers
 			utils::hook::nop(0x14025615E, 2); // ^
@@ -273,22 +272,24 @@ namespace dedicated
 			utils::hook::set<uint8_t>(0x1405E0C00, 0xC3); // ^
 			utils::hook::set<uint8_t>(0x1405DFE50, 0xC3); // ^
 
-			utils::hook::set<uint8_t>(0x1404B67E0, 0xC3); // sound crashes (H1 - questionable, function looks way different)
+			// utils::hook::set<uint8_t>(0x1404B67E0, 0xC3); // sound crashes (H1 - questionable, function looks way different)
 
 			utils::hook::set<uint8_t>(0x14048B660, 0xC3); // disable host migration
 
 			utils::hook::set<uint8_t>(0x14042B2E0, 0xC3); // render synchronization lock
 			utils::hook::set<uint8_t>(0x14042B210, 0xC3); // render synchronization unlock
 
-			utils::hook::set<uint8_t>(0x140176D2D, 0xEB);
-			// LUI: Unable to start the LUI system due to errors in main.lua
+			utils::hook::set<uint8_t>(0x140176D2D, 0xEB); // LUI: Unable to start the LUI system due to errors in main.lua
 
 			utils::hook::nop(0x140506ECE, 5); // Disable sound pak file loading
 			utils::hook::nop(0x140506ED6, 2); // ^
 			utils::hook::set<uint8_t>(0x1402C5910, 0xC3); // Disable image pak file loading
 
 			// Reduce min required memory
-			utils::hook::set<uint64_t>(0x14050C715, 0x80000000);
+			utils::hook::set<uint64_t>(0x14050C717, 0x80000000);
+
+			utils::hook::set(0x1402BF7F0, 0xC3); // some loop
+			utils::hook::set(0x14007E150, 0xC3); // related to shader caching / techsets / fastfiles
 
 			// initialize the game after onlinedataflags is 32 (workaround)
 			scheduler::schedule([=]()
@@ -315,7 +316,7 @@ namespace dedicated
 				console::info("==================================\n");
 
 				// remove disconnect command
-				game::Cmd_RemoveCommand(reinterpret_cast<const char*>(751));
+				game::Cmd_RemoveCommand("disconnect");
 
 				execute_startup_command_queue();
 				execute_console_command_queue();
