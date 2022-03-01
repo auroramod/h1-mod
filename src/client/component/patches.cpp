@@ -2,18 +2,18 @@
 #include "loader/component_loader.hpp"
 
 #include "dvars.hpp"
+#include "version.h"
+#include "command.hpp"
+#include "console.hpp"
+#include "network.hpp"
+#include "scheduler.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
-#include <component/scheduler.hpp>
-
-#include "version.h"
-#include <component/command.hpp>
-#include <component/console.hpp>
-#include <component/network.hpp>
+#include <utils/flags.hpp>
 
 namespace patches
 {
@@ -258,6 +258,16 @@ namespace patches
 
 			// Prevent clients from sending invalid reliableAcknowledge
 			// utils::hook::call(0x1404899C6, sv_execute_client_message_stub); // H1(1.4)
+
+			// "fix" for rare 'Out of memory error' error
+			if (utils::flags::has_flag("memoryfix"))
+			{
+				utils::hook::jump(0x140578BE0, malloc);
+				utils::hook::jump(0x140578B00, _aligned_malloc);
+				utils::hook::jump(0x140578C40, free);
+				utils::hook::jump(0x140578D30, realloc);
+				utils::hook::jump(0x140578B60, _aligned_realloc);
+			}
 		}
 	};
 }
