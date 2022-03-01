@@ -172,7 +172,7 @@ namespace patches
 			utils::hook::nop(SELECT_VALUE(0x14018797E, 0x14024EF60), 2);
 			utils::hook::nop(SELECT_VALUE(0x1401856DC, 0x14024C6B0), 6);
 
-			if (game::environment::is_mp())
+			if (!game::environment::is_sp())
 			{
 				patch_mp();
 			}
@@ -223,11 +223,11 @@ namespace patches
 			// patch "Server is different version" to show the server client version
 			utils::hook::inject(0x140480952, VERSION); // H1(1.4)
 
-			 // prevent servers overriding our fov
-			 utils::hook::call(0x14023279E, set_client_dvar_from_server_stub);
-			 utils::hook::nop(0x1400DAF69, 5);
-			 utils::hook::nop(0x140190C16, 5);
-			 utils::hook::set<uint8_t>(0x14021D22A, 0xEB);
+			// prevent servers overriding our fov
+			utils::hook::call(0x14023279E, set_client_dvar_from_server_stub);
+			utils::hook::nop(0x1400DAF69, 5);
+			utils::hook::nop(0x140190C16, 5);
+			utils::hook::set<uint8_t>(0x14021D22A, 0xEB);
 
 			// unlock safeArea_*
 			utils::hook::jump(0x1402624F5, 0x140262503); // H1(1.4)
