@@ -548,7 +548,7 @@ namespace party
 				info.set("sv_maxclients", utils::string::va("%i", *game::mp::svs_numclients));
 				info.set("protocol", utils::string::va("%i", PROTOCOL));
 				info.set("playmode", utils::string::va("%i", game::Com_GetCurrentCoDPlayMode()));
-				info.set("sv_running", utils::string::va("%i", get_dvar_bool("sv_running")));
+				info.set("sv_running", utils::string::va("%i", get_dvar_bool("sv_running") && !game::VirtualLobby_Loaded()));
 				info.set("dedicated", utils::string::va("%i", get_dvar_bool("dedicated")));
 
 				network::send(target, "infoResponse", info.build(), '\n');
@@ -563,6 +563,8 @@ namespace party
 				{
 					return;
 				}
+
+				printf("%s\n", info.build().data());
 
 				if (info.get("challenge") != connect_state.challenge)
 				{
