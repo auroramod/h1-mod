@@ -16,7 +16,6 @@
 #include <version.hpp>
 
 #include "game/dvars.hpp"
-#include <utils/flags.hpp>
 
 namespace exception
 {
