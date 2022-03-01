@@ -254,7 +254,7 @@ namespace console
 		{
 			std::string cmd;
 
-			while (true)
+			while (!this->terminate_runner_)
 			{
 				std::getline(std::cin, cmd);
 				command::execute(cmd);
