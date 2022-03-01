@@ -555,7 +555,7 @@ namespace game_console
 	{
 		if (key == game::keyNum_t::K_F10)
 		{
-			if (game::mp::svs_clients[local_client_num].header.state >= 1)
+			if (!game::Com_InFrontEnd())
 			{
 				return false;
 			}

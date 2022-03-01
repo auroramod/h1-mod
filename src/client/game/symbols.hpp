@@ -20,8 +20,9 @@ namespace game
 
 	WEAK symbol<void(void*, void*)> AimAssist_AddToTargetList{0, 0x14009D0F0};
 
-	WEAK symbol<void()> Com_Frame_Try_Block_Function{0, 0x1400D8310};
+	WEAK symbol<void()> Com_Frame_Try_Block_Function{0x1401CE8D0, 0x1400D8310};
 	WEAK symbol<CodPlayMode()> Com_GetCurrentCoDPlayMode{0, 0x1405039A0};
+	WEAK symbol<bool()> Com_InFrontEnd{0x1400E4B30, 0x140176A30};
 	WEAK symbol<void(float, float, int)> Com_SetSlowMotion{0, 0x1400DB790};
 	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{0x1403509C0, 0x1400D78A0};
 	WEAK symbol<void()> Com_Quit_f{0x140352BE0, 0x1400DA830};
@@ -58,7 +59,7 @@ namespace game
 	WEAK symbol<void()> G_Glass_Update{0, 0x14033A640};
 	WEAK symbol<int(int clientNum)> G_GetClientScore{0, 0x140342F90};
 
-	WEAK symbol<char* (char* string)> I_CleanStr{0x1403CD230, 0x140503D00};
+	WEAK symbol<char*(char* string)> I_CleanStr{0x1403CD230, 0x140503D00};
 
 	WEAK symbol<const char* (int, int, int)> Key_KeynumToString{0x140187CC0, 0x14024FE10};
 
