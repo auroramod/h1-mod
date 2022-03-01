@@ -229,7 +229,7 @@ namespace dvars
 		{
 			set_string_overrides[name] = value;
 		}
-
+    
 		void set_from_string(const std::string& name, const std::string& value)
 		{
 			set_from_string_overrides[name] = value;
@@ -413,7 +413,6 @@ namespace dvars
 		auto* var = find_dvar(override::set_from_string_overrides, dvar->hash);
 		if (var)
 		{
-			printf("fucker\n");
 			string = var->data();
 		}
 

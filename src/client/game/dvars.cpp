@@ -1,8 +1,11 @@
 #include <std_include.hpp>
+#include "loader/component_loader.hpp"
+
 #include <utils/string.hpp>
 
 #include "game.hpp"
 #include <component/console.hpp>
+#include <utils/hook.hpp>
 
 namespace dvars
 {

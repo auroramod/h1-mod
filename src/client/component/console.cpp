@@ -21,6 +21,12 @@ namespace console
 		using message_queue = std::queue<std::string>;
 		utils::concurrency::container<message_queue> messages;
 
+		bool native_console()
+		{
+			static const auto flag = utils::flags::has_flag("nativeconsole");
+			return flag;
+		}
+
 		void hide_console()
 		{
 			auto* const con_window = GetConsoleWindow();
@@ -28,11 +34,9 @@ namespace console
 			DWORD process;
 			GetWindowThreadProcessId(con_window, &process);
 
-			if (process == GetCurrentProcessId() || IsDebuggerPresent())
+			if (!native_console() && (process == GetCurrentProcessId() || IsDebuggerPresent()))
 			{
-#ifndef NATIVE_CONSOLE
 				ShowWindow(con_window, SW_HIDE);
-#endif
 			}
 		}
 
@@ -48,6 +52,12 @@ namespace console
 
 		void dispatch_message(const int type, const std::string& message)
 		{
+			if (native_console())
+			{
+				printf("%s\n", message.data());
+				return;
+			}
+
 			game_console::print(type, message);
 			messages.access([&message](message_queue& msgs)
 			{
@@ -68,14 +78,17 @@ namespace console
 		{
 			hide_console();
 
-#ifdef NATIVE_CONSOLE
-			setvbuf(stdout, nullptr, _IONBF, 0);
-			setvbuf(stderr, nullptr, _IONBF, 0);
-#else
-			(void)_pipe(this->handles_, 1024, _O_TEXT);
-			(void)_dup2(this->handles_[1], 1);
-			(void)_dup2(this->handles_[1], 2);
-#endif
+			if (native_console())
+			{
+				setvbuf(stdout, nullptr, _IONBF, 0);
+				setvbuf(stderr, nullptr, _IONBF, 0);
+			}
+			else
+			{
+				(void)_pipe(this->handles_, 1024, _O_TEXT);
+				(void)_dup2(this->handles_[1], 1);
+				(void)_dup2(this->handles_[1], 2);
+			}
 		}
 
 		void post_start() override
@@ -84,7 +97,14 @@ namespace console
 
 			this->console_runner_ = utils::thread::create_named_thread("Console IO", [this]
 			{
-				this->runner();
+				if (native_console())
+				{
+					this->native_input();
+				}
+				else
+				{
+					this->runner();
+				}
 			});
 		}
 
@@ -137,11 +157,9 @@ namespace console
 		{
 			this->console_thread_ = utils::thread::create_named_thread("Console", [this]()
 			{
-				if (game::environment::is_dedi() || !utils::flags::has_flag("noconsole"))
+				if (!native_console() && (game::environment::is_dedi() || !utils::flags::has_flag("noconsole")))
 				{
-#ifndef NATIVE_CONSOLE
 					game::Sys_ShowConsole();
-#endif
 				}
 
 				if (!game::environment::is_dedi())
@@ -227,6 +245,19 @@ namespace console
 				{
 					std::this_thread::sleep_for(1ms);
 				}
+			}
+
+			std::this_thread::yield();
+		}
+
+		void native_input()
+		{
+			std::string cmd;
+
+			while (true)
+			{
+				std::getline(std::cin, cmd);
+				command::execute(cmd);
 			}
 
 			std::this_thread::yield();

@@ -36,19 +36,6 @@ namespace patches
 			return sv_kick_client_num_hook.invoke<void>(client_num, reason);
 		}
 
-		utils::hook::detour gscr_set_save_dvar_hook;
-
-		void gscr_set_save_dvar_stub()
-		{
-			const auto string = utils::string::to_lower(utils::hook::invoke<const char*>(SELECT_VALUE(0x140375210, 0x140443150), 0));
-			if (string == "cg_fov" || string == "cg_fovscale")
-			{
-				return;
-			}
-
-			gscr_set_save_dvar_hook.invoke<void>();
-		}
-
 		std::string get_login_username()
 		{
 			char username[UNLEN + 1];
@@ -167,15 +154,15 @@ namespace patches
 			// Unlock fps in main menu
 			utils::hook::set<BYTE>(SELECT_VALUE(0x14018D47B, 0x14025B86B), 0xEB); // H1(1.4)
 
-			// Fix mouse lag
-			utils::hook::nop(SELECT_VALUE(0x1403E3C05, 0x1404DB1AF), 6);
-			scheduler::loop([]()
+			if (!game::environment::is_dedi())
 			{
-				SetThreadExecutionState(ES_DISPLAY_REQUIRED);
-			}, scheduler::pipeline::main);
-
-			// Prevent game from overriding cg_fov and cg_fovscale values
-			gscr_set_save_dvar_hook.create(SELECT_VALUE(0x1402AE020, 0x14036B600), &gscr_set_save_dvar_stub);
+				// Fix mouse lag
+				utils::hook::nop(SELECT_VALUE(0x1403E3C05, 0x1404DB1AF), 6);
+				scheduler::loop([]()
+				{
+					SetThreadExecutionState(ES_DISPLAY_REQUIRED);
+				}, scheduler::pipeline::main);
+			}
 
 			// Make cg_fov and cg_fovscale saved dvars
 			dvars::override::register_float("cg_fov", 65.f, 40.f, 200.f, game::DvarFlags::DVAR_FLAG_SAVED);
