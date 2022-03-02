@@ -435,7 +435,7 @@ namespace dvars
 			dvar_set_float_hook.create(SELECT_VALUE(0x1403C7420, 0x1404FD360), &dvar_set_float);
 			dvar_set_int_hook.create(SELECT_VALUE(0x1403C76C0, 0x1404FD5E0), &dvar_set_int);
 			dvar_set_string_hook.create(SELECT_VALUE(0x1403C7900, 0x1404FD8D0), &dvar_set_string);
-			dvar_set_from_string_hook.create(SELECT_VALUE(0, 0x1404FD520), &dvar_set_from_string);
+			dvar_set_from_string_hook.create(SELECT_VALUE(0x1403C7620, 0x1404FD520), &dvar_set_from_string);
 		}
 	};
 }
