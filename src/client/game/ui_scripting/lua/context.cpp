@@ -74,7 +74,7 @@ namespace ui_scripting::lua
 			userdata_type[sol::meta_function::new_index] = [](const userdata& userdata, const sol::this_state s, 
 				const sol::lua_value& key, const sol::lua_value& value)
 			{
-				userdata.set(convert({s, key }), convert({s, value}));
+				userdata.set(convert({s, key}), convert({s, value}));
 			};
 
 			auto table_type = state.new_usertype<table>("table_");
