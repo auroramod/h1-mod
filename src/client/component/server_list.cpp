@@ -150,6 +150,11 @@ namespace server_list
 				return servers[i].game_type.empty() ? "" : utils::string::va("%s", servers[i].game_type.data());
 			}
 
+			if (column == 4)
+			{
+				return servers[i].game_type.empty() ? "" : utils::string::va("%i", servers[i].ping);
+			}
+
 			return "";
 		}
 
