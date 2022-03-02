@@ -1397,7 +1397,7 @@ namespace game
 			LiveClientDropType liveDropRequest; //269572
 			char __pad4[24];
 			TestClientType testClient; // 269600
-			char __pad5[391700];
+			char __pad5[610012];
 		}; // size = 661304
 	}
 
