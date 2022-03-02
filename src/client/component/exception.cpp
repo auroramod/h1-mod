@@ -16,7 +16,6 @@
 #include <version.hpp>
 
 #include "game/dvars.hpp"
-#include <utils/flags.hpp>
 
 namespace exception
 {
@@ -255,17 +254,6 @@ namespace exception
 		{
 			dvars::cg_legacyCrashHandling = dvars::register_bool("cg_legacyCrashHandling", 
 				false, game::DVAR_FLAG_SAVED, true);
-
-			// Could cause memory leaks but fixes possible out of memory (12) errors
-			const auto has_flag = utils::flags::has_flag("memoryfix");
-			if (has_flag)
-			{
-				utils::hook::jump(0x140578BE0, malloc);
-				utils::hook::jump(0x140578B00, _aligned_malloc);
-				utils::hook::jump(0x140578C40, free);
-				utils::hook::jump(0x140578D30, realloc);
-				utils::hook::jump(0x140578B60, _aligned_realloc);
-			}
 		}
 	};
 }

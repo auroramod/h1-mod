@@ -196,9 +196,6 @@ namespace dedicated
 			// Disable r_preloadShaders
 			dvars::override::register_bool("r_preloadShaders", false, game::DVAR_FLAG_READ);
 
-			// Don't allow sv_hostname to be changed by the game
-			dvars::disable::set_string("sv_hostname");
-
 			// Stop crashing from sys_errors
 			utils::hook::jump(0x140511520, sys_error_stub);
 

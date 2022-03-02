@@ -141,4 +141,33 @@ namespace demonware
 			buffer->read_string(&this->timezone);
 		}
 	};
+
+	// made up name
+	class bdFile final : public bdTaskResult
+	{
+	public:
+		uint64_t owner_id;
+		std::string platform;
+		std::string filename;
+		uint32_t unk;
+		std::string data;
+
+		void serialize(byte_buffer* buffer) override
+		{
+			buffer->write_uint64(this->owner_id);
+			buffer->write_string(this->platform);
+			buffer->write_string(this->filename);
+			buffer->write_uint32(this->unk);
+			buffer->write_blob(this->data);
+		}
+
+		void deserialize(byte_buffer* buffer) override
+		{
+			buffer->read_uint64(&this->owner_id);
+			buffer->read_string(&this->platform);
+			buffer->read_string(&this->filename);
+			buffer->read_uint32(&this->unk);
+			buffer->read_blob(&this->data);
+		}
+	};
 }

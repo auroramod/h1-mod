@@ -29,8 +29,9 @@ namespace game
 
 	WEAK symbol<void(unsigned int weapon, bool isAlternate, char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{0x0, 0x140165580}; // H1MP
 
-	WEAK symbol<void()> Com_Frame_Try_Block_Function{0, 0x1400D8310};
+	WEAK symbol<void()> Com_Frame_Try_Block_Function{0x1401CE8D0, 0x1400D8310};
 	WEAK symbol<CodPlayMode()> Com_GetCurrentCoDPlayMode{0, 0x1405039A0};
+	WEAK symbol<bool()> Com_InFrontEnd{0x1400E4B30, 0x140176A30};
 	WEAK symbol<void(float, float, int)> Com_SetSlowMotion{0, 0x1400DB790};
 	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{0x1403509C0, 0x1400D78A0};
 	WEAK symbol<void()> Com_Quit_f{0x140352BE0, 0x1400DA830};
@@ -74,7 +75,7 @@ namespace game
 	WEAK symbol<void()> G_Glass_Update{0, 0x14033A640};
 	WEAK symbol<int(int clientNum)> G_GetClientScore{0, 0x140342F90};
 
-	WEAK symbol<char* (char* string)> I_CleanStr{0x1403CD230, 0x140503D00};
+	WEAK symbol<char*(char* string)> I_CleanStr{0x1403CD230, 0x140503D00};
 
 	WEAK symbol<const char* (int, int, int)> Key_KeynumToString{0x140187CC0, 0x14024FE10};
 
@@ -118,9 +119,9 @@ namespace game
 
 	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x14019A3B0, 0x14028BE70};
 
-	WEAK symbol<void(int clientNum, const char* menu, int a3, int a4, unsigned int a5)> LUI_OpenMenu{0, 0x1404CD210};
+	WEAK symbol<void(int clientNum, const char* menu, int a3, int a4, unsigned int a5)> LUI_OpenMenu{0x14039D5F0, 0x1404CD210};
 
-	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0, 0x1404C7320};
+	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0x1404709C0, 0x1404C7320};
 
 	WEAK symbol<scr_string_t(const char* str)> SL_FindString{0x140314AF0, 0x14043B470};
 	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{0x140314D90, 0x14043B840}; // H1MP
@@ -161,8 +162,8 @@ namespace game
 
 	WEAK symbol<const char* (const char*)> UI_GetMapDisplayName{0, 0x140408CC0};
 	WEAK symbol<const char* (const char*)> UI_GetGameTypeDisplayName{0, 0x1404086A0};
-	WEAK symbol<void(unsigned int localClientNum, const char** args)> UI_RunMenuScript{0, 0x1404CFE60};
-	WEAK symbol<int(const char* text, int maxChars, Font_s* font, float scale)> UI_TextWidth{0, 0x1404D21A0};
+	WEAK symbol<void(unsigned int localClientNum, const char** args)> UI_RunMenuScript{0x14039EFF0, 0x1404CFE60};
+	WEAK symbol<int(const char* text, int maxChars, Font_s* font, float scale)> UI_TextWidth{0x1403A0F20, 0x1404D21A0};
 
 	WEAK symbol<const char*(const char* string)> UI_SafeTranslateString{0x140350430, 0x14041C580};
 
@@ -220,5 +221,20 @@ namespace game
 	namespace sp
 	{
 		WEAK symbol<gentity_s> g_entities{0x14550DD90, 0};
+	}
+
+	namespace hks
+	{
+		WEAK symbol<lua_State*> lua_state{0x141E2C2F8, 0x1426D3D08};
+		WEAK symbol<void(lua_State* s, const char* str, unsigned int l)> hksi_lua_pushlstring{0x14004DA90, 0x1400624F0};
+		WEAK symbol<HksObject*(HksObject* result, lua_State* s, const HksObject* table, const HksObject* key)> hks_obj_getfield{0x14009C0A0, 0x14012C600};
+		WEAK symbol<void(lua_State* s, const HksObject* tbl, const HksObject* key, const HksObject* val)> hks_obj_settable{0x14009D240, 0x14012D820};
+		WEAK symbol<HksObject* (HksObject* result, lua_State* s, const HksObject* table, const HksObject* key)> hks_obj_gettable{0x14009C580, 0x14012CAE0};
+		WEAK symbol<void(lua_State* s, int nargs, int nresults, const unsigned int* pc)> vm_call_internal{0x1400C87A0, 0x140159EB0};
+		WEAK symbol<HashTable*(lua_State* s, unsigned int arraySize, unsigned int hashSize)> Hashtable_Create{0x14008B3B0, 0x14011B320};
+		WEAK symbol<cclosure*(lua_State* s, lua_function function, int num_upvalues, 
+			int internal_, int profilerTreatClosureAsFunc)> cclosure_Create{0x14008B5D0, 0x14011B540};
+		WEAK symbol<int(lua_State* s, int t)> hksi_luaL_ref{0x1400A64D0, 0x140136D30};
+		WEAK symbol<void(lua_State* s, int t, int ref)> hksi_luaL_unref{0x14009EF10, 0x14012F610};
 	}
 }

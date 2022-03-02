@@ -227,10 +227,12 @@ targetdir "%{wks.location}/bin/%{cfg.platform}/%{cfg.buildcfg}"
 
 configurations {"Debug", "Release"}
 
-architecture "x64"
+language "C++"
+cppdialect "C++20"
+
+architecture "x86_64"
 platforms "x64"
 
-buildoptions "/std:c++latest"
 systemversion "latest"
 symbols "On"
 staticruntime "On"
@@ -248,25 +250,22 @@ end
 
 flags {"NoIncrementalLink", "NoMinimalRebuild", "MultiProcessorCompile", "No64BitChecks"}
 
+filter "platforms:x64"
+	defines {"_WINDOWS", "WIN32"}
+filter {}
 
-configuration "windows"
-defines {"_WINDOWS", "WIN32"}
+filter "configurations:Release"
+	optimize "Size"
+	buildoptions {"/GL"}
+	linkoptions { "/IGNORE:4702", "/LTCG" }
+	defines {"NDEBUG"}
+	flags {"FatalCompileWarnings"}
+filter {}
 
-configuration "Release"
-optimize "Size"
-buildoptions {"/GL"}
-linkoptions { "/IGNORE:4702", "/LTCG" }
-
-defines {"NDEBUG"}
-
-flags {"FatalCompileWarnings"}
-
-configuration "Debug"
-optimize "Debug"
-
-defines {"DEBUG", "_DEBUG"}
-
-configuration {}
+filter "configurations:Debug"
+	optimize "Debug"
+	defines {"DEBUG", "_DEBUG"}
+filter {}
 
 project "common"
 kind "StaticLib"

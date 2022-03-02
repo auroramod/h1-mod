@@ -15,11 +15,6 @@ namespace lui
 	public:
 		void post_unpack() override
 		{
-			if (!game::environment::is_mp())
-			{
-				return;
-			}
-
 			// Don't show create cod account popup
 			//utils::hook::set<uint32_t>(0x14017C957, 0); // H1(1.4)
 
