@@ -10,6 +10,7 @@
 #pragma warning(disable: 4702)
 #pragma warning(disable: 4996)
 #pragma warning(disable: 5054)
+#pragma warning(disable: 5056)
 #pragma warning(disable: 6011)
 #pragma warning(disable: 6297)
 #pragma warning(disable: 6385)

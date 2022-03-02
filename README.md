@@ -12,7 +12,7 @@ Proof of concept for an Modern Warfare Remastered client. <br>
 ## Compile from source
 
 - Clone the Git repo. Do NOT download it as ZIP, that won't work.
-- Update the submodules and run `premake5 vs2019` or simply use the delivered `generate.bat`.
+- Update the submodules and run `premake5 vs2022` or simply use the delivered `generate.bat`.
 - Build via solution file in `build\h1-mod.sln`.
 
 ### Premake arguments
