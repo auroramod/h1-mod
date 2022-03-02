@@ -49,17 +49,21 @@ namespace discord
 
 					discord_presence.details = utils::string::va("%s on %s", gametype, mapname);
 
-					auto host_name = game::Dvar_FindVar("sv_hostname")->current.string;
+					char clean_hostname[0x100] = {0};
+					utils::string::strip(game::Dvar_FindVar("sv_hostname")->current.string, 
+						clean_hostname, sizeof(clean_hostname));
 					auto max_clients = game::Dvar_FindVar("sv_maxclients")->current.integer;
+
 					if (game::SV_Loaded())
 					{
+						strcpy_s(clean_hostname, "Private Match");
 						max_clients = party::server_client_count();
 					}
 
-					auto clients = *(reinterpret_cast<int*>(0x14621BE00));
+					auto clients = *reinterpret_cast<int*>(0x14621BE00);
 					discord_presence.partySize = clients;
 					discord_presence.partyMax = max_clients;
-					discord_presence.state = host_name;
+					discord_presence.state = clean_hostname;
 					discord_presence.largeImageKey = map;
 				}
 				else if (game::environment::is_sp())

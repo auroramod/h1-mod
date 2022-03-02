@@ -268,6 +268,9 @@ namespace patches
 				utils::hook::jump(0x140578D30, realloc);
 				utils::hook::jump(0x140578B60, _aligned_realloc);
 			}
+
+			// Change default hostname and make it replicated
+			dvars::override::register_string("sv_hostname", "^2H1-Mod^7 Default Server", game::DVAR_FLAG_REPLICATED);
 		}
 	};
 }
