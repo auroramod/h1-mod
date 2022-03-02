@@ -160,9 +160,13 @@ namespace ui_scripting
 			hks_start_hook.create(SELECT_VALUE(0x1400E4B40, 0x140176A40), hks_start_stub);
 			hks_shutdown_hook.create(SELECT_VALUE(0x1400DD3D0, 0x14016CA80), hks_shutdown_stub);
 			hksi_lual_error_hook.create(SELECT_VALUE(0x1400A5EA0, 0x14012F300), hksi_lual_error_stub);
-			hksi_lual_error_hook2.create(SELECT_VALUE(0x1400A5EA0, 0x1401366B0), hksi_lual_error_stub);
 			hks_allocator_hook.create(SELECT_VALUE(0x14009B570, 0x14012BAC0), hks_allocator_stub);
 			hks_frame_hook.create(SELECT_VALUE(0x1400E37F0, 0x1401755B0), hks_frame_stub);
+
+			if (game::environment::is_mp())
+			{
+				hksi_lual_error_hook2.create(0x1401366B0, hksi_lual_error_stub);
+			}
 
 			command::add("lui_restart", []()
 			{
