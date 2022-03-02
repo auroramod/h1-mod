@@ -111,7 +111,7 @@ namespace fps
 
 		void cg_draw_ping()
 		{
-			if (cg_drawping->current.integer > 0 && game::CL_IsCgameInitialized())
+			if (cg_drawping->current.integer > 0 && game::CL_IsCgameInitialized() && !game::VirtualLobby_Loaded())
 			{
 				const auto ping = *reinterpret_cast<int*>(0x142D106F0);
 
