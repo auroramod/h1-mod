@@ -183,4 +183,19 @@ namespace game
 	{
 		WEAK symbol<gentity_s> g_entities{0x14550DD90, 0};
 	}
+
+	namespace hks
+	{
+		WEAK symbol<lua_State*> lua_state{0, 0x1426D3D08};
+		WEAK symbol<void(lua_State* s, const char* str, unsigned int l)> hksi_lua_pushlstring{0, 0x1400624F0};
+		WEAK symbol<HksObject*(HksObject* result, lua_State* s, const HksObject* table, const HksObject* key)> hks_obj_getfield{0, 0x14012C600};
+		WEAK symbol<void(lua_State* s, const HksObject* tbl, const HksObject* key, const HksObject* val)> hks_obj_settable{0, 0x14012D820};
+		WEAK symbol<HksObject* (HksObject* result, lua_State* s, const HksObject* table, const HksObject* key)> hks_obj_gettable{0, 0x14012CAE0};
+		WEAK symbol<void(lua_State* s, int nargs, int nresults, const unsigned int* pc)> vm_call_internal{0, 0x140159EB0};
+		WEAK symbol<HashTable*(lua_State* s, unsigned int arraySize, unsigned int hashSize)> Hashtable_Create{0, 0x14011B320};
+		WEAK symbol<cclosure*(lua_State* s, lua_function function, int num_upvalues, 
+			int internal_, int profilerTreatClosureAsFunc)> cclosure_Create{0, 0x14011B540};
+		WEAK symbol<int(lua_State* s, int t)> hksi_luaL_ref{0, 0x140136D30};
+		WEAK symbol<void(lua_State* s, int t, int ref)> hksi_luaL_unref{0, 0x14012F610};
+	}
 }
