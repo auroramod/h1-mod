@@ -96,8 +96,7 @@ namespace colors
 			const size_t unk, const size_t unk2)
 		{
 			// CL_GetClientName (CL_GetClientNameAndClantag?)
-			const auto result = reinterpret_cast<size_t(*)(int, int, char*, int, size_t, size_t)>(0x14025BAA0)( // H1 (1.4)
-				local_client_num, index, buf, size, unk, unk2);
+			const auto result = utils::hook::invoke<size_t>(0x14025BAA0, local_client_num, index, buf, size, unk, unk2);
 
 			utils::string::strip(buf, buf, size);
 

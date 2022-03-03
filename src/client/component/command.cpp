@@ -91,7 +91,7 @@ namespace command
 		void parse_commandline_stub()
 		{
 			parse_command_line();
-			reinterpret_cast<void(*)()>(0x1400D8210)(); // mwr: test
+			utils::hook::invoke<void>(0x1400D8210);
 		}
 
 		game::dvar_t* dvar_command_stub()

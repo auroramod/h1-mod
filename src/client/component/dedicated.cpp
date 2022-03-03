@@ -26,7 +26,7 @@ namespace dedicated
 			initialized = true;
 
 			// R_LoadGraphicsAssets
-			reinterpret_cast<void(*)()>(0x1405DF4B0)();
+			utils::hook::invoke<void>(0x1405DF4B0);
 		}
 
 		void send_heartbeat()

@@ -119,7 +119,7 @@ namespace party
 			}
 
 			// This function either does Dvar_SetString or Dvar_RegisterString for the given dvar
-			reinterpret_cast<void(*)(const char*, const char*)>(0x1404FB210)(dvar_name, string);
+			utils::hook::invoke<void>(0x1404FB210, dvar_name, string);
 		}
 
 		void disconnect_stub()
@@ -129,12 +129,12 @@ namespace party
 				if (game::CL_IsCgameInitialized())
 				{
 					// CL_ForwardCommandToServer
-					reinterpret_cast<void (*)(int, const char*)>(0x140253480)(0, "disconnect");
+					utils::hook::invoke<void>(0x140253480, 0, "disconnect");
 					// CL_WritePacket
-					reinterpret_cast<void (*)(int)>(0x14024DB10)(0);
+					utils::hook::invoke<void>(0x14024DB10, 0);
 				}
 				// CL_Disconnect
-				reinterpret_cast<void (*)(int)>(0x140252060)(0);
+				utils::hook::invoke<void>(0x140252060, 0);
 			}
 		}
 
@@ -337,7 +337,8 @@ namespace party
 				*reinterpret_cast<int*>(0x14A3A91D0) = 1; // sv_map_restart
 				*reinterpret_cast<int*>(0x14A3A91D4) = 1; // sv_loadScripts
 				*reinterpret_cast<int*>(0x14A3A91D8) = 0; // sv_migrate
-				reinterpret_cast<void(*)()>(0x14047E7F0)(); // SV_CheckLoadGame
+
+				utils::hook::invoke<void>(0x14047E7F0); // SV_CheckLoadGame
 			});
 
 			command::add("fast_restart", []()
