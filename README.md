@@ -1,13 +1,11 @@
-# H1-Mod 1.4
-
-- *Note: Multiplayer support is in progress!*
+# H1-Mod
 
 <p align="center">
   <img alig src="https://cdn.discordapp.com/attachments/895680402142941194/938488726391242842/splash.png"/>
 </p>
 
-Proof of concept for an Modern Warfare Remastered client. <br>
-[This project is based on S1x](https://github.com/XLabsProject/s1x-client)
+Currently a proof-of-concept client for Modern Warfare Remaster (1.04). Latest MWR (1.15) version planned in future. <br>
+[This project is based on S1x.](https://github.com/XLabsProject/s1x-client)
 
 ## Compile from source
 
@@ -24,11 +22,11 @@ Proof of concept for an Modern Warfare Remastered client. <br>
 
 ## Credits:
 
-- [XLabsProject - S1x](https://github.com/XLabsProject/s1x-client), Project base.
-- [quaK](https://github.com/Joelrau), Helping in alot of stuff.
-- [fed - h2-mod](https://github.com/fedddddd/h2-mod), [Dvars](https://github.com/skkuull/h1-mod/blob/main/src/client/game/dvars.cpp) and [patches](https://github.com/skkuull/h1-mod/blob/main/src/client/component/patches.cpp).
-
+- [S1x](https://github.com/XLabsProject/s1x-client) - code and base.
+- [quaK](https://github.com/Joelrau) - lots of insight and help
+- [fed](https://github.com/fedddddd) - fixed DW/networking, work from [fed](https://github.com/fedddddd/h2-mod)
+- [mjkzy](https://github.com/mjkzy) - porting code from s1x
 
 ## Disclaimer
 
-This software has been made for learning purposes.
+This software has been created purely for the purposes of academic research. It is not intended to be used to attack other systems. Project maintainers are not responsible or liable for misuse of the software. Use responsibly.
