@@ -15,6 +15,7 @@
 
 namespace scripting
 {
+	std::unordered_map<int, std::unordered_map<std::string, int>> fields_table;
 	std::unordered_map<std::string, std::unordered_map<std::string, const char*>> script_function_table;
 
 	namespace
@@ -22,6 +23,8 @@ namespace scripting
 		utils::hook::detour vm_notify_hook;
 		utils::hook::detour scr_load_level_hook;
 		utils::hook::detour g_shutdown_game_hook;
+
+		utils::hook::detour scr_add_class_field_hook;
 
 		utils::hook::detour scr_set_thread_position_hook;
 		utils::hook::detour process_script_hook;
@@ -45,7 +48,7 @@ namespace scripting
 						e.arguments.emplace_back(*value);
 					}
 
-					if (e.name == "connected")
+					if (e.name == "entitydeleted")
 					{
 						scripting::clear_entity_fields(e.entity);
 					}
@@ -70,6 +73,18 @@ namespace scripting
 		{
 			lua::engine::stop();
 			return g_shutdown_game_hook.invoke<void>(free_scripts);
+		}
+
+		void scr_add_class_field_stub(unsigned int classnum, game::scr_string_t _name, unsigned int canonicalString, unsigned int offset)
+		{
+			const auto name = game::SL_ConvertToString(_name);
+
+			if (fields_table[classnum].find(name) == fields_table[classnum].end())
+			{
+				fields_table[classnum][name] = offset;
+			}
+
+			scr_add_class_field_hook.invoke<void>(classnum, _name, canonicalString, offset);
 		}
 
 		void process_script_stub(const char* filename)
@@ -100,18 +115,25 @@ namespace scripting
 	public:
 		void post_unpack() override
 		{
-			vm_notify_hook.create(SELECT_VALUE(0x140320E50, 0x1404479F0 ), vm_notify_stub); // H1MP
-			// SP address is wrong, but should be ok
-			scr_load_level_hook.create(SELECT_VALUE(0x140005260, 0x1403727C0), scr_load_level_stub); // H1MP
-			g_shutdown_game_hook.create(SELECT_VALUE(0x140228BA0, 0x140345A60), g_shutdown_game_stub); // H1MP
+			if (game::environment::is_sp())
+			{
+				return;
+			}
 
-			scr_set_thread_position_hook.create(SELECT_VALUE(0x1403115E0, 0x140437D10), scr_set_thread_position_stub); // H1MP
-			process_script_hook.create(SELECT_VALUE(0x14031AB30, 0x1404417E0), process_script_stub); // H1MP
+			vm_notify_hook.create(SELECT_VALUE(0x140379A00, 0x1404479F0), vm_notify_stub);
+
+			scr_add_class_field_hook.create(SELECT_VALUE(0x140370370, 0x14043E2C0), scr_add_class_field_stub);
+
+			scr_set_thread_position_hook.create(SELECT_VALUE(0x14036A180, 0x140437D10), scr_set_thread_position_stub);
+			process_script_hook.create(SELECT_VALUE(0x1403737E0, 0x1404417E0), process_script_stub);
+
+			scr_load_level_hook.create(0x1403727C0, scr_load_level_stub);
+			g_shutdown_game_hook.create(0x140345A60, g_shutdown_game_stub);
 
 			scheduler::loop([]()
-				{
-					lua::engine::run_frame();
-				}, scheduler::pipeline::server);
+			{
+				lua::engine::run_frame();
+			}, scheduler::pipeline::server);
 		}
 	};
 }

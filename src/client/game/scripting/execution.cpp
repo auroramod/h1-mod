@@ -26,19 +26,9 @@ namespace scripting
 
 		int get_field_id(const int classnum, const std::string& field)
 		{
-			const auto class_id = game::g_classMap[classnum].id;
-			const auto field_str = game::SL_GetString(field.data(), 0);
-			const auto _ = gsl::finally([field_str]()
+			if (scripting::fields_table[classnum].find(field) != scripting::fields_table[classnum].end())
 			{
-				game::RemoveRefToValue(game::SCRIPT_STRING, {static_cast<int>(field_str)});
-			});
-
-			const auto offset = game::FindVariable(class_id, field_str);
-			if (offset)
-			{
-				const auto index = 3 * (offset + 0xFA00 * (class_id & 3));
-				const auto id = reinterpret_cast<PINT64>(SELECT_VALUE(0x149BB5680, 0x14821DF80))[index];
-				return static_cast<int>(id);
+				return scripting::fields_table[classnum][field];
 			}
 
 			return -1;

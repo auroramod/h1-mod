@@ -24,7 +24,7 @@ namespace logfile
 		std::vector<sol::protected_function> player_damage_callbacks;
 
 		utils::hook::detour vm_execute_hook;
-		char empty_function[2] = { 0x32, 0x34 }; // CHECK_CLEAR_PARAMS, END
+		char empty_function[2] = {0x32, 0x34}; // CHECK_CLEAR_PARAMS, END
 		bool hook_enabled = true;
 
 		sol::lua_value convert_entity(lua_State* state, const game::mp::gentity_s* ent)
@@ -34,16 +34,14 @@ namespace logfile
 				return {};
 			}
 
-			const auto player = scripting::call("getEntByNum", { ent->s.entityNum });
-
+			const scripting::entity player{game::Scr_GetEntityId(ent->s.entityNum, 0)};
 			return scripting::lua::convert(state, player);
 		}
 
 		std::string get_weapon_name(unsigned int weapon, bool isAlternate)
 		{
-			char output[1024] = { 0 };
+			char output[1024] = {0};
 			game::BG_GetWeaponNameComplete(weapon, isAlternate, output, 1024);
-
 			return output;
 		}
 
@@ -54,39 +52,39 @@ namespace logfile
 				return {};
 			}
 
-			const auto _vec = scripting::vector(vec);
-
-			return scripting::lua::convert(state, _vec);
+			const auto vec_ = scripting::vector(vec);
+			return scripting::lua::convert(state, vec_);
 		}
 
 		std::string convert_mod(const int meansOfDeath)
 		{
 			const auto value = reinterpret_cast<game::scr_string_t**>(0x140FEC3F0)[meansOfDeath];
 			const auto string = game::SL_ConvertToString(*value);
-
 			return string;
 		}
 
-		void scr_player_killed_stub(game::mp::gentity_s* self, const game::mp::gentity_s* inflictor, game::mp::gentity_s* attacker, int damage,
-			const int meansOfDeath, const unsigned int weapon, const bool isAlternate, const float* vDir, const unsigned int hitLoc, int psTimeOffset, int deathAnimDuration)
+		void scr_player_killed_stub(game::mp::gentity_s* self, const game::mp::gentity_s* inflictor, 
+			game::mp::gentity_s* attacker, int damage, const int meansOfDeath, const unsigned int weapon, 
+			const bool isAlternate, const float* vDir, const unsigned int hitLoc, int psTimeOffset, int deathAnimDuration)
 		{
 			{
-				const std::string _hitLoc = reinterpret_cast<const char**>(0x140FEC4D0)[hitLoc]; // or 12162B0
-				const auto _mod = convert_mod(meansOfDeath);
+				const std::string hitloc = reinterpret_cast<const char**>(0x140FEC4D0)[hitLoc];
+				const auto mod_ = convert_mod(meansOfDeath);
 
-				const auto _weapon = get_weapon_name(weapon, isAlternate);
+				const auto weapon_ = get_weapon_name(weapon, isAlternate);
 
 				for (const auto& callback : player_killed_callbacks)
 				{
 					const auto state = callback.lua_state();
 
-					const auto _self = convert_entity(state, self);
-					const auto _inflictor = convert_entity(state, inflictor);
-					const auto _attacker = convert_entity(state, attacker);
+					const auto self_ = convert_entity(state, self);
+					const auto inflictor_ = convert_entity(state, inflictor);
+					const auto attacker_ = convert_entity(state, attacker);
 
-					const auto _vDir = convert_vector(state, vDir);
+					const auto dir = convert_vector(state, vDir);
 
-					const auto result = callback(_self, _inflictor, _attacker, damage, _mod, _weapon, _vDir, _hitLoc, psTimeOffset, deathAnimDuration);
+					const auto result = callback(self_, inflictor_, attacker_, damage,
+						mod_, weapon_, dir, hitloc, psTimeOffset, deathAnimDuration);
 
 					scripting::lua::handle_error(result);
 
@@ -102,30 +100,34 @@ namespace logfile
 				}
 			}
 
-			scr_player_killed_hook.invoke<void>(self, inflictor, attacker, damage, meansOfDeath, weapon, isAlternate, vDir, hitLoc, psTimeOffset, deathAnimDuration);
+			scr_player_killed_hook.invoke<void>(self, inflictor, attacker, damage, meansOfDeath, 
+				weapon, isAlternate, vDir, hitLoc, psTimeOffset, deathAnimDuration);
 		}
 
-		void scr_player_damage_stub(game::mp::gentity_s* self, const game::mp::gentity_s* inflictor, game::mp::gentity_s* attacker, int damage, int dflags,
-			const int meansOfDeath, const unsigned int weapon, const bool isAlternate, const float* vPoint, const float* vDir, const unsigned int hitLoc, const int timeOffset)
+		void scr_player_damage_stub(game::mp::gentity_s* self, const game::mp::gentity_s* inflictor, 
+			game::mp::gentity_s* attacker, int damage, int dflags, const int meansOfDeath, 
+			const unsigned int weapon, const bool isAlternate, const float* vPoint, 
+			const float* vDir, const unsigned int hitLoc, const int timeOffset)
 		{
 			{
-				const std::string _hitLoc = reinterpret_cast<const char**>(0x140FEC4D0)[hitLoc]; // or 12162B0
-				const auto _mod = convert_mod(meansOfDeath);
+				const std::string hitloc = reinterpret_cast<const char**>(0x140FEC4D0)[hitLoc];
+				const auto mod_ = convert_mod(meansOfDeath);
 
-				const auto _weapon = get_weapon_name(weapon, isAlternate);
+				const auto weapon_ = get_weapon_name(weapon, isAlternate);
 
 				for (const auto& callback : player_damage_callbacks)
 				{
 					const auto state = callback.lua_state();
 
-					const auto _self = convert_entity(state, self);
-					const auto _inflictor = convert_entity(state, inflictor);
-					const auto _attacker = convert_entity(state, attacker);
+					const auto self_ = convert_entity(state, self);
+					const auto inflictor_ = convert_entity(state, inflictor);
+					const auto attacker_ = convert_entity(state, attacker);
 
-					const auto _vPoint = convert_vector(state, vPoint);
-					const auto _vDir = convert_vector(state, vDir);
+					const auto point = convert_vector(state, vPoint);
+					const auto dir = convert_vector(state, vDir);
 
-					const auto result = callback(_self, _inflictor, _attacker, damage, dflags, _mod, _weapon, _vPoint, _vDir, _hitLoc);
+					const auto result = callback(self_, inflictor_, attacker_, 
+						damage, dflags, mod_, weapon_, point, dir, hitloc);
 
 					scripting::lua::handle_error(result);
 
@@ -141,13 +143,14 @@ namespace logfile
 				}
 			}
 
-			scr_player_damage_hook.invoke<void>(self, inflictor, attacker, damage, dflags, meansOfDeath, weapon, isAlternate, vPoint, vDir, hitLoc, timeOffset);
+			scr_player_damage_hook.invoke<void>(self, inflictor, attacker, damage, dflags, 
+				meansOfDeath, weapon, isAlternate, vPoint, vDir, hitLoc, timeOffset);
 		}
 
 		void client_command_stub(const int clientNum)
 		{
 			auto self = &game::mp::g_entities[clientNum];
-			char cmd[1024]{};
+			char cmd[1024] = {0};
 
 			game::SV_Cmd_ArgvBuffer(0, cmd, 1024);
 
@@ -160,13 +163,13 @@ namespace logfile
 				message.erase(0, hidden ? 2 : 1);
 
 				scheduler::once([cmd, message, self]()
-					{
-						const scripting::entity level{ *game::levelEntityId };
-						const auto player = scripting::call("getEntByNum", { self->s.entityNum }).as<scripting::entity>();
+				{
+					const scripting::entity level{*game::levelEntityId};
+					const scripting::entity player{game::Scr_GetEntityId(self->s.entityNum, 0)};
 
-						scripting::notify(level, cmd, { player, message });
-						scripting::notify(player, cmd, { message });
-					}, scheduler::pipeline::server);
+					scripting::notify(level, cmd, {player, message});
+					scripting::notify(player, cmd, {message});
+				}, scheduler::pipeline::server);
 
 				if (hidden)
 				{
@@ -175,18 +178,18 @@ namespace logfile
 			}
 
 			// ClientCommand
-			return reinterpret_cast<void(*)(int)>(0x140336000)(clientNum);
+			return utils::hook::invoke<void>(0x140336000, clientNum);
 		}
 
 		void g_shutdown_game_stub(const int freeScripts)
 		{
 			{
-				const scripting::entity level{ *game::levelEntityId };
-				scripting::notify(level, "shutdownGame_called", { 1 });
+				const scripting::entity level{*game::levelEntityId};
+				scripting::notify(level, "shutdownGame_called", {1});
 			}
 
 			// G_ShutdownGame
-			return reinterpret_cast<void(*)(int)>(0x140345A60)(freeScripts);
+			return utils::hook::invoke<void>(0x140345A60, freeScripts);
 		}
 
 		unsigned int local_id_to_entity(unsigned int local_id)
@@ -249,10 +252,9 @@ namespace logfile
 
 			a.movzx(r15d, byte_ptr(r14));
 			a.inc(r14);
-			a.lea(eax, dword_ptr(r15, -0x17));
-			a.mov(dword_ptr(rbp, 0x68), r15d);
+			a.mov(dword_ptr(rbp, 0xA4), r15d);
 
-			a.jmp(0x140444653);
+			a.jmp(SELECT_VALUE(0x140376663, 0x140444653));
 
 			a.bind(replace);
 
@@ -294,20 +296,18 @@ namespace logfile
 	public:
 		void post_unpack() override
 		{
-			if (game::environment::is_sp())
+			if (!game::environment::is_sp())
 			{
-				return;
+				utils::hook::call(0x14048191D, client_command_stub);
+
+				scr_player_damage_hook.create(0x14037DC50, scr_player_damage_stub);
+				scr_player_killed_hook.create(0x14037DF30, scr_player_killed_stub);
+
+				utils::hook::call(0x140484EC0, g_shutdown_game_stub);
+				utils::hook::call(0x1404853C1, g_shutdown_game_stub);
 			}
 
-			utils::hook::call(0x14048191D, client_command_stub);
-
-			scr_player_damage_hook.create(0x14037DC50, scr_player_damage_stub);
-			scr_player_killed_hook.create(0x14037DF30, scr_player_killed_stub);
-
-			utils::hook::call(0x140484EC0, g_shutdown_game_stub);
-			utils::hook::call(0x1404853C1, g_shutdown_game_stub);
-
-			utils::hook::jump(0x140444645, utils::hook::assemble(vm_execute_stub), true);
+			utils::hook::jump(SELECT_VALUE(0x140376655, 0x140444645), utils::hook::assemble(vm_execute_stub), true);
 		}
 	};
 }

@@ -11,82 +11,44 @@
 #include "../../../component/scripting.hpp"
 
 #include <utils/string.hpp>
+#include <utils/io.hpp>
 
 namespace scripting::lua
 {
 	namespace
 	{
-		std::vector<std::string> load_game_constants()
+
+		vector normalize_vector(const vector& vec)
 		{
-			std::vector<std::string> result{};
+			const auto length = sqrt(
+				(vec.get_x() * vec.get_x()) + 
+				(vec.get_y() * vec.get_y()) + 
+				(vec.get_z() * vec.get_z())
+			);
 
-			const auto constants = game::GScr_LoadConsts.get();
-
-			ud_t ud;
-			ud_init(&ud);
-			ud_set_mode(&ud, 64);
-			ud_set_pc(&ud, uint64_t(constants));
-			ud_set_input_buffer(&ud, reinterpret_cast<const uint8_t*>(constants), INT32_MAX);
-
-			while (true)
-			{
-				ud_disassemble(&ud);
-
-				if (ud_insn_mnemonic(&ud) == UD_Iret)
-				{
-					break;
-				}
-
-				if (ud_insn_mnemonic(&ud) == UD_Imov)
-				{
-					const auto* operand = ud_insn_opr(&ud, 0);
-					if (operand && operand->type == UD_OP_REG && operand->base == UD_R_ECX)
-					{
-						operand = ud_insn_opr(&ud, 1);
-						if (operand && operand->type == UD_OP_IMM && (operand->base == UD_R_RAX || operand->base == UD_R_EAX))
-						{
-							result.emplace_back(reinterpret_cast<const char**>(0x1409C1CE0)[operand->lval.udword]);
-						}
-					}
-				}
-
-				if (ud_insn_mnemonic(&ud) == UD_Ilea)
-				{
-					const auto* operand = ud_insn_opr(&ud, 0);
-					if (!operand || operand->type != UD_OP_REG || operand->base != UD_R_RCX)
-					{
-						continue;
-					}
-
-					operand = ud_insn_opr(&ud, 1);
-					if (operand && operand->type == UD_OP_MEM && operand->base == UD_R_RIP)
-					{
-						auto* operand_ptr = reinterpret_cast<char*>(ud_insn_len(&ud) + ud_insn_off(&ud) + operand->lval.
-							sdword);
-						if (!utils::memory::is_bad_read_ptr(operand_ptr) && utils::memory::is_rdata_ptr(operand_ptr) &&
-							strlen(operand_ptr) > 0)
-						{
-							result.emplace_back(operand_ptr);
-						}
-					}
-				}
-
-				if (*reinterpret_cast<unsigned char*>(ud.pc) == 0xCC) break; // int 3
-			}
-
-			return result;
+			return vector(
+				vec.get_x() / length,
+				vec.get_y() / length,
+				vec.get_z() / length
+			);
 		}
 
-		const std::vector<std::string>& get_game_constants()
+		void setup_io(sol::state& state)
 		{
-			static auto constants = load_game_constants();
-			return constants;
+			state["io"]["fileexists"] = utils::io::file_exists;
+			state["io"]["writefile"] = utils::io::write_file;
+			state["io"]["remove_file"] = utils::io::remove_file;
+			state["io"]["filesize"] = utils::io::file_size;
+			state["io"]["createdirectory"] = utils::io::create_directory;
+			state["io"]["directoryexists"] = utils::io::directory_exists;
+			state["io"]["directoryisempty"] = utils::io::directory_is_empty;
+			state["io"]["listfiles"] = utils::io::list_files;
+			state["io"]["copyfolder"] = utils::io::copy_folder;
+			state["io"]["readfile"] = static_cast<std::string(*)(const std::string&)>(utils::io::read_file);
 		}
 
-		void setup_entity_type(sol::state& state, event_handler& handler, scheduler& scheduler)
+		void setup_vector_type(sol::state& state)
 		{
-			state["level"] = entity{*game::levelEntityId};
-
 			auto vector_type = state.new_usertype<vector>("vector", sol::constructors<vector(float, float, float)>());
 			vector_type["x"] = sol::property(&vector::get_x, &vector::set_x);
 			vector_type["y"] = sol::property(&vector::get_y, &vector::set_y);
@@ -95,6 +57,109 @@ namespace scripting::lua
 			vector_type["r"] = sol::property(&vector::get_x, &vector::set_x);
 			vector_type["g"] = sol::property(&vector::get_y, &vector::set_y);
 			vector_type["b"] = sol::property(&vector::get_z, &vector::set_z);
+
+			vector_type[sol::meta_function::addition] = sol::overload(
+				[](const vector& a, const vector& b)
+				{
+					return vector(
+						a.get_x() + b.get_x(),
+						a.get_y() + b.get_y(),
+						a.get_z() + b.get_z()
+					);
+				},
+				[](const vector& a, const int value)
+				{
+					return vector(
+						a.get_x() + value,
+						a.get_y() + value,
+						a.get_z() + value
+					);
+				}
+			);
+
+			vector_type[sol::meta_function::subtraction] = sol::overload(
+				[](const vector& a, const vector& b)
+				{
+					return vector(
+						a.get_x() - b.get_x(),
+						a.get_y() - b.get_y(),
+						a.get_z() - b.get_z()
+					);
+				},
+				[](const vector& a, const int value)
+				{
+					return vector(
+						a.get_x() - value,
+						a.get_y() - value,
+						a.get_z() - value
+					);
+				}
+			);
+
+			vector_type[sol::meta_function::multiplication] = sol::overload(
+				[](const vector& a, const vector& b)
+				{
+					return vector(
+						a.get_x() * b.get_x(),
+						a.get_y() * b.get_y(),
+						a.get_z() * b.get_z()
+					);
+				},
+				[](const vector& a, const int value)
+				{
+					return vector(
+						a.get_x() * value,
+						a.get_y() * value,
+						a.get_z() * value
+					);
+				}
+			);
+
+			vector_type[sol::meta_function::division] = sol::overload(
+				[](const vector& a, const vector& b)
+				{
+					return vector(
+						a.get_x() / b.get_x(),
+						a.get_y() / b.get_y(),
+						a.get_z() / b.get_z()
+					);
+				},
+				[](const vector& a, const int value)
+				{
+					return vector(
+						a.get_x() / value,
+						a.get_y() / value,
+						a.get_z() / value
+					);
+				}
+			);
+
+			vector_type[sol::meta_function::equal_to] = [](const vector& a, const vector& b)
+			{
+				return a.get_x() == b.get_x() &&
+					   a.get_y() == b.get_y() &&
+					   a.get_z() == b.get_z();
+			};
+
+			vector_type[sol::meta_function::length] = [](const vector& a)
+			{
+				return sqrt((a.get_x() * a.get_x()) + (a.get_y() * a.get_y()) + (a.get_z() * a.get_z()));
+			};
+
+			vector_type[sol::meta_function::to_string] = [](const vector& a)
+			{
+				return utils::string::va("{x: %f, y: %f, z: %f}", a.get_x(), a.get_y(), a.get_z());
+			};
+
+			vector_type["normalize"] = [](const vector& a)
+			{
+				return normalize_vector(a);
+			};
+		}
+
+		void setup_entity_type(sol::state& state, event_handler& handler, scheduler& scheduler)
+		{
+			state["level"] = entity{*game::levelEntityId};
 
 			auto entity_type = state.new_usertype<entity>("entity");
 
@@ -112,19 +177,6 @@ namespace scripting::lua
 
 					return convert(s, entity.call(name, arguments));
 				};
-			}
-
-			for (const auto& constant : get_game_constants())
-			{
-				entity_type[constant] = sol::property(
-					[constant](const entity& entity, const sol::this_state s)
-					{
-						return convert(s, entity.get(constant));
-					},
-					[constant](const entity& entity, const sol::this_state s, const sol::lua_value& value)
-					{
-						entity.set(constant, convert({s, value}));
-					});
 			}
 
 			entity_type["set"] = [](const entity& entity, const std::string& field,
@@ -288,8 +340,7 @@ namespace scripting::lua
 
 			game_type["getgamevar"] = [](const sol::this_state s)
 			{
-				const auto id = *reinterpret_cast<unsigned int*>(0x14815DEB4);
-				const auto value = ::game::scr_VarGlob->childVariableValue[id];
+				const auto value = ::game::scr_VarGlob->childVariableValue[*::game::gameEntityId];
 
 				::game::VariableValue variable{};
 				variable.type = value.type;
@@ -445,6 +496,8 @@ namespace scripting::lua
 			return this->folder_;
 		};
 
+		setup_io(this->state_);
+		setup_vector_type(this->state_);
 		setup_entity_type(this->state_, this->event_handler_, this->scheduler_);
 
 		printf("Loading script '%s'\n", this->folder_.data());
