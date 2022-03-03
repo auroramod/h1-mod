@@ -45,15 +45,15 @@ jobs:
         uses: ammaraskar/msvc-problem-matcher@master
 
       - name: Build ${{matrix.configuration}} binaries
-        run: msbuild /m /v:minimal /p:Configuration=${{matrix.configuration}} /p:Platform=x64 build/h2-mod.sln
+        run: msbuild /m /v:minimal /p:Configuration=${{matrix.configuration}} /p:Platform=x64 build/h1-mod.sln
 
       - name: Upload ${{matrix.configuration}} binaries
         uses: actions/upload-artifact@v2
         with:
           name: ${{matrix.configuration}} binaries
           path: |
-            build/bin/x64/${{matrix.configuration}}/h2-mod.exe
-            build/bin/x64/${{matrix.configuration}}/h2-mod.pdb
+            build/bin/x64/${{matrix.configuration}}/h1-mod.exe
+            build/bin/x64/${{matrix.configuration}}/h1-mod.pdb
             
       - name: Upload ${{matrix.configuration}} data artifacts
         uses: actions/upload-artifact@v2
@@ -105,8 +105,8 @@ jobs:
       - name: Remove old data files
         run: ssh ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }} rm -rf ${{ env.H1_MOD_MASTER_PATH }}/h1-mod/data/*
 
-      - name: Upload h2-mod binary
-        run: rsync -avz h2-mod.exe ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
+      - name: Upload h1-mod binary
+        run: rsync -avz h1-mod.exe ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
 
       - name: Upload data files
         run: rsync -avz ./data/ ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/data/
