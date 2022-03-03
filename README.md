@@ -24,7 +24,7 @@ Currently a proof-of-concept client for Modern Warfare Remaster (1.04). Latest M
 
 - [S1x](https://github.com/XLabsProject/s1x-client) - code and base.
 - [quaK](https://github.com/Joelrau) - lots of insight and help
-- [fed](https://github.com/fedddddd) - fixed DW/networking, work from [fed](https://github.com/fedddddd/h2-mod)
+- [fed](https://github.com/fedddddd) - fixed DW/networking, work from [h2-mod](https://github.com/fedddddd/h2-mod)
 - [mjkzy](https://github.com/mjkzy) - porting code from s1x
 
 ## Disclaimer
