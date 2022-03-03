@@ -227,8 +227,8 @@ namespace auth
 				utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true); // H1(1.4)
 				utils::hook::call(0x140250ED2, send_connect_data_stub); // H1(1.4)
 
-				// Check for sending connect packet
-				utils::hook::set(0x14059A6E0, 0xC301B0);
+				// Skip checks for sending connect packet
+				utils::hook::jump(0x1402508FC, 0x140250946);
 				// Don't instantly timeout the connecting client ? not sure about this
 				utils::hook::set(0x14025136B, 0xC3);
 			}
