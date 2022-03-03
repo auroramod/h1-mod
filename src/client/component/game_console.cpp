@@ -59,7 +59,7 @@ namespace game_console
 		std::vector<std::string> matches{};
 
 		float color_white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-		float color_title[4] = {0.9f, 0.9f, 0.5f, 1.0f};
+		float color_title[4] = {0.25f, 0.62f, 0.3f, 1.0f};
 
 		void clear()
 		{
@@ -453,9 +453,17 @@ namespace game_console
 
 	bool console_char_event(const int local_client_num, const int key)
 	{
-		if (key == game::keyNum_t::K_GRAVE || key == game::keyNum_t::K_TILDE)
+		if (key == game::keyNum_t::K_GRAVE || 
+			key == game::keyNum_t::K_TILDE ||
+			key == '|' ||
+			key == '\\')
 		{
 			return false;
+		}
+
+		if (key > 127)
+		{
+			return true;
 		}
 
 		if (*game::keyCatchers & 1)

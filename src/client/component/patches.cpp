@@ -7,6 +7,7 @@
 #include "console.hpp"
 #include "network.hpp"
 #include "scheduler.hpp"
+#include "filesystem.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -77,16 +78,27 @@ namespace patches
 			}
 
 			// CG_SetClientDvarFromServer
-			reinterpret_cast<void(*)(void*, void*, const char*, const char*)>(0x140236120)(a1, a2, dvar, value);
+			utils::hook::invoke<void>(0x140236120, a1, a2, dvar, value);
 		}
 
-		/*void aim_assist_add_to_target_list(void* a1, void* a2)
+		const char* db_read_raw_file_stub(const char* filename, char* buf, const int size)
 		{
-			if (!dvars::aimassist_enabled->current.enabled)
-				return;
+			std::string file_name = filename;
+			if (file_name.find(".cfg") == std::string::npos)
+			{
+				file_name.append(".cfg");
+			}
 
-			game::AimAssist_AddToTargetList(a1, a2);
-		}*/
+			const auto file = filesystem::file(file_name);
+			if (file.exists())
+			{
+				snprintf(buf, size, "%s\n", file.get_buffer().data());
+				return buf;
+			}
+
+			// DB_ReadRawFile
+			return utils::hook::invoke<const char*>(SELECT_VALUE(0x1401CD4F0, 0x1402BEF10), filename, buf, size);
+		}
 
 		void bsp_sys_error_stub(const char* error, const char* arg1)
 		{
@@ -131,7 +143,7 @@ namespace patches
 				return;
 			}
 
-			reinterpret_cast<void(*)(game::mp::client_t*, game::msg_t*)>(0x140481A00)(client, msg);
+			utils::hook::invoke<void>(0x140481A00, client, msg);
 		}
 
 		void aim_assist_add_to_target_list(void* a1, void* a2)
@@ -171,6 +183,9 @@ namespace patches
 			// Allow kbam input when gamepad is enabled
 			utils::hook::nop(SELECT_VALUE(0x14018797E, 0x14024EF60), 2);
 			utils::hook::nop(SELECT_VALUE(0x1401856DC, 0x14024C6B0), 6);
+
+			// Allow executing custom cfg files with the "exec" command
+			utils::hook::call(SELECT_VALUE(0x140343855, 0x140403E28), db_read_raw_file_stub);
 
 			if (!game::environment::is_sp())
 			{
