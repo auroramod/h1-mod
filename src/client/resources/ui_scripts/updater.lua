@@ -1,6 +1,8 @@
 updatecancelled = false
 taskinterval = 100
 
+updater.cancelupdate()
+
 function startupdatecheck(popup, autoclose)
     updatecancelled = false
 
@@ -85,11 +87,17 @@ function startupdatedownload(popup, autoclose)
                 callback = function()
                     updater.relaunch()
                 end
-            })--
+            })
         end
-            
+
         if (autoclose) then
             LUI.FlowManager.RequestLeaveMenu(popup)
+        end
+
+        if (LUI.mp_menus) then
+            Engine.Exec("lui_restart; lui_open mp_main_menu")
+        else
+            Engine.Exec("lui_restart")
         end
     end
 
