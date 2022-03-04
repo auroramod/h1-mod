@@ -35,7 +35,7 @@ namespace renderer
 		{
 			if (dvars::r_fullbright->modified)
 			{
-				game::Dvar_ClearModified(dvars::r_fullbright);
+				//game::Dvar_ClearModified(dvars::r_fullbright);
 				game::R_SyncRenderThread();
 
 				gfxdrawmethod();
