@@ -10,10 +10,16 @@
 
 namespace ui_scripting::lua
 {
+	enum script_type
+	{
+		file,
+		code
+	};
+
 	class context
 	{
 	public:
-		context(std::string folder);
+		context(std::string folder, script_type type);
 		~context();
 
 		context(context&&) noexcept = delete;

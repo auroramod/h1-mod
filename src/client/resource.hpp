@@ -15,3 +15,6 @@
 #define RUNNER                307
 
 #define ICON_IMAGE            308
+
+#define LUI_COMMON            309
+#define LUI_UPDATER           310

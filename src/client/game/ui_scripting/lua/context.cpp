@@ -7,6 +7,7 @@
 
 #include "../../../component/ui_scripting.hpp"
 #include "../../../component/command.hpp"
+#include "../../../component/updater.hpp"
 
 #include "component/game_console.hpp"
 #include "component/scheduler.hpp"
@@ -141,12 +142,35 @@ namespace ui_scripting::lua
 			state["LUI"] = state["luiglobals"]["LUI"];
 			state["Engine"] = state["luiglobals"]["Engine"];
 			state["Game"] = state["luiglobals"]["Game"];
+
+			auto updater_table = sol::table::create(state.lua_state());
+
+			updater_table["relaunch"] = updater::relaunch;
+
+			updater_table["sethastriedupdate"] = updater::set_has_tried_update;
+			updater_table["gethastriedupdate"] = updater::get_has_tried_update;
+			updater_table["autoupdatesenabled"] = updater::auto_updates_enabled;
+
+			updater_table["startupdatecheck"] = updater::start_update_check;
+			updater_table["isupdatecheckdone"] = updater::is_update_check_done;
+			updater_table["getupdatecheckstatus"] = updater::get_update_check_status;
+			updater_table["isupdateavailable"] = updater::is_update_available;
+
+			updater_table["startupdatedownload"] = updater::start_update_download;
+			updater_table["isupdatedownloaddone"] = updater::is_update_download_done;
+			updater_table["getupdatedownloadstatus"] = updater::get_update_download_status;
+			updater_table["cancelupdate"] = updater::cancel_update;
+			updater_table["isrestartrequired"] = updater::is_restart_required;
+
+			updater_table["getlasterror"] = updater::get_last_error;
+			updater_table["getcurrentfile"] = updater::get_current_file;
+			
+			state["updater"] = updater_table;
 		}
 	}
 
-	context::context(std::string folder)
-		: folder_(std::move(folder))
-		  , scheduler_(state_)
+	context::context(std::string data, script_type type)
+		: scheduler_(state_)
 	{
 		this->state_.open_libraries(sol::lib::base,
 		                            sol::lib::package,
@@ -156,27 +180,37 @@ namespace ui_scripting::lua
 		                            sol::lib::math,
 		                            sol::lib::table);
 
-		this->state_["include"] = [this](const std::string& file)
-		{
-			this->load_script(file);
-		};
-
-		sol::function old_require = this->state_["require"];
-		auto base_path = utils::string::replace(this->folder_, "/", ".") + ".";
-		this->state_["require"] = [base_path, old_require](const std::string& path)
-		{
-			return old_require(base_path + path);
-		};
-
-		this->state_["scriptdir"] = [this]()
-		{
-			return this->folder_;
-		};
-
 		setup_types(this->state_, this->scheduler_);
 
-		printf("Loading ui script '%s'\n", this->folder_.data());
-		this->load_script("__init__");
+		if (type == script_type::file)
+		{
+			this->folder_ = data;
+
+			this->state_["include"] = [this](const std::string& file)
+			{
+				this->load_script(file);
+			};
+
+			sol::function old_require = this->state_["require"];
+			auto base_path = utils::string::replace(this->folder_, "/", ".") + ".";
+			this->state_["require"] = [base_path, old_require](const std::string& path)
+			{
+				return old_require(base_path + path);
+			};
+
+			this->state_["scriptdir"] = [this]()
+			{
+				return this->folder_;
+			};
+
+			printf("Loading ui script '%s'\n", this->folder_.data());
+			this->load_script("__init__");
+		}
+
+		if (type == script_type::code)
+		{
+			handle_error(this->state_.safe_script(data, &sol::script_pass_on_error));
+		}
 	}
 
 	context::~context()
