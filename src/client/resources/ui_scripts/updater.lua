@@ -88,16 +88,16 @@ function startupdatedownload(popup, autoclose)
                     updater.relaunch()
                 end
             })
+        else
+            if (LUI.mp_menus) then
+                Engine.Exec("lui_restart; lui_open mp_main_menu")
+            else
+                Engine.Exec("lui_restart")
+            end
         end
 
         if (autoclose) then
             LUI.FlowManager.RequestLeaveMenu(popup)
-        end
-
-        if (LUI.mp_menus) then
-            Engine.Exec("lui_restart; lui_open mp_main_menu")
-        else
-            Engine.Exec("lui_restart")
         end
     end
 
