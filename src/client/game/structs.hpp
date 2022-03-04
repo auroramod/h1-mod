@@ -186,8 +186,8 @@ namespace game
 
 	struct scrVarGlob_t
 	{
-		ObjectVariableValue objectVariableValue[40960];
-		ObjectVariableChildren objectVariableChildren[40960];
+		ObjectVariableValue objectVariableValue[56320];
+		ObjectVariableChildren objectVariableChildren[56320];
 		unsigned __int16 childVariableBucket[65536];
 		ChildVariableValue childVariableValue[384000];
 	};
@@ -1358,18 +1358,22 @@ namespace game
 
 		struct EntityState
 		{
-			char entityNum;
+			uint16_t entityNum;
 		}; // size = ?
 
+#pragma pack(push, 1)
 		struct gentity_s
 		{
 			EntityState s;
-			char __pad0[343];
+			char __pad0[342];
 			gclient_s* client;
 			char __pad1[80];
 			int flags;
 			char __pad2[300];
 		}; // size = 736
+#pragma pack(pop)
+
+		static_assert(sizeof(gentity_s) == 736);
 
 		struct playerState_s
 		{

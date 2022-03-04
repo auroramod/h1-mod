@@ -12,6 +12,7 @@
 #include <utils/hook.hpp>
 
 #include "console.hpp"
+#include "command.hpp"
 
 namespace server_list
 {
@@ -377,7 +378,15 @@ namespace server_list
 			if (!game::environment::is_mp()) return;
 
 			localized_strings::override("PLATFORM_SYSTEM_LINK_TITLE", "SERVER LIST");
+			localized_strings::override("MENU_NUMPLAYERS", "Players");
 
+			// small command until ui scripting
+			command::add("openServerList", []()
+			{
+				refresh_server_list();
+				command::execute("lui_open menu_systemlink_join\n");
+			});
+			
 			// hook LUI_OpenMenu to refresh server list for system link menu
 			lui_open_menu_hook.create(game::LUI_OpenMenu, lui_open_menu_stub);
 
