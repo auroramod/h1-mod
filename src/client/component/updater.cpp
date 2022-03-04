@@ -139,9 +139,14 @@ namespace updater
 			return name;
 		}
 
+		std::string get_time_str()
+		{
+			return utils::string::va("%i", uint32_t(time(nullptr)));
+		}
+
 		std::optional<std::string> download_file(const std::string& name)
 		{
-			return utils::http::get_data(MASTER + select(DATA_PATH, DATA_PATH_DEV) + name);
+			return utils::http::get_data(MASTER + select(DATA_PATH, DATA_PATH_DEV) + name + "?" + get_time_str());
 		}
 
 		bool is_update_cancelled()
@@ -331,7 +336,7 @@ namespace updater
 
 		scheduler::once([]()
 		{
-			const auto files_data = utils::http::get_data(MASTER + select(FILES_PATH, FILES_PATH_DEV));
+			const auto files_data = utils::http::get_data(MASTER + select(FILES_PATH, FILES_PATH_DEV) + "?" + get_time_str());
 
 			if (is_update_cancelled())
 			{
