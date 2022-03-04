@@ -127,8 +127,8 @@ namespace scripting
 			scr_set_thread_position_hook.create(SELECT_VALUE(0x14036A180, 0x140437D10), scr_set_thread_position_stub);
 			process_script_hook.create(SELECT_VALUE(0x1403737E0, 0x1404417E0), process_script_stub);
 
-			scr_load_level_hook.create(0x1403727C0, scr_load_level_stub);
-			g_shutdown_game_hook.create(0x140345A60, g_shutdown_game_stub);
+			scr_load_level_hook.create(SELECT_VALUE(0x1402A5BE0, 0x1403727C0), scr_load_level_stub);
+			g_shutdown_game_hook.create(SELECT_VALUE(0x140277D40, 0x140345A60), g_shutdown_game_stub);
 
 			scheduler::loop([]()
 			{

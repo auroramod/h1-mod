@@ -296,16 +296,18 @@ namespace logfile
 	public:
 		void post_unpack() override
 		{
-			if (!game::environment::is_sp())
+			if (game::environment::is_sp())
 			{
-				utils::hook::call(0x14048191D, client_command_stub);
-
-				scr_player_damage_hook.create(0x14037DC50, scr_player_damage_stub);
-				scr_player_killed_hook.create(0x14037DF30, scr_player_killed_stub);
-
-				utils::hook::call(0x140484EC0, g_shutdown_game_stub);
-				utils::hook::call(0x1404853C1, g_shutdown_game_stub);
+				return;
 			}
+
+			utils::hook::call(0x14048191D, client_command_stub);
+
+			scr_player_damage_hook.create(0x14037DC50, scr_player_damage_stub);
+			scr_player_killed_hook.create(0x14037DF30, scr_player_killed_stub);
+
+			utils::hook::call(0x140484EC0, g_shutdown_game_stub);
+			utils::hook::call(0x1404853C1, g_shutdown_game_stub);
 
 			utils::hook::jump(SELECT_VALUE(0x140376655, 0x140444645), utils::hook::assemble(vm_execute_stub), true);
 		}
