@@ -9,9 +9,6 @@
 
 namespace game
 {
-	extern uint64_t base_address;
-	void load_base_address();
-
 	namespace environment
 	{
 		launcher::mode get_mode();
@@ -40,10 +37,10 @@ namespace game
 		{
 			if (environment::is_sp())
 			{
-				return reinterpret_cast<T*>((uint64_t)sp_object_ + base_address);
+				return sp_object_;
 			}
 
-			return reinterpret_cast<T*>((uint64_t)mp_object_ + base_address);
+			return mp_object_;
 		}
 
 		operator T* () const
@@ -69,7 +66,5 @@ namespace game
 
 	bool VirtualLobby_Loaded();
 }
-
-uintptr_t operator"" _b(const uintptr_t ptr);
 
 #include "symbols.hpp"
