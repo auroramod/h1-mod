@@ -9,6 +9,7 @@
 #include "../../../component/command.hpp"
 #include "../../../component/updater.hpp"
 #include "../../../component/fps.hpp"
+#include "../../../component/localized_strings.hpp"
 
 #include "component/game_console.hpp"
 #include "component/scheduler.hpp"
@@ -61,6 +62,12 @@ namespace ui_scripting::lua
 				return ::game::environment::is_mp();
 			};
 
+			game_type["addlocalizedstring"] = [](const game&, const std::string& string,
+				const std::string& value)
+			{
+				localized_strings::override(string, value);
+			};
+
 			auto userdata_type = state.new_usertype<userdata>("userdata_");
 
 			userdata_type["new"] = sol::property(
@@ -73,7 +80,6 @@ namespace ui_scripting::lua
 					userdata.set("new", convert({s, value}));
 				}
 			);
-
 			
 			userdata_type["get"] = [](const userdata& userdata, const sol::this_state s,
 				const sol::lua_value& key)

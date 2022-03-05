@@ -1,5 +1,11 @@
 local pcdisplay = luiglobals.require("LUI.PCDisplay")
 
+game:addlocalizedstring("LUA_MENU_FPS", "FPS Counter")
+game:addlocalizedstring("LUA_MENU_FPS_DESC", "Show FPS Counter")
+
+game:addlocalizedstring("LUA_MENU_LATENCY", "Server Latency")
+game:addlocalizedstring("LUA_MENU_LATENCY_DESC", "Show server latency")
+
 function createdivider(menu, text)
 	local element = LUI.UIElement.new( {
 		leftAnchor = true,
@@ -128,8 +134,8 @@ pcdisplay.CreateOptions = function( menu )
     LUI.Options.CreateOptionButton(
         menu, 
         "cg_infobar_ping", 
-        "Server Latency", 
-        "Show server latency", 
+        "@LUA_MENU_LATENCY", 
+        "@LUA_MENU_LATENCY_DESC", 
         {
             {
                 text = "@LUA_MENU_ENABLED",
@@ -150,8 +156,8 @@ pcdisplay.CreateOptions = function( menu )
     LUI.Options.CreateOptionButton(
         menu, 
         "cg_infobar_fps", 
-        "FPS counter", 
-        "Show FPS counter", 
+        "@LUA_MENU_FPS", 
+        "@LUA_MENU_FPS_DESC", 
         {
             {
                 text = "@LUA_MENU_ENABLED",

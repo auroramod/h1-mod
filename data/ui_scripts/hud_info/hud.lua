@@ -122,6 +122,10 @@ mphud.updateHudVisibility = function(a1, a2)
     local menus = root:AnyActiveMenusInStack()
     local infobar = root.infobar
 
+    if (not infobar) then
+        return
+    end
+
     if (menus) then
         infobar:animateToState("hud_off")
     else

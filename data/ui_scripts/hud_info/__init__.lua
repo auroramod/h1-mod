@@ -1,4 +1,4 @@
-if (game:issingleplyer()) then
+if (game:issingleplayer()) then
     return
 end
 
