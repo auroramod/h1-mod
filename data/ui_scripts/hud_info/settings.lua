@@ -28,152 +28,152 @@ end
 
 pcdisplay.CreateOptions = function( menu )
 	LUI.Options.AddButtonOptionVariant(
-        menu, 
-        luiglobals.GenericButtonSettings.Variants.Select, 
-        "@LUA_MENU_COLORBLIND_FILTER", 
-        "@LUA_MENU_COLOR_BLIND_DESC", 
-        LUI.Options.GetRenderColorBlindText, 
-        LUI.Options.RenderColorBlindToggle, 
-        LUI.Options.RenderColorBlindToggle 
-    )
+		menu, 
+		luiglobals.GenericButtonSettings.Variants.Select, 
+		"@LUA_MENU_COLORBLIND_FILTER", 
+		"@LUA_MENU_COLOR_BLIND_DESC", 
+		LUI.Options.GetRenderColorBlindText, 
+		LUI.Options.RenderColorBlindToggle, 
+		LUI.Options.RenderColorBlindToggle 
+	)
 	
-    if Engine.IsMultiplayer() and Engine.GetDvarType( "cg_paintballFx" ) == luiglobals.DvarTypeTable.DvarBool then
+	if Engine.IsMultiplayer() and Engine.GetDvarType( "cg_paintballFx" ) == luiglobals.DvarTypeTable.DvarBool then
 		LUI.Options.AddButtonOptionVariant(
-            menu, 
-            luiglobals.GenericButtonSettings.Variants.Select, 
-            "@LUA_MENU_PAINTBALL", "@LUA_MENU_PAINTBALL_DESC", 
-            LUI.Options.GetDvarEnableTextFunc("cg_paintballFx", false), 
-            LUI.Options.ToggleDvarFunc("cg_paintballFx"), 
-            LUI.Options.ToggleDvarFunc("cg_paintballFx")
-        )
+			menu, 
+			luiglobals.GenericButtonSettings.Variants.Select, 
+			"@LUA_MENU_PAINTBALL", "@LUA_MENU_PAINTBALL_DESC", 
+			LUI.Options.GetDvarEnableTextFunc("cg_paintballFx", false), 
+			LUI.Options.ToggleDvarFunc("cg_paintballFx"), 
+			LUI.Options.ToggleDvarFunc("cg_paintballFx")
+		)
 	end
 
 	LUI.Options.AddButtonOptionVariant(
-        menu, 
-        luiglobals.GenericButtonSettings.Variants.Select, 
-        "@LUA_MENU_BLOOD", 
-        "@LUA_MENU_BLOOD_DESC", 
-        LUI.Options.GetDvarEnableTextFunc("cg_blood", false), 
-        LUI.Options.ToggleProfiledataFunc("showblood", Engine.GetControllerForLocalClient(0)), 
-        LUI.Options.ToggleProfiledataFunc("showblood", Engine.GetControllerForLocalClient(0))
-    )
+		menu, 
+		luiglobals.GenericButtonSettings.Variants.Select, 
+		"@LUA_MENU_BLOOD", 
+		"@LUA_MENU_BLOOD_DESC", 
+		LUI.Options.GetDvarEnableTextFunc("cg_blood", false), 
+		LUI.Options.ToggleProfiledataFunc("showblood", Engine.GetControllerForLocalClient(0)), 
+		LUI.Options.ToggleProfiledataFunc("showblood", Engine.GetControllerForLocalClient(0))
+	)
 	
-    if not Engine.IsMultiplayer() then
+	if not Engine.IsMultiplayer() then
 		LUI.Options.AddButtonOptionVariant(
-            menu, 
-            luiglobals.GenericButtonSettings.Variants.Select, 
-            "@LUA_MENU_CROSSHAIR", 
-            "@LUA_MENU_CROSSHAIR_DESC", 
-            LUI.Options.GetDvarEnableTextFunc("cg_drawCrosshairOption", false), 
-            LUI.Options.ToggleDvarFunc("cg_drawCrosshairOption"), 
-            LUI.Options.ToggleDvarFunc("cg_drawCrosshairOption")
-        )
+			menu, 
+			luiglobals.GenericButtonSettings.Variants.Select, 
+			"@LUA_MENU_CROSSHAIR", 
+			"@LUA_MENU_CROSSHAIR_DESC", 
+			LUI.Options.GetDvarEnableTextFunc("cg_drawCrosshairOption", false), 
+			LUI.Options.ToggleDvarFunc("cg_drawCrosshairOption"), 
+			LUI.Options.ToggleDvarFunc("cg_drawCrosshairOption")
+		)
 		
-        LUI.Options.CreateOptionButton(
-            menu, 
-            "cg_drawDamageFeedbackOption",
-            "@LUA_MENU_HIT_MARKER", 
-            "@LUA_MENU_HIT_MARKER_DESC", 
-            {
-			    {
-				    text = "@LUA_MENU_ENABLED",
-				    value = true
-			    },
-			    {
-				    text = "@LUA_MENU_DISABLED",
-				    value = false
-			    }
-		    }
-        )
+		LUI.Options.CreateOptionButton(
+			menu, 
+			"cg_drawDamageFeedbackOption",
+			"@LUA_MENU_HIT_MARKER", 
+			"@LUA_MENU_HIT_MARKER_DESC", 
+			{
+				{
+					text = "@LUA_MENU_ENABLED",
+					value = true
+				},
+				{
+					text = "@LUA_MENU_DISABLED",
+					value = false
+				}
+			}
+		)
 	end
 
 	if Engine.IsMultiplayer() then
 		LUI.Options.AddButtonOptionVariant(
-            menu, 
-            luiglobals.GenericButtonSettings.Variants.Select, 
-            "@MENU_DISPLAY_KILLSTREAK_COUNTER", 
-            "@MENU_DISPLAY_KILLSTREAK_COUNTER_DESC", 
-            pcdisplay.GetDisplayKillstreakCounterText, 
-            pcdisplay.DisplayKillstreakCounterToggle, 
-            pcdisplay.DisplayKillstreakCounterToggle
-        )
+			menu, 
+			luiglobals.GenericButtonSettings.Variants.Select, 
+			"@MENU_DISPLAY_KILLSTREAK_COUNTER", 
+			"@MENU_DISPLAY_KILLSTREAK_COUNTER_DESC", 
+			pcdisplay.GetDisplayKillstreakCounterText, 
+			pcdisplay.DisplayKillstreakCounterToggle, 
+			pcdisplay.DisplayKillstreakCounterToggle
+		)
 
 		LUI.Options.AddButtonOptionVariant(
-            menu, 
-            luiglobals.GenericButtonSettings.Variants.Select, 
-            "@MENU_DISPLAY_MEDAL_SPLASHES", 
-            "@MENU_DISPLAY_MEDAL_SPLASHES_DESC", 
-            pcdisplay.GetDisplayMedalSplashesText, 
-            pcdisplay.DisplayMedalSplashesToggle, 
-            pcdisplay.DisplayMedalSplashesToggle
-        )
+			menu, 
+			luiglobals.GenericButtonSettings.Variants.Select, 
+			"@MENU_DISPLAY_MEDAL_SPLASHES", 
+			"@MENU_DISPLAY_MEDAL_SPLASHES_DESC", 
+			pcdisplay.GetDisplayMedalSplashesText, 
+			pcdisplay.DisplayMedalSplashesToggle, 
+			pcdisplay.DisplayMedalSplashesToggle
+		)
 
 		LUI.Options.AddButtonOptionVariant(
-            menu, 
-            luiglobals.GenericButtonSettings.Variants.Select, 
-            "@MENU_DISPLAY_WEAPON_EMBLEMS", 
-            "@MENU_DISPLAY_WEAPON_EMBLEMS_DESC", 
-            pcdisplay.GetDisplayWeaponEmblemsText, 
-            pcdisplay.DisplayWeaponEmblemsToggle, 
-            pcdisplay.DisplayWeaponEmblemsToggle
-        )
+			menu, 
+			luiglobals.GenericButtonSettings.Variants.Select, 
+			"@MENU_DISPLAY_WEAPON_EMBLEMS", 
+			"@MENU_DISPLAY_WEAPON_EMBLEMS_DESC", 
+			pcdisplay.GetDisplayWeaponEmblemsText, 
+			pcdisplay.DisplayWeaponEmblemsToggle, 
+			pcdisplay.DisplayWeaponEmblemsToggle
+		)
 	end
 
-    LUI.Options.AddButtonOptionVariant(
-        menu, 
-        luiglobals.GenericButtonSettings.Variants.Common, 
-        "@MENU_BRIGHTNESS", 
-        "@MENU_BRIGHTNESS_DESC1", 
-        nil, nil, nil, 
-        pcdisplay.OpenBrightnessMenu, 
-        nil, nil, nil 
-    )
+	LUI.Options.AddButtonOptionVariant(
+		menu, 
+		luiglobals.GenericButtonSettings.Variants.Common, 
+		"@MENU_BRIGHTNESS", 
+		"@MENU_BRIGHTNESS_DESC1", 
+		nil, nil, nil, 
+		pcdisplay.OpenBrightnessMenu, 
+		nil, nil, nil 
+	)
 
-    createdivider(menu, "TELEMETRY")
+	createdivider(menu, "TELEMETRY")
 
-    LUI.Options.CreateOptionButton(
-        menu, 
-        "cg_infobar_ping", 
-        "@LUA_MENU_LATENCY", 
-        "@LUA_MENU_LATENCY_DESC", 
-        {
-            {
-                text = "@LUA_MENU_ENABLED",
-                value = true
-            },
-            {
-                text = "@LUA_MENU_DISABLED",
-                value = false
-            }
-        }, nil, nil, function(value)
-            Engine.SetDvarBool("cg_infobar_ping", value)
-            Engine.GetLuiRoot():processEvent({
-                name = "update_hud_infobar_settings"
-            })
-        end
-    )
+	LUI.Options.CreateOptionButton(
+		menu, 
+		"cg_infobar_ping", 
+		"@LUA_MENU_LATENCY", 
+		"@LUA_MENU_LATENCY_DESC", 
+		{
+			{
+				text = "@LUA_MENU_ENABLED",
+				value = true
+			},
+			{
+				text = "@LUA_MENU_DISABLED",
+				value = false
+			}
+		}, nil, nil, function(value)
+			Engine.SetDvarBool("cg_infobar_ping", value)
+			Engine.GetLuiRoot():processEvent({
+				name = "update_hud_infobar_settings"
+			})
+		end
+	)
 
-    LUI.Options.CreateOptionButton(
-        menu, 
-        "cg_infobar_fps", 
-        "@LUA_MENU_FPS", 
-        "@LUA_MENU_FPS_DESC", 
-        {
-            {
-                text = "@LUA_MENU_ENABLED",
-                value = true
-            },
-            {
-                text = "@LUA_MENU_DISABLED",
-                value = false
-            }
-        }, nil, nil, function(value)
-            Engine.SetDvarBool("cg_infobar_fps", value)
-            Engine.GetLuiRoot():processEvent({
-                name = "update_hud_infobar_settings"
-            })
-        end
-    )
+	LUI.Options.CreateOptionButton(
+		menu, 
+		"cg_infobar_fps", 
+		"@LUA_MENU_FPS", 
+		"@LUA_MENU_FPS_DESC", 
+		{
+			{
+				text = "@LUA_MENU_ENABLED",
+				value = true
+			},
+			{
+				text = "@LUA_MENU_DISABLED",
+				value = false
+			}
+		}, nil, nil, function(value)
+			Engine.SetDvarBool("cg_infobar_fps", value)
+			Engine.GetLuiRoot():processEvent({
+				name = "update_hud_infobar_settings"
+			})
+		end
+	)
 
 	LUI.Options.InitScrollingList(menu.list, nil)
 end
