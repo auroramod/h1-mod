@@ -9,179 +9,179 @@ namespace scripting
 {
 	std::unordered_map<std::string, unsigned> function_map =
 	{
-		{"_func_001", 0x001}, // SP 0x14029D940 MP 0x140368EA0
+		{"precacheturret", 0x001}, // SP 0x14029D940 MP 0x140368EA0
 		{"getweaponarray", 0x002}, // SP 0x14028F750 MP 0x140357B80
-		{"_func_003", 0x003}, // SP 0x1405D92F0 MP 0x1403668A0
-		{"_func_004", 0x004}, // SP 0x1402ACD70 MP 0x000000000
-		{"_func_005", 0x005}, // SP 0x1402ADB70 MP 0x000000000
-		{"_func_006", 0x006}, // SP 0x1402A8E20 MP 0x000000000
-		{"_func_007", 0x007}, // SP 0x1402A8B20 MP 0x000000000
-		{"_func_008", 0x008}, // SP 0x1402A8B40 MP 0x000000000
-		{"_func_009", 0x009}, // SP 0x1402A8BC0 MP 0x000000000
-		{"_func_00A", 0x00A}, // SP 0x1402A8B60 MP 0x000000000
-		{"_func_00B", 0x00B}, // SP 0x1402A8960 MP 0x000000000
-		{"_func_00C", 0x00C}, // SP 0x1402ADBE0 MP 0x000000000
-		{"_func_00D", 0x00D}, // SP 0x1402ADC60 MP 0x000000000
-		{"_func_00E", 0x00E}, // SP 0x1402ADC90 MP 0x000000000
-		{"_func_00F", 0x00F}, // SP 0x1405D92F0 MP 0x1403669E0
-		{"_func_010", 0x010}, // SP 0x14029AF60 MP 0x1403669F0
-		{"_func_011", 0x011}, // SP 0x14029AF60 MP 0x140366D40
-		{"_func_012", 0x012}, // SP 0x1405D92F0 MP 0x140367400
-		{"_func_013", 0x013}, // SP 0x1405D92F0 MP 0x140367520
-		{"_func_014", 0x014}, // SP 0x1405D92F0 MP 0x140367530
-		{"_func_015", 0x015}, // SP 0x1405D92F0 MP 0x1403675E0
-		{"_func_016", 0x016}, // SP 0x1405D92F0 MP 0x140367660
-		{"_func_017", 0x017}, // SP 0x1405D92F0 MP 0x140367890
+		{"createprintchannel", 0x003}, // SP 0x1405D92F0 MP 0x1403668A0 nullsub
+		{"updategamerprofileall", 0x004}, // SP 0x1402ACD70 MP 0x000000000
+		{"clearlocalizedstrings", 0x005}, // SP 0x1402ADB70 MP 0x000000000
+		{"setphysicsgravitydir", 0x006}, // SP 0x1402A8E20 MP 0x000000000
+		{"gettimescale", 0x007}, // SP 0x1402A8B20 MP 0x000000000
+		{"settimescale", 0x008}, // SP 0x1402A8B40 MP 0x000000000
+		{"setslowmotionview", 0x009}, // SP 0x1402A8BC0 MP 0x000000000
+		{"teleportscene", 0x00A}, // SP 0x1402A8B60 MP 0x000000000
+		{"forcesharedammo", 0x00B}, // SP 0x1402A8960 MP 0x000000000
+		{"refreshhudcompass", 0x00C}, // SP 0x1402ADBE0 MP 0x000000000
+		{"refreshhudammocounter", 0x00D}, // SP 0x1402ADC60 MP 0x000000000
+		{"notifyoncommand", 0x00E}, // SP 0x1402ADC90 MP 0x000000000
+		{"setprintchannel", 0x00F}, // SP 0x1405D92F0 MP 0x1403669E0 nullsub
+		{"print", 0x010}, // SP 0x14029AF60 MP 0x1403669F0 ^
+		{"println", 0x011}, // SP 0x14029AF60 MP 0x140366D40 ^
+		{"print3d", 0x012}, // SP 0x1405D92F0 MP 0x140367400 ^
+		{"line", 0x013}, // SP 0x1405D92F0 MP 0x140367520 ^
+		{"box", 0x014}, // SP 0x1405D92F0 MP 0x140367530 ^
+		{"orientedbox", 0x015}, // SP 0x1405D92F0 MP 0x1403675E0 ^
+		{"sphere", 0x016}, // SP 0x1405D92F0 MP 0x140367660 ^
+		{"cylinder", 0x017}, // SP 0x1405D92F0 MP 0x140367890 ^
 		{"spawnturret", 0x018}, // SP 0x14029D650 MP 0x140368B10
 		{"canspawnturret", 0x019}, // SP 0x14029D870 MP 0x140368E80
-		{"_func_01A", 0x01A}, // SP 0x14029C9B0 MP 0x1403678A0
-		{"_func_01B", 0x01B}, // SP 0x1402AB640 MP 0x000000000
-		{"_func_01C", 0x01C}, // SP 0x1402AB670 MP 0x000000000
-		{"_func_01D", 0x01D}, // SP 0x1402AB7A0 MP 0x000000000
-		{"_func_01E", 0x01E}, // SP 0x1402AB960 MP 0x000000000
+		{"assert", 0x01A}, // SP 0x14029C9B0 MP 0x1403678A0
+		{"pausecinematicingame", 0x01B}, // SP 0x1402AB640 MP 0x000000000
+		{"drawcompassfriendlies", 0x01C}, // SP 0x1402AB670 MP 0x000000000
+		{"bulletspread", 0x01D}, // SP 0x1402AB7A0 MP 0x000000000
+		{"bullettracer", 0x01E}, // SP 0x1402AB960 MP 0x000000000
 		{"badplace_delete", 0x01F}, // SP 0x14028F340 MP 0x140358600
 		{"badplace_cylinder", 0x020}, // SP 0x14028F4B0 MP 0x140358C50
 		{"badplace_arc", 0x021}, // SP 0x14028F830 MP 0x140359110
 		{"badplace_brush", 0x022}, // SP 0x14028FF10 MP 0x140359CB0
-		{"_func_023", 0x023}, // SP 0x1402AC9D0 MP 0x000000000
-		{"_func_024", 0x024}, // SP 0x1402CC640 MP 0x000000000
-		{"_func_025", 0x025}, // SP 0x1402CC6E0 MP 0x000000000
-		{"_func_026", 0x026}, // SP 0x1402CC570 MP 0x000000000
-		{"_func_027", 0x027}, // SP 0x1402CC430 MP 0x000000000
-		{"_func_02A", 0x02A}, // SP 0x1405D92F0 MP 0x000000000
-		{"_func_02B", 0x02B}, // SP 0x1405D92F0 MP 0x000000000
-		{"_func_02C", 0x02C}, // SP 0x1402ACD10 MP 0x000000000
-		{"_func_02D", 0x02D}, // SP 0x14029C9B0 MP 0x140367950
-		{"_func_02E", 0x02E}, // SP 0x14029CAC0 MP 0x140367980
+		{"clearallcorpses", 0x023}, // SP 0x1402AC9D0 MP 0x000000000
+		{"setturretnode", 0x024}, // SP 0x1402CC640 MP 0x000000000
+		{"unsetturretnode", 0x025}, // SP 0x1402CC6E0 MP 0x000000000
+		{"setnodepriority", 0x026}, // SP 0x1402CC570 MP 0x000000000
+		{"isnodeoccupied", 0x027}, // SP 0x1402CC430 MP 0x000000000
+		{"setdebugorigin", 0x02A}, // SP 0x1405D92F0 MP 0x000000000
+		{"setdebugangles", 0x02B}, // SP 0x1405D92F0 MP 0x000000000
+		{"updategamerprofile", 0x02C}, // SP 0x1402ACD10 MP 0x000000000
+		{"assertex", 0x02D}, // SP 0x14029C9B0 MP 0x140367950
+		{"assertmsg", 0x02E}, // SP 0x14029CAC0 MP 0x140367980
 		{"isdefined", 0x02F}, // SP 0x14029D000 MP 0x140368520
 		{"isvalidmissile", 0x030}, // SP 0x14029D3E0 MP 0x140368A70
-		{"_func_031", 0x031}, // SP 0x14029D630 MP 0x140368D30
-		{"_func_032", 0x032}, // SP 0x14029E0A0 MP 0x14036A580
-		{"_func_033", 0x033}, // SP 0x14029E220 MP 0x14036A7C0
-		{"setdynamicdvar", 0x034}, // SP 0x14029EB20 MP 0x14036AE70
-		{"_func_035", 0x035}, // SP 0x000000000 MP 0x14036B600
-		{"_func_036", 0x036}, // SP 0x14029F8F0 MP 0x14036BB60
-		{"setdvar", 0x037}, // SP 0x14029F1C0 MP 0x14036B7F0
-		{"_func_038", 0x038}, // SP 0x14029F8F0 MP 0x14036C070
+		{"isstring", 0x031}, // SP 0x14029D630 MP 0x140368D30
+		{"setomnvar", 0x032}, // SP 0x14029E0A0 MP 0x14036A580
+		{"getomnvar", 0x033}, // SP 0x14029E220 MP 0x14036A7C0
+		{"setdvar", 0x034}, // SP 0x14029EB20 MP 0x14036AE70
+		{"setdynamicdvar", 0x035}, // SP 0x000000000 MP 0x14036B600
+		{"setdvarifuninitialized", 0x036}, // SP 0x14029F8F0 MP 0x14036BB60
+		{"setdevdvar", 0x037}, // SP 0x14029F1C0 MP 0x14036B7F0
+		{"setdevdvarifuninitialized", 0x038}, // SP 0x14029F8F0 MP 0x14036C070
 		{"getdvar", 0x039}, // SP 0x14029FE30 MP 0x14036C350
 		{"getdvarint", 0x03A}, // SP 0x1402A0270 MP 0x14036C7B0
 		{"getdvarfloat", 0x03B}, // SP 0x1402A0810 MP 0x14036CDD0
 		{"getdvarvector", 0x03C}, // SP 0x1402A10E0 MP 0x14036D190
-		{"_func_03D", 0x03D}, // SP 0x1402A1A50 MP 0x14036DB40
-		{"_func_03E", 0x03E}, // SP 0x1402A1A60 MP 0x14036DD80
-		{"_func_03F", 0x03F}, // SP 0x1402A1AC0 MP 0x14036DDA0
+		{"gettime", 0x03D}, // SP 0x1402A1A50 MP 0x14036DB40
+		{"gettimeutc", 0x03E}, // SP 0x1402A1A60 MP 0x14036DD80
+		{"getradiometricunit", 0x03F}, // SP 0x1402A1AC0 MP 0x14036DDA0
 		{"getentbynum", 0x040}, // SP 0x1402A1C50 MP 0x14036DF50
-		{"_func_041", 0x041}, // SP 0x1402A1D10 MP 0x000000000
-		{"_func_042", 0x042}, // SP 0x1402A1D20 MP 0x000000000
-		{"_func_043", 0x043}, // SP 0x1402A1D30 MP 0x14036E110
+		{"getscreenwidth", 0x041}, // SP 0x1402A1D10 MP 0x000000000
+		{"getscreenheight", 0x042}, // SP 0x1402A1D20 MP 0x000000000
+		{"getweaponmodel", 0x043}, // SP 0x1402A1D30 MP 0x14036E110
 		{"_func_044", 0x044}, // SP 0x1402ABBE0 MP 0x000000000
 		{"_func_045", 0x045}, // SP 0x1402ABCF0 MP 0x000000000
 		{"_func_046", 0x046}, // SP 0x1402ABD30 MP 0x000000000
-		{"_func_047", 0x047}, // SP 0x1402ABD90 MP 0x1403775E0
-		{"_func_048", 0x048}, // SP 0x1402ABE60 MP 0x140377840
-		{"_func_049", 0x049}, // SP 0x1402ABF90 MP 0x000000000
-		{"_func_04A", 0x04A}, // SP 0x1402ABFC0 MP 0x000000000
-		{"_func_04B", 0x04B}, // SP 0x1402AC0E0 MP 0x000000000
-		{"_func_04C", 0x04C}, // SP 0x1402AC210 MP 0x000000000
-		{"_func_04D", 0x04D}, // SP 0x1402AC520 MP 0x000000000
-		{"_func_04E", 0x04E}, // SP 0x1402AC6F0 MP 0x000000000
-		{"_func_04F", 0x04F}, // SP 0x1402AC720 MP 0x000000000
-		{"_func_050", 0x050}, // SP 0x1402AC740 MP 0x000000000
-		{"_func_051", 0x051}, // SP 0x1402AC760 MP 0x000000000
-		{"_func_052", 0x052}, // SP 0x1402AC780 MP 0x000000000
-		{"_func_053", 0x053}, // SP 0x1402AC830 MP 0x000000000
-		{"_func_054", 0x054}, // SP 0x1402AD6E0 MP 0x000000000
-		{"_func_055", 0x055}, // SP 0x1402AAEC0 MP 0x000000000
-		{"_func_056", 0x056}, // SP 0x1402AAF60 MP 0x000000000
-		{"_func_057", 0x057}, // SP 0x1402AB040 MP 0x000000000
-		{"_func_058", 0x058}, // SP 0x1402AB060 MP 0x000000000
-		{"_func_059", 0x059}, // SP 0x1402AB140 MP 0x000000000
-		{"_func_05A", 0x05A}, // SP 0x1402AB1E0 MP 0x000000000
-		{"_func_05B", 0x05B}, // SP 0x1402AB2A0 MP 0x000000000
-		{"_func_05C", 0x05C}, // SP 0x1402AB420 MP 0x000000000
-		{"_func_05D", 0x05D}, // SP 0x1402AB4A0 MP 0x000000000
-		{"_func_05E", 0x05E}, // SP 0x1402AB620 MP 0x000000000
-		{"_func_05F", 0x05F}, // SP 0x1402A2410 MP 0x14036E740
-		{"_func_060", 0x060}, // SP 0x1402A2910 MP 0x14036ED60
-		{"_func_061", 0x061}, // SP 0x1402A3170 MP 0x14036F3E0
-		{"_func_062", 0x062}, // SP 0x1402A34D0 MP 0x140357CA0
-		{"getweaponreticlename", 0x063}, // SP 0x14028DEA0 MP 0x140358890
-		{"_func_064", 0x064}, // SP 0x14028E0B0 MP 0x140358B80
+		{"setsunlight", 0x047}, // SP 0x1402ABD90 MP 0x1403775E0
+		{"resetsunlight", 0x048}, // SP 0x1402ABE60 MP 0x140377840
+		{"getmapsundirection", 0x049}, // SP 0x1402ABF90 MP 0x000000000
+		{"getmapsunangles", 0x04A}, // SP 0x1402ABFC0 MP 0x000000000
+		{"setsundirection", 0x04B}, // SP 0x1402AC0E0 MP 0x000000000
+		{"lerpsundirection", 0x04C}, // SP 0x1402AC210 MP 0x000000000
+		{"lerpsunangles", 0x04D}, // SP 0x1402AC520 MP 0x000000000
+		{"resetsundirection", 0x04E}, // SP 0x1402AC6F0 MP 0x000000000
+		{"enableforcedsunshadows", 0x04F}, // SP 0x1402AC720 MP 0x000000000
+		{"enableforcednosunshadows", 0x050}, // SP 0x1402AC740 MP 0x000000000
+		{"disableforcedsunshadows", 0x051}, // SP 0x1402AC760 MP 0x000000000
+		{"enableouterspacemodellighting", 0x052}, // SP 0x1402AC780 MP 0x000000000
+		{"disableouterspacemodellighting", 0x053}, // SP 0x1402AC830 MP 0x000000000
+		{"remapstage", 0x054}, // SP 0x1402AD6E0 MP 0x000000000
+		{"changelevel", 0x055}, // SP 0x1402AAEC0 MP 0x000000000
+		{"missionsuccess", 0x056}, // SP 0x1402AAF60 MP 0x000000000
+		{"missionfailed", 0x057}, // SP 0x1402AB040 MP 0x000000000
+		{"cinematic", 0x058}, // SP 0x1402AB060 MP 0x000000000
+		{"cinematicingame", 0x059}, // SP 0x1402AB140 MP 0x000000000
+		{"cinematicingamesync", 0x05A}, // SP 0x1402AB1E0 MP 0x000000000
+		{"cinematicingameloop", 0x05B}, // SP 0x1402AB2A0 MP 0x000000000
+		{"cinematicingameloopresident", 0x05C}, // SP 0x1402AB420 MP 0x000000000
+		{"iscinematicplaying", 0x05D}, // SP 0x1402AB4A0 MP 0x000000000
+		{"stopcinematicingame", 0x05E}, // SP 0x1402AB620 MP 0x000000000
+		{"getweapondisplayname", 0x05F}, // SP 0x1402A2410 MP 0x14036E740
+		{"getweaponbasename", 0x060}, // SP 0x1402A2910 MP 0x14036ED60
+		{"getweaponattachments", 0x061}, // SP 0x1402A3170 MP 0x14036F3E0
+		{"getweaponattachmentdisplaynames", 0x062}, // SP 0x1402A34D0 MP 0x140357CA0
+		{"getweaponcamoname", 0x063}, // SP 0x14028DEA0 MP 0x140358890
+		{"getweaponreticlename", 0x064}, // SP 0x14028E0B0 MP 0x140358B80
 		{"getanimlength", 0x065}, // SP 0x14028FB80 MP 0x14035AB80
 		{"animhasnotetrack", 0x066}, // SP 0x14028FD60 MP 0x14035B110
 		{"getnotetracktimes", 0x067}, // SP 0x14028FDC0 MP 0x14035B220
 		{"spawn", 0x068}, // SP 0x14029D0C0 MP 0x140368410
 		{"spawnloopsound", 0x069}, // SP 0x14029D0C0 MP 0x140368410
-		{"_func_06A", 0x06A}, // SP 0x140444BB0 MP 0x14036AF90
-		{"_func_06B", 0x06B}, // SP 0x14029E950 MP 0x140366EF0
-		{"_func_06C", 0x06C}, // SP 0x1402BBCA0 MP 0x000000000
-		{"_func_06D", 0x06D}, // SP 0x1402BB830 MP 0x000000000
-		{"_func_06E", 0x06E}, // SP 0x1402BB990 MP 0x000000000
-		{"_func_06F", 0x06F}, // SP 0x14025D860 MP 0x140375D40
-		{"_func_070", 0x070}, // SP 0x14025D770 MP 0x140375F10
-		{"_func_071", 0x071}, // SP 0x14025D630 MP 0x000000000
-		{"_func_072", 0x072}, // SP 0x1402AB510 MP 0x000000000
-		{"_func_073", 0x073}, // SP 0x1402981B0 MP 0x140364BC0
-		{"_func_074", 0x074}, // SP 0x1402AFD80 MP 0x000000000
-		{"_func_075", 0x075}, // SP 0x1402AFEA0 MP 0x000000000
-		{"_func_076", 0x076}, // SP 0x1402A78A0 MP 0x000000000
-		{"_func_077", 0x077}, // SP 0x1402A79D0 MP 0x000000000
-		{"_func_078", 0x078}, // SP 0x14029E170 MP 0x140367970
-		{"_func_079", 0x079}, // SP 0x14029E210 MP 0x140367990
-		{"_func_07A", 0x07A}, // SP 0x14029E2D0 MP 0x140367D70
-		{"_func_07B", 0x07B}, // SP 0x14029E320 MP 0x140367F30
-		{"_func_07C", 0x07C}, // SP 0x14029E330 MP 0x140367F40
-		{"_func_07D", 0x07D}, // SP 0x14029E730 MP 0x140367FA0
-		{"_func_07E", 0x07E}, // SP 0x1402A7BF0 MP 0x000000000
-		{"_func_07F", 0x07F}, // SP 0x1402A8BB0 MP 0x000000000
-		{"_func_080", 0x080}, // SP 0x1402A7A80 MP 0x000000000
-		{"_func_081", 0x081}, // SP 0x1402AAE30 MP 0x000000000
-		{"_func_083", 0x083}, // SP 0x1402AAE50 MP 0x000000000
-		{"_func_084", 0x084}, // SP 0x1402AAEA0 MP 0x000000000
-		{"_func_085", 0x085}, // SP 0x1402A8CB0 MP 0x000000000
-		{"_func_086", 0x086}, // SP 0x1402A9990 MP 0x000000000
-		{"_func_087", 0x087}, // SP 0x1402A99B0 MP 0x000000000
-		{"_func_088", 0x088}, // SP 0x1402A9100 MP 0x000000000
-		{"_func_089", 0x089}, // SP 0x1402A99D0 MP 0x000000000
-		{"_func_08A", 0x08A}, // SP 0x1402A9A70 MP 0x000000000
-		{"_func_08B", 0x08B}, // SP 0x1402AB690 MP 0x000000000
-		{"_func_08C", 0x08C}, // SP 0x1402ABB90 MP 0x000000000
+		{"spawnloopingsound", 0x06A}, // SP 0x140444BB0 MP 0x14036AF90
+		{"bullettrace", 0x06B}, // SP 0x14029E950 MP 0x140366EF0
+		{"target_setmaxsize", 0x06C}, // SP 0x1402BBCA0 MP 0x000000000
+		{"target_setcolor", 0x06D}, // SP 0x1402BB830 MP 0x000000000
+		{"target_setdelay", 0x06E}, // SP 0x1402BB990 MP 0x000000000
+		{"getstartorigin", 0x06F}, // SP 0x14025D860 MP 0x140375D40
+		{"getstartangles", 0x070}, // SP 0x14025D770 MP 0x140375F10
+		{"getcycleoriginoffset", 0x071}, // SP 0x14025D630 MP 0x000000000
+		{"magicgrenade", 0x072}, // SP 0x1402AB510 MP 0x000000000
+		{"magicgrenademanual", 0x073}, // SP 0x1402981B0 MP 0x140364BC0
+		{"setblur", 0x074}, // SP 0x1402AFD80 MP 0x000000000
+		{"musicplay", 0x075}, // SP 0x1402AFEA0 MP 0x000000000
+		{"musicstop", 0x076}, // SP 0x1402A78A0 MP 0x000000000
+		{"soundfade", 0x077}, // SP 0x1402A79D0 MP 0x000000000
+		{"addsoundsubmix", 0x078}, // SP 0x14029E170 MP 0x140367970
+		{"clearsoundsubmix", 0x079}, // SP 0x14029E210 MP 0x140367990
+		{"clearallsubmixes", 0x07A}, // SP 0x14029E2D0 MP 0x140367D70
+		{"blendsoundsubmix", 0x07B}, // SP 0x14029E320 MP 0x140367F30
+		{"makesoundsubmixsticky", 0x07C}, // SP 0x14029E330 MP 0x140367F40
+		{"makesoundsubmixunsticky", 0x07D}, // SP 0x14029E730 MP 0x140367FA0
+		{"soundsettimescalefactor", 0x07E}, // SP 0x1402A7BF0 MP 0x000000000
+		{"soundresettimescale", 0x07F}, // SP 0x1402A8BB0 MP 0x000000000
+		{"levelsoundfade", 0x080}, // SP 0x1402A7A80 MP 0x000000000
+		{"precachenightvisioncodeassets", 0x081}, // SP 0x1402AAE30 MP 0x000000000
+		{"precachedigitaldistortcodeassets", 0x083}, // SP 0x1402AAE50 MP 0x000000000
+		{"precacheminimapsentrycodeassets", 0x084}, // SP 0x1402AAEA0 MP 0x000000000
+		{"savegame", 0x085}, // SP 0x1402A8CB0 MP 0x000000000
+		{"issavesuccessful", 0x086}, // SP 0x1402A9990 MP 0x000000000
+		{"issaverecentlyloaded", 0x087}, // SP 0x1402A99B0 MP 0x000000000
+		{"savegamenocommit", 0x088}, // SP 0x1402A9100 MP 0x000000000
+		{"commitsave", 0x089}, // SP 0x1402A99D0 MP 0x000000000
+		{"commitwouldbevalid", 0x08A}, // SP 0x1402A9A70 MP 0x000000000
+		{"getfxvisibility", 0x08B}, // SP 0x1402AB690 MP 0x000000000
+		{"setculldist", 0x08C}, // SP 0x1402ABB90 MP 0x000000000
 		{"bullettracepassed", 0x08D}, // SP 0x14029F480 MP 0x140367410
-		{"_func_08E", 0x08E}, // SP 0x14029F7A0 MP 0x140367670
-		{"_func_08F", 0x08F}, // SP 0x14029FF90 MP 0x140367E20
-		{"_func_090", 0x090}, // SP 0x1402A0360 MP 0x140368180
-		{"_func_091", 0x091}, // SP 0x1402A2670 MP 0x14036A300
-		{"getangledelta", 0x092}, // SP 0x14028F3D0 MP 0x14036E210
-		{"getangledelta3d", 0x093}, // SP 0x14028FA60 MP 0x14036E910
+		{"sighttracepassed", 0x08E}, // SP 0x14029F7A0 MP 0x140367670
+		{"physicstrace", 0x08F}, // SP 0x14029FF90 MP 0x140367E20
+		{"playerphysicstrace", 0x090}, // SP 0x1402A0360 MP 0x140368180
+		{"getgroundposition", 0x091}, // SP 0x1402A2670 MP 0x14036A300
+		{"getmovedelta", 0x092}, // SP 0x14028F3D0 MP 0x14036E210
+		{"getangledelta", 0x093}, // SP 0x14028FA60 MP 0x14036E910
 		{"getnorthyaw", 0x094}, // SP 0x1402903E0 MP 0x140357C50
-		{"_func_095", 0x095}, // SP 0x1402A7970 MP 0x000000000
-		{"_func_096", 0x096}, // SP 0x1402A7A50 MP 0x000000000
-		{"_func_097", 0x097}, // SP 0x1402A9B20 MP 0x000000000
-		{"_func_098", 0x098}, // SP 0x1402A9B70 MP 0x000000000
-		{"_func_099", 0x099}, // SP 0x1402A9AE0 MP 0x000000000
-		{"_func_09A", 0x09A}, // SP 0x1402AE4D0 MP 0x000000000
-		{"_func_09B", 0x09B}, // SP 0x1402BB040 MP 0x000000000
-		{"_func_09C", 0x09C}, // SP 0x1402BB410 MP 0x000000000
-		{"_func_09D", 0x09D}, // SP 0x1402BB6F0 MP 0x000000000
-		{"_func_09E", 0x09E}, // SP 0x1402BB6B0 MP 0x000000000
-		{"_func_09F", 0x09F}, // SP 0x1402BC260 MP 0x000000000
-		{"_func_0A0", 0x0A0}, // SP 0x1402BBF00 MP 0x000000000
-		{"_func_0A1", 0x0A1}, // SP 0x1402BB590 MP 0x000000000
-		{"_func_0A2", 0x0A2}, // SP 0x1402BB520 MP 0x000000000
-		{"_func_0A3", 0x0A3}, // SP 0x1402BC390 MP 0x000000000
-		{"_func_0A4", 0x0A4}, // SP 0x1402BB060 MP 0x000000000
-		{"_func_0A5", 0x0A5}, // SP 0x1402BB4A0 MP 0x000000000
-		{"_func_0A6", 0x0A6}, // SP 0x1402BB630 MP 0x000000000
-		{"_func_0A7", 0x0A7}, // SP 0x1402BB710 MP 0x000000000
-		{"_func_0A8", 0x0A8}, // SP 0x1402BBB80 MP 0x000000000
-		{"_func_0A9", 0x0A9}, // SP 0x1402BB510 MP 0x000000000
-		{"_func_0AA", 0x0AA}, // SP 0x1402BC380 MP 0x000000000
-		{"_func_0AB", 0x0AB}, // SP 0x1402BC140 MP 0x000000000
-		{"_func_0AC", 0x0AC}, // SP 0x1402BB090 MP 0x000000000
-		{"_func_0AD", 0x0AD}, // SP 0x1402BB2C0 MP 0x000000000
-		{"_func_0AE", 0x0AE}, // SP 0x1402BB1C0 MP 0x000000000
-		{"_func_0AF", 0x0AF}, // SP 0x1402BBDB0 MP 0x000000000
-		{"_func_0B0", 0x0B0}, // SP 0x140290420 MP 0x140357E90
+		{"getcommandfromkey", 0x095}, // SP 0x1402A7970 MP 0x000000000
+		{"getsticksconfig", 0x096}, // SP 0x1402A7A50 MP 0x000000000
+		{"weaponfightdist", 0x097}, // SP 0x1402A9B20 MP 0x000000000
+		{"weaponmaxdist", 0x098}, // SP 0x1402A9B70 MP 0x000000000
+		{"isturretactive", 0x099}, // SP 0x1402A9AE0 MP 0x000000000
+		{"getstarttime", 0x09A}, // SP 0x1402AE4D0 MP 0x000000000
+		{"target_alloc", 0x09B}, // SP 0x1402BB040 MP 0x000000000
+		{"target_flush", 0x09C}, // SP 0x1402BB410 MP 0x000000000
+		{"target_set", 0x09D}, // SP 0x1402BB6F0 MP 0x000000000
+		{"target_remove", 0x09E}, // SP 0x1402BB6B0 MP 0x000000000
+		{"target_setshader", 0x09F}, // SP 0x1402BC260 MP 0x000000000
+		{"target_setoffscreenshader", 0x0A0}, // SP 0x1402BBF00 MP 0x000000000
+		{"target_isinrect", 0x0A1}, // SP 0x1402BB590 MP 0x000000000
+		{"target_isincircle", 0x0A2}, // SP 0x1402BB520 MP 0x000000000
+		{"target_startreticlelockon", 0x0A3}, // SP 0x1402BC390 MP 0x000000000
+		{"target_clearreticlelockon", 0x0A4}, // SP 0x1402BB060 MP 0x000000000
+		{"target_getarray", 0x0A5}, // SP 0x1402BB4A0 MP 0x000000000
+		{"target_istarget", 0x0A6}, // SP 0x1402BB630 MP 0x000000000
+		{"target_setattackmode", 0x0A7}, // SP 0x1402BB710 MP 0x000000000
+		{"target_setjavelinonly", 0x0A8}, // SP 0x1402BBB80 MP 0x000000000
+		{"target_hidefromplayer", 0x0A9}, // SP 0x1402BB510 MP 0x000000000
+		{"target_showtoplayer", 0x0AA}, // SP 0x1402BC380 MP 0x000000000
+		{"target_setscaledrendermode", 0x0AB}, // SP 0x1402BC140 MP 0x000000000
+		{"target_drawcornersonly", 0x0AC}, // SP 0x1402BB090 MP 0x000000000
+		{"target_drawsquare", 0x0AD}, // SP 0x1402BB2C0 MP 0x000000000
+		{"target_drawsingle", 0x0AE}, // SP 0x1402BB1C0 MP 0x000000000
+		{"target_setminsize", 0x0AF}, // SP 0x1402BBDB0 MP 0x000000000
+		{"setnorthyaw", 0x0B0}, // SP 0x140290420 MP 0x140357E90
 		{"setslowmotion", 0x0B1}, // SP 0x14029BC60 MP 0x140365480
 		{"randomint", 0x0B2}, // SP 0x1402A2ED0 MP 0x14036A770
 		{"randomfloat", 0x0B3}, // SP 0x1402A3140 MP 0x14036A9E0
@@ -196,41 +196,41 @@ namespace scripting
 		{"int", 0x0BC}, // SP 0x14028DAE0 MP 0x14036BBF0
 		{"float", 0x0BD}, // SP 0x14028DE30 MP 0x14036C000
 		{"abs", 0x0BE}, // SP 0x14028DFC0 MP 0x14036C320
-		{"_func_0BF", 0x0BF}, // SP 0x14028DFF0 MP 0x14036C580
-		{"_func_0C0", 0x0C0}, // SP 0x1402B7A30 MP 0x000000000
-		{"_func_0C1", 0x0C1}, // SP 0x1402B7B50 MP 0x000000000
-		{"_func_0C2", 0x0C2}, // SP 0x1402B7BF0 MP 0x000000000
+		{"min", 0x0BF}, // SP 0x14028DFF0 MP 0x14036C580
+		{"objective_additionalcurrent", 0x0C0}, // SP 0x1402B7A30 MP 0x000000000
+		{"objective_ring", 0x0C1}, // SP 0x1402B7B50 MP 0x000000000
+		{"objective_setpointertextoverride", 0x0C2}, // SP 0x1402B7BF0 MP 0x000000000
 		{"getnode", 0x0C3}, // SP 0x1402CBED0 MP 0x14031FA00
 		{"getnodearray", 0x0C4}, // SP 0x1402CBFE0 MP 0x14031FB10
 		{"getallnodes", 0x0C5}, // SP 0x1402CBCD0 MP 0x14031F7E0
-		{"_func_0C6", 0x0C6}, // SP 0x1402CC0F0 MP 0x14031FCC0
-		{"_func_0C7", 0x0C7}, // SP 0x1402CC100 MP 0x14031FCD0
-		{"_func_0C8", 0x0C8}, // SP 0x1402CBD20 MP 0x14031F830
-		{"_func_0C9", 0x0C9}, // SP 0x1405D92F0 MP 0x000000000
-		{"_func_0CA", 0x0CA}, // SP 0x1405D92F0 MP 0x000000000
-		{"_func_0CB", 0x0CB}, // SP 0x140468CF0 MP 0x000000000
-		{"_func_0CC", 0x0CC}, // SP 0x140468DD0 MP 0x000000000
-		{"_func_0CD", 0x0CD}, // SP 0x140468CA0 MP 0x000000000
+		{"getnodesinradius", 0x0C6}, // SP 0x1402CC0F0 MP 0x14031FCC0
+		{"getnodesinradiussorted", 0x0C7}, // SP 0x1402CC100 MP 0x14031FCD0
+		{"getclosestnodeinsight", 0x0C8}, // SP 0x1402CBD20 MP 0x14031F830
+		{"getreflectionlocs", 0x0C9}, // SP 0x1405D92F0 MP 0x000000000
+		{"getreflectionreferencelocs", 0x0CA}, // SP 0x1405D92F0 MP 0x000000000
+		{"getvehicletracksegment", 0x0CB}, // SP 0x140468CF0 MP 0x000000000
+		{"getvehicletracksegmentarray", 0x0CC}, // SP 0x140468DD0 MP 0x000000000
+		{"getallvehicletracksegments", 0x0CD}, // SP 0x140468CA0 MP 0x000000000
 		{"isarray", 0x0CE}, // SP 0x140291BF0 MP 0x14035E620
 		{"isai", 0x0CF}, // SP 0x1402ADC10 MP 0x140377460
 		{"getindexforluincstring", 0x0D0}, // SP 0x14029DB50 MP 0x140369C50
 		{"issentient", 0x0D1}, // SP 0x14029D7D0 MP 0x140368DA0
-		{"_func_0D2", 0x0D2}, // SP 0x1402ADD90 MP 0x000000000
-		{"_func_0D3", 0x0D3}, // SP 0x1402ADED0 MP 0x000000000
-		{"_func_0D4", 0x0D4}, // SP 0x1402ADF60 MP 0x000000000
-		{"_func_0D5", 0x0D5}, // SP 0x1402ADFD0 MP 0x000000000
-		{"_func_0D6", 0x0D6}, // SP 0x1402AE020 MP 0x000000000
-		{"_func_0D7", 0x0D7}, // SP 0x1402AE4E0 MP 0x000000000
-		{"_func_0D8", 0x0D8}, // SP 0x1402AE4F0 MP 0x000000000
-		{"_func_0D9", 0x0D9}, // SP 0x1402AE7A0 MP 0x000000000
-		{"_func_0DA", 0x0DA}, // SP 0x1402AF980 MP 0x000000000
-		{"_func_0DB", 0x0DB}, // SP 0x1402AFBD0 MP 0x000000000
-		{"_func_0DC", 0x0DC}, // SP 0x1402AFB20 MP 0x000000000
-		{"_func_0DD", 0x0DD}, // SP 0x1402AFCE0 MP 0x000000000
-		{"_func_0DE", 0x0DE}, // SP 0x1402AFE20 MP 0x000000000
-		{"_func_0DF", 0x0DF}, // SP 0x14029CAC0 MP 0x000000000
-		{"_func_0E0", 0x0E0}, // SP 0x1402A7830 MP 0x000000000
-		{"_func_0E1", 0x0E1}, // SP 0x14028E170 MP 0x14036C720
+		{"isgodmode", 0x0D2}, // SP 0x1402ADD90 MP 0x000000000
+		{"getdebugdvar", 0x0D3}, // SP 0x1402ADED0 MP 0x000000000
+		{"getdebugdvarint", 0x0D4}, // SP 0x1402ADF60 MP 0x000000000
+		{"getdebugdvarfloat", 0x0D5}, // SP 0x1402ADFD0 MP 0x000000000
+		{"setsaveddvar", 0x0D6}, // SP 0x1402AE020 MP 0x000000000
+		{"getfreeaicount", 0x0D7}, // SP 0x1402AE4E0 MP 0x000000000
+		{"getaicount", 0x0D8}, // SP 0x1402AE4F0 MP 0x000000000
+		{"getaiarray", 0x0D9}, // SP 0x1402AE7A0 MP 0x000000000
+		{"getaispeciesarray", 0x0DA}, // SP 0x1402AF980 MP 0x000000000
+		{"getspawnerarray", 0x0DB}, // SP 0x1402AFBD0 MP 0x000000000
+		{"getcorpsearray", 0x0DC}, // SP 0x1402AFB20 MP 0x000000000
+		{"getspawnerteamarray", 0x0DD}, // SP 0x1402AFCE0 MP 0x000000000
+		{"getweaponclipmodel", 0x0DE}, // SP 0x1402AFE20 MP 0x000000000
+		{"getbrushmodelcenter", 0x0DF}, // SP 0x14029CAC0 MP 0x000000000
+		{"getkeybinding", 0x0E0}, // SP 0x1402A7830 MP 0x000000000
+		{"max", 0x0E1}, // SP 0x14028E170 MP 0x14036C720
 		{"floor", 0x0E2}, // SP 0x14028E1C0 MP 0x14036C750
 		{"ceil", 0x0E3}, // SP 0x14028E260 MP 0x14036C770
 		{"exp", 0x0E4}, // SP 0x14028E280 MP 0x14036C790
@@ -238,36 +238,36 @@ namespace scripting
 		{"log", 0x0E6}, // SP 0x14028E410 MP 0x14036C840
 		{"sqrt", 0x0E7}, // SP 0x14028E470 MP 0x14036CB80
 		{"squared", 0x0E8}, // SP 0x14028E4B0 MP 0x14036CBA0
-		{"_func_0E9", 0x0E9}, // SP 0x14028E770 MP 0x14036CE40
-		{"_func_0EA", 0x0EA}, // SP 0x14028E8C0 MP 0x14036CF30
+		{"clamp", 0x0E9}, // SP 0x14028E770 MP 0x14036CE40
+		{"angleclamp", 0x0EA}, // SP 0x14028E8C0 MP 0x14036CF30
 		{"angleclamp180", 0x0EB}, // SP 0x14028E920 MP 0x14036CFB0
 		{"vectorfromlinetopoint", 0x0EC}, // SP 0x140290740 MP 0x14036E5A0
 		{"pointonsegmentnearesttopoint", 0x0ED}, // SP 0x140290B60 MP 0x14036EB30
-		{"_func_0EE", 0x0EE}, // SP 0x140291260 MP 0x14036F6E0
-		{"_func_0EF", 0x0EF}, // SP 0x1402913A0 MP 0x14036F790
-		{"_func_0F0", 0x0F0}, // SP 0x140291600 MP 0x140357E10
-		{"_func_0F1", 0x0F1}, // SP 0x1402918C0 MP 0x140357FB0
-		{"_func_0F2", 0x0F2}, // SP 0x140291930 MP 0x140358030
-		{"_func_0F3", 0x0F3}, // SP 0x140291AF0 MP 0x140358130
-		{"_func_0F4", 0x0F4}, // SP 0x140291B30 MP 0x140358190
-		{"_func_0F5", 0x0F5}, // SP 0x140291C20 MP 0x1403581E0
-		{"_func_0F6", 0x0F6}, // SP 0x140291EB0 MP 0x140358570
-		{"_func_0F7", 0x0F7}, // SP 0x140291F80 MP 0x140358640
+		{"distance", 0x0EE}, // SP 0x140291260 MP 0x14036F6E0
+		{"distance2d", 0x0EF}, // SP 0x1402913A0 MP 0x14036F790
+		{"distancesquared", 0x0F0}, // SP 0x140291600 MP 0x140357E10
+		{"length", 0x0F1}, // SP 0x1402918C0 MP 0x140357FB0
+		{"length2d", 0x0F2}, // SP 0x140291930 MP 0x140358030
+		{"lengthsquared", 0x0F3}, // SP 0x140291AF0 MP 0x140358130
+		{"length2dsquared", 0x0F4}, // SP 0x140291B30 MP 0x140358190
+		{"closer", 0x0F5}, // SP 0x140291C20 MP 0x1403581E0
+		{"vectordot", 0x0F6}, // SP 0x140291EB0 MP 0x140358570
+		{"vectorcross", 0x0F7}, // SP 0x140291F80 MP 0x140358640
 		{"axistoangles", 0x0F8}, // SP 0x140292690 MP 0x140359050
-		{"_func_0F9", 0x0F9}, // SP 0x1402ABB50 MP 0x1403771E0
-		{"_func_0FA", 0x0FA}, // SP 0x1402ABB60 MP 0x140377260
-		{"_func_0FB", 0x0FB}, // SP 0x000000000 MP 0x14037B950
-		{"_func_0FC", 0x0FC}, // SP 0x000000000 MP 0x140374E10
+		{"visionsetthermal", 0x0F9}, // SP 0x1402ABB50 MP 0x1403771E0
+		{"visionsetpain", 0x0FA}, // SP 0x1402ABB60 MP 0x140377260
+		{"endlobby", 0x0FB}, // SP 0x000000000 MP 0x14037B950
+		{"setac130ambience", 0x0FC}, // SP 0x000000000 MP 0x140374E10
 		{"getmapcustom", 0x0FD}, // SP 0x000000000 MP 0x140378260
-		{"_func_0FE", 0x0FE}, // SP 0x000000000 MP 0x1403765A0
+		{"spawnsighttrace", 0x0FE}, // SP 0x000000000 MP 0x1403765A0
 		{"incrementcounter", 0x0FF}, // SP 0x1402AE370 MP 0x140374FE0
 		{"getcountertotal", 0x100}, // SP 0x1402AE3C0 MP 0x140375100
-		{"_func_101", 0x101}, // SP 0x1402A1AE0 MP 0x000000000
-		{"_func_102", 0x102}, // SP 0x14028E970 MP 0x000000000
-		{"_func_103", 0x103}, // SP 0x14028ED80 MP 0x000000000
-		{"_func_104", 0x104}, // SP 0x1405D92F0 MP 0x14042C2C0
-		{"_func_105", 0x105}, // SP 0x1405D92F0 MP 0x14042C2D0
-		{"_func_106", 0x106}, // SP 0x14028D7F0 MP 0x000000000
+		{"getlevelticks", 0x101}, // SP 0x1402A1AE0 MP 0x000000000
+		{"perlinnoise2d", 0x102}, // SP 0x14028E970 MP 0x000000000
+		{"calcrockingangles", 0x103}, // SP 0x14028ED80 MP 0x000000000
+		{"reconevent", 0x104}, // SP 0x1405D92F0 MP 0x14042C2C0
+		{"reconspatialevent", 0x105}, // SP 0x1405D92F0 MP 0x14042C2D0
+		{"setsunflareposition", 0x106}, // SP 0x14028D7F0 MP 0x000000000
 		{"createthreatbiasgroup", 0x107}, // SP 0x1402D79E0 MP 0x1400774E0
 		{"threatbiasgroupexists", 0x108}, // SP 0x1402D7A10 MP 0x140077510
 		{"getthreatbias", 0x109}, // SP 0x1402D7A50 MP 0x140077550
@@ -275,63 +275,63 @@ namespace scripting
 		{"setthreatbiasagainstall", 0x10B}, // SP 0x1402D7B30 MP 0x140077630
 		{"setignoremegroup", 0x10C}, // SP 0x1402D7B80 MP 0x140077680
 		{"isenemyteam", 0x10D}, // SP 0x1402D7CC0 MP 0x140077820
-		{"_func_10E", 0x10E}, // SP 0x1402B7530 MP 0x000000000
-		{"_func_10F", 0x10F}, // SP 0x1402B77F0 MP 0x000000000
-		{"_func_110", 0x110}, // SP 0x1402B7800 MP 0x000000000
-		{"_func_111", 0x111}, // SP 0x1402B7810 MP 0x000000000
-		{"_func_112", 0x112}, // SP 0x1402B79C0 MP 0x000000000
-		{"_func_113", 0x113}, // SP 0x1402B7A20 MP 0x000000000
+		{"objective_additionalentity", 0x10E}, // SP 0x1402B7530 MP 0x000000000
+		{"objective_state_nomessage", 0x10F}, // SP 0x1402B77F0 MP 0x000000000
+		{"objective_string", 0x110}, // SP 0x1402B7800 MP 0x000000000
+		{"objective_string_nomessage", 0x111}, // SP 0x1402B7810 MP 0x000000000
+		{"objective_additionalposition", 0x112}, // SP 0x1402B79C0 MP 0x000000000
+		{"objective_current_nomessage", 0x113}, // SP 0x1402B7A20 MP 0x000000000
 		{"vectornormalize", 0x114}, // SP 0x140292150 MP 0x1403587A0
 		{"vectortoangles", 0x115}, // SP 0x140292290 MP 0x140358A90
 		{"vectortoyaw", 0x116}, // SP 0x1402924D0 MP 0x140358B10
 		{"vectorlerp", 0x117}, // SP 0x140292510 MP 0x140358E60
 		{"anglestoup", 0x118}, // SP 0x140292C80 MP 0x1403596E0
-		{"_func_119", 0x119}, // SP 0x140292D50 MP 0x140359890
-		{"_func_11A", 0x11A}, // SP 0x140292F80 MP 0x140359930
+		{"anglestoright", 0x119}, // SP 0x140292D50 MP 0x140359890
+		{"anglestoforward", 0x11A}, // SP 0x140292F80 MP 0x140359930
 		{"anglesdelta", 0x11B}, // SP 0x1402930E0 MP 0x140359BC0
-		{"_func_11C", 0x11C}, // SP 0x1402934C0 MP 0x14035A0F0
-		{"_func_11D", 0x11D}, // SP 0x140293670 MP 0x14035A280
-		{"_func_11E", 0x11E}, // SP 0x1402956B0 MP 0x14035B550
-		{"_func_11F", 0x11F}, // SP 0x140295850 MP 0x14035B7F0
+		{"combineangles", 0x11C}, // SP 0x1402934C0 MP 0x14035A0F0
+		{"transformmove", 0x11D}, // SP 0x140293670 MP 0x14035A280
+		{"rotatevector", 0x11E}, // SP 0x1402956B0 MP 0x14035B550
+		{"rotatepointaroundvector", 0x11F}, // SP 0x140295850 MP 0x14035B7F0
 		{"issubstr", 0x120}, // SP 0x140296960 MP 0x14035CB70
 		{"isendstr", 0x121}, // SP 0x1402969A0 MP 0x14035CD40
 		{"getsubstr", 0x122}, // SP 0x140296BB0 MP 0x14035CF80
 		{"tolower", 0x123}, // SP 0x140296DC0 MP 0x14035D360
-		{"_func_124", 0x124}, // SP 0x140297230 MP 0x14035DA90
-		{"_func_125", 0x125}, // SP 0x140297970 MP 0x14035E690
-		{"_func_126", 0x126}, // SP 0x14029FA50 MP 0x1403679A0
+		{"strtok", 0x124}, // SP 0x140297230 MP 0x14035DA90
+		{"stricmp", 0x125}, // SP 0x140297970 MP 0x14035E690
+		{"ambientplay", 0x126}, // SP 0x14029FA50 MP 0x1403679A0
 		{"getuavstrengthmax", 0x127}, // SP 0x000000000 MP 0x14037B790
-		{"getuavstrengthlevelshowenemyfastsweep", 0x128}, // SP 0x000000000 MP 0x14037B7A0
-		{"isdedicatedserver", 0x129}, // SP 0x000000000 MP 0x14037B7B0
-		{"worldentnumber", 0x12A}, // SP 0x000000000 MP 0x14037B7C0
+		{"getuavstrengthlevelneutral", 0x128}, // SP 0x000000000 MP 0x14037B7A0
+		{"getuavstrengthlevelshowenemyfastsweep", 0x129}, // SP 0x000000000 MP 0x14037B7B0
+		{"getuavstrengthlevelshowenemydirectional", 0x12A}, // SP 0x000000000 MP 0x14037B7C0
 		{"blockteamradar", 0x12B}, // SP 0x000000000 MP 0x14037B7D0
 		{"unblockteamradar", 0x12C}, // SP 0x000000000 MP 0x14037B830
 		{"isteamradarblocked", 0x12D}, // SP 0x000000000 MP 0x14037B8B0
-		{"_func_12E", 0x12E}, // SP 0x000000000 MP 0x140378110
-		{"_func_12F", 0x12F}, // SP 0x000000000 MP 0x14037A7B0
-		{"_func_130", 0x130}, // SP 0x000000000 MP 0x140378420
+		{"getassignedteam", 0x12E}, // SP 0x000000000 MP 0x140378110
+		{"setmatchdata", 0x12F}, // SP 0x000000000 MP 0x14037A7B0
+		{"getmatchdata", 0x130}, // SP 0x000000000 MP 0x140378420
 		{"sendmatchdata", 0x131}, // SP 0x000000000 MP 0x140378490
-		{"_func_132", 0x132}, // SP 0x000000000 MP 0x140378F40
-		{"_func_133", 0x133}, // SP 0x000000000 MP 0x14037A820
-		{"_func_134", 0x134}, // SP 0x000000000 MP 0x140378FE0
+		{"clearmatchdata", 0x132}, // SP 0x000000000 MP 0x140378F40
+		{"setmatchdatadef", 0x133}, // SP 0x000000000 MP 0x14037A820
+		{"setmatchclientip", 0x134}, // SP 0x000000000 MP 0x140378FE0
 		{"setmatchdataid", 0x135}, // SP 0x000000000 MP 0x140378DD0
-		{"_func_136", 0x136}, // SP 0x000000000 MP 0x140378F70
-		{"getmatchdata", 0x137}, // SP 0x000000000 MP 0x140378290
-		{"_func_138", 0x138}, // SP 0x000000000 MP 0x14037A8D0
+		{"setclientmatchdata", 0x136}, // SP 0x000000000 MP 0x140378F70
+		{"getclientmatchdata", 0x137}, // SP 0x000000000 MP 0x140378290
+		{"setclientmatchdatadef", 0x138}, // SP 0x000000000 MP 0x14037A8D0
 		{"sendclientmatchdata", 0x139}, // SP 0x000000000 MP 0x14037ADE0
 		{"getbuildversion", 0x13A}, // SP 0x000000000 MP 0x14037AEB0
-		{"getsquadassaultelo", 0x13B}, // SP 0x000000000 MP 0x14037B0E0
+		{"getbuildnumber", 0x13B}, // SP 0x000000000 MP 0x14037B0E0
 		{"getsystemtime", 0x13C}, // SP 0x000000000 MP 0x14037B100
 		{"getmatchrulesdata", 0x13D}, // SP 0x000000000 MP 0x14037AA30
 		{"isusingmatchrulesdata", 0x13E}, // SP 0x000000000 MP 0x14037AB20
-		{"_func_13F", 0x13F}, // SP 0x000000000 MP 0x1403769E0
-		{"ishairrunning", 0x140}, // SP 0x1402ACD00 MP 0x140378030
+		{"kick", 0x13F}, // SP 0x000000000 MP 0x1403769E0
+		{"issplitscreen", 0x140}, // SP 0x1402ACD00 MP 0x140378030
 		{"setmapcenter", 0x141}, // SP 0x000000000 MP 0x14037B550
 		{"setgameendtime", 0x142}, // SP 0x000000000 MP 0x14037B5A0
 		{"visionsetthermal", 0x143}, // SP 0x1402ABA00 MP 0x140376D40
 		{"visionsetpain", 0x144}, // SP 0x1402ABA10 MP 0x1403770E0
-		{"visionsetpostapply", 0x145}, // SP 0x1402ABA20 MP 0x140377160
-		{"_func_146", 0x146}, // SP 0x1402A12A0 MP 0x1403699C0
+		{"visionsetnight", 0x145}, // SP 0x1402ABA20 MP 0x140377160
+		{"visionsetmissilecam", 0x146}, // SP 0x1402A12A0 MP 0x1403699C0
 		{"_func_147", 0x147}, // SP 0x140298040 MP 0x14035F250
 		{"_func_148", 0x148}, // SP 0x140298370 MP 0x14035F7A0
 		{"_func_149", 0x149}, // SP 0x14029E7B0 MP 0x140366DA0
@@ -342,7 +342,7 @@ namespace scripting
 		{"_func_14E", 0x14E}, // SP 0x1402982C0 MP 0x14035F470
 		{"_func_14F", 0x14F}, // SP 0x14029EDB0 MP 0x1403670E0
 		{"loadfx", 0x150}, // SP 0x140290A80 MP 0x1403583B0
-		{"_func_151", 0x151}, // SP 0x140291730 MP 0x140359620
+		{"playfx", 0x151}, // SP 0x140291730 MP 0x140359620
 		{"playfxontag", 0x152}, // SP 0x140292A40 MP 0x14035AF90
 		{"stopfxontag", 0x153}, // SP 0x140294440 MP 0x14035C4B0
 		{"_func_154", 0x154}, // SP 0x140294DD0 MP 0x14035D560
