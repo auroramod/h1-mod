@@ -1,6 +1,8 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
+#include "fps.hpp"
+
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
@@ -93,9 +95,7 @@ namespace fps
 		{
 			if (cg_drawfps->current.integer > 0)
 			{
-				const auto fps = static_cast<std::int32_t>(static_cast<float>(1000.0f / static_cast<float>(cg_perf.
-					average))
-					+ 9.313225746154785e-10);
+				const auto fps = fps::get_fps();
 
 				const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
 				const auto fps_string = utils::string::va("%i", fps);
@@ -113,10 +113,8 @@ namespace fps
 		{
 			if (cg_drawping->current.integer > 0 && game::CL_IsCgameInitialized() && !game::VirtualLobby_Loaded())
 			{
-				const auto ping = *reinterpret_cast<int*>(0x142D106F0);
-
 				const auto font = game::R_RegisterFont("fonts/consolefont", 20);
-				const auto ping_string = utils::string::va("Ping: %i", ping);
+				const auto ping_string = utils::string::va("Ping: %i", *game::mp::ping);
 
 				const auto x = (game::ScrPlace_GetViewPlacement()->realViewportSize[0] - 375.0f) - game::R_TextWidth(
 					ping_string, 0x7FFFFFFF, font);
@@ -132,6 +130,13 @@ namespace fps
 			cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_FLAG_SAVED, false);
 			return cg_drawfps;
 		}
+	}
+
+	int get_fps()
+	{
+		return static_cast<std::int32_t>(static_cast<float>(1000.0f / static_cast<float>(cg_perf.
+			average))
+			+ 9.313225746154785e-10);
 	}
 
 	class component final : public component_interface
@@ -167,6 +172,9 @@ namespace fps
 
 				scheduler::loop(cg_draw_ping, scheduler::pipeline::renderer);
 			}
+
+			dvars::register_bool("cg_infobar_fps", false, game::DVAR_FLAG_SAVED, true);
+			dvars::register_bool("cg_infobar_ping", false, game::DVAR_FLAG_SAVED, true);
 		}
 	};
 }

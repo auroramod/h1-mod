@@ -8,6 +8,7 @@
 #include "../../../component/ui_scripting.hpp"
 #include "../../../component/command.hpp"
 #include "../../../component/updater.hpp"
+#include "../../../component/fps.hpp"
 
 #include "component/game_console.hpp"
 #include "component/scheduler.hpp"
@@ -38,6 +39,26 @@ namespace ui_scripting::lua
 			                                       const long long milliseconds)
 			{
 				return scheduler.add(callback, milliseconds, false);
+			};
+
+			game_type["getfps"] = [](const game&)
+			{
+				return fps::get_fps();
+			};
+
+			game_type["getping"] = [](const game&)
+			{
+				return *::game::mp::ping;
+			};
+
+			game_type["issingleplayer"] = [](const game&)
+			{
+				return ::game::environment::is_sp();
+			};
+
+			game_type["ismultiplayer"] = [](const game&)
+			{
+				return ::game::environment::is_mp();
 			};
 
 			auto userdata_type = state.new_usertype<userdata>("userdata_");

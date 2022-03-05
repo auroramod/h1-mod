@@ -220,6 +220,8 @@ namespace game
 		WEAK symbol<int> svs_numclients{0, 0x14B204A0C};
 		WEAK symbol<int> gameTime{0, 0x14621BDBC};
 
+		WEAK symbol<int> ping{0, 0x142D106F0};
+
 		WEAK symbol<int> sv_serverId_value{0, 0x14A3E99B8};
 
 		WEAK symbol<bool> virtualLobby_loaded{0, 0x142D077FD};

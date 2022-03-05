@@ -266,7 +266,7 @@ namespace patches
 
 			dvars::register_int("scr_game_spectatetype", 1, 0, 99, game::DVAR_FLAG_REPLICATED);
 
-			dvars::override::register_int("com_maxfps", 0, 10, 1000, game::DVAR_FLAG_SAVED);
+			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
 
 			// Prevent clients from ending the game as non host by sending 'end_game' lui notification
 			// cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub); // H1(1.4)
