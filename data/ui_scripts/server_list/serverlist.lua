@@ -5,6 +5,9 @@ if (not SystemLinkJoinMenu) then
 	return
 end
 
+game:addlocalizedstring("MENU_NUMPLAYERS", "Players")
+game:addlocalizedstring("MENU_PING", "Ping")
+
 local offsets = {
 	10,
 	500,
@@ -16,9 +19,9 @@ local offsets = {
 local columns = {
 	"@MENU_HOST_NAME",
 	"@MENU_MAP",
-	"Players",
+	"@MENU_NUMPLAYERS",
 	"@MENU_TYPE1",
-	"Ping",
+	"@MENU_PING",
 }
 
 SystemLinkJoinMenu.AddHeaderButton = function(menu, f12_arg1, width)

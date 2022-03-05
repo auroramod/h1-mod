@@ -1,6 +1,8 @@
 local Lobby = luiglobals.Lobby
 local MPLobbyOnline = LUI.mp_menus.MPLobbyOnline
 
+game:addlocalizedstring("LUA_MENU_SERVERLIST", "SERVER LIST")
+
 function LeaveLobby(f5_arg0)
 	LeaveXboxLive()
 	if Lobby.IsInPrivateParty() == false or Lobby.IsPrivatePartyHost() then
@@ -17,7 +19,7 @@ function menu_xboxlive(f16_arg0, f16_arg1)
 
 	menu:setClass(LUI.MPLobbyOnline)
 
-	local serverListButton = menu:AddButton("SERVER LIST", function (a1, a2)
+	local serverListButton = menu:AddButton("@LUA_MENU_SERVERLIST", function (a1, a2)
         LUI.FlowManager.RequestAddMenu(a1, "menu_systemlink_join", true, nil)
     end)
 	serverListButton:setDisabledRefreshRate(500)
