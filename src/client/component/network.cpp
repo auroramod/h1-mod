@@ -67,11 +67,11 @@ namespace network
 			// Command handled
 			a.popad64();
 			a.mov(al, 1);
-			a.jmp(0x140252AF8); // H1MP64(1.4)
+			a.jmp(0x252AF8_b); // STEAM
 
 			a.bind(return_unhandled);
 			a.popad64();
-			a.jmp(0x14025234C); // H1MP64(1.4)
+			a.jmp(0x25234C_b); // STEAM
 		}
 
 		int net_compare_base_address(const game::netadr_s* a1, const game::netadr_s* a2)
@@ -117,7 +117,7 @@ namespace network
 			if (net_interface && net_interface != "localhost"s)
 			{
 				// Sys_StringToSockaddr
-				utils::hook::invoke<void>(0x1404F6580, net_interface, &address);
+				utils::hook::invoke<void>(0x59E810_b, net_interface, &address);
 			}
 
 			address.sin_family = AF_INET;
@@ -237,52 +237,52 @@ namespace network
 
 				// redirect dw_sendto to raw socket
 				//utils::hook::jump(0x1404D850A, reinterpret_cast<void*>(0x1404D849A));
-				utils::hook::call(0x140513467, dw_send_to_stub); // H1MP64(1.4)
-				utils::hook::jump(game::Sys_SendPacket, dw_send_to_stub); // H1MP64(1.4)
+				utils::hook::call(0x5BDB47_b, dw_send_to_stub); // STEAM
+				utils::hook::jump(game::Sys_SendPacket, dw_send_to_stub); // STEAM
 
 				// intercept command handling
-				utils::hook::jump(0x140252327, utils::hook::assemble(handle_command_stub), true); // H1MP64(1.4)
+				utils::hook::jump(0x12F387_b, utils::hook::assemble(handle_command_stub), true); // STEAM
 
 				// handle xuid without secure connection
-				utils::hook::nop(0x140486AAF, 6); // H1MP64(1.4)
+				utils::hook::nop(0x554222_b, 6); // STEAM
 
-				utils::hook::jump(0x140424F20, net_compare_address); // H1MP64(1.4)
-				utils::hook::jump(0x140424F70, net_compare_base_address); // H1MP64(1.4)
+				utils::hook::jump(0x4F1800_b, net_compare_address); // STEAM
+				utils::hook::jump(0x4F1850_b, net_compare_base_address); // STEAM
 
 				// don't establish secure conenction
-				utils::hook::set<uint8_t>(0x14027EA4D, 0xEB); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x14027EB1E, 0xEB); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x14027EF8D, 0xEB); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x14025081F, 0xEB); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x358C8D_b, 0xEB); // STEAM
+				utils::hook::set<uint8_t>(0x358D5E_b, 0xEB); // STEAM
+				utils::hook::set<uint8_t>(0x3591CD_b, 0xEB); // STEAM
+				utils::hook::set<uint8_t>(0x12CD0F_b, 0xEB); // STEAM
 
 				// ignore unregistered connection
-				utils::hook::jump(0x140480F46, 0x140480EE5); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x140480F3B, 0xEB); // H1MP64(1.4)
+				utils::hook::jump(0x54E2D1_b, 0x54E270_b); // STEAM
+				utils::hook::set<uint8_t>(0x54E2C6_b, 0xEB); // STEAM
 
 				// disable xuid verification
-				utils::hook::set<uint8_t>(0x14005B62D, 0xEB); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x14005B649, 0xEB); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x728BF_b, 0xEB); // STEAM NOT SURE AT ALL
+				utils::hook::set<uint8_t>(0x72903_b, 0xEB); // STEAM NOT SURE AT FKING ALL
 
 				// disable xuid verification
-				utils::hook::nop(0x14048382C, 2);
-				utils::hook::set<uint8_t>(0x140483889, 0xEB); // H1MP64(1.4)
+				utils::hook::nop(0x5509D9_b, 2); // STEAM SHOULD
+				utils::hook::set<uint8_t>(0x550A36_b, 0xEB); // STEAM SHOULD
 
 				// ignore configstring mismatch
-				utils::hook::set<uint8_t>(0x1402591C9, 0xEB); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x341261_b, 0xEB); // STEAM
 
 				// ignore dw handle in SV_PacketEvent
-				utils::hook::set<uint8_t>(0x1404898E2, 0xEB);
-				utils::hook::call(0x1404898D6, &net_compare_address); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x1CBC22_b, 0xEB); // STEAM
+				utils::hook::call(0x1CBC16_b, &net_compare_address); // STEAM
 
 				// ignore dw handle in SV_FindClientByAddress
-				utils::hook::set<uint8_t>(0x140488EFD, 0xEB);
-				utils::hook::call(0x140488EF1, &net_compare_address); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x1CB24D_b, 0xEB); // STEAM
+				utils::hook::call(0x1CB241_b, &net_compare_address); // STEAM
 
 				// ignore dw handle in SV_DirectConnect
-				utils::hook::set<uint8_t>(0x140480C58, 0xEB);
-				utils::hook::set<uint8_t>(0x140480E6F, 0xEB);
-				utils::hook::call(0x140480C4B, &net_compare_address);
-				utils::hook::call(0x140480E62, &net_compare_address);
+				utils::hook::set<uint8_t>(0x54DFE8_b, 0xEB); // STEAM
+				utils::hook::set<uint8_t>(0x54E1FD_b, 0xEB); // STEAM NOT_SURE
+				utils::hook::call(0x54DFDB_b, &net_compare_address); // STEAM
+				utils::hook::call(0x54E1F0_b, &net_compare_address); // STEAM
 
 				// increase cl_maxpackets
 				dvars::override::register_int("cl_maxpackets", 1000, 1, 1000, game::DVAR_FLAG_SAVED);
@@ -291,32 +291,32 @@ namespace network
 				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_FLAG_NONE);
 
 				// ignore impure client
-				utils::hook::jump(0x140481B58, reinterpret_cast<void*>(0x140481BEE)); // H1MP64(1.4)
+				utils::hook::jump(0x481B58_b, reinterpret_cast<void*>(0x54EE69_b)); // STEAM
 
 				// don't send checksum
-				utils::hook::set<uint8_t>(0x140513433, 0); // H1MP64(1.4) mov: r8d, edi ; LEN
-				utils::hook::set<uint8_t>(0x14051345A, 0); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x513433_b, 0); // STEAM mov: r8d, edi ; LEN
+				utils::hook::set<uint8_t>(0x51345A_b, 0); // STEAM
 
 				// don't read checksum
-				utils::hook::set(0x1404F6620, 0xC301B0); // H1MP64(1.4)
+				utils::hook::set(0x513389_b, 0xC301B0); // STEAM
 
 				// don't try to reconnect client
-				utils::hook::call(0x140480DFF, reconnect_migratated_client); // H1MP64(1.4)
-				utils::hook::nop(0x140480DDB, 4); // H1MP64(1.4) this crashes when reconnecting for some reason
+				utils::hook::call(0x480DFF_b, reconnect_migratated_client); // STEAM
+				utils::hook::nop(0x480DDB_b, 4); // STEAM this crashes when reconnecting for some reason
 
 				// allow server owner to modify net_port before the socket bind
-				utils::hook::call(0x140512BE5, register_netport_stub); // H1MP64(1.4)
-				utils::hook::call(0x140512D20, register_netport_stub); // H1MP64(1.4)
+				utils::hook::call(0x512BE5_b, register_netport_stub); // STEAM
+				utils::hook::call(0x512D20_b, register_netport_stub); // STEAM
 
 				// increase allowed packet size
 				const auto max_packet_size = 0x20000;
-				utils::hook::set<int>(0x1404255F1, max_packet_size); // H1MP64(1.4)
-				utils::hook::set<int>(0x140425630, max_packet_size); // H1MP64(1.4)
-				utils::hook::set<int>(0x140425522, max_packet_size); // H1MP64(1.4)
-				utils::hook::set<int>(0x140425545, max_packet_size); // H1MP64(1.4)
+				utils::hook::set<int>(0x4255F0_b, max_packet_size); // STEAM
+				utils::hook::set<int>(0x42562E_b, max_packet_size); // STEAM
+				utils::hook::set<int>(0x425521_b, max_packet_size); // STEAM
+				utils::hook::set<int>(0x425549_b, max_packet_size); // STEAM
 
 				// ignore built in "print" oob command and add in our own
-				utils::hook::set<uint8_t>(0x14025280E, 0xEB); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x25280E_b, 0xEB); // STEAM
 				on("print", [](const game::netadr_s&, const std::string_view& data)
 				{
 					const std::string message{data};
@@ -325,7 +325,7 @@ namespace network
 
 				// Use our own socket since the game's socket doesn't work with non localhost addresses
 				// why? no idea
-				utils::hook::jump(0x140512B40, create_socket);
+				utils::hook::jump(0x5BD210_b, create_socket);
 			}
 		}
 	};

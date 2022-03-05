@@ -177,21 +177,22 @@ namespace auth
 			game::SV_DirectConnect(from);
 		}
 
-		void* get_direct_connect_stub()
-		{
-			return utils::hook::assemble([](utils::hook::assembler& a)
-			{
-				a.lea(rcx, qword_ptr(rsp, 0x20));
-				a.movaps(xmmword_ptr(rsp, 0x20), xmm0);
+		// CAN'T FIND
+		//void* get_direct_connect_stub()
+		//{
+		//	return utils::hook::assemble([](utils::hook::assembler& a)
+		//	{
+		//		a.lea(rcx, qword_ptr(rsp, 0x20));
+		//		a.movaps(xmmword_ptr(rsp, 0x20), xmm0);
 
-				a.pushad64();
-				a.mov(rdx, rsi);
-				a.call_aligned(direct_connect);
-				a.popad64();
+		//		a.pushad64();
+		//		a.mov(rdx, rsi);
+		//		a.call_aligned(direct_connect);
+		//		a.popad64();
 
-				a.jmp(0x140488CE2); // H1MP64(1.4)
-			});
-		}
+		//		a.jmp(0x140488CE2); // H1MP64(1.4)
+		//	});
+		//}
 	}
 
 	uint64_t get_guid()
@@ -218,14 +219,14 @@ namespace auth
 			}
 			else
 			{
-				utils::hook::jump(0x140571E07, 0x140571E5A); // H1(1.4)
-				utils::hook::jump(0x14004B223, 0x14004B4F2); // H1(1.4)
-				utils::hook::jump(0x14004B4AD, 0x14004B4F2); // H1(1.4)
-				utils::hook::jump(0x140572F6F, 0x140572FB0); // H1(1.4)
-				utils::hook::jump(0x140573470, 0x1405734B6); // H1(1.4)
+				utils::hook::jump(0x1D6193_b, 0x1D61FA_b); // STEAM
+				utils::hook::jump(0x60153_b, 0x60426_b); // STEAM
+				utils::hook::jump(0x603E1_b, 0x60426_b); // STEAM
+				utils::hook::jump(0x1D7542_b, 0x1D7587_b); // STEAM MAYBE `1401D7553` ON FIRST
+				utils::hook::jump(0x1D7A82_b, 0x1D7AC8_b); // STEAM
 
-				utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true); // H1(1.4)
-				utils::hook::call(0x140250ED2, send_connect_data_stub); // H1(1.4)
+				//utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true); // H1(1.4) can't find
+				utils::hook::call(0x12D437_b, send_connect_data_stub); // H1(1.4)
 
 				// Skip checks for sending connect packet
 				utils::hook::jump(0x1402508FC, 0x140250946);
