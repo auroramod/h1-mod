@@ -309,8 +309,7 @@ namespace server_list
 
 	bool get_master_server(game::netadr_s& address)
 	{
-		return game::NET_StringToAdr("135.148.53.121:20810", &address);
-		// return game::NET_StringToAdr("master.xlabs.dev:20810", &address);
+		return game::NET_StringToAdr("master.ff.h1p.co:20810", &address);
 	}
 
 	void handle_info_response(const game::netadr_s& address, const utils::info_string& info)
