@@ -1183,7 +1183,7 @@ namespace scripting
 		{"_meth_81B2", 0x81B2}, // SP 0x1402A15D0 MP 0x14036AE60
 		{"viewkick", 0x81B3}, // SP 0x1402A1640 MP 0x14036AFA0
 		{"_meth_81B4", 0x81B4}, // SP 0x14029B1E0 MP 0x1403668B0
-		{"_meth_81B5", 0x81B5}, // SP 0x1402998B0 MP 0x140364980
+		{"getentitynumber", 0x81B5}, // SP 0x1402998B0 MP 0x140364980
 		{"autoboltmissileeffects", 0x81B6}, // SP 0x140299AA0 MP 0x140364B50
 		{"enablegrenadetouchdamage", 0x81B7}, // SP 0x140299CA0 MP 0x140364F40
 		{"disablegrenadetouchdamage", 0x81B8}, // SP 0x140299F20 MP 0x1403650C0
