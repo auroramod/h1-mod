@@ -252,9 +252,6 @@ namespace patches
 			dvars::override::register_int("safeArea_horizontal", 1, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_int("safeArea_vertical", 1, 0, 1, game::DVAR_FLAG_SAVED);
 
-			// move chat position on the screen above menu splashes
-			dvars::override::register_vec2("cg_hudChatPosition", 5, 170, 0, 640, game::DVAR_FLAG_SAVED);
-
 			// allow servers to check for new packages more often
 			dvars::override::register_int("sv_network_fps", 1000, 20, 1000, game::DVAR_FLAG_SAVED);
 
