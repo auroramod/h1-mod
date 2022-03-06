@@ -7,9 +7,7 @@
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
-#include <utils/nt.hpp>
 #include <utils/hook.hpp>
-#include <utils/flags.hpp>
 
 namespace chat
 {
