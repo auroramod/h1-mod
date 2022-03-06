@@ -264,6 +264,8 @@ namespace patches
 
 			dvars::register_int("scr_game_spectatetype", 1, 0, 99, game::DVAR_FLAG_REPLICATED);
 
+			dvars::override::register_bool("ui_drawcrosshair", true, game::DVAR_FLAG_WRITE);
+
 			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
 
 			// Prevent clients from ending the game as non host by sending 'end_game' lui notification
