@@ -72,7 +72,7 @@ namespace patches
 
 		void set_client_dvar_from_server_stub(void* a1, void* a2, const char* dvar, const char* value)
 		{
-			if (dvar == "cg_fov"s)
+			if (dvar == "cg_fov"s || dvar == "cg_fovMin"s)
 			{
 				return;
 			}
@@ -179,7 +179,8 @@ namespace patches
 			// Make cg_fov and cg_fovscale saved dvars
 			dvars::override::register_float("cg_fov", 65.f, 40.f, 200.f, game::DvarFlags::DVAR_FLAG_SAVED);
 			dvars::override::register_float("cg_fovScale", 1.f, 0.1f, 2.f, game::DvarFlags::DVAR_FLAG_SAVED);
-			
+			dvars::override::register_float("cg_fovMin", 1.f, 1.0f, 90.f, game::DvarFlags::DVAR_FLAG_SAVED);
+
 			// Allow kbam input when gamepad is enabled
 			utils::hook::nop(SELECT_VALUE(0x14018797E, 0x14024EF60), 2);
 			utils::hook::nop(SELECT_VALUE(0x1401856DC, 0x14024C6B0), 6);
