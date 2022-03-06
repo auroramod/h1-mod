@@ -91,7 +91,9 @@ namespace bots
 					num_bots = atoi(params.get(1));
 				}
 
-				for (auto i = 0; i < (num_bots > *game::mp::svs_numclients ? *game::mp::svs_numclients : num_bots); i++)
+				num_bots = std::min(num_bots, *game::mp::svs_numclients);;
+
+				for (auto i = 0; i < num_bots; i++)
 				{
 					scheduler::once(add_bot, scheduler::pipeline::server, 100ms * i);
 				}
