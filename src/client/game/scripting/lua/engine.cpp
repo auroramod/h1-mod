@@ -4,7 +4,6 @@
 
 #include "../execution.hpp"
 #include "../../../component/logfile.hpp"
-#include "../../../component/game_module.hpp"
 
 #include <utils/io.hpp>
 
@@ -52,7 +51,6 @@ namespace scripting::lua::engine
 		}
 
 		stop();
-		load_scripts(game_module::get_host_module().get_folder() + "/data/scripts/");
 		load_scripts("h1-mod/scripts/");
 		load_scripts("data/scripts/");
 	}

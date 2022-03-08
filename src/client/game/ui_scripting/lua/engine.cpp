@@ -3,7 +3,6 @@
 #include "context.hpp"
 
 #include "../../../component/ui_scripting.hpp"
-#include "../../../component/game_module.hpp"
 
 #include <utils/io.hpp>
 
@@ -52,7 +51,6 @@ namespace ui_scripting::lua::engine
 		load_code(lui_common);
 		load_code(lui_updater);
 
-		load_scripts(game_module::get_host_module().get_folder() + "/data/ui_scripts/");
 		load_scripts("h1-mod/ui_scripts/");
 		load_scripts("data/ui_scripts/");
 	}
