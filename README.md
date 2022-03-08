@@ -4,8 +4,8 @@
   <img alig src="https://cdn.discordapp.com/attachments/895680402142941194/938488726391242842/splash.png"/>
 </p>
 
-Currently a proof-of-concept client for Modern Warfare Remaster (1.04). Latest MWR (1.15) version planned in future. <br>
-[This project is based on S1x.](https://github.com/XLabsProject/s1x-client)
+A experimental client for Modern Warfare Remaster (1.04). Latest MWR (1.15) version planned in future. <br>
+[This project is using the S1x codebase.](https://github.com/XLabsProject/s1x-client)
 
 ## Compile from source
 
@@ -22,10 +22,11 @@ Currently a proof-of-concept client for Modern Warfare Remaster (1.04). Latest M
 
 ## Credits:
 
-- [S1x](https://github.com/XLabsProject/s1x-client) - code and base.
+- [XLabsProject](https://github.com/XLabsProject) - codebase and iw6x/s1x research
 - [quaK](https://github.com/Joelrau) - lots of insight and help
 - [fed](https://github.com/fedddddd) - fixed DW/networking, work from [h2-mod](https://github.com/fedddddd/h2-mod)
 - [mjkzy](https://github.com/mjkzy) - porting code from s1x
+- [skkuull](https://github.com/skkuull) - initial porting of s1x
 
 ## Disclaimer
 
