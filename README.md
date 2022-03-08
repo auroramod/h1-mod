@@ -26,7 +26,7 @@ A experimental client for Modern Warfare Remaster (1.04). Latest MWR (1.15) vers
 - [quaK](https://github.com/Joelrau) - lots of insight and help
 - [fed](https://github.com/fedddddd) - fixed DW/networking, work from [h2-mod](https://github.com/fedddddd/h2-mod)
 - [mjkzy](https://github.com/mjkzy) - porting code from s1x
-- [skkuull](https://github.com/skkuull) - initial porting of s1x
+- [Skull](https://github.com/skkuull) - initial porting of s1x
 
 ## Disclaimer
 
