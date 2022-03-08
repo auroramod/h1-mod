@@ -5,6 +5,7 @@
 #include "../../../component/ui_scripting.hpp"
 
 #include <utils/io.hpp>
+#include <utils/nt.hpp>
 
 namespace ui_scripting::lua::engine
 {
