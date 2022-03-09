@@ -258,20 +258,6 @@ namespace server_list
 			return true;
 		}
 
-		void resize_host_name(std::string& name)
-		{
-			name = utils::string::split(name, '\n').front();
-
-			game::Font_s* font = game::R_RegisterFont("fonts/default.otf", 18);
-			auto text_size = game::UI_TextWidth(name.data(), 32, font, 1.0f);
-
-			while (text_size > 450)
-			{
-				text_size = game::UI_TextWidth(name.data(), 32, font, 1.0f);
-				name.pop_back();
-			}
-		}
-
 		utils::hook::detour lui_open_menu_hook;
 
 		void lui_open_menu_stub(int controllerIndex, const char* menu, int a3, int a4, unsigned int a5)
@@ -363,8 +349,6 @@ namespace server_list
 		server.ping = std::min(now - start_time, 999);
 
 		server.in_game = 1;
-
-		resize_host_name(server.host_name);
 
 		insert_server(std::move(server));
 	}

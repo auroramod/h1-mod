@@ -24,6 +24,19 @@ local columns = {
 	"@MENU_PING",
 }
 
+function textlength(text, font, height)
+	local _, _, width = luiglobals.GetTextDimensions(text, font, height)
+	return width
+end
+
+function trimtext(text, font, height, maxwidth)
+	while (textlength(text, font, height) > maxwidth) do
+		text = text:sub(1, #text - 1)
+	end
+
+	return text
+end
+
 SystemLinkJoinMenu.AddHeaderButton = function(menu, f12_arg1, width)
 	local state = CoD.CreateState(0, f12_arg1, nil, nil, CoD.AnchorTypes.TopLeft)
 	state.width = width
@@ -53,7 +66,8 @@ SystemLinkJoinMenu.AddServerButton = function(menu, controller, index)
 	button:addEventHandler("button_action", SystemLinkJoinMenu.OnJoinGame)
 
 	local gettext = function(i)
-		return Lobby.GetServerData(controller, index, i - 1)
+		local text = Lobby.GetServerData(controller, index, i - 1)
+		return trimtext(text, CoD.TextSettings.TitleFontSmall.Font, 14, 400)
 	end
 	
 	for i = 1, #offsets do
