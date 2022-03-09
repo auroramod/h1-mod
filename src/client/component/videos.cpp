@@ -35,7 +35,7 @@ namespace videos
 	public:
 		void post_unpack() override
 		{
-			playvid_hook.create(SELECT_VALUE(0x1404A9D00, 0x1405B0AF0), &playvid); // H1(1.4)
+			playvid_hook.create(SELECT_VALUE(0x1404A9D00, 0x1405B0AF0), &playvid);
 
 			if (game::environment::is_mp())
 			{

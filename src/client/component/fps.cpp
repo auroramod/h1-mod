@@ -88,7 +88,7 @@ namespace fps
 
 			perf_calc_fps(&cg_perf, cg_perf.frame_ms);
 
-			utils::hook::invoke<void>(SELECT_VALUE(0x1405487A0, 0x1406575A0)); // H1(1.4)
+			utils::hook::invoke<void>(SELECT_VALUE(0x1405487A0, 0x1406575A0));
 		}
 
 		void cg_draw_fps()

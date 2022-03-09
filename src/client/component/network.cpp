@@ -67,11 +67,11 @@ namespace network
 			// Command handled
 			a.popad64();
 			a.mov(al, 1);
-			a.jmp(0x140252AF8); // H1MP64(1.4)
+			a.jmp(0x140252AF8);
 
 			a.bind(return_unhandled);
 			a.popad64();
-			a.jmp(0x14025234C); // H1MP64(1.4)
+			a.jmp(0x14025234C);
 		}
 
 		int net_compare_base_address(const game::netadr_s* a1, const game::netadr_s* a2)
@@ -237,46 +237,46 @@ namespace network
 
 				// redirect dw_sendto to raw socket
 				//utils::hook::jump(0x1404D850A, reinterpret_cast<void*>(0x1404D849A));
-				utils::hook::call(0x140513467, dw_send_to_stub); // H1MP64(1.4)
-				utils::hook::jump(game::Sys_SendPacket, dw_send_to_stub); // H1MP64(1.4)
+				utils::hook::call(0x140513467, dw_send_to_stub);
+				utils::hook::jump(game::Sys_SendPacket, dw_send_to_stub);
 
 				// intercept command handling
-				utils::hook::jump(0x140252327, utils::hook::assemble(handle_command_stub), true); // H1MP64(1.4)
+				utils::hook::jump(0x140252327, utils::hook::assemble(handle_command_stub), true);
 
 				// handle xuid without secure connection
-				utils::hook::nop(0x140486AAF, 6); // H1MP64(1.4)
+				utils::hook::nop(0x140486AAF, 6);
 
-				utils::hook::jump(0x140424F20, net_compare_address); // H1MP64(1.4)
-				utils::hook::jump(0x140424F70, net_compare_base_address); // H1MP64(1.4)
+				utils::hook::jump(0x140424F20, net_compare_address);
+				utils::hook::jump(0x140424F70, net_compare_base_address);
 
 				// don't establish secure conenction
-				utils::hook::set<uint8_t>(0x14027EA4D, 0xEB); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x14027EB1E, 0xEB); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x14027EF8D, 0xEB); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x14025081F, 0xEB); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x14027EA4D, 0xEB);
+				utils::hook::set<uint8_t>(0x14027EB1E, 0xEB);
+				utils::hook::set<uint8_t>(0x14027EF8D, 0xEB);
+				utils::hook::set<uint8_t>(0x14025081F, 0xEB);
 
 				// ignore unregistered connection
-				utils::hook::jump(0x140480F46, 0x140480EE5); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x140480F3B, 0xEB); // H1MP64(1.4)
+				utils::hook::jump(0x140480F46, 0x140480EE5);
+				utils::hook::set<uint8_t>(0x140480F3B, 0xEB);
 
 				// disable xuid verification
-				utils::hook::set<uint8_t>(0x14005B62D, 0xEB); // H1MP64(1.4)
-				utils::hook::set<uint8_t>(0x14005B649, 0xEB); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x14005B62D, 0xEB);
+				utils::hook::set<uint8_t>(0x14005B649, 0xEB);
 
 				// disable xuid verification
 				utils::hook::nop(0x14048382C, 2);
-				utils::hook::set<uint8_t>(0x140483889, 0xEB); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x140483889, 0xEB);
 
 				// ignore configstring mismatch
-				utils::hook::set<uint8_t>(0x1402591C9, 0xEB); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x1402591C9, 0xEB);
 
 				// ignore dw handle in SV_PacketEvent
 				utils::hook::set<uint8_t>(0x1404898E2, 0xEB);
-				utils::hook::call(0x1404898D6, &net_compare_address); // H1MP64(1.4)
+				utils::hook::call(0x1404898D6, &net_compare_address);
 
 				// ignore dw handle in SV_FindClientByAddress
 				utils::hook::set<uint8_t>(0x140488EFD, 0xEB);
-				utils::hook::call(0x140488EF1, &net_compare_address); // H1MP64(1.4)
+				utils::hook::call(0x140488EF1, &net_compare_address);
 
 				// ignore dw handle in SV_DirectConnect
 				utils::hook::set<uint8_t>(0x140480C58, 0xEB);
@@ -291,32 +291,32 @@ namespace network
 				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_FLAG_NONE);
 
 				// ignore impure client
-				utils::hook::jump(0x140481B58, reinterpret_cast<void*>(0x140481BEE)); // H1MP64(1.4)
+				utils::hook::jump(0x140481B58, reinterpret_cast<void*>(0x140481BEE));
 
 				// don't send checksum
-				utils::hook::set<uint8_t>(0x140513433, 0); // H1MP64(1.4) mov: r8d, edi ; LEN
-				utils::hook::set<uint8_t>(0x14051345A, 0); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x140513433, 0);
+				utils::hook::set<uint8_t>(0x14051345A, 0);
 
 				// don't read checksum
-				utils::hook::set(0x1404F6620, 0xC301B0); // H1MP64(1.4)
+				utils::hook::set(0x1404F6620, 0xC301B0);
 
 				// don't try to reconnect client
-				utils::hook::call(0x140480DFF, reconnect_migratated_client); // H1MP64(1.4)
-				utils::hook::nop(0x140480DDB, 4); // H1MP64(1.4) this crashes when reconnecting for some reason
+				utils::hook::call(0x140480DFF, reconnect_migratated_client);
+				utils::hook::nop(0x140480DDB, 4); // this crashes when reconnecting for some reason
 
 				// allow server owner to modify net_port before the socket bind
-				utils::hook::call(0x140512BE5, register_netport_stub); // H1MP64(1.4)
-				utils::hook::call(0x140512D20, register_netport_stub); // H1MP64(1.4)
+				utils::hook::call(0x140512BE5, register_netport_stub);
+				utils::hook::call(0x140512D20, register_netport_stub);
 
 				// increase allowed packet size
 				const auto max_packet_size = 0x20000;
-				utils::hook::set<int>(0x1404255F1, max_packet_size); // H1MP64(1.4)
-				utils::hook::set<int>(0x140425630, max_packet_size); // H1MP64(1.4)
-				utils::hook::set<int>(0x140425522, max_packet_size); // H1MP64(1.4)
-				utils::hook::set<int>(0x140425545, max_packet_size); // H1MP64(1.4)
+				utils::hook::set<int>(0x1404255F1, max_packet_size);
+				utils::hook::set<int>(0x140425630, max_packet_size);
+				utils::hook::set<int>(0x140425522, max_packet_size);
+				utils::hook::set<int>(0x140425545, max_packet_size);
 
 				// ignore built in "print" oob command and add in our own
-				utils::hook::set<uint8_t>(0x14025280E, 0xEB); // H1MP64(1.4)
+				utils::hook::set<uint8_t>(0x14025280E, 0xEB);
 				on("print", [](const game::netadr_s&, const std::string_view& data)
 				{
 					const std::string message{data};

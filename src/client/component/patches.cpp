@@ -161,10 +161,10 @@ namespace patches
 		void post_unpack() override
 		{
 			// Register dvars
-			com_register_dvars_hook.create(SELECT_VALUE(0x140351B80, 0x1400D9320), &com_register_dvars_stub); // H1(1.4)
+			com_register_dvars_hook.create(SELECT_VALUE(0x140351B80, 0x1400D9320), &com_register_dvars_stub);
 
 			// Unlock fps in main menu
-			utils::hook::set<BYTE>(SELECT_VALUE(0x14018D47B, 0x14025B86B), 0xEB); // H1(1.4)
+			utils::hook::set<BYTE>(SELECT_VALUE(0x14018D47B, 0x14025B86B), 0xEB);
 
 			if (!game::environment::is_dedi())
 			{
@@ -197,16 +197,16 @@ namespace patches
 		static void patch_mp()
 		{
 			// Use name dvar
-			utils::hook::jump(0x14050FF90, &live_get_local_client_name); // H1(1.4)
+			utils::hook::jump(0x14050FF90, &live_get_local_client_name);
 
 			// Patch SV_KickClientNum
-			sv_kick_client_num_hook.create(0x14047ED00, &sv_kick_client_num); // H1(1.4)
+			sv_kick_client_num_hook.create(0x14047ED00, &sv_kick_client_num);
 
 			// block changing name in-game
-			utils::hook::set<uint8_t>(0x14047FC90, 0xC3); // H1(1.4)
+			utils::hook::set<uint8_t>(0x14047FC90, 0xC3);
 
 			// patch "Couldn't find the bsp for this map." error to not be fatal in mp
-			utils::hook::call(0x1402BA26B, bsp_sys_error_stub); // H1(1.4)
+			utils::hook::call(0x1402BA26B, bsp_sys_error_stub);
 
 			// client side aim assist dvar
 			dvars::aimassist_enabled = dvars::register_bool("aimassist_enabled", true,
@@ -215,12 +215,12 @@ namespace patches
 			utils::hook::call(0x14009EE9E, aim_assist_add_to_target_list);
 
 			// unlock all items
-			utils::hook::jump(0x140413E60, is_item_unlocked); // LiveStorage_IsItemUnlockedFromTable_LocalClient H1(1.4)
-			utils::hook::jump(0x140413860, is_item_unlocked); // LiveStorage_IsItemUnlockedFromTable H1(1.4)
-			utils::hook::jump(0x140412B70, is_item_unlocked); // idk ( unlocks loot etc ) H1(1.4)
+			utils::hook::jump(0x140413E60, is_item_unlocked); // LiveStorage_IsItemUnlockedFromTable_LocalClient
+			utils::hook::jump(0x140413860, is_item_unlocked); // LiveStorage_IsItemUnlockedFromTable
+			utils::hook::jump(0x140412B70, is_item_unlocked); // idk ( unlocks loot etc )
 
 			// isProfanity
-			utils::hook::set(0x1402877D0, 0xC3C033); // MAY BE WRONG H1(1.4)
+			utils::hook::set(0x1402877D0, 0xC3C033);
 
 			// disable emblems
 			dvars::override::register_int("emblems_active", 0, 0, 0, game::DVAR_FLAG_NONE);
@@ -228,16 +228,16 @@ namespace patches
 
 			// disable elite_clan
 			dvars::override::register_int("elite_clan_active", 0, 0, 0, game::DVAR_FLAG_NONE);
-			utils::hook::set<uint8_t>(0x140585680, 0xC3); // don't register commands H1(1.4)
+			utils::hook::set<uint8_t>(0x140585680, 0xC3); // don't register commands
 
 			// disable codPointStore
 			dvars::override::register_int("codPointStore_enabled", 0, 0, 0, game::DVAR_FLAG_NONE);
 
 			// don't register every replicated dvar as a network dvar
-			utils::hook::nop(0x14039E58E, 5); // dvar_foreach H1(1.4)
+			utils::hook::nop(0x14039E58E, 5); // dvar_foreach
 
 			// patch "Server is different version" to show the server client version
-			utils::hook::inject(0x140480952, VERSION); // H1(1.4)
+			utils::hook::inject(0x140480952, VERSION);
 
 			// prevent servers overriding our fov
 			utils::hook::call(0x14023279E, set_client_dvar_from_server_stub);
@@ -246,8 +246,8 @@ namespace patches
 			utils::hook::set<uint8_t>(0x14021D22A, 0xEB);
 
 			// unlock safeArea_*
-			utils::hook::jump(0x1402624F5, 0x140262503); // H1(1.4)
-			utils::hook::jump(0x14026251C, 0x140262547); // H1(1.4)
+			utils::hook::jump(0x1402624F5, 0x140262503);
+			utils::hook::jump(0x14026251C, 0x140262547);
 			dvars::override::register_int("safeArea_adjusted_horizontal", 1, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_int("safeArea_adjusted_vertical", 1, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_int("safeArea_horizontal", 1, 0, 1, game::DVAR_FLAG_SAVED);
@@ -269,10 +269,10 @@ namespace patches
 			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
 
 			// Prevent clients from ending the game as non host by sending 'end_game' lui notification
-			// cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub); // H1(1.4)
+			// cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub);
 
 			// Prevent clients from sending invalid reliableAcknowledge
-			// utils::hook::call(0x1404899C6, sv_execute_client_message_stub); // H1(1.4)
+			// utils::hook::call(0x1404899C6, sv_execute_client_message_stub);
 
 			// "fix" for rare 'Out of memory error' error
 			if (utils::flags::has_flag("memoryfix"))

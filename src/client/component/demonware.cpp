@@ -537,34 +537,29 @@ namespace demonware
 
 		void post_unpack() override
 		{
-			/*
-				mwr has upgraded some networking methods and the gethostbyname import from winsock library is no longer used
-				gethostbyname has been replaced with getaddrinfo
-				btw, still you can't get online..
-			*/
-			utils::hook::jump(SELECT_VALUE(0x140610320, 0x1407400B0), bd_logger_stub); // H1MP64(1.4)
+			utils::hook::jump(SELECT_VALUE(0x140610320, 0x1407400B0), bd_logger_stub);
 
 			if (game::environment::is_sp())
 			{
-				utils::hook::set<uint8_t>(0x1405FCA00, 0xC3); // bdAuthSteam H1(1.4)
-				utils::hook::set<uint8_t>(0x140333A00, 0xC3); // dwNet H1(1.4)
+				utils::hook::set<uint8_t>(0x1405FCA00, 0xC3); // bdAuthSteam
+				utils::hook::set<uint8_t>(0x140333A00, 0xC3); // dwNet
 				return;
 			}
 
-			utils::hook::set<uint8_t>(0x140715039, 0x0);  // CURLOPT_SSL_VERIFYPEER H1MP64(1.4)
-			utils::hook::set<uint8_t>(0x140715025, 0xAF); // CURLOPT_SSL_VERIFYHOST H1MP64(1.4)
-			utils::hook::set<uint8_t>(0x14095433C, 0x0);  // HTTPS -> HTTP              [MWR OK][S1X: 0x14088D0E8]
+			utils::hook::set<uint8_t>(0x140715039, 0x0);  // CURLOPT_SSL_VERIFYPEER
+			utils::hook::set<uint8_t>(0x140715025, 0xAF); // CURLOPT_SSL_VERIFYHOST
+			utils::hook::set<uint8_t>(0x14095433C, 0x0);  // HTTPS -> HTTP
 
 			//HTTPS -> HTTP
-			utils::hook::inject(0x14006DDA9, "http://prod.umbrella.demonware.net/v1.0/"); // --->  [H1MP1.4 - S1X: 0x14003852E]
-			utils::hook::inject(0x14006E11C, "http://prod.umbrella.demonware.net/v1.0/"); // --->  [H1MP1.4 - S1X: 0x14003884F]
-			utils::hook::inject(0x14006E2FB, "http://prod.umbrella.demonware.net/v1.0/"); // --->  [H1MP1.4 - S1X: 0x140038A07]
+			utils::hook::inject(0x14006DDA9, "http://prod.umbrella.demonware.net/v1.0/");
+			utils::hook::inject(0x14006E11C, "http://prod.umbrella.demonware.net/v1.0/");
+			utils::hook::inject(0x14006E2FB, "http://prod.umbrella.demonware.net/v1.0/");
 			utils::hook::inject(0x14006E9A9, "http://prod.uno.demonware.net/v1.0/");
 			utils::hook::inject(0x14006ED49, "http://prod.uno.demonware.net/v1.0/");
 			utils::hook::inject(0x140728170, "http://%s:%d/auth/");
 
-			utils::hook::set<uint8_t>(0x14047F290, 0xC3); // SV_SendMatchData H1MP64(1.4)
-			utils::hook::set<uint8_t>(0x140598990, 0xC3); // Live_CheckForFullDisconnect H1MP64(1.4)
+			utils::hook::set<uint8_t>(0x14047F290, 0xC3); // SV_SendMatchData
+			utils::hook::set<uint8_t>(0x140598990, 0xC3); // Live_CheckForFullDisconnect
 
 #ifdef DEBUG
 			// yes
