@@ -65,11 +65,6 @@ namespace patches
 			return com_register_dvars_hook.invoke<void>();
 		}
 
-		int is_item_unlocked()
-		{
-			return 0; // 0 == yes
-		}
-
 		void set_client_dvar_from_server_stub(void* a1, void* a2, const char* dvar, const char* value)
 		{
 			if (dvar == "cg_fov"s || dvar == "cg_fovMin"s)
@@ -213,11 +208,6 @@ namespace patches
 				game::DvarFlags::DVAR_FLAG_SAVED,
 				true);
 			utils::hook::call(0x14009EE9E, aim_assist_add_to_target_list);
-
-			// unlock all items
-			utils::hook::jump(0x140413E60, is_item_unlocked); // LiveStorage_IsItemUnlockedFromTable_LocalClient
-			utils::hook::jump(0x140413860, is_item_unlocked); // LiveStorage_IsItemUnlockedFromTable
-			utils::hook::jump(0x140412B70, is_item_unlocked); // idk ( unlocks loot etc )
 
 			// isProfanity
 			utils::hook::set(0x1402877D0, 0xC3C033);
