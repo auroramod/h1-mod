@@ -166,11 +166,7 @@ namespace updater
 				return false;
 			}
 
-#ifdef DEBUG
-			return utils::io::write_file("update_test/" + name, data);
-#else
 			return utils::io::write_file(name, data);
-#endif
 		}
 
 		void delete_old_file()
