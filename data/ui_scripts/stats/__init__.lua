@@ -53,9 +53,7 @@ end
 LUI.MenuBuilder.registerType("stats_menu", function(a1)
 	local menu = LUI.MenuTemplate.new(a1, {
 		menu_title = Engine.ToUpperCase(Engine.Localize("@LUA_MENU_STATS")),
-		menu_list_divider_top_offset = -(LUI.H1MenuTab.tabChangeHoldingElementHeight + luiglobals.H1MenuDims.spacing),
 		menu_width = luiglobals.GenericMenuDims.OptionMenuWidth,
-		skipAnim = 0 ~= LUI.PCGraphicOptions.FindTypeIndex(LUI.PreviousMenuName)
 	})
 
 	createdivider(menu, "@LUA_MENU_SETTINGS")
