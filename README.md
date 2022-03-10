@@ -4,8 +4,9 @@
   <img alig src="https://cdn.discordapp.com/attachments/895680402142941194/938488726391242842/splash.png"/>
 </p>
 
-A experimental client for Modern Warfare Remaster (1.04). Latest MWR (1.15) version planned in future. <br>
-[This project is using the S1x codebase.](https://github.com/XLabsProject/s1x-client)
+An experimental client for Call of Duty Modern Warfare Remastered (version 1.04).  
+Support for the latest version (1.15) is planned for the future.  
+[This project is based on S1x.](https://github.com/XLabsProject/s1x-client)
 
 ## Compile from source
 
