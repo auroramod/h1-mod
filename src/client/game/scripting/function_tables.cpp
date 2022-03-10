@@ -1514,9 +1514,9 @@ namespace scripting
 		{"_meth_82F0", 0x82F0}, // SP 0x140260E80 MP 0x14032C5E0
 		{"_meth_82F1", 0x82F1}, // SP 0x1402677A0 MP 0x14032BE30
 		{"_meth_82F2", 0x82F2}, // SP 0x140260130 MP 0x14032BF20
-		{"_meth_82F3", 0x82F3}, // SP 0x140264AD0 MP 0x140330E20
+		{"setweaponammoclip", 0x82F3}, // SP 0x140264AD0 MP 0x140330E20
 		{"setweaponammostock", 0x82F4}, // SP 0x140264EB0 MP 0x140331350
-		{"_meth_82F5", 0x82F5}, // SP 0x140265380 MP 0x1403293A0
+		{"getweaponammoclip", 0x82F5}, // SP 0x140265380 MP 0x1403293A0
 		{"getweaponammostock", 0x82F6}, // SP 0x1402655D0 MP 0x140329580
 		{"_meth_82F7", 0x82F7}, // SP 0x140265820 MP 0x140329990
 		{"stoplocalsound", 0x82F8}, // SP 0x140265F20 MP 0x14032A3B0
@@ -1573,7 +1573,7 @@ namespace scripting
 		{"_meth_832C", 0x832C}, // SP 0x140267180 MP 0x14032B9E0
 		{"deactivatechannelvolumes", 0x832D}, // SP 0x140267410 MP 0x14032BB00
 		{"_meth_832E", 0x832E}, // SP 0x140265FA0 MP 0x140329C00
-		{"_meth_832F", 0x832F}, // SP 0x140266200 MP 0x140329F00
+		{"givemaxammo", 0x832F}, // SP 0x140266200 MP 0x140329F00
 		{"_meth_8330", 0x8330}, // SP 0x140266560 MP 0x14032A240
 		{"_meth_8331", 0x8331}, // SP 0x140266820 MP 0x14032A6F0
 		{"isdualwielding", 0x8332}, // SP 0x140266E10 MP 0x14032ABC0
