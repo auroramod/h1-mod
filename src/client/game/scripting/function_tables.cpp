@@ -742,6 +742,7 @@ namespace scripting
 		{"getchallengerewarditem", 0x2DB}, // SP 0x000000000 MP 0x14037ABB0
 		{"setentplayerxuidforemblem", 0x2DC}, // SP 0x000000000 MP 0x14037E1C0
 		{"resetentplayerxuidforemblems", 0x2DD}, // SP 0x000000000 MP 0x14037E1B0
+		{"nodesetremotemissilename", 0x2DE},
 		{"isshipbuild", 0x2DF}, // SP 0x140292220 MP 0x14036F7F0
 		{"strinsertnumericdelimiters", 0x2E0}, // SP 0x140297C80 MP 0x14035EDE0
 		{"isscriptedagent", 0x2E1}, // SP 0x000000000 MP 0x1403788D0
@@ -782,19 +783,19 @@ namespace scripting
 	std::unordered_map<std::string, unsigned> method_map =
 	{
 		{"motionblurhqenable", 0x8000}, // SP 0x14029B0D0 MP 0x140362FD0
-		{"_meth_8001", 0x8001}, // SP 0x1402A8AC0 MP 0x000000000
+		{"setturretdismountorg", 0x8001}, // SP 0x1402A8AC0 MP 0x000000000
 		{"setdamagestage", 0x8002}, // SP 0x000000000 MP 0x14055A000
-		{"_meth_8003", 0x8003}, // SP 0x000000000 MP 0x140378300
+		{"playsoundtoteam", 0x8003}, // SP 0x000000000 MP 0x140378300
 		{"playsoundtoplayer", 0x8004}, // SP 0x000000000 MP 0x1403784F0
 		{"playerhide", 0x8005}, // SP 0x000000000 MP 0x14037AB70
-		{"_meth_8006", 0x8006}, // SP 0x000000000 MP 0x14037ABD0
+		{"playershow", 0x8006}, // SP 0x000000000 MP 0x14037ABD0
 		{"showtoplayer", 0x8007}, // SP 0x000000000 MP 0x14037AC50
-		{"_meth_8008", 0x8008}, // SP 0x000000000 MP 0x14037ACB0
-		{"_meth_8009", 0x8009}, // SP 0x000000000 MP 0x14037ACC0
+		{"threatdetectedtoplayer", 0x8008}, // SP 0x000000000 MP 0x14037ACB0
+		{"clearthreatdetected", 0x8009}, // SP 0x000000000 MP 0x14037ACC0
 		{"enableplayeruse", 0x800A}, // SP 0x000000000 MP 0x140374B10
 		{"disableplayeruse", 0x800B}, // SP 0x000000000 MP 0x140374BB0
-		{"_meth_800c", 0x800C}, // SP 0x000000000 MP 0x140374D70
-		{"_meth_800d", 0x800D}, // SP 0x000000000 MP 0x140374C90
+		{"enableammogeneration", 0x800C}, // SP 0x000000000 MP 0x140374D70
+		{"disableammogeneration", 0x800D}, // SP 0x000000000 MP 0x140374C90
 		{"makescrambler", 0x800E}, // SP 0x000000000 MP 0x14037B890
 		{"makeportableradar", 0x800F}, // SP 0x000000000 MP 0x14037B930
 		{"clearscrambler", 0x8010}, // SP 0x000000000 MP 0x14037B910
@@ -804,25 +805,26 @@ namespace scripting
 		{"clientclaimtrigger", 0x8014}, // SP 0x000000000 MP 0x14037B220
 		{"clientreleasetrigger", 0x8015}, // SP 0x000000000 MP 0x14037B300
 		{"releaseclaimedtrigger", 0x8016}, // SP 0x000000000 MP 0x14037B510
-		{"_meth_8017", 0x8017}, // SP 0x000000000 MP 0x14037AC10
-		{"_meth_8018", 0x8018}, // SP 0x000000000 MP 0x14037ACD0
-		{"_meth_8019", 0x8019}, // SP 0x000000000 MP 0x140378210
-		{"_meth_801a", 0x801A}, // SP 0x14028F380 MP 0x14036F540
+		{"isusingonlinedataoffline", 0x8017}, // SP 0x000000000 MP 0x14037AC10
+		{"getrestedtime", 0x8018}, // SP 0x000000000 MP 0x14037ACD0
+		{"sendleaderboards", 0x8019}, // SP 0x000000000 MP 0x140378210
+		{"isonladder", 0x801A}, // SP 0x14028F380 MP 0x14036F540
 		{"getcorpseanim", 0x801B}, // SP 0x000000000 MP 0x14037BD60
 		{"playerforcedeathanim", 0x801C}, // SP 0x000000000 MP 0x140374A30
-		{"_meth_801d", 0x801D}, // SP 0x14029DCF0 MP 0x140369D40
-		{"_meth_801e", 0x801E}, // SP 0x1402AD230 MP 0x000000000
-		{"_meth_801f", 0x801F}, // SP 0x1402AD490 MP 0x000000000
-		{"_meth_8020", 0x8020}, // SP 0x1402AD4C0 MP 0x000000000
-		{"_meth_8021", 0x8021}, // SP 0x1402AD640 MP 0x000000000
-		{"_meth_8022", 0x8022}, // SP 0x1402AD660 MP 0x000000000
-		{"_meth_8023", 0x8023}, // SP 0x1402AD920 MP 0x14037BA50
-		{"_meth_8024", 0x8024}, // SP 0x1402ADA90 MP 0x000000000
-		{"_meth_8025", 0x8025}, // SP 0x1405D92F0 MP 0x14035CB60
-		{"_meth_8026", 0x8026}, // SP 0x1405D92F0 MP 0x140377C40
+		{"attach", 0x801D}, // SP 0x14029DCF0 MP 0x140369D40
+		{"getlightfovinner", 0x801E}, // SP 0x1402AD230 MP 0x000000000
+		{"getlightfovouter", 0x801F}, // SP 0x1402AD490 MP 0x000000000
+		{"setlightfovrange", 0x8020}, // SP 0x1402AD4C0 MP 0x000000000
+		{"getlightexponent", 0x8021}, // SP 0x1402AD640 MP 0x000000000
+		{"setlightexponent", 0x8022}, // SP 0x1402AD660 MP 0x000000000
+		{"startragdoll", 0x8023}, // SP 0x1402AD920 MP 0x14037BA50
+		{"startragdollfromimpact", 0x8024}, // SP 0x1402ADA90 MP 0x000000000
+		{"queryshouldearlyragdoll", 0x8025}, // SP 0x1405D92F0 MP 0x14035CB60
+		{"shouldearlyragdoll", 0x8026}, // SP 0x1405D92F0 MP 0x140377C40
+		{"_meth_8027", 0x8027},
 		{"_meth_8028", 0x8028}, // SP 0x1402ADE80 MP 0x000000000
-		{"_meth_8029", 0x8029}, // SP 0x14029AEC0 MP 0x140362D10
-		{"_meth_802a", 0x802A}, // SP 0x14029E0E0 MP 0x14036A480
+		{"thermaldrawenable", 0x8029}, // SP 0x14029AEC0 MP 0x140362D10
+		{"detach", 0x802A}, // SP 0x14029E0E0 MP 0x14036A480
 		{"detachall", 0x802B}, // SP 0x14029E180 MP 0x14036A4C0
 		{"getattachsize", 0x802C}, // SP 0x1402A0610 MP 0x14036C860
 		{"getattachmodelname", 0x802D}, // SP 0x1402A0890 MP 0x14036CE90
@@ -882,12 +884,14 @@ namespace scripting
 		{"_meth_8063", 0x8063}, // SP 0x1402A9BC0 MP 0x000000000
 		{"_meth_8064", 0x8064}, // SP 0x1402AABA0 MP 0x000000000
 		{"_meth_8065", 0x8065}, // SP 0x1402AAC10 MP 0x000000000
+		{"_meth_8066", 0x8066},
 		{"setmode", 0x8067}, // SP 0x1402AD9A0 MP 0x140375030
 		{"_meth_8068", 0x8068}, // SP 0x1402ADCD0 MP 0x140375210
 		{"_meth_8069", 0x8069}, // SP 0x1402ADF10 MP 0x000000000
 		{"islinked", 0x806A}, // SP 0x14028D6B0 MP 0x1403598E0
 		{"enablelinkto", 0x806B}, // SP 0x14028EA50 MP 0x14035A950
 		{"_meth_806c", 0x806C}, // SP 0x1402ACB60 MP 0x000000000
+		{"_meth_806d", 0x806D},
 		{"_meth_806e", 0x806E}, // SP 0x1402A27D0 MP 0x14035AB10
 		{"_meth_806f", 0x806F}, // SP 0x1402A23E0 MP 0x14035A9C0
 		{"_meth_8070", 0x8070}, // SP 0x1402A2980 MP 0x14035B0D0
@@ -935,6 +939,10 @@ namespace scripting
 		{"_meth_809a", 0x809A}, // SP 0x1402AC1D0 MP 0x000000000
 		{"useby", 0x809B}, // SP 0x1402AC470 MP 0x140377D00
 		{"playsound", 0x809C}, // SP 0x1402AC9B0 MP 0x140377F40
+		{"_meth_809d", 0x809D},
+		{"_meth_809e", 0x809E},
+		{"_meth_809f", 0x809F},
+		{"_meth_80a0", 0x80A0},
 		{"playerlinkedoffsetdisable", 0x80A1}, // SP 0x140290320 MP 0x14035CAF0
 		{"playerlinkedsetviewznear", 0x80A2}, // SP 0x140290680 MP 0x14035CE40
 		{"playerlinkedsetusebaseangleforviewclamp", 0x80A3}, // SP 0x140290960 MP 0x14035D290
@@ -956,6 +964,8 @@ namespace scripting
 		{"setmodel", 0x80B3}, // SP 0x14029C8F0 MP 0x1403677D0
 		{"_meth_80b4", 0x80B4}, // SP 0x14029A0F0 MP 0x140361C30
 		{"_meth_80b5", 0x80B5}, // SP 0x14029A250 MP 0x140361F90
+		{"_meth_80b6", 0x80B6},
+		{"_meth_80b7", 0x80B7},
 		{"thermalvisionon", 0x80B8}, // SP 0x14029A450 MP 0x1403623A0
 		{"thermalvisionoff", 0x80B9}, // SP 0x14029AAF0 MP 0x140362B70
 		{"_meth_80ba", 0x80BA}, // SP 0x14029BF20 MP 0x140364290
@@ -963,6 +973,7 @@ namespace scripting
 		{"_meth_80bc", 0x80BC}, // SP 0x000000000 MP 0x140364910
 		{"autospotoverlayon", 0x80BD}, // SP 0x000000000 MP 0x140364A50
 		{"_meth_80be", 0x80BE}, // SP 0x000000000 MP 0x140364D40
+		{"_meth_80bf", 0x80BF},
 		{"setcontents", 0x80C0}, // SP 0x140297CC0 MP 0x14035FDD0
 		{"makeusable", 0x80C1}, // SP 0x140297E90 MP 0x1403600D0
 		{"makeunusable", 0x80C2}, // SP 0x140297FF0 MP 0x140360320
@@ -1059,9 +1070,14 @@ namespace scripting
 		{"_meth_811d", 0x811D}, // SP 0x140261A30 MP 0x14032D780
 		{"_meth_811e", 0x811E}, // SP 0x140269090 MP 0x000000000
 		{"_meth_811f", 0x811F}, // SP 0x140269510 MP 0x000000000
+		{"_meth_8120", 0x8120},
 		{"_meth_8121", 0x8121}, // SP 0x1402692D0 MP 0x000000000
 		{"_meth_8122", 0x8122}, // SP 0x140269350 MP 0x000000000
 		{"_meth_8123", 0x8123}, // SP 0x140269650 MP 0x000000000
+		{"_meth_8124", 0x8124},
+		{"_meth_8125", 0x8125},
+		{"_meth_8126", 0x8126},
+		{"_meth_8127", 0x8127},
 		{"_meth_8128", 0x8128}, // SP 0x140269650 MP 0x000000000
 		{"_meth_8129", 0x8129}, // SP 0x140269370 MP 0x000000000
 		{"_meth_812a", 0x812A}, // SP 0x1402680B0 MP 0x000000000
@@ -1087,6 +1103,7 @@ namespace scripting
 		{"_meth_813e", 0x813E}, // SP 0x1402D8040 MP 0x000000000
 		{"_meth_813f", 0x813F}, // SP 0x1402D80E0 MP 0x000000000
 		{"_meth_8140", 0x8140}, // SP 0x14028A390 MP 0x000000000
+		{"_meth_8141", 0x8141},
 		{"_meth_8142", 0x8142}, // SP 0x14028A3D0 MP 0x000000000
 		{"_meth_8143", 0x8143}, // SP 0x14028A370 MP 0x000000000
 		{"_meth_8144", 0x8144}, // SP 0x14028A410 MP 0x000000000
@@ -1175,6 +1192,10 @@ namespace scripting
 		{"_meth_8197", 0x8197}, // SP 0x140248640 MP 0x000000000
 		{"_meth_8198", 0x8198}, // SP 0x1402486A0 MP 0x000000000
 		{"_meth_8199", 0x8199}, // SP 0x1402486F0 MP 0x000000000
+		{"_meth_819a", 0x819A},
+		{"_meth_819b", 0x819B},
+		{"_meth_819c", 0x819C},
+		{"_meth_819d", 0x819D},
 		{"_meth_819e", 0x819E}, // SP 0x1402487C0 MP 0x000000000
 		{"_meth_819f", 0x819F}, // SP 0x140248870 MP 0x000000000
 		{"_meth_81a0", 0x81A0}, // SP 0x1402488C0 MP 0x000000000
@@ -1282,6 +1303,7 @@ namespace scripting
 		{"_meth_8206", 0x8206}, // SP 0x000000000 MP 0x14035AB40
 		{"_meth_8207", 0x8207}, // SP 0x1402AA5F0 MP 0x000000000
 		{"_meth_8208", 0x8208}, // SP 0x000000000 MP 0x14035ABE0
+		{"_meth_8209", 0x8209},
 		{"_meth_820a", 0x820A}, // SP 0x000000000 MP 0x14035B100
 		{"_meth_820b", 0x820B}, // SP 0x000000000 MP 0x14035B170
 		{"_meth_820c", 0x820C}, // SP 0x000000000 MP 0x14035B380
@@ -1335,6 +1357,7 @@ namespace scripting
 		{"_meth_823c", 0x823C}, // SP 0x14029CF00 MP 0x000000000
 		{"_meth_823d", 0x823D}, // SP 0x140292BA0 MP 0x000000000
 		{"_meth_823e", 0x823E}, // SP 0x140292DF0 MP 0x000000000
+		{"_meth_823f", 0x823F},
 		{"_meth_8240", 0x8240}, // SP 0x1402A3880 MP 0x000000000
 		{"_meth_8241", 0x8241}, // SP 0x140248AD0 MP 0x000000000
 		{"_meth_8242", 0x8242}, // SP 0x140248EA0 MP 0x000000000
@@ -1564,6 +1587,7 @@ namespace scripting
 		{"_meth_8322", 0x8322}, // SP 0x140263330 MP 0x14032F4E0
 		{"openpopupmenu", 0x8323}, // SP 0x140263430 MP 0x14032F6C0
 		{"openpopupmenunomouse", 0x8324}, // SP 0x140263630 MP 0x14032F930
+		{"_meth_8325", 0x8325},
 		{"freezecontrols", 0x8326}, // SP 0x140263B10 MP 0x14032FD60
 		{"disableusability", 0x8327}, // SP 0x140263C10 MP 0x14032FFE0
 		{"enableusability", 0x8328}, // SP 0x140263E40 MP 0x1403300F0
@@ -1618,14 +1642,17 @@ namespace scripting
 		{"botgetscriptgoalradius", 0x8359}, // SP 0x000000000 MP 0x1404785F0
 		{"botgetscriptgoalyaw", 0x835A}, // SP 0x000000000 MP 0x1404786F0
 		{"botgetscriptgoaltype", 0x835B}, // SP 0x000000000 MP 0x140478670
+		{"_meth_835c", 0x835C},
 		{"_meth_835d", 0x835D}, // SP 0x000000000 MP 0x140478850
 		{"_meth_835e", 0x835E}, // SP 0x000000000 MP 0x140478E10
 		{"botfindnoderandom", 0x835F}, // SP 0x000000000 MP 0x140477D00
 		{"botmemoryevent", 0x8360}, // SP 0x000000000 MP 0x140478B70
+		{"_meth_8361", 0x8361},
 		{"_meth_8362", 0x8362}, // SP 0x000000000 MP 0x140478EB0
 		{"bothasscriptgoal", 0x8363}, // SP 0x000000000 MP 0x140478890
 		{"botgetpersonality", 0x8364}, // SP 0x000000000 MP 0x140478420
 		{"_meth_8365", 0x8365}, // SP 0x000000000 MP 0x14047A1C0
+		{"_meth_8366", 0x8366},
 		{"botsetpersonality", 0x8367}, // SP 0x000000000 MP 0x140479A70
 		{"botsetdifficulty", 0x8368}, // SP 0x000000000 MP 0x1404797B0
 		{"botgetdifficulty", 0x8369}, // SP 0x000000000 MP 0x140477E90
@@ -1635,11 +1662,13 @@ namespace scripting
 		{"botcanseeentity", 0x836D}, // SP 0x000000000 MP 0x140477A90
 		{"botgetnodesonpath", 0x836E}, // SP 0x000000000 MP 0x140478230
 		{"_meth_836f", 0x836F}, // SP 0x000000000 MP 0x140479020
+		{"_meth_8370", 0x8370},
 		{"_meth_8371", 0x8371}, // SP 0x000000000 MP 0x140477FD0
 		{"botsetawareness", 0x8372}, // SP 0x000000000 MP 0x140479720
 		{"_meth_8373", 0x8373}, // SP 0x000000000 MP 0x140479610
 		{"botgetscriptgoalnode", 0x8374}, // SP 0x000000000 MP 0x140478560
 		{"botgetimperfectenemyinfo", 0x8375}, // SP 0x000000000 MP 0x1404780D0
+		{"_meth_8376", 0x8376},
 		{"botsetpathingstyle", 0x8377}, // SP 0x000000000 MP 0x1404799A0
 		{"botsetdifficultysetting", 0x8378}, // SP 0x000000000 MP 0x140479840
 		{"botgetdifficultysetting", 0x8379}, // SP 0x000000000 MP 0x140477F20
@@ -1656,6 +1685,7 @@ namespace scripting
 		{"nodeisdisconnected", 0x8384}, // SP 0x000000000 MP 0x14032E920
 		{"_meth_8385", 0x8385}, // SP 0x140262C60 MP 0x14032E340
 		{"_meth_8386", 0x8386}, // SP 0x000000000 MP 0x14037B1B0
+		{"_meth_8387", 0x8387},
 		{"_meth_8388", 0x8388}, // SP 0x000000000 MP 0x14044EF90
 		{"_meth_8389", 0x8389}, // SP 0x000000000 MP 0x14044E610
 		{"setagentattacker", 0x838A}, // SP 0x000000000 MP 0x14044EE40
@@ -1694,6 +1724,8 @@ namespace scripting
 		{"_meth_83ab", 0x83AB}, // SP 0x140268330 MP 0x000000000
 		{"_meth_83ac", 0x83AC}, // SP 0x140268410 MP 0x000000000
 		{"_meth_83ad", 0x83AD}, // SP 0x1402683A0 MP 0x000000000
+		{"_meth_83ae", 0x83AE},
+		{"_meth_83af", 0x83AF},
 		{"_meth_83b0", 0x83B0}, // SP 0x1405D92F0 MP 0x14032CC20
 		{"_meth_83b1", 0x83B1}, // SP 0x1402670A0 MP 0x14032B5D0
 		{"_meth_83b2", 0x83B2}, // SP 0x140267250 MP 0x14032B7B0
@@ -1756,6 +1788,7 @@ namespace scripting
 		{"getmovingplatformparent", 0x83EB}, // SP 0x14028E2A0 MP 0x14035A4D0
 		{"_meth_83ec", 0x83EC}, // SP 0x000000000 MP 0x14032CEF0
 		{"_meth_83ed", 0x83ED}, // SP 0x1402ADF90 MP 0x000000000
+		{"_meth_83ee", 0x83EE},
 		{"_meth_83ef", 0x83EF}, // SP 0x1402A0B60 MP 0x14036A5C0
 		{"_meth_83f0", 0x83F0}, // SP 0x14029F670 MP 0x140369790
 		{"makevehiclenotcollidewithplayers", 0x83F1}, // SP 0x1402913E0 MP 0x14035B490
@@ -1827,6 +1860,7 @@ namespace scripting
 		{"playsoundonmovingent", 0x8433}, // SP 0x000000000 MP 0x140377F80
 		{"cancelmantle", 0x8434}, // SP 0x140266DD0 MP 0x14032B210
 		{"hasfemalecustomizationmodel", 0x8435}, // SP 0x000000000 MP 0x140332F50
+		{"_meth_8436", 0x8436},
 		{"setscriptabledamageowner", 0x8437}, // SP 0x1402A0440 MP 0x1403586F0
 		{"_meth_8438", 0x8438}, // SP 0x1402A0B00 MP 0x140358FF0
 		{"_meth_8439", 0x8439}, // SP 0x000000000 MP 0x140379890
@@ -1858,6 +1892,8 @@ namespace scripting
 		{"_meth_8453", 0x8453}, // SP 0x140261E30 MP 0x14032DC80
 		{"_meth_8454", 0x8454}, // SP 0x1402612F0 MP 0x000000000
 		{"_meth_8455", 0x8455}, // SP 0x1402AD1E0 MP 0x000000000
+		{"_meth_8456", 0x8456},
+		{"_meth_8457", 0x8457},
 		{"getvieworigin", 0x8458}, // SP 0x14029DE70 MP 0x140366600
 		{"_meth_8459", 0x8459}, // SP 0x140265E70 MP 0x140329A80
 		{"_meth_845a", 0x845A}, // SP 0x000000000 MP 0x140359980
@@ -1956,6 +1992,7 @@ namespace scripting
 		{"_meth_84b7", 0x84B7}, // SP 0x1404655C0 MP 0x14055F460
 		{"_meth_84b8", 0x84B8}, // SP 0x1402A09C0 MP 0x14036A6A0
 		{"_meth_84b9", 0x84B9}, // SP 0x000000000 MP 0x1403807B0
+		{"_meth_84ba", 0x84BA},
 		{"_meth_84bb", 0x84BB}, // SP 0x1402643F0 MP 0x140330910
 		{"_meth_84bc", 0x84BC}, // SP 0x140264500 MP 0x140330A20
 		{"_meth_84bd", 0x84BD}, // SP 0x000000000 MP 0x1403330D0
@@ -1984,11 +2021,14 @@ namespace scripting
 		{"_meth_84d4", 0x84D4}, // SP 0x14029F410 MP 0x140368D50
 		{"_meth_84d5", 0x84D5}, // SP 0x14029F530 MP 0x140368DF0
 		{"_meth_84d6", 0x84D6}, // SP 0x14029F5E0 MP 0x140368ED0
+		{"_meth_84d7", 0x84D7},
 		{"_meth_84d8", 0x84D8}, // SP 0x1402674E0 MP 0x14032B4A0
 		{"_meth_84d9", 0x84D9}, // SP 0x1402B4400 MP 0x140380280
 		{"_meth_84da", 0x84DA}, // SP 0x000000000 MP 0x14035B2A0
 		{"_meth_84db", 0x84DB}, // SP 0x140248770 MP 0x000000000
 		{"_meth_84dc", 0x84DC}, // SP 0x140461FF0 MP 0x000000000
+		{"_meth_84dd", 0x84DD},
+		{"_meth_84de", 0x84DE},
 		{"_meth_84df", 0x84DF}, // SP 0x14028DF20 MP 0x14035B180
 		{"_meth_84e0", 0x84E0}, // SP 0x14026E2F0 MP 0x14033C220
 		{"_meth_84e1", 0x84E1}, // SP 0x1404632B0 MP 0x140561AF0
@@ -1997,6 +2037,7 @@ namespace scripting
 		{"_meth_84e4", 0x84E4}, // SP 0x1405D92F0 MP 0x1403604A0
 		{"_meth_84e5", 0x84E5}, // SP 0x1402A88B0 MP 0x000000000
 		{"_meth_84e6", 0x84E6}, // SP 0x1405D92F0 MP 0x14036C920
+		{"_meth_84e7", 0x84E7},
 		{"_meth_84e8", 0x84E8}, // SP 0x140264970 MP 0x140330E00
 		{"_meth_84e9", 0x84E9}, // SP 0x1402649D0 MP 0x140330E10
 		{"_meth_84ea", 0x84EA}, // SP 0x14028ABB0 MP 0x000000000
@@ -2091,6 +2132,7 @@ namespace scripting
 		{"_meth_8543", 0x8543}, // SP 0x000000000 MP 0x140375800
 		{"_meth_8544", 0x8544}, // SP 0x000000000 MP 0x14044FA10
 		{"_meth_8545", 0x8545}, // SP 0x000000000 MP 0x140333640
+		{"_meth_8546", 0x8546},
 		{"_meth_8547", 0x8547}, // SP 0x000000000 MP 0x140450C20
 		{"_meth_8548", 0x8548}, // SP 0x140262130 MP 0x14032DF00
 		{"_meth_8549", 0x8549}, // SP 0x000000000 MP 0x140333FA0
