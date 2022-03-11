@@ -1382,17 +1382,17 @@ namespace game
 		struct clientHeader_t
 		{
 			int state;
-			char __pad0[36];
+			char __pad0[44];
 			netadr_s remoteAddress;
 		}; // size = ?
 
 		struct client_t
 		{
 			clientHeader_t header;
-			char __pad0[3044];
+			char __pad0[265164];
 			int reliableSequence;
 			int reliableAcknowledge;
-			char __pad1[265864];
+			char __pad1[265832];
 			gentity_s* gentity; // 268976
 			char name[32]; // 268984
 			char __pad2[8];
@@ -1401,8 +1401,10 @@ namespace game
 			LiveClientDropType liveDropRequest; //269572
 			char __pad4[24];
 			TestClientType testClient; // 269600
-			char __pad5[610012];
+			char __pad5[129600];
 		}; // size = 661304
+
+		static_assert(sizeof(client_t) == 661304);
 	}
 
 	namespace sp

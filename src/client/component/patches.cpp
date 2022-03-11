@@ -259,10 +259,10 @@ namespace patches
 			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
 
 			// Prevent clients from ending the game as non host by sending 'end_game' lui notification
-			// cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub);
+			cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub);
 
 			// Prevent clients from sending invalid reliableAcknowledge
-			// utils::hook::call(0x1404899C6, sv_execute_client_message_stub);
+			utils::hook::call(0x1404899C6, sv_execute_client_message_stub);
 
 			// "fix" for rare 'Out of memory error' error
 			if (utils::flags::has_flag("memoryfix"))
