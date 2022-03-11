@@ -142,7 +142,7 @@ namespace party
 
 		void cl_disconnect_stub(int a1)
 		{
-			party::sv_motd.clear();
+			party::clear_sv_motd();
 			cldisconnect_hook.invoke<void>(a1);
 		}
 
@@ -158,6 +158,11 @@ namespace party
 			utils::hook::invoke<void>(0x1400DACC0, error.data(), "MENU_NOTICE");
 			utils::hook::set(0x142C1DA98, 1);
 		}
+	}
+
+	void clear_sv_motd()
+	{
+		party::sv_motd.clear();
 	}
 
 	int get_client_num_by_name(const std::string& name)
