@@ -1366,11 +1366,11 @@ namespace scripting
 		{"_meth_8245", 0x8245}, // SP 0x1402A24D0 MP 0x14036C5B0
 		{"trackerupdate", 0x8246}, // SP 0x14028DC50 MP 0x14036E800
 		{"pingplayer", 0x8247}, // SP 0x000000000 MP 0x140332B50
-		{"_meth_8248", 0x8248}, // SP 0x140268FE0 MP 0x140332B40
+		{"buttonpressed", 0x8248}, // SP 0x140268FE0 MP 0x140332B40
 		{"sayteam", 0x8249}, // SP 0x000000000 MP 0x1403345F0
 		{"sayall", 0x824A}, // SP 0x000000000 MP 0x1403346A0
 		{"_meth_824b", 0x824B}, // SP 0x000000000 MP 0x140332C90
-		{"_meth_824c", 0x824C}, // SP 0x140265080 MP 0x140330FE0
+		{"dropitem", 0x824C}, // SP 0x140265080 MP 0x140330FE0
 		{"dropscavengerbag", 0x824D}, // SP 0x000000000 MP 0x140332FB0
 		{"setjitterparams", 0x824E}, // SP 0x140461E80 MP 0x140560640
 		{"sethoverparams", 0x824F}, // SP 0x140461F50 MP 0x140560710
@@ -1399,8 +1399,8 @@ namespace scripting
 		{"finishplayerdamage", 0x8266}, // SP 0x000000000 MP 0x1403337A0
 		{"suicide", 0x8267}, // SP 0x000000000 MP 0x140333E20
 		{"_meth_8268", 0x8268}, // SP 0x000000000 MP 0x140334010
-		{"_meth_8269", 0x8269}, // SP 0x000000000 MP 0x1403340A0
-		{"_meth_826a", 0x826A}, // SP 0x000000000 MP 0x140334120
+		{"clientiprintln", 0x8269}, // SP 0x000000000 MP 0x1403340A0
+		{"clientiprintlnbold", 0x826A}, // SP 0x000000000 MP 0x140334120
 		{"spawn", 0x826B}, // SP 0x000000000 MP 0x1403341A0
 		{"_meth_826c", 0x826C}, // SP 0x000000000 MP 0x140334230
 		{"_meth_826d", 0x826D}, // SP 0x000000000 MP 0x140334290
@@ -1441,8 +1441,8 @@ namespace scripting
 		{"setmaxpitchroll", 0x8290}, // SP 0x140461CC0 MP 0x140560480
 		{"setairresitance", 0x8291}, // SP 0x140461D80 MP 0x140560540
 		{"setturningability", 0x8292}, // SP 0x140461E10 MP 0x1405605D0
-		{"_meth_8293", 0x8293}, // SP 0x140260F20 MP 0x140334B90
-		{"_meth_8294", 0x8294}, // SP 0x000000000 MP 0x140334D50
+		{"getxuid", 0x8293}, // SP 0x140260F20 MP 0x140334B90
+		{"getucdidhigh", 0x8294}, // SP 0x000000000 MP 0x140334D50
 		{"ismlgspectator", 0x8295}, // SP 0x000000000 MP 0x140334DB0
 		{"getclanidhigh", 0x8296}, // SP 0x000000000 MP 0x140334E10
 		{"getclanidlow", 0x8297}, // SP 0x000000000 MP 0x140334E70
@@ -1535,16 +1535,16 @@ namespace scripting
 		{"setvelocity", 0x82EE}, // SP 0x1402601C0 MP 0x14032BBE0
 		{"_meth_82ef", 0x82EF}, // SP 0x140260AD0 MP 0x14032C3C0
 		{"_meth_82f0", 0x82F0}, // SP 0x140260E80 MP 0x14032C5E0
-		{"_meth_82f1", 0x82F1}, // SP 0x1402677A0 MP 0x14032BE30
+		{"playsound", 0x82F1}, // SP 0x1402677A0 MP 0x14032BE30
 		{"_meth_82f2", 0x82F2}, // SP 0x140260130 MP 0x14032BF20
-		{"_meth_82f3", 0x82F3}, // SP 0x140264AD0 MP 0x140330E20
+		{"setweaponammoclip", 0x82F3}, // SP 0x140264AD0 MP 0x140330E20
 		{"setweaponammostock", 0x82F4}, // SP 0x140264EB0 MP 0x140331350
-		{"_meth_82f5", 0x82F5}, // SP 0x140265380 MP 0x1403293A0
+		{"getweaponammoclip", 0x82F5}, // SP 0x140265380 MP 0x1403293A0
 		{"getweaponammostock", 0x82F6}, // SP 0x1402655D0 MP 0x140329580
 		{"_meth_82f7", 0x82F7}, // SP 0x140265820 MP 0x140329990
 		{"stoplocalsound", 0x82F8}, // SP 0x140265F20 MP 0x14032A3B0
 		{"setclientdvar", 0x82F9}, // SP 0x140266410 MP 0x14032A990
-		{"_meth_82fa", 0x82FA}, // SP 0x1402666C0 MP 0x14032B260
+		{"setclientdvars", 0x82FA}, // SP 0x1402666C0 MP 0x14032B260
 		{"_meth_82fb", 0x82FB}, // SP 0x000000000 MP 0x14032AC30
 		{"_meth_82fc", 0x82FC}, // SP 0x000000000 MP 0x14032AD80
 		{"allowads", 0x82FD}, // SP 0x140261130 MP 0x14032C940
@@ -1562,7 +1562,7 @@ namespace scripting
 		{"getweaponslistitems", 0x8309}, // SP 0x1402622E0 MP 0x14032E230
 		{"_meth_830a", 0x830A}, // SP 0x140261090 MP 0x14032C720
 		{"_meth_830b", 0x830B}, // SP 0x140262F00 MP 0x14032EA90
-		{"_meth_830c", 0x830C}, // SP 0x140263380 MP 0x14032F210
+		{"takeweapon", 0x830C}, // SP 0x140263380 MP 0x14032F210
 		{"takeallweapons", 0x830D}, // SP 0x1402635B0 MP 0x14032F310
 		{"getcurrentweapon", 0x830E}, // SP 0x140263750 MP 0x14032F5E0
 		{"getcurrentprimaryweapon", 0x830F}, // SP 0x140263A30 MP 0x14032F860
@@ -1570,7 +1570,7 @@ namespace scripting
 		{"givestartammo", 0x8311}, // SP 0x1402647A0 MP 0x140330740
 		{"switchtoweapon", 0x8312}, // SP 0x140264CA0 MP 0x140330D20
 		{"switchtoweaponimmediate", 0x8313}, // SP 0x140264E50 MP 0x140330D90
-		{"_meth_8314", 0x8314}, // SP 0x140265950 MP 0x140329520
+		{"gethybridscopestate", 0x8314}, // SP 0x140265950 MP 0x140329520
 		{"switchtooffhand", 0x8315}, // SP 0x140265B80 MP 0x1403296D0
 		{"_meth_8316", 0x8316}, // SP 0x140264440 MP 0x140330340
 		{"getcustomizationbody", 0x8317}, // SP 0x140264600 MP 0x140330520
@@ -1593,7 +1593,7 @@ namespace scripting
 		{"enableusability", 0x8328}, // SP 0x140263E40 MP 0x1403300F0
 		{"_meth_8329", 0x8329}, // SP 0x140266C00 MP 0x14032B640
 		{"_meth_832a", 0x832A}, // SP 0x140266D10 MP 0x14032B800
-		{"_meth_832b", 0x832B}, // SP 0x140266EA0 MP 0x14032B9C0
+		{"setreverb", 0x832B}, // SP 0x140266EA0 MP 0x14032B9C0
 		{"_meth_832c", 0x832C}, // SP 0x140267180 MP 0x14032B9E0
 		{"deactivatechannelvolumes", 0x832D}, // SP 0x140267410 MP 0x14032BB00
 		{"_meth_832e", 0x832E}, // SP 0x140265FA0 MP 0x140329C00
@@ -1625,7 +1625,7 @@ namespace scripting
 		{"forcethirdpersonwhenfollowing", 0x8348}, // SP 0x000000000 MP 0x140374D30
 		{"disableforcethirdpersonwhenfollowing", 0x8349}, // SP 0x000000000 MP 0x140374DD0
 		{"_meth_834a", 0x834A}, // SP 0x140260C10 MP 0x14032C5D0
-		{"_meth_834b", 0x834B}, // SP 0x000000000 MP 0x14037B380
+		{"setscriptmoverkillcam", 0x834B}, // SP 0x000000000 MP 0x14037B380
 		{"secondaryoffhandbuttonpressed", 0x834C}, // SP 0x140261D40 MP 0x14032D9C0
 		{"_meth_834d", 0x834D}, // SP 0x000000000 MP 0x140374B70
 		{"_meth_834e", 0x834E}, // SP 0x000000000 MP 0x140374C10
@@ -1767,7 +1767,7 @@ namespace scripting
 		{"issprinting", 0x83D6}, // SP 0x1402613C0 MP 0x14032CB20
 		{"_meth_83d7", 0x83D7}, // SP 0x140291320 MP 0x000000000
 		{"_meth_83d8", 0x83D8}, // SP 0x1402495B0 MP 0x000000000
-		{"_meth_83d9", 0x83D9}, // SP 0x1405D92F0 MP 0x140358020
+		{"setclothtype", 0x83D9}, // SP 0x1405D92F0 MP 0x140358020
 		{"_meth_83da", 0x83DA}, // SP 0x140264C80 MP 0x000000000
 		{"_meth_83db", 0x83DB}, // SP 0x140264C80 MP 0x000000000
 		{"_meth_83dc", 0x83DC}, // SP 0x140261B80 MP 0x14032D800
@@ -1876,7 +1876,7 @@ namespace scripting
 		{"_meth_8443", 0x8443}, // SP 0x140266090 MP 0x14032A550
 		{"_meth_8444", 0x8444}, // SP 0x1402A8A40 MP 0x000000000
 		{"_meth_8445", 0x8445}, // SP 0x1402A8A80 MP 0x000000000
-		{"_meth_8446", 0x8446}, // SP 0x1402A2F70 MP 0x14036CC00
+		{"getcacplayerdata", 0x8446}, // SP 0x1402A2F70 MP 0x14036CC00
 		{"_meth_8447", 0x8447}, // SP 0x1405D92F0 MP 0x140363840
 		{"_meth_8448", 0x8448}, // SP 0x1405D92F0 MP 0x140363A50
 		{"_meth_8449", 0x8449}, // SP 0x1402611B0 MP 0x14032C860
