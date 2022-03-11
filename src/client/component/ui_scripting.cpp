@@ -48,10 +48,8 @@ namespace ui_scripting
 			{
 				return hksi_lual_error_hook.invoke<void>(s, formatted.data());
 			}
-			else
-			{
-				throw std::runtime_error(formatted);
-			}
+
+			throw std::runtime_error(formatted);
 		}
 
 		int hksi_hks_error_stub(game::hks::lua_State* s, int a2)
@@ -60,31 +58,27 @@ namespace ui_scripting
 			{
 				return hksi_hks_error_hook.invoke<int>(s, a2);
 			}
-			else
-			{
-				throw std::runtime_error("unknown error");
-			}
+
+			throw std::runtime_error("unknown error");
 		}
 
-		int lui_error_stub(game::hks::lua_State* s)
+		void lui_error_stub(game::hks::lua_State* s)
 		{
 			if (!error_hook_enabled)
 			{
-				return lui_error_hook.invoke<int>(s);
+				lui_error_hook.invoke<void>(s);
 			}
-			else
+
+			const auto count = static_cast<int>(s->m_apistack.top - s->m_apistack.base);
+			const auto arguments = get_return_values(count);
+
+			std::string error_str = "LUI Error";
+			if (count && arguments[0].is<std::string>())
 			{
-				const auto count = static_cast<int>(s->m_apistack.top - s->m_apistack.base);
-				const auto arguments = get_return_values(count);
-
-				std::string error_str = "LUI Error";
-				if (count && arguments[0].is<std::string>())
-				{
-					error_str = arguments[0].as<std::string>();
-				}
-
-				throw std::runtime_error(error_str);
+				error_str = arguments[0].as<std::string>();
 			}
+
+			throw std::runtime_error(error_str);
 		}
 
 		void* hks_start_stub(char a1)
