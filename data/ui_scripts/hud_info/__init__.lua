@@ -1,5 +1,5 @@
 if (game:issingleplayer()) then
-	return
+    return
 end
 
 require("settings")
