@@ -1,4 +1,4 @@
-if (game:issingleplayer()) then
+if (game:issingleplayer() or not Engine.InFrontend()) then
 	return
 end
 
