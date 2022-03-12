@@ -1401,7 +1401,7 @@ namespace scripting
 		{"_meth_8268", 0x8268}, // SP 0x000000000 MP 0x140334010
 		{"clientiprintln", 0x8269}, // SP 0x000000000 MP 0x1403340A0
 		{"clientiprintlnbold", 0x826A}, // SP 0x000000000 MP 0x140334120
-		{"spawnSpectator", 0x826B}, // SP 0x000000000 MP 0x1403341A0
+		{"spawnspectator", 0x826B}, // SP 0x000000000 MP 0x1403341A0
 		{"_meth_826c", 0x826C}, // SP 0x000000000 MP 0x140334230
 		{"cloneplayer", 0x826D}, // SP 0x000000000 MP 0x140334290
 		{"istalking", 0x826E}, // SP 0x000000000 MP 0x140334570
