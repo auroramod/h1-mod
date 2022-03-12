@@ -162,9 +162,9 @@ namespace map_rotation
 
 			scheduler::once([]()
 			{
-				dvars::register_string("sv_mapRotation", "", game::DVAR_FLAG_NONE, true);
-				dvars::register_string("sv_mapRotationCurrent", "", game::DVAR_FLAG_NONE, true);
-				dvars::register_string("sv_autoPriority", "", game::DVAR_FLAG_NONE, true);
+				dvars::register_string("sv_mapRotation", "", game::DVAR_FLAG_NONE, "");
+				dvars::register_string("sv_mapRotationCurrent", "", game::DVAR_FLAG_NONE, "");
+				dvars::register_string("sv_autoPriority", "", game::DVAR_FLAG_NONE, "Lowers the process priority during map changes to not cause lags on other servers.");
 			}, scheduler::pipeline::main);
 
 			command::add("map_rotate", &perform_map_rotation);

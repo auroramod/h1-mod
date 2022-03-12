@@ -35,7 +35,8 @@ namespace shaders
 
 			const auto has_flag = utils::flags::has_flag("noshadercaching");
 
-			disable_shader_caching = dvars::register_bool("disable_shader_caching", has_flag, game::DVAR_FLAG_SAVED, true);
+			disable_shader_caching = dvars::register_bool("disable_shader_caching", has_flag, 
+				game::DVAR_FLAG_SAVED, "Disable shader caching");
 			if (has_flag)
 			{
 				dvars::override::set_bool("disable_shader_caching", 1);

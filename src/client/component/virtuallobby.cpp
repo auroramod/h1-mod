@@ -52,7 +52,8 @@ namespace virtuallobby
 				return;
 			}
 
-			virtualLobby_fovscale = dvars::register_float("virtualLobby_fovScale", 0.7f, 0.0f, 2.0f, game::DVAR_FLAG_SAVED);
+			virtualLobby_fovscale = dvars::register_float("virtualLobby_fovScale", 0.7f, 0.0f, 2.0f, 
+				game::DVAR_FLAG_SAVED, "Field of view scaled for the virtual lobby");
 
 			utils::hook::nop(0x1400B555C, 14);
 			utils::hook::jump(0x1400B555C, get_fovscale_stub, true);

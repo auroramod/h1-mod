@@ -93,7 +93,7 @@ namespace logger
 
 		void print_dev(const char* msg, ...)
 		{
-			static auto* enabled = dvars::register_bool("logger_dev", false, game::DVAR_FLAG_SAVED, true);
+			static auto* enabled = dvars::register_bool("logger_dev", false, game::DVAR_FLAG_SAVED, "Print dev stuff");
 			if (!enabled->current.enabled)
 			{
 				return;

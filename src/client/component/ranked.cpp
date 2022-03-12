@@ -32,7 +32,7 @@ namespace ranked
 				dvars::override::register_bool("xblive_privatematch", false, game::DVAR_FLAG_REPLICATED | game::DVAR_FLAG_WRITE);
 
 				// Skip some check in _menus.gsc
-				dvars::register_bool("force_ranking", true, game::DVAR_FLAG_WRITE);
+				dvars::register_bool("force_ranking", true, game::DVAR_FLAG_WRITE, "");
 			}
 
 			// Always run bots, even if xblive_privatematch is 0

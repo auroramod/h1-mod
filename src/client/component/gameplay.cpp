@@ -45,10 +45,10 @@ namespace gameplay
 			}
 
 			utils::hook::call(0x1401E8830, jump_apply_slowdown_stub);
-			jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_FLAG_REPLICATED, true);
+			jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_FLAG_REPLICATED, "Slow player movement after jumping");
 
 			utils::hook::call(0x1401E490F, pm_crashland_stub);
-			jump_enableFallDamage = dvars::register_bool("jump_enableFallDamage", true, game::DVAR_FLAG_REPLICATED, true);
+			jump_enableFallDamage = dvars::register_bool("jump_enableFallDamage", true, game::DVAR_FLAG_REPLICATED, "Enable fall damage");
 		}
 	};
 }

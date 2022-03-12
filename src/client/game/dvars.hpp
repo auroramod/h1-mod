@@ -6,6 +6,12 @@
 
 namespace dvars
 {
+	struct dvar_info
+	{
+		std::string name;
+		std::string description;
+	};
+
 	extern game::dvar_t* aimassist_enabled;
 
 	extern game::dvar_t* con_inputBoxColor;
@@ -25,14 +31,20 @@ namespace dvars
 
 	extern game::dvar_t* cg_legacyCrashHandling;
 
-	extern std::vector<std::string> dvar_list;
+	extern std::vector<dvar_info> dvar_list;
 
 	std::string dvar_get_vector_domain(const int components, const game::dvar_limits& domain);
 	std::string dvar_get_domain(const game::dvar_type type, const game::dvar_limits& domain);
+	std::string dvar_get_description(const std::string& name);
 
-	game::dvar_t* register_int(const std::string& name, int value, int min, int max, game::DvarFlags flags, bool add_to_list = true);
-	game::dvar_t* register_bool(const std::string& name, bool value, game::DvarFlags flags, bool add_to_list = true);
-	game::dvar_t* register_string(const std::string& name, const char* value, game::DvarFlags flags, bool add_to_list = true);
-	game::dvar_t* register_float(const std::string& name, float value, float min, float max, game::DvarFlags flags, bool add_to_list = true);
-	game::dvar_t* register_vec4(const std::string& name, float x, float y, float z, float w, float min, float max, game::DvarFlags flags, bool add_to_list = true);
+	game::dvar_t* register_int(const std::string& name, int value, int min, int max,
+		game::DvarFlags flags, const std::string& description);
+	game::dvar_t* register_bool(const std::string& name, bool value,
+		game::DvarFlags flags, const std::string& description);
+	game::dvar_t* register_string(const std::string& name, const char* value, 
+		game::DvarFlags flags, const std::string& description);
+	game::dvar_t* register_float(const std::string& name, float value, float min, float max,
+		game::DvarFlags flags, const std::string& description);
+	game::dvar_t* register_vec4(const std::string& name, float x, float y, float z, float w, float min, 
+		float max, game::DvarFlags flags, const std::string& description);
 }

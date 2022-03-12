@@ -56,10 +56,10 @@ namespace patches
 			if (game::environment::is_mp())
 			{
 				// Make name save
-				dvars::register_string("name", get_login_username().data(), game::DVAR_FLAG_SAVED, true);
+				dvars::register_string("name", get_login_username().data(), game::DVAR_FLAG_SAVED, "Player name.");
 
 				// Disable data validation error popup
-				dvars::register_int("data_validation_allow_drop", 0, 0, 0, game::DVAR_FLAG_NONE, true);
+				dvars::register_int("data_validation_allow_drop", 0, 0, 0, game::DVAR_FLAG_NONE, "");
 			}
 
 			return com_register_dvars_hook.invoke<void>();
@@ -206,7 +206,7 @@ namespace patches
 			// client side aim assist dvar
 			dvars::aimassist_enabled = dvars::register_bool("aimassist_enabled", true,
 				game::DvarFlags::DVAR_FLAG_SAVED,
-				true);
+				"Enables aim assist for controllers");
 			utils::hook::call(0x14009EE9E, aim_assist_add_to_target_list);
 
 			// isProfanity
@@ -235,6 +235,9 @@ namespace patches
 			utils::hook::nop(0x140190C16, 5);
 			utils::hook::set<uint8_t>(0x14021D22A, 0xEB);
 
+			// some anti tamper thing that kills performance
+			dvars::override::register_int("dvl", 0, 0, 0, game::DVAR_FLAG_READ);
+
 			// unlock safeArea_*
 			utils::hook::jump(0x1402624F5, 0x140262503);
 			utils::hook::jump(0x14026251C, 0x140262547);
@@ -252,7 +255,7 @@ namespace patches
 			dvars::override::register_int("cl_connectTimeout", 120, 120, 1800, game::DVAR_FLAG_NONE); // Seems unused
 			dvars::override::register_int("sv_connectTimeout", 120, 120, 1800, game::DVAR_FLAG_NONE); // 60 - 0 - 1800
 
-			dvars::register_int("scr_game_spectatetype", 1, 0, 99, game::DVAR_FLAG_REPLICATED);
+			dvars::register_int("scr_game_spectatetype", 1, 0, 99, game::DVAR_FLAG_REPLICATED, "");
 
 			dvars::override::register_bool("ui_drawcrosshair", true, game::DVAR_FLAG_WRITE);
 

@@ -209,7 +209,7 @@ namespace network
 		const char* description)
 	{
 		game::dvar_t* dvar;
-		dvar = dvars::register_int("net_port", 27016, 0, 0xFFFFu, game::DVAR_FLAG_LATCHED);
+		dvar = dvars::register_int("net_port", 27016, 0, 0xFFFFu, game::DVAR_FLAG_LATCHED, "Network port");
 
 		// read net_port from command line
 		command::read_startup_variable("net_port");

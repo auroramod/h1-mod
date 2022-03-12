@@ -185,10 +185,10 @@ namespace dedicated
 #endif
 
 			// Register dedicated dvar
-			dvars::register_bool("dedicated", true, game::DVAR_FLAG_READ);
+			dvars::register_bool("dedicated", true, game::DVAR_FLAG_READ, "Dedicated server");
 
 			// Add lanonly mode
-			dvars::register_bool("sv_lanOnly", false, game::DVAR_FLAG_NONE);
+			dvars::register_bool("sv_lanOnly", false, game::DVAR_FLAG_NONE, "Don't send heartbeat");
 
 			// Disable VirtualLobby
 			dvars::override::register_bool("virtualLobbyEnabled", false, game::DVAR_FLAG_READ);

@@ -1,16 +1,17 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+
 #include "command.hpp"
 #include "console.hpp"
 #include "game_console.hpp"
 
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 #include <utils/memory.hpp>
-#include "utils/io.hpp"
-#include <game/dvars.hpp>
+#include <utils/io.hpp>
 
 namespace command
 {
@@ -112,9 +113,12 @@ namespace command
 					const auto current = game::Dvar_ValueToString(dvar, dvar->current);
 					const auto reset = game::Dvar_ValueToString(dvar, dvar->reset);
 
-					console::info("\"%s\" is: \"%s\" default: \"%s\" hash: 0x%08lX",
+					console::info("\"%s\" is: \"%s\" default: \"%s\" hash: 0x%08lX\n",
 						args[0], current, reset, dvar->hash);
 
+					const auto dvar_info = dvars::dvar_get_description(args[0]);
+
+					console::info("%s\n", dvar_info.data());
 					console::info("   %s\n", dvars::dvar_get_domain(dvar->type, dvar->domain).data());
 				}
 				else

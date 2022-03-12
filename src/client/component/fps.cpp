@@ -127,7 +127,7 @@ namespace fps
 		game::dvar_t* cg_draw_fps_register_stub(const char* name, const char** _enum, const int value, unsigned int /*flags*/,
 			const char* desc)
 		{
-			cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_FLAG_SAVED, false);
+			cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_FLAG_SAVED, "Draw frames per second");
 			return cg_drawfps;
 		}
 	}
@@ -160,7 +160,7 @@ namespace fps
 
 			if (game::environment::is_sp())
 			{
-				cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_FLAG_SAVED, false);
+				cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_FLAG_SAVED, "Draw frames per second");
 			}
 
 			if (game::environment::is_mp())
@@ -168,13 +168,13 @@ namespace fps
 				// fix ping value
 				utils::hook::nop(0x14025AC41, 2);
 
-				cg_drawping = dvars::register_int("cg_drawPing", 0, 0, 1, game::DVAR_FLAG_SAVED, true);
+				cg_drawping = dvars::register_int("cg_drawPing", 0, 0, 1, game::DVAR_FLAG_SAVED, "Choose to draw ping");
 
 				scheduler::loop(cg_draw_ping, scheduler::pipeline::renderer);
 			}
 
-			dvars::register_bool("cg_infobar_fps", false, game::DVAR_FLAG_SAVED, true);
-			dvars::register_bool("cg_infobar_ping", false, game::DVAR_FLAG_SAVED, true);
+			dvars::register_bool("cg_infobar_fps", false, game::DVAR_FLAG_SAVED, "Show server latency");
+			dvars::register_bool("cg_infobar_ping", false, game::DVAR_FLAG_SAVED, "Show FPS counter");
 		}
 	};
 }
