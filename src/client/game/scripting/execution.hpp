@@ -1,6 +1,7 @@
 #pragma once
 #include "game/game.hpp"
 #include "entity.hpp"
+#include "array.hpp"
 #include "script_value.hpp"
 
 namespace scripting
@@ -33,4 +34,6 @@ namespace scripting
 	script_value get_entity_field(const entity& entity, const std::string& field);
 
 	void notify(const entity& entity, const std::string& event, const std::vector<script_value>& arguments);
+
+	unsigned int make_array();
 }

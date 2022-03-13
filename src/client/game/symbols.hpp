@@ -13,6 +13,7 @@ namespace game
 	WEAK symbol<void(unsigned int id)> AddRefToObject{0x14036E5F0, 0x14043C570};
 	WEAK symbol<void(unsigned int id)> RemoveRefToObject{0x14036FFE0, 0x14043DF80};
 	WEAK symbol<unsigned int(unsigned int id)> AllocThread{0x14036E960, 0x14043C8E0};
+	WEAK symbol<ObjectVariableValue*(unsigned int* id)> AllocVariable{0x14036E9C0, 0x14043C940};
 
 	WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{0x140342EB0, 0x1404033B0};
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* buffer,
@@ -70,7 +71,8 @@ namespace game
 	WEAK symbol<void(const char* path, const char* dir)> FS_AddLocalizedGameDirectory{0x1403B6030, 0x1404EBE20};
 
 	WEAK symbol<unsigned int(unsigned int, unsigned int)> GetVariable{0x14036FDD0, 0x1403F3730};
-
+	WEAK symbol<unsigned int(unsigned int parentId, unsigned int unsignedValue)> GetNewVariable{0x14036FA00, 0x14043D990};
+	WEAK symbol<unsigned int(unsigned int parentId, unsigned int unsignedValue)> GetNewArrayVariable{0x14036F880, 0x14043D810};
 	WEAK symbol<void()> GScr_LoadConsts{0x1402D13E0, 0x140393810};
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int name)> FindVariable{0x14036F4B0, 0x14043D430};
 	WEAK symbol<unsigned int(int entnum, unsigned int classnum)> FindEntityId{0x14036F3B0, 0x14043D330};
@@ -197,21 +199,21 @@ namespace game
 
 	WEAK symbol<CmdArgs> sv_cmd_args{0x14AD99A10, 0x14946BA20};
 
-	WEAK symbol<int> g_script_error_level{0x14A1917A8, 0x14A33C824};
-	WEAK symbol<jmp_buf> g_script_error{0x14A1917B0, 0x14A33C940};
+	WEAK symbol<int> g_script_error_level{0x14BCFA4A4, 0x14A33C824};
+	WEAK symbol<jmp_buf> g_script_error{0x14BCFA5C0, 0x14A33C940};
 	
-	WEAK symbol<unsigned int> levelEntityId{0x149AF55B0, 0x149CA0730};
-	WEAK symbol<unsigned int> gameEntityId{0x149CA0734, 0x14B65E3B4};
+	WEAK symbol<unsigned int> levelEntityId{0x14B65E3B0, 0x149CA0730};
+	WEAK symbol<unsigned int> gameEntityId{0x14B65E3B4, 0x149CA0734};
 
 	WEAK symbol<const char*> command_whitelist{0x141079A60, 0x14120C360};
 	WEAK symbol<cmd_function_s*> cmd_functions{0x14AD99AB8, 0x14946BAC8};
 	WEAK symbol<CmdArgs> cmd_args{0x14AD99960, 0x14946B970};
 
-	WEAK symbol<int> g_poolSize{0, 0x140FEADF0};
-	WEAK symbol<scr_classStruct_t> g_classMap{0x14080A840, 0x1412106B0};
+	WEAK symbol<int> g_poolSize{0x140DE84A0, 0x140FEADF0};
+	WEAK symbol<scr_classStruct_t> g_classMap{0x14107AAF0, 0x1412106B0};
 
 	WEAK symbol<scrVarGlob_t> scr_VarGlob{0x14B686480, 0x149CC8800};
-	WEAK symbol<scrVmPub_t> scr_VmPub{0x14A1938C0, 0x14A33EA40};
+	WEAK symbol<scrVmPub_t> scr_VmPub{0x14BCFC6C0, 0x14A33EA40};
 	WEAK symbol<function_stack_t> scr_function_stack{0x14BD06C40, 0x14A348FC0};
 
 	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0x14F05CE50, 0x14FD21180};

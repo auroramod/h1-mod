@@ -21,7 +21,7 @@ namespace scripting::lua
 
 			std::unordered_map<std::string, array_value> values;
 
-			const auto offset = 0xA000 * (id & 3);
+			const auto offset = 0xFA00 * (id & 3);
 
 			auto current = game::scr_VarGlob->objectVariableChildren[id].firstChild;
 			auto idx = 1;
@@ -294,7 +294,7 @@ namespace scripting::lua
 			return entity_to_struct(state, value.get_raw().u.uintValue);
 		}
 
-		if (value.is<std::vector<script_value>>())
+		if (value.is<scripting::array>())
 		{
 			return entity_to_array(state, value.get_raw().u.uintValue);
 		}

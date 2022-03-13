@@ -1494,12 +1494,12 @@ namespace scripting
 		{"setspectatedefaults", 0x82C5}, // SP 0x000000000 MP 0x140331EE0
 		{"getthirdpersoncrosshairoffset", 0x82C6}, // SP 0x000000000 MP 0x140332250
 		{"disableweaponpickup", 0x82C7}, // SP 0x140262950 MP 0x14032EF00
-		{"_meth_82c8", 0x82C8}, // SP 0x140262A60 MP 0x14032EFF0
-		{"_meth_82c9", 0x82C9}, // SP 0x140262AB0 MP 0x14032F0D0
-		{"_meth_82ca", 0x82CA}, // SP 0x000000000 MP 0x1403322C0
-		{"getweaponslistexclusives", 0x82CB}, // SP 0x1402623D0 MP 0x14032E3A0
-		{"_meth_82cc", 0x82CC}, // SP 0x1402624C0 MP 0x14032E4B0
-		{"_meth_82cd", 0x82CD}, // SP 0x1402625B0 MP 0x14032E650
+		{"enableweaponpickup", 0x82C8}, // SP 0x140262A60 MP 0x14032EFF0
+		{"issplitscreenplayer", 0x82C9}, // SP 0x140262AB0 MP 0x14032F0D0
+		{"issplitscreenplayerprimary", 0x82CA}, // SP 0x000000000 MP 0x1403322C0
+		{"getweaponslistoffhands", 0x82CB}, // SP 0x1402623D0 MP 0x14032E3A0
+		{"getweaponslistitems", 0x82CC}, // SP 0x1402624C0 MP 0x14032E4B0
+		{"getweaponslistexclusives", 0x82CD}, // SP 0x1402625B0 MP 0x14032E650
 		{"getweaponslist", 0x82CE}, // SP 0x140262720 MP 0x14032E790
 		{"canplayerplacesentry", 0x82CF}, // SP 0x140264D00 MP 0x140331530
 		{"canplayerplacetank", 0x82D0}, // SP 0x1402651B0 MP 0x1403292E0
@@ -1559,8 +1559,8 @@ namespace scripting
 		{"setviewkickscale", 0x8306}, // SP 0x1402608B0 MP 0x14032CB90
 		{"getviewkickscale", 0x8307}, // SP 0x140260A80 MP 0x14032CCC0
 		{"getweaponslistall", 0x8308}, // SP 0x1402621A0 MP 0x14032E120 - getweaponslistoffhands
-		{"getweaponslistitems", 0x8309}, // SP 0x1402622E0 MP 0x14032E230
-		{"_meth_830a", 0x830A}, // SP 0x140261090 MP 0x14032C720
+		{"getweaponslistprimaries", 0x8309}, // SP 0x1402622E0 MP 0x14032E230
+		{"getnormalizedcameramovement", 0x830A}, // SP 0x140261090 MP 0x14032C720
 		{"giveweapon", 0x830B}, // SP 0x140262F00 MP 0x14032EA90f
 		{"takeweapon", 0x830C}, // SP 0x140263380 MP 0x14032F210
 		{"takeallweapons", 0x830D}, // SP 0x1402635B0 MP 0x14032F310
@@ -1596,13 +1596,13 @@ namespace scripting
 		{"setreverb", 0x832B}, // SP 0x140266EA0 MP 0x14032B9C0
 		{"_meth_832c", 0x832C}, // SP 0x140267180 MP 0x14032B9E0
 		{"deactivatechannelvolumes", 0x832D}, // SP 0x140267410 MP 0x14032BB00
-		{"_meth_832e", 0x832E}, // SP 0x140265FA0 MP 0x140329C00
-		{"_meth_832f", 0x832F}, // SP 0x140266200 MP 0x140329F00
-		{"_meth_8330", 0x8330}, // SP 0x140266560 MP 0x14032A240
-		{"_meth_8331", 0x8331}, // SP 0x140266820 MP 0x14032A6F0
+		{"givestartammo", 0x832E}, // SP 0x140265FA0 MP 0x140329C00
+		{"givemaxammo", 0x832F}, // SP 0x140266200 MP 0x140329F00
+		{"getfractionstartammo", 0x8330}, // SP 0x140266560 MP 0x14032A240
+		{"getfractionmaxammo", 0x8331}, // SP 0x140266820 MP 0x14032A6F0
 		{"isdualwielding", 0x8332}, // SP 0x140266E10 MP 0x14032ABC0
-		{"_meth_8333", 0x8333}, // SP 0x140267030 MP 0x14032AD00
-		{"isreloading", 0x8334}, // SP 0x140267100 MP 0x14032AEE0
+		{"isreloading", 0x8333}, // SP 0x140267030 MP 0x14032AD00
+		{"isswitchingweapon", 0x8334}, // SP 0x140267100 MP 0x14032AEE0
 		{"setorigin", 0x8335}, // SP 0x1402677C0 MP 0x14032B8D0
 		{"getvelocity", 0x8336}, // SP 0x1402604D0 MP 0x14032BC80
 		{"_meth_8337", 0x8337}, // SP 0x140260930 MP 0x14032BE70

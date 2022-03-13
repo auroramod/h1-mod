@@ -6,6 +6,7 @@
 namespace scripting
 {
 	class entity;
+	class array;
 
 	class script_value
 	{
@@ -24,6 +25,7 @@ namespace scripting
 		script_value(const std::string& value);
 
 		script_value(const entity& value);
+		script_value(const array& value);
 
 		script_value(const vector& value);
 
@@ -43,10 +45,11 @@ namespace scripting
 
 		const game::VariableValue& get_raw() const;
 
+		variable_value value_{};
+
 	private:
 		template <typename T>
 		T get() const;
 
-		variable_value value_{};
 	};
 }
