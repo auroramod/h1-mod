@@ -81,9 +81,9 @@ namespace scripting::lua
 	{
 		auto merger = [&](task_list& tasks)
 		{
-			for(auto& task : tasks)
+			for (auto& task : tasks)
 			{
-				if(task.id == handle.id)
+				if (task.id == handle.id)
 				{
 					task.endon_conditions.emplace_back(entity, event);
 				}
