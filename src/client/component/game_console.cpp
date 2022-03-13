@@ -59,7 +59,7 @@ namespace game_console
 		std::vector<dvars::dvar_info> matches{};
 
 		float color_white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-		float color_title[4] = {0.25f, 0.62f, 0.3f, 1.0f};
+		float color_title[4] = {0.3f, 0.7f, 0.3f, 1.0f};
 
 		void clear()
 		{
@@ -782,7 +782,7 @@ namespace game_console
 			dvars::con_outputBarColor = dvars::register_vec4("con_outputBarColor", 0.5f, 0.5f, 0.5f, 0.6f, 0.0f,
 				1.0f, game::DVAR_FLAG_SAVED,
 				"color of console output bar");
-			dvars::con_outputSliderColor = dvars::register_vec4("con_outputSliderColor", 1.0f, 0.8f, 0.0f, 1.0f,
+			dvars::con_outputSliderColor = dvars::register_vec4("con_outputSliderColor", 0.3f, 0.7f, 0.3f, 1.0f,
 				0.0f, 1.0f,
 				game::DVAR_FLAG_SAVED, "color of console output slider");
 			dvars::con_outputWindowColor = dvars::register_vec4("con_outputWindowColor", 0.25f, 0.25f, 0.25f, 0.85f,
