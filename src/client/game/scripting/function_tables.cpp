@@ -1777,7 +1777,7 @@ namespace scripting
 		{"setrocketcorpse", 0x83E0}, // SP 0x1402A15D0 MP 0x14036E1F0
 		{"setcorpsefalling", 0x83E1}, // SP 0x000000000 MP 0x140374840
 		{"setsurfacetype", 0x83E2}, // SP 0x14029FD00 MP 0x140358090
-		{"aIiphysicstrace", 0x83E3}, // SP 0x1402A0C60 MP 0x140369520
+		{"aiphysicstrace", 0x83E3}, // SP 0x1402A0C60 MP 0x140369520
 		{"_meth_83e4", 0x83E4}, // SP 0x1402A20D0 MP 0x140369FE0
 		{"_meth_83e5", 0x83E5}, // SP 0x1405D92F0 MP 0x14033B020
 		{"_meth_83e6", 0x83E6}, // SP 0x1402A7B00 MP 0x000000000
