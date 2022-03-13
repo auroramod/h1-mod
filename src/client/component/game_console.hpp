@@ -1,4 +1,5 @@
 #pragma once
+#include "game/dvars.hpp"
 
 namespace game_console
 {
@@ -6,5 +7,5 @@ namespace game_console
 	bool console_key_event(int local_client_num, int key, int down);
 
 	bool match_compare(const std::string& input, const std::string& text, const bool exact);
-	void find_matches(std::string input, std::vector<std::string>& suggestions, const bool exact);
+	void find_matches(std::string input, std::vector<dvars::dvar_info>& suggestions, const bool exact);
 }

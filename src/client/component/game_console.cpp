@@ -673,13 +673,13 @@ namespace game_console
 		return false;
 	}
 
-	void find_matches(std::string input, std::vector<std::string>& suggestions, const bool exact)
+	void find_matches(std::string input, std::vector<dvars::dvar_info>& suggestions, const bool exact)
 	{
 		input = utils::string::to_lower(input);
 
 		for (const auto& dvar : dvars::dvar_list)
 		{
-			auto name = utils::string::to_lower(dvar);
+			auto name = utils::string::to_lower(dvar.name);
 			if (game::Dvar_FindVar(name.data()) && match_compare(input, name, exact))
 			{
 				suggestions.push_back(dvar);
@@ -693,7 +693,7 @@ namespace game_console
 
 		if (suggestions.size() == 0 && game::Dvar_FindVar(input.data()))
 		{
-			suggestions.push_back(input.data());
+			suggestions.push_back({ input.data(), "" });
 		}
 
 		game::cmd_function_s* cmd = (*game::cmd_functions);
@@ -703,9 +703,9 @@ namespace game_console
 			{
 				std::string name = utils::string::to_lower(cmd->name);
 
-				if (game_console::match_compare(input, name, exact))
+				if (match_compare(input, name, exact))
 				{
-					suggestions.push_back(cmd->name);
+					suggestions.push_back({ cmd->name, "" });
 				}
 
 				if (exact && suggestions.size() > 1)
