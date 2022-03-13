@@ -19,14 +19,10 @@ namespace bots
 	{
 		bool can_add()
 		{
-			if (party::get_client_count() < *game::mp::svs_numclients)
-			{
-				return true;
-			}
-			return false;
+			return party::get_client_count() < *game::mp::svs_numclients
+				&& game::SV_Loaded() && !game::VirtualLobby_Loaded();
 		}
 
-		// TODO: when scripting comes, fix this to use better notifies
 		void bot_team_join(const int entity_num)
 		{
 			const game::scr_entref_t entref{static_cast<uint16_t>(entity_num), 0};
@@ -57,17 +53,20 @@ namespace bots
 				return;
 			}
 
-			// SV_BotGetRandomName
-			const auto* const bot_name = game::SV_BotGetRandomName();
-			auto* bot_ent = game::SV_AddBot(bot_name);
+			static auto first_bot = true;
+
+			const auto bot_name = game::SV_BotGetRandomName();
+			const auto bot_ent = game::SV_AddBot(bot_name);
+
 			if (bot_ent)
 			{
 				spawn_bot(bot_ent->s.entityNum);
 			}
-			else if (can_add()) // workaround since first bot won't ever spawn
-			{
-				add_bot();
-			}
+			// can cause a stack overflow
+			// else if (can_add()) // workaround since first bot won't ever spawn
+			// {
+			//	add_bot();
+			// }
 		}
 	}
 
@@ -83,7 +82,10 @@ namespace bots
 
 			command::add("spawnBot", [](const command::params& params)
 			{
-				if (!game::SV_Loaded() || game::VirtualLobby_Loaded()) return;
+				if (!can_add())
+				{
+					return;
+				}
 
 				auto num_bots = 1;
 				if (params.size() == 2)

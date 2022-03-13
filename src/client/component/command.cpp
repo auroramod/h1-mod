@@ -172,8 +172,8 @@ namespace command
 
 			try
 			{
-				const auto arg = params[1];
-				const scripting::entity player = scripting::call("getentbynum", {client_num}).as<scripting::entity>();
+				const auto& arg = params[1];
+				const auto player = scripting::entity({static_cast<uint16_t>(client_num), 0});
 				auto ps = game::SV_GetPlayerstateForClientNum(client_num);
 
 				if (arg == "ammo")
@@ -243,7 +243,7 @@ namespace command
 		{
 			try
 			{
-				const scripting::entity player = scripting::call("getentbynum", {client_num}).as<scripting::entity>();
+				const auto player = scripting::entity({static_cast<uint16_t>(client_num), 0});
 				const auto weapon = player.call("getcurrentweapon");
 				player.call("dropitem", {weapon});
 			}
@@ -264,7 +264,7 @@ namespace command
 
 			try
 			{
-				const scripting::entity player = scripting::call("getentbynum", {client_num}).as<scripting::entity>();
+				const auto player = scripting::entity({static_cast<uint16_t>(client_num), 0});
 				if (weapon == "all"s)
 				{
 					player.call("takeallweapons");
@@ -285,7 +285,7 @@ namespace command
 			{
 				try
 				{
-					const scripting::entity player = scripting::call("getentbynum", {client_num}).as<scripting::entity>();
+					const auto player = scripting::entity({static_cast<uint16_t>(client_num), 0});
 					player.call(SELECT_VALUE("kill", "suicide"));
 				}
 				catch (...)
