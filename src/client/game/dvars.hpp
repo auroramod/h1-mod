@@ -10,6 +10,7 @@ namespace dvars
 	{
 		std::string name;
 		std::string description;
+		int hash;
 	};
 
 	extern game::dvar_t* aimassist_enabled;
@@ -36,6 +37,7 @@ namespace dvars
 	std::string dvar_get_vector_domain(const int components, const game::dvar_limits& domain);
 	std::string dvar_get_domain(const game::dvar_type type, const game::dvar_limits& domain);
 	std::string dvar_get_description(const std::string& name);
+	std::optional<dvar_info> get_dvar_info_from_hash(const int hash);
 
 	game::dvar_t* register_int(const std::string& name, int value, int min, int max,
 		game::DvarFlags flags, const std::string& description);

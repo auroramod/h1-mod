@@ -40,6 +40,8 @@ namespace game
 
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{0x1401389A0, 0x140220CC0};
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{0x140138750, 0x140220620};
+	WEAK symbol<void(int localClientNum, /*mp::cg_s**/void* cg, 
+		const char* dvar, const char* value)> CG_SetClientDvarFromServer{0, 0x140236120};
 
 	WEAK symbol<bool()> CL_IsCgameInitialized{0x14017EE30, 0x140245650};
 
@@ -47,6 +49,10 @@ namespace game
 	WEAK symbol<dvar_t*(const char* name)> Dvar_FindVar{0x1403C5D50, 0x1404FBB00};
 	WEAK symbol<void(char* buffer, int index)> Dvar_GetCombinedString{0x140354DF0, 0x14041D830};
 	WEAK symbol<const char*(dvar_t* dvar, dvar_value value)> Dvar_ValueToString{0x1403C8560, 0x1404FE660};
+	WEAK symbol<void(dvar_t* dvar, DvarSetSource source)> Dvar_Reset{0, 0x1404FCC40};
+	WEAK symbol<void(const char*, const char*, 
+		DvarSetSource)> Dvar_SetFromStringByNameFromSource{0, 0x1404FD490};
+
 	WEAK symbol<dvar_t*(int hash, const char* name, bool value, 
 		unsigned int flags)> Dvar_RegisterBool{0x1403C47E0, 0x1404FA540};
 	WEAK symbol<dvar_t*(int hash, const char* name, int value, int min, int max, 
@@ -202,7 +208,7 @@ namespace game
 	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0x14F05CE50, 0x14FD21180};
 
 	WEAK symbol<int> dvarCount{0x14C217D10, 0x14D064CF4};
-	WEAK symbol<dvar_t*> dvarPool{0x14C217D20, 0x14D064D00};
+	WEAK symbol<dvar_t> dvarPool{0x14C217D20, 0x14D064D00};
 
 	WEAK symbol<void*> DB_XAssetPool{0x140DE8C80, 0x140FEB5D0};
 

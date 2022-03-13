@@ -33,7 +33,7 @@ namespace command
 			}
 		}
 
-		void client_command(const int client_num, void* a2)
+		void client_command(const int client_num)
 		{
 			params_sv params = {};
 
@@ -43,7 +43,7 @@ namespace command
 				handlers_sv[command](client_num, params);
 			}
 
-			client_command_hook.invoke<void>(client_num, a2);
+			client_command_hook.invoke<void>(client_num);
 		}
 
 		// Shamelessly stolen from Quake3
@@ -59,8 +59,8 @@ namespace command
 			static std::string comand_line_buffer = GetCommandLineA();
 			auto* command_line = comand_line_buffer.data();
 
-			auto& com_num_console_lines = *reinterpret_cast<int*>(0x142623FB4); //H1(1.4)
-			auto* com_console_lines = reinterpret_cast<char**>(0x142623FC0); //H1(1.4)
+			auto& com_num_console_lines = *reinterpret_cast<int*>(0x142623FB4);
+			auto* com_console_lines = reinterpret_cast<char**>(0x142623FC0);
 
 			auto inq = false;
 			com_console_lines[0] = command_line;
@@ -247,9 +247,9 @@ namespace command
 	void add(const char* name, const std::function<void()>& callback)
 	{
 		add(name, [callback](const params&)
-			{
-				callback();
-			});
+		{
+			callback();
+		});
 	}
 
 	void add_sv(const char* name, std::function<void(int, const params_sv&)> callback)
@@ -288,7 +288,7 @@ namespace command
 			}
 			else
 			{
-				utils::hook::call(0x1400D728F, &parse_commandline_stub); // MWR TEST
+				utils::hook::call(0x1400D728F, parse_commandline_stub);
 				utils::hook::jump(0x14041D750, dvar_command_stub);
 
 				add_commands_mp();
@@ -301,34 +301,10 @@ namespace command
 		static void add_commands_generic()
 		{
 			add("quit", game::Quit);
-			//add("quit_hard", utils::nt::raise_hard_exception); /* this command delivers you to a windows blue screen, its quit hard from windows xD */
 			add("crash", []()
 			{
 				*reinterpret_cast<int*>(1) = 0;
 			});
-
-			/*add("consoleList", [](const params& params)
-				{
-					const std::string input = params.get(1);
-
-					std::vector<std::string> matches;
-					game_console::find_matches(input, matches, false);
-
-					for (auto& match : matches)
-					{
-						auto* dvar = game::Dvar_FindVar(match.c_str());
-						if (!dvar)
-						{
-							console::info("[CMD]\t %s\n", match.c_str());
-						}
-						else
-						{
-							console::info("[DVAR]\t%s \"%s\"\n", match.c_str(), game::Dvar_ValueToString(dvar, dvar->current, 0));
-						}
-					}
-
-					console::info("Total %i matches\n", matches.size());
-				});*/
 
 			add("commandDump", [](const params& argument)
 			{
@@ -402,7 +378,7 @@ namespace command
 						console::info("%s\n", asset_name);
 					}, true);
 				}
-			});
+			});*/
 
 			add("vstr", [](const params& params)
 			{
@@ -412,12 +388,12 @@ namespace command
 					return;
 				}
 
-				const auto* dvarName = params.get(1);
-				const auto* dvar = game::Dvar_FindVar(dvarName);
+				const auto name = params.get(1);
+				const auto dvar = game::Dvar_FindVar(name);
 
 				if (dvar == nullptr)
 				{
-					console::info("%s doesn't exist\n", dvarName);
+					console::info("%s doesn't exist\n", name);
 					return;
 				}
 
@@ -429,7 +405,7 @@ namespace command
 				}
 
 				execute(dvar->current.string);
-			});*/
+			});
 		}
 
 		static void add_commands_sp()
@@ -444,8 +420,8 @@ namespace command
 				game::sp::g_entities[0].flags ^= 1;
 				game::CG_GameMessage(0, utils::string::va("godmode %s",
 					game::sp::g_entities[0].flags & 1
-					? "^2on"
-					: "^1off"));
+						? "^2on"
+						: "^1off"));
 			});
 
 			add("demigod", []()
@@ -458,8 +434,8 @@ namespace command
 				game::sp::g_entities[0].flags ^= 2;
 				game::CG_GameMessage(0, utils::string::va("demigod mode %s",
 					game::sp::g_entities[0].flags & 2
-					? "^2on"
-					: "^1off"));
+						? "^2on"
+						: "^1off"));
 			});
 
 			add("notarget", []()
@@ -472,8 +448,8 @@ namespace command
 				game::sp::g_entities[0].flags ^= 4;
 				game::CG_GameMessage(0, utils::string::va("notarget %s",
 					game::sp::g_entities[0].flags & 4
-					? "^2on"
-					: "^1off"));
+						? "^2on"
+						: "^1off"));
 			});
 
 			add("noclip", []()
@@ -486,8 +462,8 @@ namespace command
 				game::sp::g_entities[0].client->flags ^= 1;
 				game::CG_GameMessage(0, utils::string::va("noclip %s",
 					game::sp::g_entities[0].client->flags & 1
-					? "^2on"
-					: "^1off"));
+						? "^2on"
+						: "^1off"));
 			});
 
 			add("ufo", []()
@@ -500,16 +476,16 @@ namespace command
 				game::sp::g_entities[0].client->flags ^= 2;
 				game::CG_GameMessage(0, utils::string::va("ufo %s",
 					game::sp::g_entities[0].client->flags & 2
-					? "^2on"
-					: "^1off"));
+						? "^2on"
+						: "^1off"));
 			});
 		}
 
 		static void add_commands_mp()
 		{
-			//client_command_hook.create(0x1402E98F0, &client_command);
+			client_command_hook.create(0x140336000, &client_command);
 
-			/*add_sv("god", [](const int client_num, const params_sv&)
+			add_sv("god", [](const int client_num, const params_sv&)
 			{
 				if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
 				{
@@ -522,8 +498,8 @@ namespace command
 				game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
 					utils::string::va("f \"godmode %s\"",
 					game::mp::g_entities[client_num].flags & 1
-					? "^2on"
-					: "^1off"));
+						? "^2on"
+						: "^1off"));
 			});
 
 			add_sv("demigod", [](const int client_num, const params_sv&)
@@ -594,7 +570,7 @@ namespace command
 					: "^1off"));
 			});
 
-			add_sv("give", [](const int client_num, const params_sv& params)
+			/*add_sv("give", [](const int client_num, const params_sv& params)
 			{
 				if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
 				{

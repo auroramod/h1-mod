@@ -940,7 +940,10 @@ namespace game
 		dvar_value latched;
 		dvar_value reset;
 		dvar_limits domain;
+		char __pad0[0xC];
 	};
+
+	static_assert(sizeof(dvar_t) == 96);
 
 	enum connstate_t
 	{
@@ -1350,10 +1353,10 @@ namespace game
 
 		struct gclient_s
 		{
-			char __pad0[20708];
-			char name[32]; // 20708
-			char __pad1[668];
-			int flags; // 21408
+			char __pad0[18720];
+			char name[32]; // 18720
+			char __pad1[752];
+			int flags; // 19504 
 		}; // size = ?
 
 		struct EntityState

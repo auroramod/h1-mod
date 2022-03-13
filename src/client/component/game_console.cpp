@@ -302,7 +302,11 @@ namespace game_console
 						color_white, 0);
 
 					const auto offset_y = height + 3.f;
-					draw_hint_box(1, dvars::con_inputHintBoxColor->current.vector, 0, offset_y);
+					const auto line_count_ = dvar->type == game::dvar_type::enumeration
+						? dvar->domain.enumeration.stringCount + 1
+						: 1;
+
+					draw_hint_box(line_count_, dvars::con_inputHintBoxColor->current.vector, 0, offset_y);
 					draw_hint_text(0, dvars::dvar_get_domain(dvar->type, dvar->domain).data(),
 						dvars::con_inputCmdMatchColor->current.vector, 0, offset_y);
 				}
