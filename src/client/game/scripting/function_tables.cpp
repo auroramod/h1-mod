@@ -1088,7 +1088,7 @@ namespace scripting
 		{"_meth_812f", 0x812F}, // SP 0x140267650 MP 0x14032B720
 		{"_meth_8130", 0x8130}, // SP 0x140262E20 MP 0x14032F570
 		{"_meth_8131", 0x8131}, // SP 0x1402684C0 MP 0x000000000
-		{"_meth_8132", 0x8132}, // SP 0x140261580 MP 0x14032CD50
+		{"isplanting", 0x8132}, // SP 0x140261580 MP 0x14032CD50
 		{"_meth_8133", 0x8133}, // SP 0x140261670 MP 0x14032CF00
 		{"_meth_8134", 0x8134}, // SP 0x140268530 MP 0x000000000
 		{"setconvergencetime", 0x8135}, // SP 0x140295E90 MP 0x140360A40
@@ -1218,9 +1218,9 @@ namespace scripting
 		{"_meth_81b1", 0x81B1}, // SP 0x1402A15D0 MP 0x14036ADA0
 		{"_meth_81b2", 0x81B2}, // SP 0x1402A15D0 MP 0x14036AE60
 		{"viewkick", 0x81B3}, // SP 0x1402A1640 MP 0x14036AFA0
-		{"_meth_81b4", 0x81B4}, // SP 0x14029B1E0 MP 0x1403668B0
+		{"localtoworldcoords", 0x81B4}, // SP 0x14029B1E0 MP 0x1403668B0
 		{"getentitynumber", 0x81B5}, // SP 0x1402998B0 MP 0x140364980
-		{"autoboltmissileeffects", 0x81B6}, // SP 0x140299AA0 MP 0x140364B50
+		{"getentityvelocity", 0x81B6}, // SP 0x140299AA0 MP 0x140364B50
 		{"enablegrenadetouchdamage", 0x81B7}, // SP 0x140299CA0 MP 0x140364F40
 		{"disablegrenadetouchdamage", 0x81B8}, // SP 0x140299F20 MP 0x1403650C0
 		{"_meth_81b9", 0x81B9}, // SP 0x14029AF00 MP 0x1403665A0
@@ -1255,8 +1255,8 @@ namespace scripting
 		{"_meth_81d6", 0x81D6}, // SP 0x140247930 MP 0x000000000
 		{"_meth_81d7", 0x81D7}, // SP 0x14029B180 MP 0x140366790
 		{"entityradiusdamage", 0x81D8}, // SP 0x1402A3840 MP 0x14036C130
-		{"_meth_81d9", 0x81D9}, // SP 0x14028DCF0 MP 0x14036CAB0
-		{"bddatachunk::deserialize", 0x81DA}, // SP 0x14028E350 MP 0x14036D0C0
+		{"detonate", 0x81D9}, // SP 0x14028DCF0 MP 0x14036CAB0
+		{"damageconetrace", 0x81DA}, // SP 0x14028E350 MP 0x14036D0C0 
 		{"_meth_81db", 0x81DB}, // SP 0x14028E430 MP 0x14036D150
 		{"_meth_81dc", 0x81DC}, // SP 0x14029A340 MP 0x140365D80
 		{"_meth_81dd", 0x81DD}, // SP 0x14029A4E0 MP 0x140365E90
@@ -1475,9 +1475,9 @@ namespace scripting
 		{"_meth_82b2", 0x82B2}, // SP 0x1402B3460 MP 0x14037F060
 		{"rotateyaw", 0x82B3}, // SP 0x1402B3470 MP 0x14037F070
 		{"_meth_82b4", 0x82B4}, // SP 0x1402B3490 MP 0x14037F090 // looks similar to moveto/rotateto, wtf
-		{"_meth_82b5", 0x82B5}, // SP 0x1402B3410 MP 0x14037F010
-		{"_meth_82b6", 0x82B6}, // SP 0x1402B3430 MP 0x14037F030
-		{"_meth_82b7", 0x82B7}, // SP 0x1402B3450 MP 0x14037F050
+		{"addpitch", 0x82B5}, // SP 0x1402B3410 MP 0x14037F010
+		{"addyaw", 0x82B6}, // SP 0x1402B3430 MP 0x14037F030
+		{"addoll", 0x82B7}, // SP 0x1402B3450 MP 0x14037F050
 		{"_meth_82b8", 0x82B8}, // SP 0x1402B34B0 MP 0x14037F0B0
 		{"rotatevelocity", 0x82B9}, // SP 0x1402B3700 MP 0x14037F3C0
 		{"solid", 0x82BA}, // SP 0x1402B45E0 MP 0x1403808A0
@@ -1515,7 +1515,7 @@ namespace scripting
 		{"getbuildnumber", 0x82DA}, // SP 0x1402663A0 MP 0x14032A910
 		{"_meth_82db", 0x82DB}, // SP 0x140266AF0 MP 0x14032AE90
 		{"_meth_82dc", 0x82DC}, // SP 0x140266CD0 MP 0x14032B120
-		{"_meth_82dd", 0x82DD}, // SP 0x140266FE0 MP 0x14032B500
+		{"ismantling", 0x82DD}, // SP 0x140266FE0 MP 0x14032B500
 		{"playfx", 0x82DE}, // SP 0x140267330 MP 0x14032B9F0
 		{"playerrecoilscaleon", 0x82DF}, // SP 0x140267530 MP 0x14032BD00
 		{"player_recoilscaleoff", 0x82E0}, // SP 0x140267600 MP 0x14032BDD0
@@ -1606,8 +1606,8 @@ namespace scripting
 		{"setorigin", 0x8335}, // SP 0x1402677C0 MP 0x14032B8D0
 		{"getvelocity", 0x8336}, // SP 0x1402604D0 MP 0x14032BC80
 		{"_meth_8337", 0x8337}, // SP 0x140260930 MP 0x14032BE70
-		{"forcemantle", 0x8338}, // SP 0x140260990 MP 0x14032C0D0
-		{"attackbuttonpressed", 0x8339}, // SP 0x140261500 MP 0x14032CE10
+		{"getplayerangles", 0x8338}, // SP 0x140260990 MP 0x14032C0D0
+		{"usebuttonpressed", 0x8339}, // SP 0x140261500 MP 0x14032CE10
 		{"_meth_833a", 0x833A}, // SP 0x1402615F0 MP 0x14032D0B0
 		{"meleebuttonpressed", 0x833B}, // SP 0x1402617D0 MP 0x14032D1B0
 		{"jumpbuttonpressed", 0x833C}, // SP 0x1402618D0 MP 0x14032D450
@@ -1679,7 +1679,7 @@ namespace scripting
 		{"_meth_837e", 0x837E}, // SP 0x000000000 MP 0x1404791D0
 		{"getnodenumber", 0x837F}, // SP 0x000000000 MP 0x14032E760
 		{"setclientowner", 0x8380}, // SP 0x000000000 MP 0x14037AD60
-		{"_meth_8381", 0x8381}, // SP 0x000000000 MP 0x14037A3B0
+		{"setotherent", 0x8381}, // SP 0x000000000 MP 0x14037A3B0
 		{"setaisightlinevisible", 0x8382}, // SP 0x1402A15D0 MP 0x140358460
 		{"setentityowner", 0x8383}, // SP 0x000000000 MP 0x14037A980
 		{"nodeisdisconnected", 0x8384}, // SP 0x000000000 MP 0x14032E920
@@ -1697,7 +1697,7 @@ namespace scripting
 		{"setgoalnode", 0x8390}, // SP 0x000000000 MP 0x140450090
 		{"setgoalentity", 0x8391}, // SP 0x000000000 MP 0x140450000
 		{"setgoalradius", 0x8392}, // SP 0x000000000 MP 0x140450260
-		{"_meth_8393", 0x8393}, // SP 0x000000000 MP 0x14044FEC0
+		{"scragentsetanimscale", 0x8393}, // SP 0x000000000 MP 0x14044FEC0
 		{"setorientmode", 0x8394}, // SP 0x000000000 MP 0x140450540
 		{"setanimmode", 0x8395}, // SP 0x000000000 MP 0x14044FDA0
 		{"setphysicsmode", 0x8396}, // SP 0x000000000 MP 0x140450780
@@ -1758,7 +1758,7 @@ namespace scripting
 		{"_meth_83cd", 0x83CD}, // SP 0x14024B7A0 MP 0x000000000
 		{"setanimclass", 0x83CE}, // SP 0x000000000 MP 0x1400781E0
 		{"enableanimstate", 0x83CF}, // SP 0x000000000 MP 0x140077CB0
-		{"_meth_83d0", 0x83D0}, // SP 0x000000000 MP 0x140078250
+		{"setanimstate", 0x83D0}, // SP 0x000000000 MP 0x140078250
 		{"getanimentry", 0x83D1}, // SP 0x000000000 MP 0x140077DF0
 		{"getanimentryname", 0x83D2}, // SP 0x000000000 MP 0x140077FA0
 		{"getanimentryalias", 0x83D3}, // SP 0x000000000 MP 0x140077E80
@@ -1774,10 +1774,10 @@ namespace scripting
 		{"rotateto", 0x83DD}, // SP 0x1402B3200 MP 0x14037EF90
 		{"getlookaheaddir", 0x83DE}, // SP 0x000000000 MP 0x14044F710
 		{"getpathgoalpos", 0x83DF}, // SP 0x000000000 MP 0x14044FAD0
-		{"_meth_83e0", 0x83E0}, // SP 0x1402A15D0 MP 0x14036E1F0
+		{"setrocketcorpse", 0x83E0}, // SP 0x1402A15D0 MP 0x14036E1F0
 		{"setcorpsefalling", 0x83E1}, // SP 0x000000000 MP 0x140374840
 		{"setsurfacetype", 0x83E2}, // SP 0x14029FD00 MP 0x140358090
-		{"_meth_83e3", 0x83E3}, // SP 0x1402A0C60 MP 0x140369520
+		{"aIiphysicstrace", 0x83E3}, // SP 0x1402A0C60 MP 0x140369520
 		{"_meth_83e4", 0x83E4}, // SP 0x1402A20D0 MP 0x140369FE0
 		{"_meth_83e5", 0x83E5}, // SP 0x1405D92F0 MP 0x14033B020
 		{"_meth_83e6", 0x83E6}, // SP 0x1402A7B00 MP 0x000000000
@@ -1872,7 +1872,7 @@ namespace scripting
 		{"_meth_843f", 0x843F}, // SP 0x1405D92F0 MP 0x14032D4E0
 		{"_meth_8440", 0x8440}, // SP 0x1404639C0 MP 0x140562210
 		{"_meth_8441", 0x8441}, // SP 0x140462EA0 MP 0x1405616E0
-		{"_meth_8442", 0x8442}, // SP 0x1402A36A0 MP 0x140358B60
+		{"linkto", 0x8442}, // SP 0x1402A36A0 MP 0x140358B60
 		{"_meth_8443", 0x8443}, // SP 0x140266090 MP 0x14032A550
 		{"_meth_8444", 0x8444}, // SP 0x1402A8A40 MP 0x000000000
 		{"_meth_8445", 0x8445}, // SP 0x1402A8A80 MP 0x000000000
