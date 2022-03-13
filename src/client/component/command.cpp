@@ -277,6 +277,15 @@ namespace command
 		}
 	}
 
+	void enum_assets(const game::XAssetType type, const std::function<void(game::XAssetHeader)>& callback, const bool includeOverride)
+	{
+		game::DB_EnumXAssets_Internal(type, static_cast<void(*)(game::XAssetHeader, void*)>([](game::XAssetHeader header, void* data)
+		{
+			const auto& cb = *static_cast<const std::function<void(game::XAssetHeader)>*>(data);
+			cb(header);
+		}), &callback, includeOverride);
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -339,7 +348,7 @@ namespace command
 				console::info("================================ END COMMAND DUMP =================================\n");
 			});
 
-			/*add("listassetpool", [](const params& params)
+			add("listassetpool", [](const params& params)
 			{
 				if (params.size() < 2)
 				{
@@ -378,7 +387,7 @@ namespace command
 						console::info("%s\n", asset_name);
 					}, true);
 				}
-			});*/
+			});
 
 			add("vstr", [](const params& params)
 			{
@@ -570,7 +579,7 @@ namespace command
 					: "^1off"));
 			});
 
-			/*add_sv("give", [](const int client_num, const params_sv& params)
+			add_sv("give", [](const int client_num, const params_sv& params)
 			{
 				if (!game::Dvar_FindVar("sv_cheats")->current.enabled)
 				{
@@ -620,7 +629,7 @@ namespace command
 				{
 					game::G_TakePlayerWeapon(ps, wp);
 				}
-			});*/
+			});
 		}
 	};
 }
