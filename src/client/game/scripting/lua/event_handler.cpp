@@ -31,7 +31,6 @@ namespace scripting::lua
 			this->merge_callbacks();
 			this->handle_endon_conditions(event);
 
-			auto size = tasks.size();
 			for (auto i = 0; i < tasks.size();)
 			{
 				const auto task = tasks[i];
