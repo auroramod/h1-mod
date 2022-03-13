@@ -62,11 +62,13 @@ namespace bots
 			{
 				spawn_bot(bot_ent->s.entityNum);
 			}
-			// can cause a stack overflow
-			// else if (can_add()) // workaround since first bot won't ever spawn
-			// {
-			//	add_bot();
-			// }
+			else
+			{
+				scheduler::once([]()
+				{
+					add_bot();
+				}, scheduler::pipeline::server, 100ms);
+			}
 		}
 	}
 
