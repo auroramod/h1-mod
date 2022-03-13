@@ -23,11 +23,11 @@ namespace scripting::lua
 	{
 		auto deleter = [&](task_list& tasks)
 		{
-			for(auto& task : tasks)
+			for (auto& task : tasks)
 			{
-				for(auto& condition : task.endon_conditions)
+				for (auto& condition : task.endon_conditions)
 				{
-					if(condition.first == event.entity && condition.second == event.name)
+					if (condition.first == event.entity && condition.second == event.name)
 					{
 						task.is_deleted = true;
 						break;
@@ -122,9 +122,9 @@ namespace scripting::lua
 	{
 		auto merger = [&](task_list& tasks)
 		{
-			for(auto& task : tasks)
+			for (auto& task : tasks)
 			{
-				if(task.id == handle.id)
+				if (task.id == handle.id)
 				{
 					task.endon_conditions.emplace_back(entity, event);
 				}

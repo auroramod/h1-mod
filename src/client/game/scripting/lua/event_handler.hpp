@@ -43,7 +43,7 @@ namespace scripting::lua
 		sol::state& state_;
 		std::atomic_int64_t current_listener_id_ = 0;
 
-		using task_list = std::list<event_listener>;
+		using task_list = std::vector<event_listener>;
 		utils::concurrency::container<task_list> new_callbacks_;
 		utils::concurrency::container<task_list, std::recursive_mutex> callbacks_;
 

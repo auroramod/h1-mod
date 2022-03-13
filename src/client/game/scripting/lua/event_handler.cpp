@@ -31,28 +31,30 @@ namespace scripting::lua
 			this->merge_callbacks();
 			this->handle_endon_conditions(event);
 
-			for (auto i = tasks.begin(); i != tasks.end();)
+			auto size = tasks.size();
+			for (auto i = 0; i < tasks.size();)
 			{
-				if (i->event != event.name || i->entity != event.entity)
+				const auto task = tasks[i];
+				if (task.event != event.name || task.entity != event.entity)
 				{
 					++i;
 					continue;
 				}
 
-				if (!i->is_deleted)
+				if (!task.is_deleted)
 				{
-					if(!has_built_arguments)
+					if (!has_built_arguments)
 					{
 						has_built_arguments = true;
 						arguments = this->build_arguments(event);
 					}
 					
-					handle_error(i->callback(sol::as_args(arguments)));
+					handle_error(task.callback(sol::as_args(arguments)));
 				}
 
-				if (i->is_volatile || i->is_deleted)
+				if (task.is_volatile || task.is_deleted)
 				{
-					i = tasks.erase(i);
+					tasks.erase(tasks.begin() + i);
 				}
 				else
 				{
@@ -144,11 +146,11 @@ namespace scripting::lua
 	{
 		auto deleter = [&](task_list& tasks)
 		{
-			for(auto& task : tasks)
+			for (auto& task : tasks)
 			{
-				for(auto& condition : task.endon_conditions)
+				for (auto& condition : task.endon_conditions)
 				{
-					if(condition.first == event.entity && condition.second == event.name)
+					if (condition.first == event.entity && condition.second == event.name)
 					{
 						task.is_deleted = true;
 						break;
