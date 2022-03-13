@@ -97,4 +97,6 @@ namespace utils::string
 	std::wstring convert(const std::string& str);
 
 	std::string replace(std::string str, const std::string& from, const std::string& to);
+
+	bool match_compare(const std::string& input, const std::string& text, const bool exact);
 }
