@@ -1406,10 +1406,10 @@ namespace game
 			LiveClientDropType liveDropRequest; //269572
 			char __pad4[24];
 			TestClientType testClient; // 269600
-			char __pad5[129600];
-		}; // size = 661304
+			char __pad5[347912];
+		}; // size = 879616
 
-		static_assert(sizeof(client_t) == 661304);
+		static_assert(sizeof(client_t) == 879616);
 	}
 
 	namespace sp
