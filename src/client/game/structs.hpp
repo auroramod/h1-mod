@@ -1101,10 +1101,90 @@ namespace game
 		int forceTechType;
 	};
 
+	struct GfxImage;
+
+	union MaterialTextureDefInfo
+	{
+		GfxImage* image;
+		void* water;
+	};
+
+	struct MaterialTextureDef
+	{
+		unsigned int nameHash;
+		char nameStart;
+		char nameEnd;
+		char samplerState;
+		char semantic;
+		MaterialTextureDefInfo u;
+		char pad[1000];
+	};
+
+	struct MaterialPass
+	{
+		void* vertexShader;
+		void* vertexDecl;
+		void* hullShader;
+		void* domainShader;
+		void* pixelShader;
+		char pixelOutputMask;
+		char perPrimArgCount;
+		char perObjArgCount;
+		char stableArgCount;
+		unsigned __int16 perPrimArgSize;
+		unsigned __int16 perObjArgSize;
+		unsigned __int16 stableArgSize;
+		char zone;
+		char perPrimConstantBuffer;
+		char perObjConstantBuffer;
+		char stableConstantBuffer;
+		unsigned int customBufferFlags;
+		char customSamplerFlags;
+		char precompiledIndex;
+		char stageConfig;
+		void* args;
+	};
+
+	struct MaterialTechnique
+	{
+		const char* name;
+		unsigned __int16 flags;
+		unsigned __int16 passCount;
+		MaterialPass passArray[1];
+	};
+
+	struct MaterialTechniqueSet
+	{
+		const char* name;
+		unsigned __int16 flags;
+		char worldVertFormat;
+		char preDisplacementOnlyCount;
+		MaterialTechnique* techniques[309];
+	};
+
+	struct GfxStateBits
+	{
+		unsigned int loadBits[3];
+		char zone;
+		char depthStencilState[11];
+		char blendState;
+		char rasterizerState;
+	};
+
 	struct Material
 	{
 		const char* name;
+		char __pad0[0x118];
+		char textureCount;
+		char __pad1[7];
+		MaterialTechniqueSet* techniqueSet;
+		MaterialTextureDef* textureTable;
+		void* constantTable;
+		GfxStateBits* stateBitsTable;
+		char __pad2[0x108];
 	};
+
+	static_assert(sizeof(Material) == 0x250);
 
 	struct Glyph
 	{
@@ -1251,7 +1331,6 @@ namespace game
 		ID3D11Texture2D* cubemap;
 		GfxImageLoadDef* loadDef;
 	};
-
 
 	struct GfxTexture
 	{
