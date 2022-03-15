@@ -1117,7 +1117,6 @@ namespace game
 		char samplerState;
 		char semantic;
 		MaterialTextureDefInfo u;
-		char pad[1000];
 	};
 
 	struct MaterialPass
