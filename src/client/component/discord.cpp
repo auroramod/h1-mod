@@ -9,6 +9,7 @@
 #include "party.hpp"
 
 #include <utils/string.hpp>
+#include <utils/cryptography.hpp>
 
 #include <discord_rpc.h>
 
@@ -37,6 +38,12 @@ namespace discord
 				discord_presence.partyMax = 0;
 				discord_presence.startTimestamp = 0;
 				discord_presence.largeImageKey = game::environment::is_sp() ? "menu_singleplayer" : "menu_multiplayer";
+			
+				// set to blank when in lobby
+				discord_presence.matchSecret = "";
+				discord_presence.joinSecret = "";
+				discord_presence.partyId = "";
+				discord_presence.state = "";
 			}
 			else
 			{
@@ -59,6 +66,22 @@ namespace discord
 					{
 						strcpy_s(clean_hostname, "Private Match");
 						max_clients = game::Dvar_FindVar("sv_maxclients")->current.integer;
+						discord_presence.partyPrivacy = DISCORD_PARTY_PRIVATE;
+					}
+					else
+					{
+						discord_presence.partyPrivacy = DISCORD_PARTY_PUBLIC;
+
+						// TODO: we need to make this a random string that represents the session ID
+						// const auto sessionId = party::get_state_challenge();
+						discord_presence.partyId = "PLACEHOLDER";
+
+						const auto server_net_info = party::get_state_host();
+						const auto server_ip_port = utils::string::va("%i.%i.%i.%i:%i",
+							server_net_info.ip[0], server_net_info.ip[1], server_net_info.ip[2], server_net_info.ip[3],
+							ntohs(server_net_info.port));
+
+						discord_presence.joinSecret = server_ip_port;
 					}
 
 					discord_presence.partySize = *reinterpret_cast<int*>(0x1429864C4);
@@ -99,9 +122,9 @@ namespace discord
 			handlers.ready = ready;
 			handlers.errored = errored;
 			handlers.disconnected = errored;
-			handlers.joinGame = nullptr;
+			handlers.joinGame = joinGame;
 			handlers.spectateGame = nullptr;
-			handlers.joinRequest = nullptr;
+			handlers.joinRequest = joinRequest;
 
 			Discord_Initialize("947125042930667530", &handlers, 1, nullptr);
 
@@ -127,13 +150,13 @@ namespace discord
 	private:
 		bool initialized_ = false;
 
-		static void ready(const DiscordUser* /*request*/)
+		static void ready(const DiscordUser* request)
 		{
 			ZeroMemory(&discord_presence, sizeof(discord_presence));
 
 			discord_presence.instance = 1;
 
-			console::info("Discord: Ready\n");
+			console::info("Discord: Ready on %s (%s)\n", request->username, request->userId);
 
 			Discord_UpdatePresence(&discord_presence);
 		}
@@ -141,6 +164,27 @@ namespace discord
 		static void errored(const int error_code, const char* message)
 		{
 			console::error("Discord: Error (%i): %s\n", error_code, message);
+		}
+
+		static void joinGame(const char* joinSecret)
+		{
+			console::info("Discord: Join game called with join secret: %s\n", joinSecret);
+
+			scheduler::once([joinSecret]()
+			{
+				game::netadr_s target{};
+				if (game::NET_StringToAdr(joinSecret, &target))
+				{
+					console::info("Discord: Connecting to server: %s\n", joinSecret);
+					party::connect(target);
+				}
+			}, scheduler::pipeline::main);
+		}
+
+		static void joinRequest(const DiscordUser* request)
+		{
+			console::info("Discord: joinRequest from %s (%s)\n", request->username, request->userId);
+			// Discord_Respond(request->userId, DISCORD_REPLY_YES);
 		}
 	};
 }

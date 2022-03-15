@@ -234,6 +234,16 @@ namespace party
 		network::send(target, "getInfo", connect_state.challenge);
 	}
 
+	game::netadr_s get_state_host()
+	{
+		return connect_state.host;
+	}
+
+	std::string get_state_challenge()
+	{
+		return connect_state.challenge;
+	}
+
 	void start_map(const std::string& mapname)
 	{
 		if (game::Live_SyncOnlineDataFlags(0) > 32)

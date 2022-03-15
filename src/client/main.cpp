@@ -146,6 +146,16 @@ void limit_parallel_dll_loading()
 	RegCloseKey(key);
 }
 
+// solution for other processes that may launch the mod
+void apply_proper_directory()
+{
+	char module_path[MAX_PATH];
+	GetModuleFileNameA(nullptr, module_path, MAX_PATH);
+	PathRemoveFileSpecA(module_path);
+	SetCurrentDirectoryA(module_path);
+	SetDllDirectoryA(module_path);
+}
+
 int main()
 {
 	FARPROC entry_point;
@@ -169,6 +179,7 @@ int main()
 
 		try
 		{
+			apply_proper_directory();
 			remove_crash_file();
 
 			if (!component_loader::post_start()) return 0;
