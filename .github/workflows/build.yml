@@ -26,7 +26,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: idk
+      - name: Set up git config
         run: git config --global url."https://".insteadOf git://
 
       - name: Check out files
