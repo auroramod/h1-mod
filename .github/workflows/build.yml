@@ -26,10 +26,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: idk
+        run: git config --global url."https://".insteadOf git://
+
       - name: Check out files
         uses: actions/checkout@v3
-        run: |
-          git config --global url."https://".insteadOf git://
         with:
           submodules: true
           fetch-depth: 0
