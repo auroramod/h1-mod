@@ -97,6 +97,11 @@ namespace materials
 
 		game::Material* try_load_material(const std::string& name)
 		{
+			if (name == "white")
+			{
+				return nullptr;
+			}
+
 			try
 			{
 				return load_material(name);
