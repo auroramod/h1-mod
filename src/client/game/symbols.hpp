@@ -121,6 +121,9 @@ namespace game
 #define R_AddCmdDrawTextWithCursor(TXT, MC, F, UNK, X, Y, XS, YS, R, C, S, CP, CC) \
 	H1_AddBaseDrawTextCmd(TXT, MC, F, game::R_GetFontHeight(F), X, Y, XS, YS, R, C, S, CP, CC, game::R_DrawSomething(S))
 
+	WEAK symbol<char* (GfxImage* image, uint32_t width, uint32_t height, uint32_t depth, uint32_t mipCount,
+		uint32_t imageFlags, DXGI_FORMAT imageFormat, const char* name, const D3D11_SUBRESOURCE_DATA* initData)> Image_Setup{0x1404D7D50, 0x1405DCF90};
+
 	WEAK symbol<unsigned int(unsigned int localId, const char* pos, 
 		unsigned int paramcount)> VM_Execute{0x140376360, 0x140444350};
 
@@ -138,7 +141,7 @@ namespace game
 
 	WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)>
 	DB_EnumXAssets_Internal{0x1401C9C10, 0x1402BA830};
-	WEAK symbol<const char* (const XAsset* asset)> DB_GetXAssetName{0x14019A390, 0x14028BE50};
+	WEAK symbol<const char*(const XAsset* asset)> DB_GetXAssetName{0x14019A390, 0x14028BE50};
 	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x14019A3B0, 0x14028BE70};
 
 	WEAK symbol<void(int clientNum, const char* menu, 
