@@ -28,3 +28,19 @@
 [submodule "deps/stb"]
 	path = deps/stb
 	url = https://github.com/nothings/stb.git
+[submodule "deps/libtomcrypt"]
+	path = deps/libtomcrypt
+	url = https://github.com/libtom/libtomcrypt.git
+	branch = develop
+[submodule "deps/libtommath"]
+	path = deps/libtommath
+	url = https://github.com/libtom/libtommath.git
+	branch = develop
+[submodule "deps/protobuf"]
+	path = deps/protobuf
+	url = https://github.com/protocolbuffers/protobuf.git
+	branch = 3.17.x
+[submodule "deps/zlib"]
+	path = deps/zlib
+	url = https://github.com/madler/zlib.git
+	branch = develop
