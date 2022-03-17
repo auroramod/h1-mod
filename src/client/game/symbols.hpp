@@ -143,6 +143,8 @@ namespace game
 	DB_EnumXAssets_Internal{0x1401C9C10, 0x1402BA830};
 	WEAK symbol<const char*(const XAsset* asset)> DB_GetXAssetName{0x14019A390, 0x14028BE50};
 	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x14019A3B0, 0x14028BE70};
+	WEAK symbol<XAssetHeader(XAssetType type, const char* name, 
+		int createDefault)> DB_FindXAssetHeader{0x1401CA150, 0x1402BAC70};
 
 	WEAK symbol<void(int clientNum, const char* menu, 
 		int a3, int a4, unsigned int a5)> LUI_OpenMenu{0x14039D5F0, 0x1404CD210};

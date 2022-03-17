@@ -1316,6 +1316,14 @@ namespace game
 		const char* buffer;
 	};
 
+	struct TTF
+	{
+		const char* name;
+		int len;
+		const char* buffer;
+		int fontFace;
+	};
+
 	struct GfxImageLoadDef
 	{
 		char levelCount;
@@ -1387,6 +1395,7 @@ namespace game
 		StringTable* stringTable;
 		LuaFile* luaFile;
 		GfxImage* image;
+		TTF* ttf;
 	};
 
 	struct XAsset
