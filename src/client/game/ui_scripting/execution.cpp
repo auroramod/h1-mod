@@ -37,6 +37,45 @@ namespace ui_scripting
 		return values;
 	}
 
+	bool notify(const std::string& name, const event_arguments& arguments)
+	{
+		const auto state = *game::hks::lua_state;
+		if (!game::LUI_BeginEvent(0, name.data(), state))
+		{
+			return false;
+		}
+		
+		const auto _1 = gsl::finally(&disable_error_hook);
+		enable_error_hook();
+
+		const auto top = state->m_apistack.top;
+		try
+		{
+			const auto event = get_return_value(0).as<table>();
+
+			for (const auto& arg : arguments)
+			{
+				event.set(arg.first, arg.second);
+			}
+		}
+		catch (...)
+		{
+		}
+
+		state->m_apistack.top = top;
+
+		try
+		{
+			game::LUI_EndEvent(state);
+		}
+		catch (const std::exception& e)
+		{
+			throw std::runtime_error(std::string("Error while processing event: ") + e.what());
+		}
+
+		return true;
+	}
+
 	arguments call_script_function(const function& function, const arguments& arguments)
 	{
 		const auto state = *game::hks::lua_state;

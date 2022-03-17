@@ -146,6 +146,8 @@ namespace game
 
 	WEAK symbol<void(int clientNum, const char* menu, 
 		int a3, int a4, unsigned int a5)> LUI_OpenMenu{0x14039D5F0, 0x1404CD210};
+	WEAK symbol<bool(int clientNum, const char* name, hks::lua_State* s)> LUI_BeginEvent{0x1400D27F0, 0x140161A00};
+	WEAK symbol<void(hks::lua_State* s)> LUI_EndEvent{0x1400D3A80, 0x140162CD0};
 
 	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0x1404709C0, 0x1404C7320};
 

@@ -53,4 +53,5 @@ namespace ui_scripting
 	};
 
 	using arguments = std::vector<script_value>;
+	using event_arguments = std::unordered_map<std::string, script_value>;
 }
