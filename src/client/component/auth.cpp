@@ -42,7 +42,7 @@ namespace auth
 
 		std::string get_protected_data()
 		{
-			std::string input = "X-Labs-H1Mod-Auth";
+			std::string input = "X-Labs-H1STEAM-Auth";
 
 			DATA_BLOB data_in{}, data_out{};
 			data_in.pbData = reinterpret_cast<uint8_t*>(input.data());
@@ -177,21 +177,20 @@ namespace auth
 			game::SV_DirectConnect(from);
 		}
 
-		// CAN'T FIND
 		//void* get_direct_connect_stub()
 		//{
 		//	return utils::hook::assemble([](utils::hook::assembler& a)
-		//	{
-		//		a.lea(rcx, qword_ptr(rsp, 0x20));
-		//		a.movaps(xmmword_ptr(rsp, 0x20), xmm0);
+		//		{
+		//			a.lea(rcx, qword_ptr(rsp, 0x20));
+		//			a.movaps(xmmword_ptr(rsp, 0x20), xmm0);
 
-		//		a.pushad64();
-		//		a.mov(rdx, rsi);
-		//		a.call_aligned(direct_connect);
-		//		a.popad64();
+		//			a.pushad64();
+		//			a.mov(rdx, rsi);
+		//			a.call_aligned(direct_connect);
+		//			a.popad64();
 
-		//		a.jmp(0x140488CE2); // H1MP64(1.4)
-		//	});
+		//			a.jmp(0x140488CE2); // H1MP64(1.4)
+		//		});
 		//}
 	}
 
@@ -225,8 +224,8 @@ namespace auth
 				utils::hook::jump(0x1D7542_b, 0x1D7587_b); // STEAM MAYBE `1401D7553` ON FIRST
 				utils::hook::jump(0x1D7A82_b, 0x1D7AC8_b); // STEAM
 
-				//utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true); // H1(1.4) can't find
-				utils::hook::call(0x12D437_b, send_connect_data_stub); // H1(1.4)
+				//utils::hook::jump(0x1401CAE70, get_direct_connect_stub(), true); // STEAM
+				utils::hook::call(0x12D437_b, send_connect_data_stub); // STEAM
 
 				// Skip checks for sending connect packet
 				utils::hook::jump(0x1402508FC, 0x140250946);

@@ -1,6 +1,7 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 #include "game_module.hpp"
+#include "game/game.hpp"
 
 #include <utils/hook.hpp>
 
@@ -90,7 +91,7 @@ namespace game_module
 
 	utils::nt::library get_game_module()
 	{
-		static utils::nt::library game{HMODULE(0x140000000)};
+		static utils::nt::library game{HMODULE(game::base_address)};
 		return game;
 	}
 
