@@ -1175,7 +1175,12 @@ namespace game
 		const char* name;
 		char __pad0[0x118];
 		char textureCount;
-		char __pad1[7];
+		char constantCount;
+		char stateBitsCount;
+		char stateFlags;
+		char cameraRegion;
+		char materialType;
+		char assetFlags;
 		MaterialTechniqueSet* techniqueSet;
 		MaterialTextureDef* textureTable;
 		void* constantTable;
