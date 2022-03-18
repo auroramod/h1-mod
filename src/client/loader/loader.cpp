@@ -31,7 +31,7 @@ FARPROC loader::load(const utils::nt::library& library, const std::string& buffe
 	return FARPROC(library.get_ptr() + source.get_relative_entry_point());
 }
 
-FARPROC loader::load_library(const std::string& filename, uint64_t* base_address) const
+FARPROC loader::load_library(const std::string& filename) const
 {
 	const auto target = utils::nt::library::load(filename);
 	if (!target)
@@ -40,7 +40,10 @@ FARPROC loader::load_library(const std::string& filename, uint64_t* base_address
 	}
 
 	const auto base = size_t(target.get_ptr());
-	*base_address = base;
+	if(base != 0x140000000)
+	{
+		throw std::runtime_error{utils::string::va("Binary was mapped at 0x%llX (instead of 0x%llX). Something is severely broken :(", base, 0x140000000)};
+	}
 
 	this->load_imports(target, target);
 	this->load_tls(target, target);

@@ -180,9 +180,9 @@ namespace scheduler
 
 		void post_unpack() override
 		{
-			r_end_frame_hook.create(SELECT_VALUE(0, 0x6A6300_b), scheduler::r_end_frame_stub);
-			g_run_frame_hook.create(SELECT_VALUE(0, 0x417940_b), scheduler::server_frame_stub);
-			main_frame_hook.create(SELECT_VALUE(0, 0x1400D8310), scheduler::main_frame_stub); // I REPEAT, ARXAN IS PAIN
+			r_end_frame_hook.create(SELECT_VALUE(0, 0x6A6300_b), scheduler::r_end_frame_stub); // H1-STEAM(1.15)
+			g_run_frame_hook.create(SELECT_VALUE(0, 0x417940_b), scheduler::server_frame_stub); // H1(1.15)
+			//main_frame_hook.create(SELECT_VALUE(0x1401CE8D0, 0x1400D8310), scheduler::main_frame_stub); can't find
 		}
 
 		void pre_destroy() override
