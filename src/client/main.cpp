@@ -50,6 +50,10 @@ launcher::mode detect_mode_from_arguments()
 	return launcher::mode::none;
 }
 
+int returning()
+{
+	return 1;
+}
 
 FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 {
@@ -73,6 +77,11 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 		else if (function == "GetProcAddress")
 		{
 			return get_proc_address;
+		}
+
+		if (function == "LoadStringA" || function == "LoadStringW")
+		{
+			return returning;
 		}
 
 		return component_loader::load_import(library, function);
@@ -162,12 +171,12 @@ int main()
 	{
 		auto premature_shutdown = true;
 		const auto _ = gsl::finally([&premature_shutdown]()
+		{
+			if (premature_shutdown)
 			{
-				if (premature_shutdown)
-				{
-					component_loader::pre_destroy();
-				}
-			});
+				component_loader::pre_destroy();
+			}
+		});
 
 		try
 		{

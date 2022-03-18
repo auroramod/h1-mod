@@ -47,6 +47,8 @@ namespace arxan
 				{
 					*static_cast<ULONG*>(info) = 1;
 				}
+
+				//https://docs.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntqueryinformationprocess
 			}
 
 			return status;
@@ -113,11 +115,6 @@ namespace arxan
 		}
 	}
 
-	int just_return()
-	{
-		return 1;
-	}
-
 	class component final : public component_interface
 	{
 	public:
@@ -126,11 +123,6 @@ namespace arxan
 			if (function == "SetThreadContext")
 			{
 				//return set_thread_context_stub;
-			}
-
-			if (function == "LoadStringA" || function == "LoadStringW")
-			{
-				return just_return;
 			}
 
 			return nullptr;
@@ -145,7 +137,7 @@ namespace arxan
 			nt_close_hook.create(ntdll.get_proc<void*>("NtClose"), nt_close_stub);
 			nt_query_information_process_hook.create(ntdll.get_proc<void*>("NtQueryInformationProcess"),
 				nt_query_information_process_stub);
-
+			// https://www.geoffchappell.com/studies/windows/win32/ntdll/api/index.htm
 			AddVectoredExceptionHandler(1, exception_filter);
 		}
 
@@ -155,8 +147,12 @@ namespace arxan
 			if (game::environment::is_sp()) return;
 
 			// some of arxan crashes
-			utils::hook::nop(0x14CDEFCAA, 6);
-			utils::hook::call(0x1405BCAD1, &just_return);
+            utils::hook::nop(0xCDEFCAA_b, 6);
+            utils::hook::nop(0x930FCAA_b, 6);
+            utils::hook::nop(0x867B66_b, 4);
+            utils::hook::nop(0x81F0C0_b, 6);
+            utils::hook::nop(0x5813609_b, 6);
+            utils::hook::nop(0x8DD678_b, 0xEB);
 		}
 	};
 }
