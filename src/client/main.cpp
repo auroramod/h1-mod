@@ -51,7 +51,7 @@ launcher::mode detect_mode_from_arguments()
 }
 
 
-FARPROC load_binary(const launcher::mode mode)
+FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 {
 	loader loader;
 	utils::nt::library self;
@@ -97,11 +97,11 @@ FARPROC load_binary(const launcher::mode mode)
 	if (!utils::io::read_file(binary, &data))
 	{
 		throw std::runtime_error(utils::string::va(
-			"Failed to read game binary (%s)!\nPlease copy the h1-mod.exe into your Call of Duty: Modern Warfare Remastered installation folder and run it from there.",
+			"Failed to read game binary (%s)!\nPlease copy the h1x.exe into your Call of Duty: Modern Warfare Remastered installation folder and run it from there.",
 			binary.data()));
 	}
 
-	return loader.load_library(binary);
+	return loader.load_library(binary, base_address);
 }
 
 void remove_crash_file()
@@ -111,10 +111,10 @@ void remove_crash_file()
 
 void enable_dpi_awareness()
 {
-	const utils::nt::library user32{"user32.dll"};
+	const utils::nt::library user32{ "user32.dll" };
 	const auto set_dpi = user32
-		                     ? user32.get_proc<BOOL(WINAPI*)(DPI_AWARENESS_CONTEXT)>("SetProcessDpiAwarenessContext")
-		                     : nullptr;
+		? user32.get_proc<BOOL(WINAPI*)(DPI_AWARENESS_CONTEXT)>("SetProcessDpiAwarenessContext")
+		: nullptr;
 	if (set_dpi)
 	{
 		set_dpi(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
@@ -149,48 +149,60 @@ void limit_parallel_dll_loading()
 
 int main()
 {
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
+
 	FARPROC entry_point;
 	enable_dpi_awareness();
 
-	// This requires admin privilege, but I suppose many
-	// people will start with admin rights if it crashes.
 	limit_parallel_dll_loading();
 
 	srand(uint32_t(time(nullptr)));
+	remove_crash_file();
 
 	{
 		auto premature_shutdown = true;
 		const auto _ = gsl::finally([&premature_shutdown]()
-		{
-			if (premature_shutdown)
 			{
-				component_loader::pre_destroy();
-			}
-		});
+				if (premature_shutdown)
+				{
+					component_loader::pre_destroy();
+				}
+			});
 
 		try
 		{
-			remove_crash_file();
-
-			if (!component_loader::post_start()) return 0;
+			if (!component_loader::post_start())
+			{
+				return 0;
+			}
 
 			auto mode = detect_mode_from_arguments();
 			if (mode == launcher::mode::none)
 			{
 				const launcher launcher;
 				mode = launcher.run();
-				if (mode == launcher::mode::none) return 0;
+				if (mode == launcher::mode::none)
+				{
+					return 0;
+				}
 			}
 
 			game::environment::set_mode(mode);
 
-			entry_point = load_binary(mode);
+			uint64_t base_address{};
+			entry_point = load_binary(mode, &base_address);
 			if (!entry_point)
 			{
 				throw std::runtime_error("Unable to load binary into memory");
 			}
 
-			if (!component_loader::post_load()) return 0;
+			game::base_address = base_address;
+			//verify_version();
+
+			if (!component_loader::post_load())
+			{
+				return 0;
+			}
 
 			premature_shutdown = false;
 		}
