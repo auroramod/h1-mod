@@ -153,6 +153,7 @@ namespace arxan
             utils::hook::nop(0x81F0C0_b, 6);
             utils::hook::nop(0x5813609_b, 6);
             utils::hook::nop(0x8DD678_b, 0xEB);
+			//utils::hook::nop(0xB3D96_b, 4);
 		}
 	};
 }

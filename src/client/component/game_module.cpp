@@ -3,6 +3,7 @@
 #include "game_module.hpp"
 
 #include <utils/hook.hpp>
+#include <game/game.hpp>
 
 namespace game_module
 {
@@ -90,7 +91,7 @@ namespace game_module
 
 	utils::nt::library get_game_module()
 	{
-		static utils::nt::library game{HMODULE(0x140000000)};
+		static utils::nt::library game{HMODULE(game::base_address)};
 		return game;
 	}
 
