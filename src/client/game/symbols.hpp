@@ -27,6 +27,8 @@ namespace game
 
 	WEAK symbol<void(void*, void*)> AimAssist_AddToTargetList{0, 0x9D0F0};
 
+	WEAK symbol<DWOnlineStatus()> dwGetLogOnStatus{ 0, 0x14053CCB0 }; // S1
+
 	WEAK symbol<void(unsigned int weapon, bool isAlternate, 
 		char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{0x430550, 0x1F9670};
 
