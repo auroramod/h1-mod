@@ -135,4 +135,4 @@ namespace binding
 	};
 }
 
-REGISTER_COMPONENT(binding::component)
+//REGISTER_COMPONENT(binding::component)

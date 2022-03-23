@@ -790,4 +790,4 @@ namespace game_console
 	};
 }
 
-REGISTER_COMPONENT(game_console::component)
+//REGISTER_COMPONENT(game_console::component)

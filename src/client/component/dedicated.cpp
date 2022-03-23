@@ -330,4 +330,4 @@ namespace dedicated
 	};
 }
 
-REGISTER_COMPONENT(dedicated::component)
+//REGISTER_COMPONENT(dedicated::component)

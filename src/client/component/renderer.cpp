@@ -73,5 +73,5 @@ namespace renderer
 }
 
 #ifdef DEBUG
-REGISTER_COMPONENT(renderer::component)
+//REGISTER_COMPONENT(renderer::component)
 #endif

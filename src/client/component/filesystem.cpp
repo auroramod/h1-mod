@@ -91,4 +91,4 @@ namespace filesystem
 	};
 }
 
-REGISTER_COMPONENT(filesystem::component)
+//REGISTER_COMPONENT(filesystem::component)

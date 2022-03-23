@@ -440,4 +440,4 @@ namespace server_list
 	};
 }
 
-REGISTER_COMPONENT(server_list::component)
+//REGISTER_COMPONENT(server_list::component)

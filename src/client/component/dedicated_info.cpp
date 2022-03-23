@@ -62,4 +62,4 @@ namespace dedicated_info
 	};
 }
 
-REGISTER_COMPONENT(dedicated_info::component)
+//REGISTER_COMPONENT(dedicated_info::component)

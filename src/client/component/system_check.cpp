@@ -86,4 +86,4 @@ namespace system_check
 	};
 }
 
-REGISTER_COMPONENT(system_check::component)
+//REGISTER_COMPONENT(system_check::component)
