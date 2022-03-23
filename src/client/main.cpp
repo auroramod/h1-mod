@@ -22,7 +22,7 @@ BOOL WINAPI system_parameters_info_a(const UINT uiAction, const UINT uiParam, co
 
 FARPROC WINAPI get_proc_address(const HMODULE hModule, const LPCSTR lpProcName)
 {
-	if (lpProcName == "GlobalMemoryStatusEx"s)
+	if (lpProcName == "InitializeCriticalSectionEx"s)
 	{
 		component_loader::post_unpack();
 	}
@@ -50,11 +50,6 @@ launcher::mode detect_mode_from_arguments()
 	return launcher::mode::none;
 }
 
-int returning()
-{
-	return 1;
-}
-
 FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 {
 	loader loader;
@@ -77,11 +72,6 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 		else if (function == "GetProcAddress")
 		{
 			return get_proc_address;
-		}
-
-		if (function == "LoadStringA" || function == "LoadStringW")
-		{
-			return returning;
 		}
 
 		return component_loader::load_import(library, function);
@@ -110,7 +100,12 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 			binary.data()));
 	}
 
+#ifdef INJECT_HOST_AS_LIB
 	return loader.load_library(binary, base_address);
+#else
+	*base_address = 0x140000000;
+	return loader.load(self, data);
+#endif
 }
 
 void remove_crash_file()

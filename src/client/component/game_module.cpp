@@ -111,7 +111,11 @@ namespace game_module
 
 		void post_load() override
 		{
+#ifdef INJECT_HOST_AS_LIB
 			hook_module_resolving();
+#else
+			assert(get_host_module() == get_game_module());
+#endif
 		}
 	};
 }
