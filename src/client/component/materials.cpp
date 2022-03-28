@@ -49,8 +49,7 @@ namespace materials
 
 		game::Material* create_material(const std::string& name, const std::string& data)
 		{
-			const auto white = *reinterpret_cast<game::Material**>(SELECT_VALUE(0x141F3D860, 0x14282C330));
-
+			const auto white = material_register_handle_hook.invoke<game::Material*>("white");
 			const auto material = utils::memory::get_allocator()->allocate<game::Material>();
 			const auto texture_table = utils::memory::get_allocator()->allocate<game::MaterialTextureDef>();
 			const auto image = utils::memory::get_allocator()->allocate<game::GfxImage>();
