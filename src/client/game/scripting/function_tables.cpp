@@ -1457,36 +1457,36 @@ namespace scripting
 		{"visionsyncwithplayer", 0x82A0}, // SP 0x000000000 MP 0x14032ED90
 		{"showhudsplash", 0x82A1}, // SP 0x140263850 MP 0x14032FB10
 		{"setperk", 0x82A2}, // SP 0x140265490 MP 0x1403297E0
-		{"_meth_82a3", 0x82A3}, // SP 0x1402659A0 MP 0x140329D00
-		{"_meth_82a4", 0x82A4}, // SP 0x1402661B0 MP 0x14032A460
-		{"_meth_82a5", 0x82A5}, // SP 0x140265D40 MP 0x14032A0A0
+		{"hasperk", 0x82A3}, // SP 0x1402659A0 MP 0x140329D00
+		{"clearperks", 0x82A4}, // SP 0x1402661B0 MP 0x14032A460
+		{"unsetperk", 0x82A5}, // SP 0x140265D40 MP 0x14032A0A0
 		{"registerparty", 0x82A6}, // SP 0x000000000 MP 0x1403323C0
-		{"_meth_82a7", 0x82A7}, // SP 0x000000000 MP 0x1403324F0
-		{"_meth_82a8", 0x82A8}, // SP 0x1405D92F0 MP 0x14032A8F0
-		{"_meth_82a9", 0x82A9}, // SP 0x1405D92F0 MP 0x14032A900
+		{"getfireteammembers", 0x82A7}, // SP 0x000000000 MP 0x1403324F0
+		{"noclip", 0x82A8}, // SP 0x1405D92F0 MP 0x14032A8F0
+		{"ufo", 0x82A9}, // SP 0x1405D92F0 MP 0x14032A900
 		{"moveto", 0x82AA}, // SP 0x1402B2A10 MP 0x14037E950
-		{"rotatepitch", 0x82AB}, // SP 0x1402B2F60 MP 0x14037EEB0
-		{"rotateyaw", 0x82AC}, // SP 0x1402B2F70 MP 0x14037EEC0
-		{"rotateroll", 0x82AD}, // SP 0x1402B2F90 MP 0x14037EEE0
+		{"movex", 0x82AB}, // SP 0x1402B2F60 MP 0x14037EEB0
+		{"movey", 0x82AC}, // SP 0x1402B2F70 MP 0x14037EEC0
+		{"movez", 0x82AD}, // SP 0x1402B2F90 MP 0x14037EEE0
 		{"movegravity", 0x82AE}, // SP 0x1402B2C10 MP 0x14037EB00
-		{"_meth_82af", 0x82AF}, // SP 0x1402B2D70 MP 0x14037EC90
-		{"_meth_82b0", 0x82B0}, // SP 0x1402B2EE0 MP 0x14037EE20
+		{"moveslide", 0x82AF}, // SP 0x1402B2D70 MP 0x14037EC90
+		{"stopmoveslide", 0x82B0}, // SP 0x1402B2EE0 MP 0x14037EE20
 		{"rotateto", 0x82B1}, // SP 0x1402B3030 MP 0x14037EF10
-		{"_meth_82b2", 0x82B2}, // SP 0x1402B3460 MP 0x14037F060
+		{"rotatepitch", 0x82B2}, // SP 0x1402B3460 MP 0x14037F060
 		{"rotateyaw", 0x82B3}, // SP 0x1402B3470 MP 0x14037F070
-		{"_meth_82b4", 0x82B4}, // SP 0x1402B3490 MP 0x14037F090 // looks similar to moveto/rotateto, wtf
+		{"rotateroll", 0x82B4}, // SP 0x1402B3490 MP 0x14037F090 // looks similar to moveto/rotateto, wtf
 		{"addpitch", 0x82B5}, // SP 0x1402B3410 MP 0x14037F010
 		{"addyaw", 0x82B6}, // SP 0x1402B3430 MP 0x14037F030
-		{"addoll", 0x82B7}, // SP 0x1402B3450 MP 0x14037F050
-		{"_meth_82b8", 0x82B8}, // SP 0x1402B34B0 MP 0x14037F0B0
+		{"addroll", 0x82B7}, // SP 0x1402B3450 MP 0x14037F050
+		{"vibrate", 0x82B8}, // SP 0x1402B34B0 MP 0x14037F0B0
 		{"rotatevelocity", 0x82B9}, // SP 0x1402B3700 MP 0x14037F3C0
 		{"solid", 0x82BA}, // SP 0x1402B45E0 MP 0x1403808A0
 		{"notsolid", 0x82BB}, // SP 0x1402B4690 MP 0x140380950
 		{"setcandamage", 0x82BC}, // SP 0x1402B3880 MP 0x14037F590
 		{"setcanradiusdamage", 0x82BD}, // SP 0x1402B38E0 MP 0x14037F5F0
 		{"physicslaunchclient", 0x82BE}, // SP 0x1402B3960 MP 0x14037F670
-		{"_meth_82bf", 0x82BF}, // SP 0x000000000 MP 0x1403351A0
-		{"_meth_82c0", 0x82C0}, // SP 0x000000000 MP 0x1403351B0
+		{"setcardicon", 0x82BF}, // SP 0x000000000 MP 0x1403351A0
+		{"setcardnameplate", 0x82C0}, // SP 0x000000000 MP 0x1403351B0
 		{"setcarddisplayslot", 0x82C1}, // SP 0x000000000 MP 0x1403351C0
 		{"regweaponforfxremoval", 0x82C2}, // SP 0x000000000 MP 0x1403352B0
 		{"laststandrevive", 0x82C3}, // SP 0x000000000 MP 0x140331E00
