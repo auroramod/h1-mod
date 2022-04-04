@@ -9,6 +9,7 @@
 #include "../../../component/command.hpp"
 #include "../../../component/logfile.hpp"
 #include "../../../component/scripting.hpp"
+#include "../../../component/fastfiles.hpp"
 
 #include <utils/string.hpp>
 #include <utils/io.hpp>
@@ -500,6 +501,76 @@ namespace scripting::lua
 				);
 
 				return detour;
+			};
+
+			game_type["assetlist"] = [](const game&, const sol::this_state s, const std::string& type_string)
+			{
+				auto table = sol::table::create(s.lua_state());
+				auto index = 1;
+				auto type_index = -1;
+
+				for (auto i = 0; i < ::game::XAssetType::ASSET_TYPE_COUNT; i++)
+				{
+					if (type_string == ::game::g_assetNames[i])
+					{
+						type_index = i;
+					}
+				}
+
+				if (type_index == -1)
+				{
+					throw std::runtime_error("Asset type does not exist");
+				}
+
+				const auto type = static_cast<::game::XAssetType>(type_index);
+				fastfiles::enum_assets(type, [type, &table, &index](const ::game::XAssetHeader header)
+				{
+					const auto asset = ::game::XAsset{type, header};
+					const std::string asset_name = ::game::DB_GetXAssetName(&asset);
+					table[index++] = asset_name;
+				}, true);
+
+				return table;
+			};
+
+			game_type["sharedset"] = [](const game&, const std::string& key, const std::string& value)
+			{
+				scripting::shared_table.access([key, value](scripting::shared_table_t& table)
+				{
+					table[key] = value;
+				});
+			};
+
+			game_type["sharedget"] = [](const game&, const std::string& key)
+			{
+				std::string result;
+				scripting::shared_table.access([key, &result](scripting::shared_table_t& table)
+				{
+					result = table[key];
+				});
+				return result;
+			};
+
+			game_type["sharedclear"] = [](const game&)
+			{
+				scripting::shared_table.access([](scripting::shared_table_t& table)
+				{
+					table.clear();
+				});
+			};
+
+			game_type["getentbyref"] = [](const game&, const sol::this_state s, 
+				const unsigned int entnum, const unsigned int classnum)
+			{
+				const auto id = ::game::Scr_GetEntityId(entnum, classnum);
+				if (id)
+				{
+					return convert(s, scripting::entity{id});
+				}
+				else
+				{
+					return sol::lua_value{s, sol::lua_nil};
+				}
 			};
 		}
 	}

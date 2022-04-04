@@ -18,6 +18,7 @@ namespace scripting
 {
 	std::unordered_map<int, std::unordered_map<std::string, int>> fields_table;
 	std::unordered_map<std::string, std::unordered_map<std::string, const char*>> script_function_table;
+	utils::concurrency::container<shared_table_t> shared_table;
 
 	namespace
 	{

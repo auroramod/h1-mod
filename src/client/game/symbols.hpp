@@ -43,6 +43,8 @@ namespace game
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{0x140138750, 0x140220620};
 	WEAK symbol<void(int localClientNum, /*mp::cg_s**/void* cg, 
 		const char* dvar, const char* value)> CG_SetClientDvarFromServer{0, 0x140236120};
+	WEAK symbol<char*(const unsigned int weapon, 
+		bool isAlternate, char* outputBuffer, int bufferLen)> CG_GetWeaponDisplayName{0x14016EC30, 0x1400B5840};
 
 	WEAK symbol<bool()> CL_IsCgameInitialized{0x14017EE30, 0x140245650};
 
