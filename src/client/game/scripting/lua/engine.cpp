@@ -11,6 +11,8 @@ namespace scripting::lua::engine
 {
 	namespace
 	{
+		bool running = false;
+
 		auto& get_scripts()
 		{
 			static std::vector<std::unique_ptr<context>> scripts{};
@@ -38,21 +40,30 @@ namespace scripting::lua::engine
 
 	void stop()
 	{
+		running = false;
 		logfile::clear_callbacks();
 		get_scripts().clear();
 	}
 
 	void start()
 	{
-		// No SP until there is a concept
-		if (game::environment::is_sp())
-		{
-			return;
-		}
-
 		stop();
+
 		load_scripts("h1-mod/scripts/");
 		load_scripts("data/scripts/");
+
+		if (game::environment::is_sp())
+		{
+			load_scripts("h1-mod/scripts/sp/");
+			load_scripts("data/scripts/sp/");
+		}
+		else
+		{
+			load_scripts("h1-mod/scripts/mp/");
+			load_scripts("data/scripts/mp/");
+		}
+
+		running = true;
 	}
 
 	void notify(const event& e)
@@ -69,5 +80,10 @@ namespace scripting::lua::engine
 		{
 			script->run_frame();
 		}
+	}
+
+	bool is_running()
+	{
+		return running;
 	}
 }

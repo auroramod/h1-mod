@@ -17,7 +17,6 @@ namespace scripting::lua
 {
 	namespace
 	{
-
 		vector normalize_vector(const vector& vec)
 		{
 			const auto length = sqrt(
@@ -155,11 +154,51 @@ namespace scripting::lua
 			{
 				return normalize_vector(a);
 			};
+
+			vector_type["normalize"] = [](const vector& a)
+			{
+				return normalize_vector(a);
+			};
+
+			vector_type["toangles"] = [](const vector& a)
+			{
+				return call("vectortoangles", {a}).as<vector>();
+			};
+
+			vector_type["toyaw"] = [](const vector& a)
+			{
+				return call("vectortoyaw", {a}).as<vector>();
+			};
+
+			vector_type["tolerp"] = [](const vector& a)
+			{
+				return call("vectortolerp", {a}).as<vector>();
+			};
+
+			vector_type["toup"] = [](const vector& a)
+			{
+				return call("anglestoup", {a}).as<vector>();
+			};
+
+			vector_type["toright"] = [](const vector& a)
+			{
+				return call("anglestoright", {a}).as<vector>();
+			};
+
+			vector_type["toforward"] = [](const vector& a)
+			{
+				return call("anglestoforward", {a}).as<vector>();
+			};
 		}
 
 		void setup_entity_type(sol::state& state, event_handler& handler, scheduler& scheduler)
 		{
 			state["level"] = entity{*game::levelEntityId};
+
+			if (game::environment::is_sp())
+			{
+				state["player"] = call("getentbynum", {0}).as<entity>();
+			}
 
 			auto entity_type = state.new_usertype<entity>("entity");
 

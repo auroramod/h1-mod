@@ -70,7 +70,7 @@ namespace game
 	WEAK symbol<void(const char* gameName)> FS_Startup{0x1403B85D0, 0x1404EDD30};
 	WEAK symbol<void(const char* path, const char* dir)> FS_AddLocalizedGameDirectory{0x1403B6030, 0x1404EBE20};
 
-	WEAK symbol<unsigned int(unsigned int, unsigned int)> GetVariable{0x14036FDD0, 0x1403F3730};
+	WEAK symbol<unsigned int(unsigned int, unsigned int)> GetVariable{0x14036FDD0, 0x14043DD70};
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int unsignedValue)> GetNewVariable{0x14036FA00, 0x14043D990};
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int unsignedValue)> GetNewArrayVariable{0x14036F880, 0x14043D810};
 	WEAK symbol<void()> GScr_LoadConsts{0x1402D13E0, 0x140393810};
@@ -136,6 +136,7 @@ namespace game
 	WEAK symbol<void()> Scr_ClearOutParams{0x140374460, 0x140442510};
 	WEAK symbol<scr_entref_t(unsigned int entId)> Scr_GetEntityIdRef{0x140372D50, 0x140440D80};
 	WEAK symbol<unsigned int(int classnum, unsigned int entnum)> Scr_GetEntityId{0x140372CA0, 0x140440CD0};
+	WEAK symbol<int(unsigned int classnum, int entnum, int offset)> Scr_SetObjectField{0x1402B9F60, 0x140385330};
 
 	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetViewPlacement{0x1401981F0, 0x140288550};
 
@@ -155,8 +156,8 @@ namespace game
 
 	WEAK symbol<scr_string_t(const char* str)> SL_FindString{0x14036D700, 0x14043B470};
 	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{0x14036D9A0, 0x14043B840};
-	WEAK symbol<const char* (scr_string_t stringValue)> SL_ConvertToString{0x14036D420, 0x14043B170};
-	WEAK symbol<int(unsigned int classnum, int entnum, int offset)> Scr_SetObjectField{0x1402B9F60, 0x140385330};
+	WEAK symbol<const char*(scr_string_t stringValue)> SL_ConvertToString{0x14036D420, 0x14043B170};
+	WEAK symbol<unsigned int(const char* str)> SL_GetCanonicalString{0x14036A310, 0x140437EA0};
 
 	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{0, 0x140480860};
 	WEAK symbol<void(int arg, char* buffer, int bufferLength)> SV_Cmd_ArgvBuffer{0x1403446C0, 0x140404CA0};

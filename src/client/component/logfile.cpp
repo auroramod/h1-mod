@@ -212,7 +212,7 @@ namespace logfile
 				return false;
 			}
 
-			const auto hook = vm_execute_hooks[pos];
+			const auto& hook = vm_execute_hooks[pos];
 			const auto state = hook.lua_state();
 
 			const scripting::entity self = local_id_to_entity(game::scr_VmPub->function_frame->fs.localId);
