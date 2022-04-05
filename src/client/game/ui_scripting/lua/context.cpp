@@ -2,6 +2,7 @@
 #include "context.hpp"
 #include "error.hpp"
 #include "value_conversion.hpp"
+#include "../../scripting/execution.hpp"
 #include "../script_value.hpp"
 #include "../execution.hpp"
 
@@ -262,6 +263,51 @@ namespace ui_scripting::lua
 			updater_table["getcurrentfile"] = updater::get_current_file;
 			
 			state["updater"] = updater_table;
+
+			if (::game::environment::is_sp())
+			{
+				struct player
+				{
+				};
+				auto player_type = state.new_usertype<player>("player_");
+				state["player"] = player();
+
+				player_type["notify"] = [](const player&, const sol::this_state s, const std::string& name, sol::variadic_args va)
+				{
+					if (!::game::CL_IsCgameInitialized() || !::game::sp::g_entities[0].client)
+					{
+						throw std::runtime_error("Not in game");
+					}
+
+					const sol::state_view view{s};
+					const auto to_string = view["tostring"].get<sol::protected_function>();
+
+					std::vector<std::string> args{};
+					for (auto arg : va)
+					{
+						args.push_back(to_string.call(arg).get<std::string>());
+					}
+
+					::scheduler::once([s, name, args]()
+					{
+						try
+						{
+							std::vector<scripting::script_value> arguments{};
+
+							for (const auto& arg : args)
+							{
+								arguments.push_back(arg);
+							}
+
+							const auto player = scripting::call("getentbynum", {0}).as<scripting::entity>();
+							scripting::notify(player, name, arguments);
+						}
+						catch (...)
+						{
+						}
+					}, ::scheduler::pipeline::server);
+				};
+			}
 		}
 	}
 
