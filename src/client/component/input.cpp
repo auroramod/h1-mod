@@ -4,6 +4,7 @@
 #include "game/game.hpp"
 
 #include "game_console.hpp"
+#include "game/ui_scripting/execution.hpp"
 
 #include <utils/hook.hpp>
 
@@ -16,6 +17,12 @@ namespace input
 
 		void cl_char_event_stub(const int local_client_num, const int key)
 		{
+			ui_scripting::notify("keypress",
+			{
+				{"keynum", key},
+				{"key", game::Key_KeynumToString(key, 0, 1)},
+			});
+
 			if (!game_console::console_char_event(local_client_num, key))
 			{
 				return;
@@ -26,6 +33,12 @@ namespace input
 
 		void cl_key_event_stub(const int local_client_num, const int key, const int down)
 		{
+			ui_scripting::notify(down ? "keydown" : "keyup", 
+			{
+				{"keynum", key},
+				{"key", game::Key_KeynumToString(key, 0, 1)},
+			});
+
 			if (!game_console::console_key_event(local_client_num, key, down))
 			{
 				return;

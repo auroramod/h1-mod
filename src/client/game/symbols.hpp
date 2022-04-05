@@ -153,6 +153,8 @@ namespace game
 		int a3, int a4, unsigned int a5)> LUI_OpenMenu{0x14039D5F0, 0x1404CD210};
 	WEAK symbol<bool(int clientNum, const char* name, hks::lua_State* s)> LUI_BeginEvent{0x1400D27F0, 0x140161A00};
 	WEAK symbol<void(hks::lua_State* s)> LUI_EndEvent{0x1400D3A80, 0x140162CD0};
+	WEAK symbol<void()> LUI_EnterCriticalSection{0x1400D3B70, 0x140162DC0};
+	WEAK symbol<void()> LUI_LeaveCriticalSection{0x1400D8DB0, 0x140168150};
 
 	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0x1404709C0, 0x1404C7320};
 
@@ -273,5 +275,6 @@ namespace game
 			int internal_, int profilerTreatClosureAsFunc)> cclosure_Create{0x14008B5D0, 0x14011B540};
 		WEAK symbol<int(lua_State* s, int t)> hksi_luaL_ref{0x1400A64D0, 0x140136D30};
 		WEAK symbol<void(lua_State* s, int t, int ref)> hksi_luaL_unref{0x14009EF10, 0x14012F610};
+		WEAK symbol<void(lua_State* s, HksObject* lfp)> closePendingUpvalues{0x14008EA00, 0x14011E970};
 	}
 }
