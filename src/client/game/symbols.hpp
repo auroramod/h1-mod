@@ -33,10 +33,12 @@ namespace game
 
 	WEAK symbol<void()> Com_Frame_Try_Block_Function{0x1401CE8D0, 0x1400D8310};
 	WEAK symbol<CodPlayMode()> Com_GetCurrentCoDPlayMode{0, 0x1405039A0};
-	WEAK symbol<bool()> Com_InFrontEnd{0x1400E4B30, 0x140176A30};
+	WEAK symbol<bool()> Com_InFrontend{0x1400E4B30, 0x140176A30};
 	WEAK symbol<void(float, float, int)> Com_SetSlowMotion{0, 0x1400DB790};
 	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{0x1403509C0, 0x1400D78A0};
 	WEAK symbol<void()> Com_Quit_f{0x140352BE0, 0x1400DA830};
+	WEAK symbol<void(char const* finalMessage)> Com_Shutdown{0x140353B70, 0x1400DB8A0};
+
 	WEAK symbol<void()> Quit{0x140352D90, 0x1400DA830};
 
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{0x1401389A0, 0x140220CC0};
@@ -47,6 +49,7 @@ namespace game
 		bool isAlternate, char* outputBuffer, int bufferLen)> CG_GetWeaponDisplayName{0x14016EC30, 0x1400B5840};
 
 	WEAK symbol<bool()> CL_IsCgameInitialized{0x14017EE30, 0x140245650};
+	WEAK symbol<void(int a1)> CL_VirtualLobbyShutdown{0, 0x140256D40};
 
 	WEAK symbol<void(int hash, const char* name, const char* buffer)> Dvar_SetCommand{0x1403C72B0, 0x1404FD0A0};
 	WEAK symbol<dvar_t*(const char* name)> Dvar_FindVar{0x1403C5D50, 0x1404FBB00};

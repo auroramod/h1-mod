@@ -571,7 +571,7 @@ namespace game_console
 	{
 		if (key == game::keyNum_t::K_F10)
 		{
-			if (!game::Com_InFrontEnd())
+			if (!game::Com_InFrontend())
 			{
 				return false;
 			}

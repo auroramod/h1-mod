@@ -13,6 +13,7 @@
 #include "../../../component/localized_strings.hpp"
 #include "../../../component/fastfiles.hpp"
 #include "../../../component/scripting.hpp"
+#include "../../../component/mods.hpp"
 
 #include "component/game_console.hpp"
 #include "component/scheduler.hpp"
@@ -25,6 +26,31 @@ namespace ui_scripting::lua
 {
 	namespace
 	{
+		const auto json_script = utils::nt::load_resource(LUA_JSON);
+
+		void setup_json(sol::state& state)
+		{
+			const auto json = state.safe_script(json_script, &sol::script_pass_on_error);
+			handle_error(json);
+			state["json"] = json;
+		}
+
+		void setup_io(sol::state& state)
+		{
+			state["io"]["fileexists"] = utils::io::file_exists;
+			state["io"]["writefile"] = utils::io::write_file;
+			state["io"]["movefile"] = utils::io::move_file;
+			state["io"]["filesize"] = utils::io::file_size;
+			state["io"]["createdirectory"] = utils::io::create_directory;
+			state["io"]["directoryexists"] = utils::io::directory_exists;
+			state["io"]["directoryisempty"] = utils::io::directory_is_empty;
+			state["io"]["listfiles"] = utils::io::list_files;
+			state["io"]["copyfolder"] = utils::io::copy_folder;
+			state["io"]["removefile"] = utils::io::remove_file;
+			state["io"]["removedirectory"] = utils::io::remove_directory;
+			state["io"]["readfile"] = static_cast<std::string(*)(const std::string&)>(utils::io::read_file);
+		}
+
 		void setup_types(sol::state& state, scheduler& scheduler)
 		{
 			struct game
@@ -136,6 +162,11 @@ namespace ui_scripting::lua
 				::game::CG_GetWeaponDisplayName(weapon, alternate, buffer, 0x400);
 
 				return std::string(buffer);
+			};
+
+			game_type["getloadedmod"] = [](const game&)
+			{
+				return mods::mod_path;
 			};
 
 			auto userdata_type = state.new_usertype<userdata>("userdata_");
@@ -322,6 +353,8 @@ namespace ui_scripting::lua
 		                            sol::lib::math,
 		                            sol::lib::table);
 
+		setup_json(this->state_);
+		setup_io(this->state_);
 		setup_types(this->state_, this->scheduler_);
 
 		if (type == script_type::file)

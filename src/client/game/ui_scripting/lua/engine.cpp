@@ -3,6 +3,7 @@
 #include "context.hpp"
 
 #include "../../../component/ui_scripting.hpp"
+#include "../../../component/filesystem.hpp"
 
 #include <utils/io.hpp>
 #include <utils/nt.hpp>
@@ -52,18 +53,17 @@ namespace ui_scripting::lua::engine
 		load_code(lui_common);
 		load_code(lui_updater);
 
-		load_scripts("h1-mod/ui_scripts/");
-		load_scripts("data/ui_scripts/");
-
-		if (game::environment::is_sp())
+		for (const auto& path : filesystem::get_search_paths())
 		{
-			load_scripts("h1-mod/ui_scripts/sp/");
-			load_scripts("data/ui_scripts/sp/");
-		}
-		else
-		{
-			load_scripts("h1-mod/ui_scripts/mp/");
-			load_scripts("data/ui_scripts/mp/");
+			load_scripts(path + "/ui_scripts/");
+			if (game::environment::is_sp())
+			{
+				load_scripts(path + "/ui_scripts/sp/");
+			}
+			else
+			{
+				load_scripts(path + "/ui_scripts/mp/");
+			}
 		}
 	}
 

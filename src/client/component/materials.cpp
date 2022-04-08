@@ -3,6 +3,7 @@
 
 #include "materials.hpp"
 #include "console.hpp"
+#include "filesystem.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -20,6 +21,7 @@ namespace materials
 	{
 		utils::hook::detour db_material_streaming_fail_hook;
 		utils::hook::detour material_register_handle_hook;
+		utils::hook::detour db_get_material_index_hook;
 
 		struct material_data_t
 		{
@@ -68,6 +70,16 @@ namespace materials
 			return material;
 		}
 
+		void free_material(game::Material* material)
+		{
+			material->textureTable->u.image->textures.___u0.map->Release();
+			material->textureTable->u.image->textures.shaderView->Release();
+			utils::memory::get_allocator()->free(material->textureTable->u.image);
+			utils::memory::get_allocator()->free(material->textureTable);
+			utils::memory::get_allocator()->free(material->name);
+			utils::memory::get_allocator()->free(material);
+		}
+
 		game::Material* load_material(const std::string& name)
 		{
 			return material_data.access<game::Material*>([&](material_data_t& data_) -> game::Material*
@@ -83,9 +95,7 @@ namespace materials
 					data = i->second;
 				}
 
-				if (data.empty()
-					&& !utils::io::read_file(utils::string::va("h1-mod/materials/%s.png", name.data()), &data)
-					&& !utils::io::read_file(utils::string::va("data/materials/%s.png", name.data()), &data))
+				if (data.empty() && !filesystem::read_file(utils::string::va("materials/%s.png", name.data()), &data))
 				{
 					data_.materials[name] = nullptr;
 					return nullptr;
@@ -136,6 +146,16 @@ namespace materials
 
 			return db_material_streaming_fail_hook.invoke<int>(material);
 		}
+
+		unsigned int db_get_material_index_stub(game::Material* material)
+		{
+			if (material->constantTable == &constant_table)
+			{
+				return 0;
+			}
+
+			return db_get_material_index_hook.invoke<unsigned int>(material);
+		}
 	}
 
 	void add(const std::string& name, const std::string& data)
@@ -143,6 +163,24 @@ namespace materials
 		material_data.access([&](material_data_t& data_)
 		{
 			data_.images[name] = data;
+		});
+	}
+
+	void clear()
+	{
+		material_data.access([&](material_data_t& data_)
+		{
+			for (auto& material : data_.materials)
+			{
+				if (material.second == nullptr)
+				{
+					continue;
+				}
+
+				free_material(material.second);
+			}
+
+			data_.materials.clear();
 		});
 	}
 
@@ -158,6 +196,7 @@ namespace materials
 
 			material_register_handle_hook.create(game::Material_RegisterHandle, material_register_handle_stub);
 			db_material_streaming_fail_hook.create(SELECT_VALUE(0x1401D3180, 0x1402C6260), db_material_streaming_fail_stub);
+			db_get_material_index_hook.create(SELECT_VALUE(0x1401CAD00, 0x1402BBB20), db_get_material_index_stub);
 		}
 	};
 }

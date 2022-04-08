@@ -4,6 +4,7 @@
 
 #include "../execution.hpp"
 #include "../../../component/logfile.hpp"
+#include "../../../component/filesystem.hpp"
 
 #include <utils/io.hpp>
 
@@ -49,18 +50,17 @@ namespace scripting::lua::engine
 	{
 		stop();
 
-		load_scripts("h1-mod/scripts/");
-		load_scripts("data/scripts/");
-
-		if (game::environment::is_sp())
+		for (const auto& path : filesystem::get_search_paths())
 		{
-			load_scripts("h1-mod/scripts/sp/");
-			load_scripts("data/scripts/sp/");
-		}
-		else
-		{
-			load_scripts("h1-mod/scripts/mp/");
-			load_scripts("data/scripts/mp/");
+			load_scripts(path + "/scripts/");
+			if (game::environment::is_sp())
+			{
+				load_scripts(path + "/scripts/sp/");
+			}
+			else
+			{
+				load_scripts(path + "/scripts/mp/");
+			}
 		}
 
 		running = true;

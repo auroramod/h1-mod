@@ -15,13 +15,21 @@ namespace input
 		utils::hook::detour cl_char_event_hook;
 		utils::hook::detour cl_key_event_hook;
 
+		bool lui_running()
+		{
+			return *game::hks::lua_state != nullptr;
+		}
+
 		void cl_char_event_stub(const int local_client_num, const int key)
 		{
-			ui_scripting::notify("keypress",
+			if (lui_running())
 			{
-				{"keynum", key},
-				{"key", game::Key_KeynumToString(key, 0, 1)},
-			});
+				ui_scripting::notify("keypress",
+				{
+					{"keynum", key},
+					{"key", game::Key_KeynumToString(key, 0, 1)},
+				});
+			}
 
 			if (!game_console::console_char_event(local_client_num, key))
 			{
@@ -33,11 +41,14 @@ namespace input
 
 		void cl_key_event_stub(const int local_client_num, const int key, const int down)
 		{
-			ui_scripting::notify(down ? "keydown" : "keyup", 
+			if (lui_running())
 			{
-				{"keynum", key},
-				{"key", game::Key_KeynumToString(key, 0, 1)},
-			});
+				ui_scripting::notify(down ? "keydown" : "keyup",
+				{
+					{"keynum", key},
+					{"key", game::Key_KeynumToString(key, 0, 1)},
+				});
+			}
 
 			if (!game_console::console_key_event(local_client_num, key, down))
 			{

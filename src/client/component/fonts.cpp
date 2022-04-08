@@ -3,6 +3,7 @@
 
 #include "fonts.hpp"
 #include "console.hpp"
+#include "filesystem.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -36,6 +37,13 @@ namespace fonts
 			return font;
 		}
 
+		void free_font(game::TTF* font)
+		{
+			utils::memory::get_allocator()->free(font->buffer);
+			utils::memory::get_allocator()->free(font->name);
+			utils::memory::get_allocator()->free(font);
+		}
+
 		game::TTF* load_font(const std::string& name)
 		{
 			return font_data.access<game::TTF*>([&](font_data_t& data_) -> game::TTF*
@@ -51,9 +59,7 @@ namespace fonts
 					data = i->second;
 				}
 
-				if (data.empty()
-					&& !utils::io::read_file(utils::string::va("h1-mod/%s", name.data()), &data)
-					&& !utils::io::read_file(utils::string::va("data/%s", name.data()), &data))
+				if (data.empty() && !filesystem::read_file(name, &data))
 				{
 					return nullptr;
 				}
@@ -95,6 +101,20 @@ namespace fonts
 		font_data.access([&](font_data_t& data_)
 		{
 			data_.raw_fonts[name] = data;
+		});
+	}
+
+	void clear()
+	{
+		font_data.access([&](font_data_t& data_)
+		{
+			for (auto& font : data_.fonts)
+			{
+				free_font(font.second);
+			}
+
+			data_.fonts.clear();
+			utils::hook::set<int>(SELECT_VALUE(0x14F09DBB8, 0x14FD61EE8), 0); // reset registered font count
 		});
 	}
 

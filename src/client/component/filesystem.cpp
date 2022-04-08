@@ -8,6 +8,7 @@
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
+#include <utils/io.hpp>
 
 namespace filesystem
 {
@@ -70,6 +71,40 @@ namespace filesystem
 		return this->name_;
 	}
 
+	std::unordered_set<std::string>& get_search_paths()
+	{
+		static std::unordered_set<std::string> search_paths{};
+		return search_paths;
+	}
+
+	std::string read_file(const std::string& path)
+	{
+		for (const auto& search_path : get_search_paths())
+		{
+			const auto path_ = search_path + "/" + path;
+			if (utils::io::file_exists(path_))
+			{
+				return utils::io::read_file(path_);
+			}
+		}
+
+		return {};
+	}
+
+	bool read_file(const std::string& path, std::string* data)
+	{
+		for (const auto& search_path : get_search_paths())
+		{
+			const auto path_ = search_path + "/" + path;
+			if (utils::io::read_file(path_, data))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -87,6 +122,10 @@ namespace filesystem
 			utils::hook::call(SELECT_VALUE(0x1403B8D31, 0x1404EE3D0), register_custom_path_stub);
 			utils::hook::call(SELECT_VALUE(0x1403B8D51, 0x1404EE3F0), register_custom_path_stub);
 			utils::hook::call(SELECT_VALUE(0x1403B8D90, 0x1404EE42F), register_custom_path_stub);
+
+			get_search_paths().insert(".");
+			get_search_paths().insert("h1-mod");
+			get_search_paths().insert("data");
 		}
 	};
 }
