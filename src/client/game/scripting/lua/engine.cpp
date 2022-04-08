@@ -49,7 +49,7 @@ namespace scripting::lua::engine
 	void start()
 	{
 		stop();
-
+		running = true;
 		for (const auto& path : filesystem::get_search_paths())
 		{
 			load_scripts(path + "/scripts/");
@@ -62,8 +62,6 @@ namespace scripting::lua::engine
 				load_scripts(path + "/scripts/mp/");
 			}
 		}
-
-		running = true;
 	}
 
 	void notify(const event& e)
