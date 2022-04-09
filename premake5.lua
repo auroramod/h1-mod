@@ -321,6 +321,10 @@ if _OPTIONS["copy-to"] then
 	postbuildcommands {"copy /y \"$(TargetPath)\" \"" .. _OPTIONS["copy-to"] .. "\""}
 end
 
+if _OPTIONS["debug-dir"] then
+	debugdir ( _OPTIONS["debug-dir"] )
+end
+
 dependencies.imports()
 
 project "tlsdll"
