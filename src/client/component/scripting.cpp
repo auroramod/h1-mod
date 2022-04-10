@@ -2,6 +2,7 @@
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 
 #include "game/scripting/entity.hpp"
 #include "game/scripting/functions.hpp"
@@ -13,6 +14,8 @@
 #include "scripting.hpp"
 
 #include <utils/hook.hpp>
+#include <utils/io.hpp>
+#include <utils/string.hpp>
 
 namespace scripting
 {
@@ -34,8 +37,12 @@ namespace scripting
 
 		utils::hook::detour sl_get_canonical_string_hook;
 
+		utils::hook::detour db_find_xasset_header_hook;
+
 		std::string current_file;
 		unsigned int current_file_id{};
+
+		game::dvar_t* g_dump_scripts;
 
 		void vm_notify_stub(const unsigned int notify_list_owner_id, const game::scr_string_t string_value,
 			game::VariableValue* top)
@@ -152,6 +159,26 @@ namespace scripting
 			scripting::token_map[str] = result;
 			return result;
 		}
+
+		game::XAssetHeader db_find_xasset_header_stub(game::XAssetType type, const char* name, int allow_create_default)
+		{
+			const auto result = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, name, allow_create_default);
+			if (!g_dump_scripts->current.enabled || type != game::XAssetType::ASSET_TYPE_SCRIPTFILE)
+			{
+				return result;
+			}
+
+			std::string buffer;
+			buffer.append(result.scriptfile->name, strlen(result.scriptfile->name) + 1);
+			buffer.append(reinterpret_cast<char*>(&result.scriptfile->compressedLen), 4);
+			buffer.append(reinterpret_cast<char*>(&result.scriptfile->len), 4);
+			buffer.append(reinterpret_cast<char*>(&result.scriptfile->bytecodeLen), 4);
+			buffer.append(result.scriptfile->buffer, result.scriptfile->compressedLen);
+			buffer.append(result.scriptfile->bytecode, result.scriptfile->bytecodeLen);
+			utils::io::write_file(utils::string::va("gsc_dump/%s.gscbin", name), buffer);
+
+			return result;
+		}
 	}
 
 	class component final : public component_interface
@@ -165,6 +192,7 @@ namespace scripting
 
 			scr_set_thread_position_hook.create(SELECT_VALUE(0x14036A180, 0x140437D10), scr_set_thread_position_stub);
 			process_script_hook.create(SELECT_VALUE(0x1403737E0, 0x1404417E0), process_script_stub);
+			sl_get_canonical_string_hook.create(game::SL_GetCanonicalString, sl_get_canonical_string_stub);
 
 			if (!game::environment::is_sp())
 			{
@@ -177,7 +205,8 @@ namespace scripting
 
 			g_shutdown_game_hook.create(SELECT_VALUE(0x140277D40, 0x140345A60), g_shutdown_game_stub);
 
-			sl_get_canonical_string_hook.create(game::SL_GetCanonicalString, sl_get_canonical_string_stub);
+			db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
+			g_dump_scripts = dvars::register_bool("g_dumpScripts", false, game::DVAR_FLAG_NONE, "Dump GSC scripts");
 
 			scheduler::loop([]()
 			{
