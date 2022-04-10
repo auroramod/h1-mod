@@ -69,19 +69,40 @@ namespace scripting
 
 			return reinterpret_cast<script_function*>(method_table)[index - 0x8000];
 		}
+
+		unsigned int parse_token_id(const std::string& name)
+		{
+			if (name.starts_with("_ID"))
+			{
+				return static_cast<unsigned int>(std::strtol(name.substr(3).data(), nullptr, 10));
+			}
+
+			if (name.starts_with("_id_"))
+			{
+				return static_cast<unsigned int>(std::strtol(name.substr(4).data(), nullptr, 16));
+			}
+
+			return 0;
+		}
 	}
 
-	std::string find_token(unsigned int id)
+	std::vector<std::string> find_token(unsigned int id)
 	{
+		std::vector<std::string> results;
+
+		results.push_back(utils::string::va("_id_%X", id));
+		results.push_back(utils::string::va("_ID%i", id));
+
 		for (const auto& token : token_map)
 		{
 			if (token.second == id)
 			{
-				return token.first;
+				results.push_back(token.first);
+				break;
 			}
 		}
 
-		return utils::string::va("_ID%i", id);
+		return results;
 	}
 
 	unsigned int find_token_id(const std::string& name)
@@ -93,7 +114,13 @@ namespace scripting
 			return result->second;
 		}
 
-		return 0;
+		const auto parsed_id = parse_token_id(name);
+		if (parsed_id)
+		{
+			return parsed_id;
+		}
+
+		return game::SL_GetCanonicalString(name.data());
 	}
 
 	script_function find_function(const std::string& name, const bool prefer_global)

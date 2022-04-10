@@ -8,4 +8,5 @@ namespace scripting::lua::engine
 	void stop();
 	void notify(const event& e);
 	void run_frame();
+	bool is_running();
 }

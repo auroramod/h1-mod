@@ -931,12 +931,12 @@ namespace scripting
 		{"setstablemissile", 0x8092}, // SP 0x1402AD800 MP 0x000000000
 		{"playersetgroundreferenceent", 0x8093}, // SP 0x1402A9070 MP 0x1403752A0
 		{"dontinterpolate", 0x8094}, // SP 0x1402A0070 MP 0x140358360
-		{"_meth_8095", 0x8095}, // SP 0x1402AAC80 MP 0x000000000
-		{"_meth_8096", 0x8096}, // SP 0x1402AAD20 MP 0x000000000
+		{"dospawn", 0x8095}, // SP 0x1402AAC80 MP 0x000000000
+		{"stalingradspawn", 0x8096}, // SP 0x1402AAD20 MP 0x000000000
 		{"getorigin", 0x8097}, // SP 0x1402AADC0 MP 0x140377CA0
-		{"_meth_8098", 0x8098}, // SP 0x1402AAE70 MP 0x000000000
-		{"_meth_8099", 0x8099}, // SP 0x1402AAF90 MP 0x000000000
-		{"_meth_809a", 0x809A}, // SP 0x1402AC1D0 MP 0x000000000
+		{"getcentroid", 0x8098}, // SP 0x1402AAE70 MP 0x000000000
+		{"getshootatpos", 0x8099}, // SP 0x1402AAF90 MP 0x000000000
+		{"getdebugeye", 0x809A}, // SP 0x1402AC1D0 MP 0x000000000
 		{"useby", 0x809B}, // SP 0x1402AC470 MP 0x140377D00
 		{"playsound", 0x809C}, // SP 0x1402AC9B0 MP 0x140377F40
 		{"_meth_809d", 0x809D},
@@ -1336,14 +1336,14 @@ namespace scripting
 		{"vehicleturretcontroloff", 0x8227}, // SP 0x140464260 MP 0x140562970
 		{"isturretready", 0x8228}, // SP 0x140464340 MP 0x1405629E0
 		{"_meth_8229", 0x8229}, // SP 0x140464570 MP 0x140562C70
-		{"dospawn", 0x822A}, // SP 0x1404646D0 MP 0x140562D90
-		{"isphysveh", 0x822B}, // SP 0x1404647A0 MP 0x140562E80
-		{"crash", 0x822C}, // SP 0x140464840 MP 0x140562F80
-		{"launch", 0x822D}, // SP 0x140464980 MP 0x1405630A0
-		{"disablecrashing", 0x822E}, // SP 0x140464B20 MP 0x140563240
-		{"enablecrashing", 0x822F}, // SP 0x140464C10 MP 0x140563310
-		{"setspeed", 0x8230}, // SP 0x140464C90 MP 0x1405633E0
-		{"setconveyorbelt", 0x8231}, // SP 0x140464E50 MP 0x140563610
+		{"vehicle_dospawn", 0x822A}, // SP 0x1404646D0 MP 0x140562D90
+		{"vehicle_isphysveh", 0x822B}, // SP 0x1404647A0 MP 0x140562E80
+		{"vehphys_crash", 0x822C}, // SP 0x140464840 MP 0x140562F80
+		{"vehphys_launch", 0x822D}, // SP 0x140464980 MP 0x1405630A0
+		{"vehphys_disablecrashing", 0x822E}, // SP 0x140464B20 MP 0x140563240
+		{"vehphys_enablecrashing", 0x822F}, // SP 0x140464C10 MP 0x140563310
+		{"vehphys_setspeed", 0x8230}, // SP 0x140464C90 MP 0x1405633E0
+		{"vehphys_setconveyorbelt", 0x8231}, // SP 0x140464E50 MP 0x140563610
 		{"freevehicle", 0x8232}, // SP 0x000000000 MP 0x1405609B0
 		{"_meth_8233", 0x8233}, // SP 0x140290E70 MP 0x000000000
 		{"_meth_8234", 0x8234}, // SP 0x1402910E0 MP 0x000000000
@@ -1393,8 +1393,8 @@ namespace scripting
 		{"canturrettargetpoint", 0x8260}, // SP 0x1404635A0 MP 0x140561DF0
 		{"setlookatent", 0x8261}, // SP 0x1404638A0 MP 0x1405620F0
 		{"clearlookatent", 0x8262}, // SP 0x140463950 MP 0x1405621A0
-		{"setweapon", 0x8263}, // SP 0x140463AB0 MP 0x140562280
-		{"_meth_8264", 0x8264}, // SP 0x140463B20 MP 0x1405622F0
+		{"setvehweapon", 0x8263}, // SP 0x140463AB0 MP 0x140562280
+		{"fireweapon", 0x8264}, // SP 0x140463B20 MP 0x1405622F0
 		{"vehicleturretcontrolon", 0x8265}, // SP 0x1404641D0 MP 0x1405628F0
 		{"finishplayerdamage", 0x8266}, // SP 0x000000000 MP 0x1403337A0
 		{"suicide", 0x8267}, // SP 0x000000000 MP 0x140333E20
@@ -1421,16 +1421,16 @@ namespace scripting
 		{"setswitchnode", 0x827C}, // SP 0x140465740 MP 0x14055F4D0
 		{"setwaitspeed", 0x827D}, // SP 0x140465840 MP 0x14055F560
 		{"finishdamage", 0x827E}, // SP 0x000000000 MP 0x14055F5E0
-		{"setspeed", 0x827F}, // SP 0x1404658C0 MP 0x14055F840
-		{"setspeedimmediate", 0x8280}, // SP 0x140465930 MP 0x14055F8B0
-		{"_meth_8281", 0x8281}, // SP 0x140465AC0 MP 0x14055FA60
-		{"getspeed", 0x8282}, // SP 0x140465BE0 MP 0x14055FB80
-		{"getvelocity", 0x8283}, // SP 0x140465CD0 MP 0x14055FC70
-		{"getbodyvelocity", 0x8284}, // SP 0x140465D40 MP 0x14055FCE0
-		{"getsteering", 0x8285}, // SP 0x140465DB0 MP 0x14055FD50
-		{"getthrottle", 0x8286}, // SP 0x140465E30 MP 0x14055FDE0
-		{"turnengineoff", 0x8287}, // SP 0x140465EA0 MP 0x14055FE50
-		{"turnengineon", 0x8288}, // SP 0x140465F00 MP 0x14055FEC0
+		{"vehicle_setspeed", 0x827F}, // SP 0x1404658C0 MP 0x14055F840
+		{"vehicle_setspeedimmediate", 0x8280}, // SP 0x140465930 MP 0x14055F8B0
+		{"vehicle_rotateyaw", 0x8281}, // SP 0x140465AC0 MP 0x14055FA60
+		{"vehicle_getspeed", 0x8282}, // SP 0x140465BE0 MP 0x14055FB80
+		{"vehicle_getvelocity", 0x8283}, // SP 0x140465CD0 MP 0x14055FC70
+		{"vehicle_getbodyvelocity", 0x8284}, // SP 0x140465D40 MP 0x14055FCE0
+		{"vehicle_getsteering", 0x8285}, // SP 0x140465DB0 MP 0x14055FD50
+		{"vehicle_getthrottle", 0x8286}, // SP 0x140465E30 MP 0x14055FDE0
+		{"vehicle_turnengineoff", 0x8287}, // SP 0x140465EA0 MP 0x14055FE50
+		{"vehicle_turnengineon", 0x8288}, // SP 0x140465F00 MP 0x14055FEC0
 		{"_meth_8289", 0x8289}, // SP 0x140465F60 MP 0x000000000
 		{"getgoalspeedmph", 0x828A}, // SP 0x140466020 MP 0x14055FF30
 		{"_meth_828b", 0x828B}, // SP 0x140466090 MP 0x14055FFA0
@@ -1457,36 +1457,36 @@ namespace scripting
 		{"visionsyncwithplayer", 0x82A0}, // SP 0x000000000 MP 0x14032ED90
 		{"showhudsplash", 0x82A1}, // SP 0x140263850 MP 0x14032FB10
 		{"setperk", 0x82A2}, // SP 0x140265490 MP 0x1403297E0
-		{"_meth_82a3", 0x82A3}, // SP 0x1402659A0 MP 0x140329D00
-		{"_meth_82a4", 0x82A4}, // SP 0x1402661B0 MP 0x14032A460
-		{"_meth_82a5", 0x82A5}, // SP 0x140265D40 MP 0x14032A0A0
+		{"hasperk", 0x82A3}, // SP 0x1402659A0 MP 0x140329D00
+		{"clearperks", 0x82A4}, // SP 0x1402661B0 MP 0x14032A460
+		{"unsetperk", 0x82A5}, // SP 0x140265D40 MP 0x14032A0A0
 		{"registerparty", 0x82A6}, // SP 0x000000000 MP 0x1403323C0
-		{"_meth_82a7", 0x82A7}, // SP 0x000000000 MP 0x1403324F0
-		{"_meth_82a8", 0x82A8}, // SP 0x1405D92F0 MP 0x14032A8F0
-		{"_meth_82a9", 0x82A9}, // SP 0x1405D92F0 MP 0x14032A900
+		{"getfireteammembers", 0x82A7}, // SP 0x000000000 MP 0x1403324F0
+		{"noclip", 0x82A8}, // SP 0x1405D92F0 MP 0x14032A8F0
+		{"ufo", 0x82A9}, // SP 0x1405D92F0 MP 0x14032A900
 		{"moveto", 0x82AA}, // SP 0x1402B2A10 MP 0x14037E950
-		{"rotatepitch", 0x82AB}, // SP 0x1402B2F60 MP 0x14037EEB0
-		{"rotateyaw", 0x82AC}, // SP 0x1402B2F70 MP 0x14037EEC0
-		{"rotateroll", 0x82AD}, // SP 0x1402B2F90 MP 0x14037EEE0
+		{"movex", 0x82AB}, // SP 0x1402B2F60 MP 0x14037EEB0
+		{"movey", 0x82AC}, // SP 0x1402B2F70 MP 0x14037EEC0
+		{"movez", 0x82AD}, // SP 0x1402B2F90 MP 0x14037EEE0
 		{"movegravity", 0x82AE}, // SP 0x1402B2C10 MP 0x14037EB00
-		{"_meth_82af", 0x82AF}, // SP 0x1402B2D70 MP 0x14037EC90
-		{"_meth_82b0", 0x82B0}, // SP 0x1402B2EE0 MP 0x14037EE20
+		{"moveslide", 0x82AF}, // SP 0x1402B2D70 MP 0x14037EC90
+		{"stopmoveslide", 0x82B0}, // SP 0x1402B2EE0 MP 0x14037EE20
 		{"rotateto", 0x82B1}, // SP 0x1402B3030 MP 0x14037EF10
-		{"_meth_82b2", 0x82B2}, // SP 0x1402B3460 MP 0x14037F060
+		{"rotatepitch", 0x82B2}, // SP 0x1402B3460 MP 0x14037F060
 		{"rotateyaw", 0x82B3}, // SP 0x1402B3470 MP 0x14037F070
-		{"_meth_82b4", 0x82B4}, // SP 0x1402B3490 MP 0x14037F090 // looks similar to moveto/rotateto, wtf
+		{"rotateroll", 0x82B4}, // SP 0x1402B3490 MP 0x14037F090 // looks similar to moveto/rotateto, wtf
 		{"addpitch", 0x82B5}, // SP 0x1402B3410 MP 0x14037F010
 		{"addyaw", 0x82B6}, // SP 0x1402B3430 MP 0x14037F030
-		{"addoll", 0x82B7}, // SP 0x1402B3450 MP 0x14037F050
-		{"_meth_82b8", 0x82B8}, // SP 0x1402B34B0 MP 0x14037F0B0
+		{"addroll", 0x82B7}, // SP 0x1402B3450 MP 0x14037F050
+		{"vibrate", 0x82B8}, // SP 0x1402B34B0 MP 0x14037F0B0
 		{"rotatevelocity", 0x82B9}, // SP 0x1402B3700 MP 0x14037F3C0
 		{"solid", 0x82BA}, // SP 0x1402B45E0 MP 0x1403808A0
 		{"notsolid", 0x82BB}, // SP 0x1402B4690 MP 0x140380950
 		{"setcandamage", 0x82BC}, // SP 0x1402B3880 MP 0x14037F590
 		{"setcanradiusdamage", 0x82BD}, // SP 0x1402B38E0 MP 0x14037F5F0
 		{"physicslaunchclient", 0x82BE}, // SP 0x1402B3960 MP 0x14037F670
-		{"_meth_82bf", 0x82BF}, // SP 0x000000000 MP 0x1403351A0
-		{"_meth_82c0", 0x82C0}, // SP 0x000000000 MP 0x1403351B0
+		{"setcardicon", 0x82BF}, // SP 0x000000000 MP 0x1403351A0
+		{"setcardnameplate", 0x82C0}, // SP 0x000000000 MP 0x1403351B0
 		{"setcarddisplayslot", 0x82C1}, // SP 0x000000000 MP 0x1403351C0
 		{"regweaponforfxremoval", 0x82C2}, // SP 0x000000000 MP 0x1403352B0
 		{"laststandrevive", 0x82C3}, // SP 0x000000000 MP 0x140331E00
@@ -1509,15 +1509,15 @@ namespace scripting
 		{"visionsetthermalforplayer", 0x82D4}, // SP 0x140263710 MP 0x14032FD20
 		{"visionsetpainforplayer", 0x82D5}, // SP 0x140263730 MP 0x14032FD40
 		{"setblurforplayer", 0x82D6}, // SP 0x140264890 MP 0x140330B80
-		{"_meth_82d7", 0x82D7}, // SP 0x140264C80 MP 0x140331310
-		{"_meth_82d8", 0x82D8}, // SP 0x140264C80 MP 0x140331330
-		{"_meth_82d9", 0x82D9}, // SP 0x1402ABE90 MP 0x000000000
-		{"getbuildnumber", 0x82DA}, // SP 0x1402663A0 MP 0x14032A910
-		{"_meth_82db", 0x82DB}, // SP 0x140266AF0 MP 0x14032AE90
-		{"_meth_82dc", 0x82DC}, // SP 0x140266CD0 MP 0x14032B120
+		{"getplayerweaponmodel", 0x82D7}, // SP 0x140264C80 MP 0x140331310
+		{"getplayerknifemodel", 0x82D8}, // SP 0x140264C80 MP 0x140331330
+		{"updateplayermodelwithweapons", 0x82D9}, // SP 0x1402ABE90 MP 0x000000000
+		{"notifyonplayercommand", 0x82DA}, // SP 0x1402663A0 MP 0x14032A910
+		{"canmantle", 0x82DB}, // SP 0x140266AF0 MP 0x14032AE90
+		{"forcemantle", 0x82DC}, // SP 0x140266CD0 MP 0x14032B120
 		{"ismantling", 0x82DD}, // SP 0x140266FE0 MP 0x14032B500
 		{"playfx", 0x82DE}, // SP 0x140267330 MP 0x14032B9F0
-		{"playerrecoilscaleon", 0x82DF}, // SP 0x140267530 MP 0x14032BD00
+		{"player_recoilscaleon", 0x82DF}, // SP 0x140267530 MP 0x14032BD00
 		{"player_recoilscaleoff", 0x82E0}, // SP 0x140267600 MP 0x14032BDD0
 		{"weaponlockstart", 0x82E1}, // SP 0x1402676E0 MP 0x14032C000
 		{"weaponlockfinalize", 0x82E2}, // SP 0x140260240 MP 0x14032C240

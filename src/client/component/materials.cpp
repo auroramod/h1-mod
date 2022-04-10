@@ -3,6 +3,7 @@
 
 #include "materials.hpp"
 #include "console.hpp"
+#include "filesystem.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -20,12 +21,15 @@ namespace materials
 	{
 		utils::hook::detour db_material_streaming_fail_hook;
 		utils::hook::detour material_register_handle_hook;
+		utils::hook::detour db_get_material_index_hook;
 
 		struct material_data_t
 		{
 			std::unordered_map<std::string, game::Material*> materials;
 			std::unordered_map<std::string, std::string> images;
 		};
+
+		char constant_table[0x20] = {};
 
 		utils::concurrency::container<material_data_t> material_data;
 
@@ -47,8 +51,7 @@ namespace materials
 
 		game::Material* create_material(const std::string& name, const std::string& data)
 		{
-			const auto white = *reinterpret_cast<game::Material**>(SELECT_VALUE(0x141F3D860, 0x14282C330));
-
+			const auto white = material_register_handle_hook.invoke<game::Material*>("white");
 			const auto material = utils::memory::get_allocator()->allocate<game::Material>();
 			const auto texture_table = utils::memory::get_allocator()->allocate<game::MaterialTextureDef>();
 			const auto image = utils::memory::get_allocator()->allocate<game::GfxImage>();
@@ -57,6 +60,7 @@ namespace materials
 			std::memcpy(texture_table, white->textureTable, sizeof(game::MaterialTextureDef));
 			std::memcpy(image, white->textureTable->u.image, sizeof(game::GfxImage));
 
+			material->constantTable = &constant_table;
 			material->name = utils::memory::get_allocator()->duplicate_string(name);
 			image->name = material->name;
 
@@ -64,6 +68,16 @@ namespace materials
 			material->textureTable->u.image = setup_image(image, data);
 
 			return material;
+		}
+
+		void free_material(game::Material* material)
+		{
+			material->textureTable->u.image->textures.___u0.map->Release();
+			material->textureTable->u.image->textures.shaderView->Release();
+			utils::memory::get_allocator()->free(material->textureTable->u.image);
+			utils::memory::get_allocator()->free(material->textureTable);
+			utils::memory::get_allocator()->free(material->name);
+			utils::memory::get_allocator()->free(material);
 		}
 
 		game::Material* load_material(const std::string& name)
@@ -81,10 +95,9 @@ namespace materials
 					data = i->second;
 				}
 
-				if (data.empty()
-					&& !utils::io::read_file(utils::string::va("h1-mod/materials/%s.png", name.data()), &data)
-					&& !utils::io::read_file(utils::string::va("data/materials/%s.png", name.data()), &data))
+				if (data.empty() && !filesystem::read_file(utils::string::va("materials/%s.png", name.data()), &data))
 				{
+					data_.materials[name] = nullptr;
 					return nullptr;
 				}
 
@@ -124,24 +137,24 @@ namespace materials
 			return result;
 		}
 
-		bool db_material_streaming_fail_stub(game::Material* material)
+		int db_material_streaming_fail_stub(game::Material* material)
 		{
-			const auto found = material_data.access<bool>([material](material_data_t& data_)
+			if (material->constantTable == &constant_table)
 			{
-				if (data_.materials.find(material->name) != data_.materials.end())
-				{
-					return true;
-				}
-
-				return false;
-			});
-
-			if (found)
-			{
-				return false;
+				return 0;
 			}
 
-			return db_material_streaming_fail_hook.invoke<bool>(material);
+			return db_material_streaming_fail_hook.invoke<int>(material);
+		}
+
+		unsigned int db_get_material_index_stub(game::Material* material)
+		{
+			if (material->constantTable == &constant_table)
+			{
+				return 0;
+			}
+
+			return db_get_material_index_hook.invoke<unsigned int>(material);
 		}
 	}
 
@@ -150,6 +163,24 @@ namespace materials
 		material_data.access([&](material_data_t& data_)
 		{
 			data_.images[name] = data;
+		});
+	}
+
+	void clear()
+	{
+		material_data.access([&](material_data_t& data_)
+		{
+			for (auto& material : data_.materials)
+			{
+				if (material.second == nullptr)
+				{
+					continue;
+				}
+
+				free_material(material.second);
+			}
+
+			data_.materials.clear();
 		});
 	}
 
@@ -165,6 +196,7 @@ namespace materials
 
 			material_register_handle_hook.create(game::Material_RegisterHandle, material_register_handle_stub);
 			db_material_streaming_fail_hook.create(SELECT_VALUE(0x1401D3180, 0x1402C6260), db_material_streaming_fail_stub);
+			db_get_material_index_hook.create(SELECT_VALUE(0x1401CAD00, 0x1402BBB20), db_get_material_index_stub);
 		}
 	};
 }

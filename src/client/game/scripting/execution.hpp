@@ -27,13 +27,16 @@ namespace scripting
 	script_value call_script_function(const entity& entity, const std::string& filename,
 		const std::string& function, const std::vector<script_value>& arguments);
 
-	void clear_entity_fields(const entity& entity);
-	void clear_custom_fields();
-
 	void set_entity_field(const entity& entity, const std::string& field, const script_value& value);
 	script_value get_entity_field(const entity& entity, const std::string& field);
 
 	void notify(const entity& entity, const std::string& event, const std::vector<script_value>& arguments);
 
 	unsigned int make_array();
+
+	script_value get_object_variable(const unsigned int parent_id, const unsigned int id);
+	script_value get_object_variable(const unsigned int parent_id, const std::string& name);
+
+	void set_object_variable(const unsigned int parent_id, const std::string& name, const script_value& value);
+	void set_object_variable(const unsigned int parent_id, const unsigned int id, const script_value& value);
 }

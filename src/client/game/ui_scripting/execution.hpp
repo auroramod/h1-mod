@@ -9,6 +9,8 @@ namespace ui_scripting
 	script_value get_return_value(int offset);
 	arguments get_return_values(int count);
 
+	bool notify(const std::string& name, const event_arguments& arguments);
+
 	arguments call_script_function(const function& function, const arguments& arguments);
 
 	script_value get_field(const userdata& self, const script_value& key);

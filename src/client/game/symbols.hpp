@@ -33,18 +33,23 @@ namespace game
 
 	WEAK symbol<void()> Com_Frame_Try_Block_Function{0x1401CE8D0, 0x1400D8310};
 	WEAK symbol<CodPlayMode()> Com_GetCurrentCoDPlayMode{0, 0x1405039A0};
-	WEAK symbol<bool()> Com_InFrontEnd{0x1400E4B30, 0x140176A30};
+	WEAK symbol<bool()> Com_InFrontend{0x1400E4B30, 0x140176A30};
 	WEAK symbol<void(float, float, int)> Com_SetSlowMotion{0, 0x1400DB790};
 	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{0x1403509C0, 0x1400D78A0};
 	WEAK symbol<void()> Com_Quit_f{0x140352BE0, 0x1400DA830};
+	WEAK symbol<void(char const* finalMessage)> Com_Shutdown{0x140353B70, 0x1400DB8A0};
+
 	WEAK symbol<void()> Quit{0x140352D90, 0x1400DA830};
 
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{0x1401389A0, 0x140220CC0};
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{0x140138750, 0x140220620};
 	WEAK symbol<void(int localClientNum, /*mp::cg_s**/void* cg, 
 		const char* dvar, const char* value)> CG_SetClientDvarFromServer{0, 0x140236120};
+	WEAK symbol<char*(const unsigned int weapon, 
+		bool isAlternate, char* outputBuffer, int bufferLen)> CG_GetWeaponDisplayName{0x14016EC30, 0x1400B5840};
 
 	WEAK symbol<bool()> CL_IsCgameInitialized{0x14017EE30, 0x140245650};
+	WEAK symbol<void(int a1)> CL_VirtualLobbyShutdown{0, 0x140256D40};
 
 	WEAK symbol<void(int hash, const char* name, const char* buffer)> Dvar_SetCommand{0x1403C72B0, 0x1404FD0A0};
 	WEAK symbol<dvar_t*(const char* name)> Dvar_FindVar{0x1403C5D50, 0x1404FBB00};
@@ -70,7 +75,7 @@ namespace game
 	WEAK symbol<void(const char* gameName)> FS_Startup{0x1403B85D0, 0x1404EDD30};
 	WEAK symbol<void(const char* path, const char* dir)> FS_AddLocalizedGameDirectory{0x1403B6030, 0x1404EBE20};
 
-	WEAK symbol<unsigned int(unsigned int, unsigned int)> GetVariable{0x14036FDD0, 0x1403F3730};
+	WEAK symbol<unsigned int(unsigned int, unsigned int)> GetVariable{0x14036FDD0, 0x14043DD70};
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int unsignedValue)> GetNewVariable{0x14036FA00, 0x14043D990};
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int unsignedValue)> GetNewArrayVariable{0x14036F880, 0x14043D810};
 	WEAK symbol<void()> GScr_LoadConsts{0x1402D13E0, 0x140393810};
@@ -136,6 +141,7 @@ namespace game
 	WEAK symbol<void()> Scr_ClearOutParams{0x140374460, 0x140442510};
 	WEAK symbol<scr_entref_t(unsigned int entId)> Scr_GetEntityIdRef{0x140372D50, 0x140440D80};
 	WEAK symbol<unsigned int(int classnum, unsigned int entnum)> Scr_GetEntityId{0x140372CA0, 0x140440CD0};
+	WEAK symbol<int(unsigned int classnum, int entnum, int offset)> Scr_SetObjectField{0x1402B9F60, 0x140385330};
 
 	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetViewPlacement{0x1401981F0, 0x140288550};
 
@@ -143,16 +149,22 @@ namespace game
 	DB_EnumXAssets_Internal{0x1401C9C10, 0x1402BA830};
 	WEAK symbol<const char*(const XAsset* asset)> DB_GetXAssetName{0x14019A390, 0x14028BE50};
 	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x14019A3B0, 0x14028BE70};
+	WEAK symbol<XAssetHeader(XAssetType type, const char* name, 
+		int createDefault)> DB_FindXAssetHeader{0x1401CA150, 0x1402BAC70};
 
 	WEAK symbol<void(int clientNum, const char* menu, 
 		int a3, int a4, unsigned int a5)> LUI_OpenMenu{0x14039D5F0, 0x1404CD210};
+	WEAK symbol<bool(int clientNum, const char* name, hks::lua_State* s)> LUI_BeginEvent{0x1400D27F0, 0x140161A00};
+	WEAK symbol<void(hks::lua_State* s)> LUI_EndEvent{0x1400D3A80, 0x140162CD0};
+	WEAK symbol<void()> LUI_EnterCriticalSection{0x1400D3B70, 0x140162DC0};
+	WEAK symbol<void()> LUI_LeaveCriticalSection{0x1400D8DB0, 0x140168150};
 
 	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0x1404709C0, 0x1404C7320};
 
 	WEAK symbol<scr_string_t(const char* str)> SL_FindString{0x14036D700, 0x14043B470};
 	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{0x14036D9A0, 0x14043B840};
-	WEAK symbol<const char* (scr_string_t stringValue)> SL_ConvertToString{0x14036D420, 0x14043B170};
-	WEAK symbol<int(unsigned int classnum, int entnum, int offset)> Scr_SetObjectField{0x1402B9F60, 0x140385330};
+	WEAK symbol<const char*(scr_string_t stringValue)> SL_ConvertToString{0x14036D420, 0x14043B170};
+	WEAK symbol<unsigned int(const char* str)> SL_GetCanonicalString{0x14036A310, 0x140437EA0};
 
 	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{0, 0x140480860};
 	WEAK symbol<void(int arg, char* buffer, int bufferLength)> SV_Cmd_ArgvBuffer{0x1403446C0, 0x140404CA0};
@@ -266,5 +278,6 @@ namespace game
 			int internal_, int profilerTreatClosureAsFunc)> cclosure_Create{0x14008B5D0, 0x14011B540};
 		WEAK symbol<int(lua_State* s, int t)> hksi_luaL_ref{0x1400A64D0, 0x140136D30};
 		WEAK symbol<void(lua_State* s, int t, int ref)> hksi_luaL_unref{0x14009EF10, 0x14012F610};
+		WEAK symbol<void(lua_State* s, HksObject* lfp)> closePendingUpvalues{0x14008EA00, 0x14011E970};
 	}
 }

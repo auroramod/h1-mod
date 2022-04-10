@@ -212,7 +212,7 @@ namespace logfile
 				return false;
 			}
 
-			const auto hook = vm_execute_hooks[pos];
+			const auto& hook = vm_execute_hooks[pos];
 			const auto state = hook.lua_state();
 
 			const scripting::entity self = local_id_to_entity(game::scr_VmPub->function_frame->fs.localId);
@@ -296,6 +296,8 @@ namespace logfile
 	public:
 		void post_unpack() override
 		{
+			utils::hook::jump(SELECT_VALUE(0x140376655, 0x140444645), utils::hook::assemble(vm_execute_stub), true);
+
 			if (game::environment::is_sp())
 			{
 				return;
@@ -308,8 +310,6 @@ namespace logfile
 
 			utils::hook::call(0x140484EC0, g_shutdown_game_stub);
 			utils::hook::call(0x1404853C1, g_shutdown_game_stub);
-
-			utils::hook::jump(SELECT_VALUE(0x140376655, 0x140444645), utils::hook::assemble(vm_execute_stub), true);
 		}
 	};
 }

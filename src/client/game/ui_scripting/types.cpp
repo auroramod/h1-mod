@@ -273,4 +273,38 @@ namespace ui_scripting
 	{
 		return call_script_function(*this, arguments);
 	}
+
+	/***************************************************************
+     * Stack
+     **************************************************************/
+
+    stack::stack()
+    {
+        this->state = *game::hks::lua_state;
+        this->state->m_apistack.top = this->state->m_apistack.base;
+    }
+
+    void stack::save(int num_args)
+    {
+        this->num_args_ = num_args;
+        this->num_calls_ = state->m_numberOfCCalls;
+        this->base_bottom_ = state->m_apistack.base - state->m_apistack.bottom;
+        this->top_bottom_ = state->m_apistack.top - state->m_apistack.bottom;
+        this->callstack_ = state->m_callStack.m_current - state->m_callStack.m_records;
+    }
+
+    void stack::fix()
+    {
+        this->state->m_numberOfCCalls = this->num_calls_;
+
+        game::hks::closePendingUpvalues(this->state, &this->state->m_apistack.bottom[this->top_bottom_ - this->num_args_]);
+        this->state->m_callStack.m_current = &this->state->m_callStack.m_records[this->callstack_];
+
+        this->state->m_apistack.base = &this->state->m_apistack.bottom[this->base_bottom_];
+        this->state->m_apistack.top = &this->state->m_apistack.bottom[this->top_bottom_ - static_cast<uint64_t>(this->num_args_ + 1)];
+
+        this->state->m_apistack.bottom[this->top_bottom_].t = this->state->m_apistack.top[-1].t;
+        this->state->m_apistack.bottom[this->top_bottom_].v.ptr = this->state->m_apistack.top[-1].v.ptr;
+        this->state->m_apistack.top = &this->state->m_apistack.bottom[this->top_bottom_ + 1];
+    }
 }

@@ -264,6 +264,7 @@ filter {}
 
 filter "configurations:Debug"
 	optimize "Debug"
+	buildoptions {"/bigobj"}
 	defines {"DEBUG", "_DEBUG"}
 filter {}
 
@@ -318,6 +319,10 @@ prebuildcommands {"pushd %{_MAIN_SCRIPT_DIR}", "tools\\premake5 generate-buildin
 
 if _OPTIONS["copy-to"] then
 	postbuildcommands {"copy /y \"$(TargetPath)\" \"" .. _OPTIONS["copy-to"] .. "\""}
+end
+
+if _OPTIONS["debug-dir"] then
+	debugdir ( _OPTIONS["debug-dir"] )
 end
 
 dependencies.imports()

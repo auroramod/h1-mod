@@ -1175,7 +1175,12 @@ namespace game
 		const char* name;
 		char __pad0[0x118];
 		char textureCount;
-		char __pad1[7];
+		char constantCount;
+		char stateBitsCount;
+		char stateFlags;
+		char cameraRegion;
+		char materialType;
+		char assetFlags;
 		MaterialTechniqueSet* techniqueSet;
 		MaterialTextureDef* textureTable;
 		void* constantTable;
@@ -1311,6 +1316,14 @@ namespace game
 		const char* buffer;
 	};
 
+	struct TTF
+	{
+		const char* name;
+		int len;
+		const char* buffer;
+		int fontFace;
+	};
+
 	struct GfxImageLoadDef
 	{
 		char levelCount;
@@ -1382,6 +1395,7 @@ namespace game
 		StringTable* stringTable;
 		LuaFile* luaFile;
 		GfxImage* image;
+		TTF* ttf;
 	};
 
 	struct XAsset

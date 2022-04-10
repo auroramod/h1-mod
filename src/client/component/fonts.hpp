@@ -1,6 +1,6 @@
 #pragma once
 
-namespace materials
+namespace fonts
 {
 	void add(const std::string& name, const std::string& data);
 	void clear();

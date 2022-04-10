@@ -2,6 +2,7 @@
 #include "context.hpp"
 #include "error.hpp"
 #include "value_conversion.hpp"
+#include "../../scripting/execution.hpp"
 #include "../script_value.hpp"
 #include "../execution.hpp"
 
@@ -10,6 +11,9 @@
 #include "../../../component/updater.hpp"
 #include "../../../component/fps.hpp"
 #include "../../../component/localized_strings.hpp"
+#include "../../../component/fastfiles.hpp"
+#include "../../../component/scripting.hpp"
+#include "../../../component/mods.hpp"
 
 #include "component/game_console.hpp"
 #include "component/scheduler.hpp"
@@ -22,6 +26,31 @@ namespace ui_scripting::lua
 {
 	namespace
 	{
+		const auto json_script = utils::nt::load_resource(LUA_JSON);
+
+		void setup_json(sol::state& state)
+		{
+			const auto json = state.safe_script(json_script, &sol::script_pass_on_error);
+			handle_error(json);
+			state["json"] = json;
+		}
+
+		void setup_io(sol::state& state)
+		{
+			state["io"]["fileexists"] = utils::io::file_exists;
+			state["io"]["writefile"] = utils::io::write_file;
+			state["io"]["movefile"] = utils::io::move_file;
+			state["io"]["filesize"] = utils::io::file_size;
+			state["io"]["createdirectory"] = utils::io::create_directory;
+			state["io"]["directoryexists"] = utils::io::directory_exists;
+			state["io"]["directoryisempty"] = utils::io::directory_is_empty;
+			state["io"]["listfiles"] = utils::io::list_files;
+			state["io"]["copyfolder"] = utils::io::copy_folder;
+			state["io"]["removefile"] = utils::io::remove_file;
+			state["io"]["removedirectory"] = utils::io::remove_directory;
+			state["io"]["readfile"] = static_cast<std::string(*)(const std::string&)>(utils::io::read_file);
+		}
+
 		void setup_types(sol::state& state, scheduler& scheduler)
 		{
 			struct game
@@ -66,6 +95,78 @@ namespace ui_scripting::lua
 				const std::string& value)
 			{
 				localized_strings::override(string, value);
+			};
+
+			game_type["sharedset"] = [](const game&, const std::string& key, const std::string& value)
+			{
+				scripting::shared_table.access([key, value](scripting::shared_table_t& table)
+				{
+					table[key] = value;
+				});
+			};
+
+			game_type["sharedget"] = [](const game&, const std::string& key)
+			{
+				std::string result;
+				scripting::shared_table.access([key, &result](scripting::shared_table_t& table)
+				{
+					result = table[key];
+				});
+				return result;
+			};
+
+			game_type["sharedclear"] = [](const game&)
+			{
+				scripting::shared_table.access([](scripting::shared_table_t& table)
+				{
+					table.clear();
+				});
+			};
+
+			game_type["assetlist"] = [](const game&, const sol::this_state s, const std::string& type_string)
+			{
+				auto table = sol::table::create(s.lua_state());
+				auto index = 1;
+				auto type_index = -1;
+
+				for (auto i = 0; i < ::game::XAssetType::ASSET_TYPE_COUNT; i++)
+				{
+					if (type_string == ::game::g_assetNames[i])
+					{
+						type_index = i;
+					}
+				}
+
+				if (type_index == -1)
+				{
+					throw std::runtime_error("Asset type does not exist");
+				}
+
+				const auto type = static_cast<::game::XAssetType>(type_index);
+				fastfiles::enum_assets(type, [type, &table, &index](const ::game::XAssetHeader header)
+				{
+					const auto asset = ::game::XAsset{type, header};
+					const std::string asset_name = ::game::DB_GetXAssetName(&asset);
+					table[index++] = asset_name;
+				}, true);
+
+				return table;
+			};
+
+			game_type["getweapondisplayname"] = [](const game&, const std::string& name)
+			{
+				const auto alternate = name.starts_with("alt_");
+				const auto weapon = ::game::G_GetWeaponForName(name.data());
+
+				char buffer[0x400] = {0};
+				::game::CG_GetWeaponDisplayName(weapon, alternate, buffer, 0x400);
+
+				return std::string(buffer);
+			};
+
+			game_type["getloadedmod"] = [](const game&)
+			{
+				return mods::mod_path;
 			};
 
 			auto userdata_type = state.new_usertype<userdata>("userdata_");
@@ -193,6 +294,51 @@ namespace ui_scripting::lua
 			updater_table["getcurrentfile"] = updater::get_current_file;
 			
 			state["updater"] = updater_table;
+
+			if (::game::environment::is_sp())
+			{
+				struct player
+				{
+				};
+				auto player_type = state.new_usertype<player>("player_");
+				state["player"] = player();
+
+				player_type["notify"] = [](const player&, const sol::this_state s, const std::string& name, sol::variadic_args va)
+				{
+					if (!::game::CL_IsCgameInitialized() || !::game::sp::g_entities[0].client)
+					{
+						throw std::runtime_error("Not in game");
+					}
+
+					const sol::state_view view{s};
+					const auto to_string = view["tostring"].get<sol::protected_function>();
+
+					std::vector<std::string> args{};
+					for (auto arg : va)
+					{
+						args.push_back(to_string.call(arg).get<std::string>());
+					}
+
+					::scheduler::once([s, name, args]()
+					{
+						try
+						{
+							std::vector<scripting::script_value> arguments{};
+
+							for (const auto& arg : args)
+							{
+								arguments.push_back(arg);
+							}
+
+							const auto player = scripting::call("getentbynum", {0}).as<scripting::entity>();
+							scripting::notify(player, name, arguments);
+						}
+						catch (...)
+						{
+						}
+					}, ::scheduler::pipeline::server);
+				};
+			}
 		}
 	}
 
@@ -207,6 +353,8 @@ namespace ui_scripting::lua
 		                            sol::lib::math,
 		                            sol::lib::table);
 
+		setup_json(this->state_);
+		setup_io(this->state_);
 		setup_types(this->state_, this->scheduler_);
 
 		if (type == script_type::file)

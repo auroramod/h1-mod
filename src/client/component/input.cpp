@@ -4,6 +4,7 @@
 #include "game/game.hpp"
 
 #include "game_console.hpp"
+#include "game/ui_scripting/execution.hpp"
 
 #include <utils/hook.hpp>
 
@@ -14,8 +15,22 @@ namespace input
 		utils::hook::detour cl_char_event_hook;
 		utils::hook::detour cl_key_event_hook;
 
+		bool lui_running()
+		{
+			return *game::hks::lua_state != nullptr;
+		}
+
 		void cl_char_event_stub(const int local_client_num, const int key)
 		{
+			if (lui_running())
+			{
+				ui_scripting::notify("keypress",
+				{
+					{"keynum", key},
+					{"key", game::Key_KeynumToString(key, 0, 1)},
+				});
+			}
+
 			if (!game_console::console_char_event(local_client_num, key))
 			{
 				return;
@@ -26,6 +41,15 @@ namespace input
 
 		void cl_key_event_stub(const int local_client_num, const int key, const int down)
 		{
+			if (lui_running())
+			{
+				ui_scripting::notify(down ? "keydown" : "keyup",
+				{
+					{"keynum", key},
+					{"key", game::Key_KeynumToString(key, 0, 1)},
+				});
+			}
+
 			if (!game_console::console_key_event(local_client_num, key, down))
 			{
 				return;

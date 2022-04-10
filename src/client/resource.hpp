@@ -18,3 +18,5 @@
 
 #define LUI_COMMON            309
 #define LUI_UPDATER           310
+
+#define LUA_JSON              311

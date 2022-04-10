@@ -86,4 +86,28 @@ namespace ui_scripting
 
 		int ref{};
 	};
+
+	class stack final
+	{
+	public:
+		stack();
+
+		void save(int num_args);
+		void fix();
+
+		stack(stack&&) = delete;
+		stack(const stack&) = delete;
+		stack& operator=(stack&&) = delete;
+		stack& operator=(const stack&) = delete;
+
+	private:
+		game::hks::lua_State* state;
+
+		int num_args_;
+		int num_calls_;
+
+		uint64_t base_bottom_;
+		uint64_t top_bottom_;
+		uint64_t callstack_;
+	};
 }
