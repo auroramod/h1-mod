@@ -166,6 +166,14 @@ namespace materials
 		});
 	}
 
+	bool exists(const std::string& name)
+	{
+		return material_data.access<bool>([&](material_data_t& data_)
+		{
+			return data_.images.find(name) != data_.images.end();
+		});
+	}
+
 	void clear()
 	{
 		material_data.access([&](material_data_t& data_)

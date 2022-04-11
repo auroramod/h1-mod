@@ -8,6 +8,10 @@ namespace ui_scripting
 	{
 	public:
 		lightuserdata(void*);
+
+		bool operator==(const lightuserdata& other);
+		bool operator!=(const lightuserdata& other);
+
 		void* ptr;
 	};
 
@@ -23,6 +27,9 @@ namespace ui_scripting
 
 		userdata& operator=(const userdata& other);
 		userdata& operator=(userdata&& other) noexcept;
+
+		bool operator==(const userdata& other);
+		bool operator!=(const userdata& other);
 
 		script_value get(const script_value& key) const;
 		void set(const script_value& key, const script_value& value) const;
@@ -50,6 +57,9 @@ namespace ui_scripting
 		table& operator=(const table& other);
 		table& operator=(table&& other) noexcept;
 
+		bool operator==(const table& other);
+		bool operator!=(const table& other);
+
 		script_value get(const script_value& key) const;
 		void set(const script_value& key, const script_value& value) const;
 
@@ -74,6 +84,9 @@ namespace ui_scripting
 
 		function& operator=(const function& other);
 		function& operator=(function&& other) noexcept;
+
+		bool operator==(const function& other);
+		bool operator!=(const function& other);
 
 		arguments call(const arguments& arguments) const;
 

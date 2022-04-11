@@ -9,6 +9,8 @@ namespace party
 	void start_map(const std::string& mapname);
 
 	void clear_sv_motd();
+	game::netadr_s get_state_host();
+	std::string get_state_challenge();
 	int server_client_count();
 
 	int get_client_num_by_name(const std::string& name);

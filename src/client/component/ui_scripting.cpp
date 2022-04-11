@@ -93,6 +93,7 @@ namespace ui_scripting
 
 		void hks_shutdown_stub()
 		{
+			converted_functions.clear();
 			ui_scripting::lua::engine::stop();
 			hks_shutdown_hook.invoke<void*>();
 		}
@@ -106,15 +107,6 @@ namespace ui_scripting
 			}
 
 			return hks_allocator_hook.invoke<void*>(userData, oldMemory, oldSize, newSize);
-		}
-
-		void hks_frame_stub()
-		{
-			const auto state = *game::hks::lua_state;
-			if (state)
-			{
-				ui_scripting::lua::engine::run_frame();
-			}
 		}
 	}
 
@@ -132,7 +124,7 @@ namespace ui_scripting
 			return 0;
 		}
 
-		const auto function = converted_functions[closure];
+		const auto& function = converted_functions[closure];
 		const auto count = static_cast<int>(state->m_apistack.top - state->m_apistack.base);
 		const auto arguments = get_return_values(count);
 		const auto s = function.lua_state();
@@ -175,6 +167,11 @@ namespace ui_scripting
 		error_hook_enabled = false;
 	}
 
+	bool lui_running()
+	{
+		return *game::hks::lua_state != nullptr;
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -186,11 +183,12 @@ namespace ui_scripting
 				return;
 			}
 
+			scheduler::loop(ui_scripting::lua::engine::run_frame, scheduler::pipeline::lui);
+
 			hks_start_hook.create(SELECT_VALUE(0x1400E4B40, 0x140176A40), hks_start_stub);
 			hks_shutdown_hook.create(SELECT_VALUE(0x1400DD3D0, 0x14016CA80), hks_shutdown_stub);
 			hksi_lual_error_hook.create(SELECT_VALUE(0x1400A5EA0, 0x14012F300), hksi_lual_error_stub);
 			hks_allocator_hook.create(SELECT_VALUE(0x14009B570, 0x14012BAC0), hks_allocator_stub);
-			hks_frame_hook.create(SELECT_VALUE(0x1400E37F0, 0x1401755B0), hks_frame_stub);
 			lui_error_hook.create(SELECT_VALUE(0x14007D7D0, 0x14010C9E0), lui_error_stub);
 			hksi_hks_error_hook.create(SELECT_VALUE(0x14009DD80, 0x14012E390), hksi_hks_error_stub);
 

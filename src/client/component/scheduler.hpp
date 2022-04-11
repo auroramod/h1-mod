@@ -16,6 +16,9 @@ namespace scheduler
 		// The game's main thread
 		main,
 
+		// LUI context
+		lui,
+
 		count,
 	};
 

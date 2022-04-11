@@ -14,9 +14,12 @@
 #include "../../../component/fastfiles.hpp"
 #include "../../../component/scripting.hpp"
 #include "../../../component/mods.hpp"
+#include "../../../component/discord.hpp"
 
 #include "component/game_console.hpp"
 #include "component/scheduler.hpp"
+
+#include <discord_rpc.h>
 
 #include <utils/string.hpp>
 #include <utils/nt.hpp>
@@ -265,36 +268,6 @@ namespace ui_scripting::lua
 				return sol::as_returns(returns);
 			};
 
-			state["luiglobals"] = table((*::game::hks::lua_state)->globals.v.table);
-			state["CoD"] = state["luiglobals"]["CoD"];
-			state["LUI"] = state["luiglobals"]["LUI"];
-			state["Engine"] = state["luiglobals"]["Engine"];
-			state["Game"] = state["luiglobals"]["Game"];
-
-			auto updater_table = sol::table::create(state.lua_state());
-
-			updater_table["relaunch"] = updater::relaunch;
-
-			updater_table["sethastriedupdate"] = updater::set_has_tried_update;
-			updater_table["gethastriedupdate"] = updater::get_has_tried_update;
-			updater_table["autoupdatesenabled"] = updater::auto_updates_enabled;
-
-			updater_table["startupdatecheck"] = updater::start_update_check;
-			updater_table["isupdatecheckdone"] = updater::is_update_check_done;
-			updater_table["getupdatecheckstatus"] = updater::get_update_check_status;
-			updater_table["isupdateavailable"] = updater::is_update_available;
-
-			updater_table["startupdatedownload"] = updater::start_update_download;
-			updater_table["isupdatedownloaddone"] = updater::is_update_download_done;
-			updater_table["getupdatedownloadstatus"] = updater::get_update_download_status;
-			updater_table["cancelupdate"] = updater::cancel_update;
-			updater_table["isrestartrequired"] = updater::is_restart_required;
-
-			updater_table["getlasterror"] = updater::get_last_error;
-			updater_table["getcurrentfile"] = updater::get_current_file;
-			
-			state["updater"] = updater_table;
-
 			if (::game::environment::is_sp())
 			{
 				struct player
@@ -339,6 +312,47 @@ namespace ui_scripting::lua
 					}, ::scheduler::pipeline::server);
 				};
 			}
+
+			state["luiglobals"] = table((*::game::hks::lua_state)->globals.v.table);
+			state["CoD"] = state["luiglobals"]["CoD"];
+			state["LUI"] = state["luiglobals"]["LUI"];
+			state["Engine"] = state["luiglobals"]["Engine"];
+			state["Game"] = state["luiglobals"]["Game"];
+
+			auto updater_table = sol::table::create(state.lua_state());
+
+			updater_table["relaunch"] = updater::relaunch;
+
+			updater_table["sethastriedupdate"] = updater::set_has_tried_update;
+			updater_table["gethastriedupdate"] = updater::get_has_tried_update;
+			updater_table["autoupdatesenabled"] = updater::auto_updates_enabled;
+
+			updater_table["startupdatecheck"] = updater::start_update_check;
+			updater_table["isupdatecheckdone"] = updater::is_update_check_done;
+			updater_table["getupdatecheckstatus"] = updater::get_update_check_status;
+			updater_table["isupdateavailable"] = updater::is_update_available;
+
+			updater_table["startupdatedownload"] = updater::start_update_download;
+			updater_table["isupdatedownloaddone"] = updater::is_update_download_done;
+			updater_table["getupdatedownloadstatus"] = updater::get_update_download_status;
+			updater_table["cancelupdate"] = updater::cancel_update;
+			updater_table["isrestartrequired"] = updater::is_restart_required;
+
+			updater_table["getlasterror"] = updater::get_last_error;
+			updater_table["getcurrentfile"] = updater::get_current_file;
+			
+			state["updater"] = updater_table;
+
+			auto discord_table = sol::table::create(state.lua_state());
+
+			discord_table["respond"] = discord::respond;
+			discord_table["getavatarmaterial"] = discord::get_avatar_material;
+			discord_table["reply"] = sol::table::create(state.lua_state());
+			discord_table["reply"]["yes"] = DISCORD_REPLY_YES;
+			discord_table["reply"]["ignore"] = DISCORD_REPLY_IGNORE;
+			discord_table["reply"]["no"] = DISCORD_REPLY_NO;
+
+			state["discord"] = discord_table;
 		}
 	}
 

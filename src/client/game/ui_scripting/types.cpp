@@ -13,6 +13,16 @@ namespace ui_scripting
 	{
 	}
 
+	bool lightuserdata::operator==(const lightuserdata& other)
+	{
+		return this->ptr == other.ptr;
+	}
+
+	bool lightuserdata::operator!=(const lightuserdata& other)
+	{
+		return this->ptr != other.ptr;
+	}
+
 	/***************************************************************
 	 * Userdata
 	 **************************************************************/
@@ -64,6 +74,16 @@ namespace ui_scripting
 		}
 
 		return *this;
+	}
+
+	bool userdata::operator==(const userdata& other)
+	{
+		return this->ptr == other.ptr;
+	}
+
+	bool userdata::operator!=(const userdata& other)
+	{
+		return this->ptr != other.ptr;
 	}
 
 	void userdata::add()
@@ -158,6 +178,16 @@ namespace ui_scripting
 		return *this;
 	}
 
+	bool table::operator==(const table& other)
+	{
+		return this->ptr == other.ptr;
+	}
+
+	bool table::operator!=(const table& other)
+	{
+		return this->ptr != other.ptr;
+	}
+
 	void table::add()
 	{
 		game::hks::HksObject value{};
@@ -245,6 +275,16 @@ namespace ui_scripting
 		}
 
 		return *this;
+	}
+
+	bool function::operator==(const function& other)
+	{
+		return this->ptr == other.ptr;
+	}
+
+	bool function::operator!=(const function& other)
+	{
+		return this->ptr != other.ptr;
 	}
 
 	void function::add()
