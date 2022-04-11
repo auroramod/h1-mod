@@ -67,7 +67,7 @@ namespace discord
 
 					discord_presence.details = utils::string::va("%s on %s", gametype, mapname);
 
-					char clean_hostname[0x100] = {0};
+					char clean_hostname[0x80] = {0};
 					utils::string::strip(game::Dvar_FindVar("sv_hostname")->current.string, 
 						clean_hostname, sizeof(clean_hostname));
 					auto max_clients = party::server_client_count();
@@ -81,18 +81,22 @@ namespace discord
 					}
 					else
 					{
-						discord_presence.partyPrivacy = DISCORD_PARTY_PUBLIC;
-
-						// TODO: we need to make this a random string that represents the session ID
-						// const auto sessionId = party::get_state_challenge();
-						discord_presence.partyId = "PLACEHOLDER";
-
 						const auto server_net_info = party::get_state_host();
 						const auto server_ip_port = utils::string::va("%i.%i.%i.%i:%i",
-							server_net_info.ip[0], server_net_info.ip[1], server_net_info.ip[2], server_net_info.ip[3],
-							ntohs(server_net_info.port));
+							server_net_info.ip[0], 
+							server_net_info.ip[1], 
+							server_net_info.ip[2], 
+							server_net_info.ip[3],
+							ntohs(server_net_info.port)
+						);
 
+						char party_id[0x80] = {0};
+						const auto server_ip_port_hash = utils::cryptography::sha1::compute(server_ip_port, true);
+						strcpy_s(party_id, 0x80, server_ip_port_hash.data());
+
+						discord_presence.partyId = party_id;
 						discord_presence.joinSecret = server_ip_port;
+						discord_presence.partyPrivacy = DISCORD_PARTY_PUBLIC;
 					}
 
 					discord_presence.partySize = *reinterpret_cast<int*>(0x1429864C4);
