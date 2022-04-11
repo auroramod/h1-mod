@@ -8,6 +8,7 @@
 #include "network.hpp"
 #include "party.hpp"
 #include "materials.hpp"
+#include "discord.hpp"
 
 #include "ui_scripting.hpp"
 #include "game/ui_scripting/execution.hpp"
@@ -24,8 +25,6 @@
 #define DEFAULT_AVATAR_URL "https://cdn.discordapp.com/embed/avatars/0.png"
 #define AVATAR_URL "https://cdn.discordapp.com/avatars/%s/%s.png?size=128"
 
-#include "discord.hpp"
-
 namespace discord
 {
 	namespace
@@ -36,11 +35,11 @@ namespace discord
 		{
 			if (!game::CL_IsCgameInitialized() || game::VirtualLobby_Loaded())
 			{
-				discord_presence.details = game::environment::is_sp() ? "Singleplayer" : "Multiplayer";
+				discord_presence.details = SELECT_VALUE("Singleplayer", "Multiplayer");
 				discord_presence.state = "Main Menu";
 
-				auto firingRangeDvar = game::Dvar_FindVar("virtualLobbyInFiringRange");
-				if (firingRangeDvar && firingRangeDvar->current.enabled == 1)
+				const auto in_firing_range = game::Dvar_FindVar("virtualLobbyInFiringRange");
+				if (in_firing_range && in_firing_range->current.enabled == 1)
 				{
 					discord_presence.state = "Firing Range";
 				}
@@ -48,7 +47,7 @@ namespace discord
 				discord_presence.partySize = 0;
 				discord_presence.partyMax = 0;
 				discord_presence.startTimestamp = 0;
-				discord_presence.largeImageKey = game::environment::is_sp() ? "menu_singleplayer" : "menu_multiplayer";
+				discord_presence.largeImageKey = SELECT_VALUE("menu_singleplayer", "menu_multiplayer");
 			
 				// set to blank when in lobby
 				discord_presence.matchSecret = "";
@@ -58,16 +57,18 @@ namespace discord
 			}
 			else
 			{
+				static char details[0x80] = {0};
 				const auto map = game::Dvar_FindVar("mapname")->current.string;
-				const auto mapname = game::UI_SafeTranslateString(utils::string::va("PRESENCE_%s%s", (game::environment::is_sp() ? "SP_" : ""), map));
+				const auto mapname = game::UI_SafeTranslateString(
+					utils::string::va("PRESENCE_%s%s", SELECT_VALUE("SP_", ""), map));
 
 				if (game::environment::is_mp())
 				{
-					const auto gametype = game::UI_GetGameTypeDisplayName(game::Dvar_FindVar("g_gametype")->current.string);
+					const auto gametype = game::UI_GetGameTypeDisplayName(
+						game::Dvar_FindVar("g_gametype")->current.string);
+					strcpy_s(details, 0x80, utils::string::va("%s on %s", gametype, mapname));
 
-					discord_presence.details = utils::string::va("%s on %s", gametype, mapname);
-
-					char clean_hostname[0x80] = {0};
+					static char clean_hostname[0x80] = {0};
 					utils::string::strip(game::Dvar_FindVar("sv_hostname")->current.string, 
 						clean_hostname, sizeof(clean_hostname));
 					auto max_clients = party::server_client_count();
@@ -83,19 +84,22 @@ namespace discord
 					{
 						const auto server_net_info = party::get_state_host();
 						const auto server_ip_port = utils::string::va("%i.%i.%i.%i:%i",
-							server_net_info.ip[0], 
-							server_net_info.ip[1], 
-							server_net_info.ip[2], 
-							server_net_info.ip[3],
-							ntohs(server_net_info.port)
+							static_cast<int>(server_net_info.ip[0]), 
+							static_cast<int>(server_net_info.ip[1]),
+							static_cast<int>(server_net_info.ip[2]),
+							static_cast<int>(server_net_info.ip[3]),
+							static_cast<int>(ntohs(server_net_info.port))
 						);
 
-						char party_id[0x80] = {0};
-						const auto server_ip_port_hash = utils::cryptography::sha1::compute(server_ip_port, true);
+						static char join_secret[0x80] = {0};
+						strcpy_s(join_secret, 0x80, server_ip_port);
+
+						static char party_id[0x80] = {0};
+						const auto server_ip_port_hash = utils::cryptography::sha1::compute(server_ip_port, true).substr(0, 8);
 						strcpy_s(party_id, 0x80, server_ip_port_hash.data());
 
 						discord_presence.partyId = party_id;
-						discord_presence.joinSecret = server_ip_port;
+						discord_presence.joinSecret = join_secret;
 						discord_presence.partyPrivacy = DISCORD_PARTY_PUBLIC;
 					}
 
@@ -108,8 +112,10 @@ namespace discord
 				{
 					discord_presence.state = "";
 					discord_presence.largeImageKey = map;
-					discord_presence.details = mapname;
+					strcpy_s(details, 0x80, mapname);
 				}
+
+				discord_presence.details = details;
 
 				if (!discord_presence.startTimestamp)
 				{
