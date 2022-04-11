@@ -7,11 +7,24 @@
 #include "command.hpp"
 #include "network.hpp"
 #include "party.hpp"
+#include "materials.hpp"
+
+#include "ui_scripting.hpp"
+#include "game/ui_scripting/execution.hpp"
 
 #include <utils/string.hpp>
 #include <utils/cryptography.hpp>
+#include <utils/http.hpp>
 
 #include <discord_rpc.h>
+
+#define DEFAULT_AVATAR "discord_default_avatar"
+#define AVATAR "discord_avatar_%s"
+
+#define DEFAULT_AVATAR_URL "https://cdn.discordapp.com/embed/avatars/0.png"
+#define AVATAR_URL "https://cdn.discordapp.com/avatars/%s/%s.png?size=128"
+
+#include "discord.hpp"
 
 namespace discord
 {
@@ -21,8 +34,6 @@ namespace discord
 
 		void update_discord()
 		{
-			Discord_RunCallbacks();
-
 			if (!game::CL_IsCgameInitialized() || game::VirtualLobby_Loaded())
 			{
 				discord_presence.details = game::environment::is_sp() ? "Singleplayer" : "Multiplayer";
@@ -105,6 +116,51 @@ namespace discord
 
 			Discord_UpdatePresence(&discord_presence);
 		}
+
+		void download_user_avatar(const std::string& id, const std::string& avatar)
+		{
+			const auto data = utils::http::get_data(
+				utils::string::va(AVATAR_URL, id.data(), avatar.data()));
+			if (data.has_value())
+			{
+				materials::add(utils::string::va(AVATAR, id.data()), data.value());
+			}
+		}
+
+		bool has_default_avatar = false;
+		void download_default_avatar()
+		{
+			const auto data = utils::http::get_data(DEFAULT_AVATAR_URL);
+			if (data.has_value())
+			{
+				has_default_avatar = true;
+				materials::add(DEFAULT_AVATAR, data.value());
+			}
+		}
+	}
+
+	std::string get_avatar_material(const std::string& id)
+	{
+		const auto avatar_name = utils::string::va(AVATAR, id.data());
+		if (materials::exists(avatar_name))
+		{
+			return avatar_name;
+		}
+
+		if (has_default_avatar)
+		{
+			return DEFAULT_AVATAR;
+		}
+
+		return "black";
+	}
+
+	void respond(const std::string& id, int reply)
+	{
+		scheduler::once([=]()
+		{
+			Discord_Respond(id.data(), reply);
+		}, scheduler::pipeline::async);
 	}
 
 	class component final : public component_interface
@@ -122,16 +178,19 @@ namespace discord
 			handlers.ready = ready;
 			handlers.errored = errored;
 			handlers.disconnected = errored;
-			handlers.joinGame = joinGame;
+			handlers.joinGame = join_game;
 			handlers.spectateGame = nullptr;
-			handlers.joinRequest = joinRequest;
+			handlers.joinRequest = join_request;
 
 			Discord_Initialize("947125042930667530", &handlers, 1, nullptr);
+
+			scheduler::once(download_default_avatar, scheduler::pipeline::async);
 
 			scheduler::once([]()
 			{
 				scheduler::once(update_discord, scheduler::pipeline::async);
 				scheduler::loop(update_discord, scheduler::pipeline::async, 5s);
+				scheduler::loop(Discord_RunCallbacks, scheduler::pipeline::async, 1s);
 			}, scheduler::pipeline::main);
 
 			initialized_ = true;
@@ -153,11 +212,8 @@ namespace discord
 		static void ready(const DiscordUser* request)
 		{
 			ZeroMemory(&discord_presence, sizeof(discord_presence));
-
 			discord_presence.instance = 1;
-
 			console::info("Discord: Ready on %s (%s)\n", request->username, request->userId);
-
 			Discord_UpdatePresence(&discord_presence);
 		}
 
@@ -166,25 +222,55 @@ namespace discord
 			console::error("Discord: Error (%i): %s\n", error_code, message);
 		}
 
-		static void joinGame(const char* joinSecret)
+		static void join_game(const char* join_secret)
 		{
-			console::info("Discord: Join game called with join secret: %s\n", joinSecret);
+			console::info("Discord: Join game called with join secret: %s\n", join_secret);
 
-			scheduler::once([joinSecret]()
+			std::string secret = join_secret;
+			scheduler::once([=]()
 			{
 				game::netadr_s target{};
-				if (game::NET_StringToAdr(joinSecret, &target))
+				if (game::NET_StringToAdr(secret.data(), &target))
 				{
-					console::info("Discord: Connecting to server: %s\n", joinSecret);
+					console::info("Discord: Connecting to server: %s\n", secret.data());
 					party::connect(target);
 				}
 			}, scheduler::pipeline::main);
 		}
 
-		static void joinRequest(const DiscordUser* request)
+		static void join_request(const DiscordUser* request)
 		{
-			console::info("Discord: joinRequest from %s (%s)\n", request->username, request->userId);
-			// Discord_Respond(request->userId, DISCORD_REPLY_YES);
+			console::info("Discord: join_request from %s (%s)\n", request->username, request->userId);
+
+			if (game::Com_InFrontend() || !ui_scripting::lui_running())
+			{
+				Discord_Respond(request->userId, DISCORD_REPLY_IGNORE);
+				return;
+			}
+
+			std::string user_id = request->userId;
+			std::string avatar = request->avatar;
+			std::string discriminator = request->discriminator;
+			std::string username = request->username;
+
+			scheduler::once([=]()
+			{
+				const ui_scripting::table request_table{};
+				request_table.set("avatar", avatar);
+				request_table.set("discriminator", discriminator);
+				request_table.set("userid", user_id);
+				request_table.set("username", username);
+
+				ui_scripting::notify("discord_join_request",
+				{
+					{"request", request_table}
+				});
+			}, scheduler::pipeline::lui);
+
+			if (!materials::exists(utils::string::va(AVATAR, user_id.data())))
+			{
+				download_user_avatar(user_id, avatar);
+			}
 		}
 	};
 }
