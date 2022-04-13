@@ -11682,6 +11682,31 @@ namespace dvars
 			"If a joints with position error exceeding this value is detected, then the whole xphys system gets snapped back to the animation pose",
 			generate_hash("xphys_maxJointPositionError")
 		},
+		{
+			"aa_player_kills",
+			"Player kills",
+			generate_hash("aa_player_kills")
+		},
+		{
+			"aa_player_damage_dealt",
+			"Player damages dealt",
+			generate_hash("aa_player_damage_dealt")
+		},
+		{
+			"aa_ads_damage_dealt",
+			"Player damages dealt in ads",
+			generate_hash("aa_ads_damage_dealt")
+		},
+		{
+			"aa_deaths",
+			"Player deaths",
+			generate_hash("aa_deaths")
+		},
+		{
+			"aa_time_tracking",
+			"Time in game",
+			generate_hash("aa_time_tracking")
+		},
 	};
 
 	std::string dvar_get_description(const std::string& name)
