@@ -88,6 +88,18 @@ namespace gameplay
 			a.jmp(0x1401EAF9D);
 		});
 
+		const auto g_speed_stub = utils::hook::assemble([](utils::hook::assembler& a)
+		{
+			a.mov(rax, qword_ptr(reinterpret_cast<int64_t>(&dvars::g_speed)));
+			a.mov(eax, dword_ptr(rax, 0x10));
+
+			// original code
+			a.mov(dword_ptr(r14, 0x36), ax);
+			a.movzx(eax, word_ptr(r14, 0x3A));
+
+			a.jmp(0x140323DBC);
+		});
+
 		const auto client_end_frame_stub = utils::hook::assemble([](utils::hook::assembler& a)
 		{
 			a.push(rax);
@@ -129,6 +141,11 @@ namespace gameplay
 			dvars::g_playerEjection = dvars::register_bool("g_playerEjection", true, game::DVAR_FLAG_REPLICATED,
 				"Flag whether player ejection is on or off");
 			utils::hook::call(0x140323333, stuck_in_client_stub);
+
+			utils::hook::nop(0x140323DAD, 15);
+			utils::hook::jump(0x140323DAD, g_speed_stub, true);
+			dvars::g_speed = dvars::register_int("g_speed", 190, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(),
+				game::DVAR_FLAG_REPLICATED, "changes the speed of the player");
 
 			// Implement player collision dvar
 			dvars::g_playerCollision = dvars::register_bool("g_playerCollision", true, game::DVAR_FLAG_REPLICATED,
