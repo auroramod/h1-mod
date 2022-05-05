@@ -25,6 +25,26 @@ namespace gameplay
 			}
 		}
 
+		int stuck_in_client_stub(void* entity)
+		{
+			if (dvars::g_playerEjection->current.enabled)
+			{
+				return utils::hook::invoke<int>(0x140326CE0, entity); // StuckInClient
+			}
+
+			return 0;
+		}
+
+		void cm_transformed_capsule_trace_stub(game::trace_t* results, const float* start, const float* end,
+			game::Bounds* bounds, game::Bounds* capsule, int contents, const float* origin, const float* angles)
+		{
+			if (dvars::g_playerCollision->current.enabled)
+			{
+				utils::hook::invoke<void>(0x1403FF860,
+					results, start, end, bounds, capsule, contents, origin, angles); // CM_TransformedCapsuleTrace
+			}
+		}
+
 		void pm_crashland_stub(game::mp::playerState_s* ps, void* pml)
 		{
 			if (jump_enableFallDamage->current.enabled)
@@ -90,6 +110,16 @@ namespace gameplay
 
 			utils::hook::call(0x1401E490F, pm_crashland_stub);
 			jump_enableFallDamage = dvars::register_bool("jump_enableFallDamage", true, game::DVAR_FLAG_REPLICATED, "Enable fall damage");
+
+			dvars::g_playerEjection = dvars::register_bool("g_playerEjection", true, game::DVAR_FLAG_REPLICATED,
+				"Flag whether player ejection is on or off");
+			utils::hook::call(0x140323333, stuck_in_client_stub);
+
+			// Implement player collision dvar
+			dvars::g_playerCollision = dvars::register_bool("g_playerCollision", true, game::DVAR_FLAG_REPLICATED,
+				"Flag whether player collision is on or off");
+			utils::hook::call(0x14049D7CF, cm_transformed_capsule_trace_stub); // SV_ClipMoveToEntity
+			utils::hook::call(0x140240BC3, cm_transformed_capsule_trace_stub); // CG_ClipMoveToEntity
 
 			// Implement bouncing dvar
 			dvars::pm_bouncing = dvars::register_bool("pm_bouncing", false,

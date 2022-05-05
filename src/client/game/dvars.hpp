@@ -24,6 +24,8 @@ namespace dvars
 	extern game::dvar_t* con_inputDvarValueColor;
 	extern game::dvar_t* con_inputDvarInactiveValueColor;
 	extern game::dvar_t* con_inputCmdMatchColor;
+	extern game::dvar_t* g_playerEjection;
+	extern game::dvar_t* g_playerCollision;
 
 	extern game::dvar_t* jump_enableFallDamage;
 

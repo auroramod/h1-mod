@@ -21,6 +21,8 @@ namespace dvars
 	game::dvar_t* con_inputDvarValueColor = nullptr;
 	game::dvar_t* con_inputDvarInactiveValueColor = nullptr;
 	game::dvar_t* con_inputCmdMatchColor = nullptr;
+	game::dvar_t* g_playerEjection = nullptr;
+	game::dvar_t* g_playerCollision = nullptr;
 
 	game::dvar_t* jump_enableFallDamage;
 

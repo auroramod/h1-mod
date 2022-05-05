@@ -1428,6 +1428,16 @@ namespace game
 		SV_LIVE_DROP_DISCONNECT = 0x1,
 	};
 
+	struct trace_t
+	{
+	};
+
+	struct Bounds
+	{
+		float midPoint[3];
+		float halfSize[3];
+	};
+
 	namespace mp
 	{
 		struct cachedSnapshot_t
