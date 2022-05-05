@@ -14,7 +14,15 @@ namespace renderer
 
 		int get_fullbright_technique()
 		{
-			return game::TECHNIQUE_UNLIT;
+			switch (dvars::r_fullbright->current.integer)
+			{
+			case 3:
+				return 13;
+			case 2:
+				return 25;
+			default:
+				return game::TECHNIQUE_UNLIT;
+			}
 		}
 
 		void gfxdrawmethod()
@@ -35,7 +43,7 @@ namespace renderer
 		{
 			if (dvars::r_fullbright->modified)
 			{
-				//game::Dvar_ClearModified(dvars::r_fullbright);
+				game::Dvar_ClearModified(dvars::r_fullbright);
 				game::R_SyncRenderThread();
 
 				gfxdrawmethod();
@@ -50,7 +58,7 @@ namespace renderer
 	public:
 		void post_unpack() override
 		{
-			if (game::environment::is_dedi() || !game::environment::is_mp())
+			if (game::environment::is_dedi())
 			{
 				return;
 			}
@@ -72,6 +80,4 @@ namespace renderer
 	};
 }
 
-#ifdef DEBUG
 REGISTER_COMPONENT(renderer::component)
-#endif
