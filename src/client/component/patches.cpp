@@ -227,7 +227,7 @@ namespace patches
 			utils::hook::nop(0x14039E58E, 5); // dvar_foreach
 
 			// patch "Server is different version" to show the server client version
-			utils::hook::inject(0x140480952, VERSION);
+			utils::hook::inject(0x140480955, VERSION);
 
 			// prevent servers overriding our fov
 			utils::hook::call(0x14023279E, set_client_dvar_from_server_stub);
