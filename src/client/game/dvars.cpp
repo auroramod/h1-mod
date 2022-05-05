@@ -3733,6 +3733,11 @@ namespace dvars
 			generate_hash("fx_visMinTraceDist")
 		},
 		{
+			"g_ai",
+			"Enable AI.",
+			generate_hash("g_ai")
+		},
+		{
 			"g_allowVote",
 			"Enable voting on this server",
 			generate_hash("g_allowVote")
@@ -9588,6 +9593,66 @@ namespace dvars
 			generate_hash("session_nonblocking")
 		},
 		{
+			"sf_use_bw",
+			"Intel Cheat - CoD Noir.",
+			generate_hash("sf_use_bw")
+		},
+		{
+			"sf_use_chaplin",
+			"Intel Cheat - Ragtime Warfare.",
+			generate_hash("sf_use_chaplin")
+		},
+		{
+			"sf_use_clustergrenade",
+			"Intel Cheat - Cluster Bombs.",
+			generate_hash("sf_use_clustergrenade")
+		},
+		{
+			"sf_use_contrast",
+			"Intel Cheat - Super Contrast.",
+			generate_hash("sf_use_contrast")
+		},
+		{
+			"sf_use_ignoreammo",
+			"Intel Cheat - Infinite Ammo.",
+			generate_hash("sf_use_ignoreammo")
+		},
+		{
+			"sf_use_invert",
+			"Intel Cheat - Photo-Negative.",
+			generate_hash("sf_use_invert")
+		},
+		{
+			"sf_use_lemonade_mode",
+			"Intel Cheat - Lemon-nade.",
+			generate_hash("sf_use_lemonade_mode")
+		},
+		{
+			"sf_use_melon_mode",
+			"Intel Cheat - Melon Heads.",
+			generate_hash("sf_use_melon_mode")
+		},
+		{
+			"sf_use_ragdoll_mode",
+			"Intel Cheat - Ragdoll Impact.",
+			generate_hash("sf_use_ragdoll_mode")
+		},
+		{
+			"sf_use_slowmo",
+			"Intel Cheat - Slow-Mo Ability.",
+			generate_hash("sf_use_slowmo")
+		},
+		{
+			"sf_use_tire_explosion",
+			"Intel Cheat - A Bad Year.",
+			generate_hash("sf_use_tire_explosion")
+		},
+		{
+			"sf_use_tracksuit_mode",
+			"Intel Cheat - Zakhaev's Sons.",
+			generate_hash("sf_use_tracksuit_mode")
+		},
+		{
 			"shortversion",
 			"Short game version",
 			generate_hash("shortversion")
@@ -10331,6 +10396,11 @@ namespace dvars
 			"thermalBlurFactorScope",
 			"Amount of blur to use when drawing blur through a weapon's thermal scope.",
 			generate_hash("thermalBlurFactorScope")
+		},
+		{
+			"timescale",
+			"Set the game speed.",
+			generate_hash("timescale")
 		},
 		{
 			"tokensEnabled",
