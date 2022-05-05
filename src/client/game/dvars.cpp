@@ -27,6 +27,10 @@ namespace dvars
 	game::dvar_t* r_fullbright;
 	game::dvar_t* r_chams;
 
+	game::dvar_t* g_gravity = nullptr;
+
+	game::dvar_t* pm_bouncing = nullptr;
+
 	game::dvar_t* cg_legacyCrashHandling;
 
 	std::string dvar_get_vector_domain(const int components, const game::dvar_limits& domain)

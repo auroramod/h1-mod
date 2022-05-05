@@ -30,6 +30,10 @@ namespace dvars
 	extern game::dvar_t* r_fullbright;
 	extern game::dvar_t* r_chams;
 
+	extern game::dvar_t* g_gravity;
+
+	extern game::dvar_t* pm_bouncing;
+
 	extern game::dvar_t* cg_legacyCrashHandling;
 
 	extern std::vector<dvar_info> dvar_list;
