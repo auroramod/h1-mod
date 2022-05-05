@@ -284,11 +284,10 @@ namespace network
 				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_FLAG_NONE);
 
 				// ignore impure client
-				utils::hook::jump(0x140481B58, reinterpret_cast<void*>(0x140481BEE));
+				utils::hook::jump(0x140481B58, 0x140481BEE);
 
 				// don't send checksum
-				utils::hook::set<uint8_t>(0x140513433, 0);
-				utils::hook::set<uint8_t>(0x14051345A, 0);
+				utils::hook::set<uint8_t>(0x1404F6398, 0);
 
 				// don't read checksum
 				utils::hook::set(0x1404F6620, 0xC301B0);
