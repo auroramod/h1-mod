@@ -14,6 +14,8 @@ namespace gameplay
 {
 	namespace
 	{
+		utils::hook::detour pm_weapon_use_ammo_hook;
+
 		game::dvar_t* jump_slowDownEnable;
 		game::dvar_t* jump_enableFallDamage;
 
@@ -50,6 +52,15 @@ namespace gameplay
 			if (jump_enableFallDamage->current.enabled)
 			{
 				utils::hook::invoke<void>(0x1401E2D00, ps, pml);
+			}
+		}
+
+		void pm_weapon_use_ammo_stub(game::playerState_s* ps, game::Weapon weapon,
+			bool is_alternate, int amount, game::PlayerHandIndex hand)
+		{
+			if (!dvars::player_sustainAmmo->current.enabled)
+			{
+				pm_weapon_use_ammo_hook.invoke<void>(ps, weapon, is_alternate, amount, hand);
 			}
 		}
 
@@ -100,6 +111,10 @@ namespace gameplay
 	public:
 		void post_unpack() override
 		{
+			dvars::player_sustainAmmo = dvars::register_bool("player_sustainAmmo", false,
+				game::DVAR_FLAG_REPLICATED, "Firing weapon will not decrease clip ammo");
+			pm_weapon_use_ammo_hook.create(SELECT_VALUE(0x14042E380, 0x1401F6B90), &pm_weapon_use_ammo_stub);
+
 			if (game::environment::is_sp())
 			{
 				return;
