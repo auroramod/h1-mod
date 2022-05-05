@@ -30,6 +30,8 @@ namespace dvars
 	game::dvar_t* r_fullbright;
 	game::dvar_t* r_chams;
 
+	game::dvar_t* g_speed = nullptr;
+
 	game::dvar_t* g_gravity = nullptr;
 
 	game::dvar_t* pm_bouncing = nullptr;
