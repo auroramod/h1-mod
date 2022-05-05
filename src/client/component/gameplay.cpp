@@ -159,7 +159,7 @@ namespace gameplay
 			utils::hook::jump(0x1401EAFE4, pm_bouncing_stub_mp, true);
 
 			dvars::g_gravity = dvars::register_int("g_gravity", 800, std::numeric_limits<short>::min(),
-				std::numeric_limits<short>::max(), game::DVAR_FLAG_REPLICATED, "");
+				std::numeric_limits<short>::max(), game::DVAR_FLAG_REPLICATED, "Game gravity in inches per second squared");
 			utils::hook::jump(0x140322F72, client_end_frame_stub, true);
 			utils::hook::nop(0x140322F68, 1); // Nop skipped opcode
 		}
