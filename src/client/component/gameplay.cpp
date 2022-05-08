@@ -15,6 +15,7 @@ namespace gameplay
 	namespace
 	{
 		utils::hook::detour pm_weapon_use_ammo_hook;
+		utils::hook::detour pm_player_trace_hook;
 
 		game::dvar_t* jump_slowDownEnable;
 		game::dvar_t* jump_enableFallDamage;
@@ -131,6 +132,18 @@ namespace gameplay
 			{
 				return;
 			}
+
+			auto* timescale = dvars::register_float("timescale", 1.0f, 0.1f, 50.0f, game::DVAR_FLAG_REPLICATED, "Changes Timescale of the game");
+			utils::hook::inject(0x1400D89A4, &timescale->current.value);
+			utils::hook::inject(0x1400DA9D1, &timescale->current.value);
+			utils::hook::inject(0x1400DB7A9, &timescale->current.value);
+			utils::hook::inject(0x1400DB7C6, &timescale->current.value);
+			utils::hook::inject(0x1400DB83C, &timescale->current.value);
+			utils::hook::inject(0x1400DB9CC, &timescale->current.value);
+			utils::hook::inject(0x1400DBAF0, &timescale->current.value);
+			utils::hook::inject(0x1400DBE72, &timescale->current.value);
+			utils::hook::inject(0x1400DBE9C, &timescale->current.value);
+
 
 			utils::hook::call(0x1401E8830, jump_apply_slowdown_stub);
 			jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_FLAG_REPLICATED, "Slow player movement after jumping");
