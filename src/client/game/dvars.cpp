@@ -24,6 +24,7 @@ namespace dvars
 	game::dvar_t* g_playerEjection = nullptr;
 	game::dvar_t* g_playerCollision = nullptr;
 	game::dvar_t* player_sustainAmmo = nullptr;
+	game::dvar_t* g_enableElevators = nullptr;
 
 	game::dvar_t* jump_enableFallDamage;
 

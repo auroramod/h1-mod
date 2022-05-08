@@ -1430,12 +1430,19 @@ namespace game
 
 	struct trace_t
 	{
+		char __pad0[41];
+		bool allsolid;
+		bool startsolid;
 	};
 
 	struct Bounds
 	{
 		float midPoint[3];
 		float halfSize[3];
+	};
+
+	struct pmove_t
+	{
 	};
 
 	enum PlayerHandIndex

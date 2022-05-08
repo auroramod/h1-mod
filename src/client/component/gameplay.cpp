@@ -179,7 +179,7 @@ namespace gameplay
 
 			// If g_enableElevators is 1 the 'ducked' flag will always be removed from the player state
 			utils::hook::jump(0x1401E1CD1, utils::hook::assemble(pm_trace_stub), true);
-			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DvarFlags::DVAR_FLAG_NONE, "");
+			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DvarFlags::DVAR_FLAG_NONE, "Enables Elevators");
 #endif
 
 			auto* timescale = dvars::register_float("timescale", 1.0f, 0.1f, 50.0f, game::DVAR_FLAG_REPLICATED, "Changes Timescale of the game");
