@@ -57,4 +57,4 @@ namespace thread_names
 	};
 }
 
-REGISTER_COMPONENT(thread_names::component)
+//REGISTER_COMPONENT(thread_names::component)

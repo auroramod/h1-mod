@@ -5,10 +5,13 @@
 
 #define SELECT_VALUE(sp, mp) (game::environment::is_sp() ? (sp) : (mp))
 
-#define SERVER_CD_KEY "S1X-CD-Key"
+#define SERVER_CD_KEY "H1MOD-CD-Key"
 
 namespace game
 {
+	extern uint64_t base_address;
+	void load_base_address();
+
 	namespace environment
 	{
 		launcher::mode get_mode();
@@ -66,5 +69,7 @@ namespace game
 
 	bool VirtualLobby_Loaded();
 }
+
+uintptr_t operator"" _b(const uintptr_t ptr);
 
 #include "symbols.hpp"

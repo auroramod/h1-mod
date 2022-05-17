@@ -179,4 +179,4 @@ namespace colors
 	};
 }
 
-REGISTER_COMPONENT(colors::component)
+//REGISTER_COMPONENT(colors::component)

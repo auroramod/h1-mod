@@ -48,4 +48,4 @@ namespace shaders
 	};
 }
 
-REGISTER_COMPONENT(shaders::component)
+//REGISTER_COMPONENT(shaders::component)

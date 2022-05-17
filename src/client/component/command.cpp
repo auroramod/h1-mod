@@ -818,4 +818,4 @@ namespace command
 	};
 }
 
-REGISTER_COMPONENT(command::component)
+//REGISTER_COMPONENT(command::component)

@@ -3,6 +3,14 @@
 
 namespace game
 {
+	uint64_t base_address;
+
+	void load_base_address()
+	{
+		const auto module = GetModuleHandle(NULL);
+		base_address = uint64_t(module);
+	}
+
 	int Cmd_Argc()
 	{
 		return cmd_args->argc[cmd_args->nesting];
@@ -101,4 +109,9 @@ namespace game
 			}
 		}
 	}
+}
+
+uintptr_t operator"" _b(const uintptr_t ptr)
+{
+	return game::base_address + ptr;
 }

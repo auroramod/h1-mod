@@ -185,4 +185,4 @@ namespace steam_proxy
 	}
 }
 
-REGISTER_COMPONENT(steam_proxy::component)
+//REGISTER_COMPONENT(steam_proxy::component)

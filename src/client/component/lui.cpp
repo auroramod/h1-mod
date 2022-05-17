@@ -55,4 +55,4 @@ namespace lui
 	};
 }
 
-REGISTER_COMPONENT(lui::component)
+//REGISTER_COMPONENT(lui::component)

@@ -116,4 +116,4 @@ namespace mods
 	};
 }
 
-REGISTER_COMPONENT(mods::component)
+//REGISTER_COMPONENT(mods::component)

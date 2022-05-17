@@ -20,16 +20,6 @@ BOOL WINAPI system_parameters_info_a(const UINT uiAction, const UINT uiParam, co
 	return SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
 }
 
-FARPROC WINAPI get_proc_address(const HMODULE hModule, const LPCSTR lpProcName)
-{
-	if (lpProcName == "GlobalMemoryStatusEx"s)
-	{
-		component_loader::post_unpack();
-	}
-
-	return GetProcAddress(hModule, lpProcName);
-}
-
 launcher::mode detect_mode_from_arguments()
 {
 	if (utils::flags::has_flag("dedicated"))
@@ -50,14 +40,15 @@ launcher::mode detect_mode_from_arguments()
 	return launcher::mode::none;
 }
 
-FARPROC load_binary(const launcher::mode mode)
+FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 {
 	loader loader;
 	utils::nt::library self;
 
 	loader.set_import_resolver([self](const std::string& library, const std::string& function) -> void*
 	{
-		if (library == "steam_api64.dll")
+		if (library == "steam_api64.dll"
+			&& function != "SteamAPI_GetSteamInstallPath") // Arxan requires one valid steam api import - maybe SteamAPI_Shutdown is better?
 		{
 			return self.get_proc<FARPROC>(function);
 		}
@@ -68,10 +59,6 @@ FARPROC load_binary(const launcher::mode mode)
 		else if (function == "SystemParametersInfoA")
 		{
 			return system_parameters_info_a;
-		}
-		else if (function == "GetProcAddress")
-		{
-			return get_proc_address;
 		}
 
 		return component_loader::load_import(library, function);
@@ -99,8 +86,13 @@ FARPROC load_binary(const launcher::mode mode)
 			"Failed to read game binary (%s)!\nPlease copy the h1-mod.exe into your Call of Duty: Modern Warfare Remastered installation folder and run it from there.",
 			binary.data()));
 	}
-
-	return loader.load_library(binary);
+ 
+#ifdef INJECT_HOST_AS_LIB
+	return loader.load_library(binary, base_address);
+#else
+	*base_address = 0x140000000;
+	return loader.load(self, data);
+#endif
 }
 
 void remove_crash_file()
@@ -158,6 +150,8 @@ void apply_proper_directory()
 
 int main()
 {
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
+
 	FARPROC entry_point;
 	enable_dpi_awareness();
 
@@ -166,6 +160,7 @@ int main()
 	limit_parallel_dll_loading();
 
 	srand(uint32_t(time(nullptr)));
+	remove_crash_file();
 
 	{
 		auto premature_shutdown = true;
@@ -179,8 +174,8 @@ int main()
 
 		try
 		{
-			apply_proper_directory();
-			remove_crash_file();
+			//apply_proper_directory();
+			//remove_crash_file();
 
 			if (!component_loader::post_start()) return 0;
 
@@ -194,11 +189,14 @@ int main()
 
 			game::environment::set_mode(mode);
 
-			entry_point = load_binary(mode);
+			uint64_t base_address{};
+			entry_point = load_binary(mode, &base_address);
 			if (!entry_point)
 			{
 				throw std::runtime_error("Unable to load binary into memory");
 			}
+
+			game::base_address = base_address;
 
 			if (!component_loader::post_load()) return 0;
 

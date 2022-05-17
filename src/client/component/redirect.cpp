@@ -80,4 +80,4 @@ namespace redirect
 	};
 }
 
-REGISTER_COMPONENT(redirect::component)
+//REGISTER_COMPONENT(redirect::component)

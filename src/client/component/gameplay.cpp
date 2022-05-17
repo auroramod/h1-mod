@@ -227,4 +227,4 @@ namespace gameplay
 	};
 }
 
-REGISTER_COMPONENT(gameplay::component)
+//REGISTER_COMPONENT(gameplay::component)

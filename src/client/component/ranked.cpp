@@ -44,4 +44,4 @@ namespace ranked
 	};
 }
 
-REGISTER_COMPONENT(ranked::component)
+//REGISTER_COMPONENT(ranked::component)

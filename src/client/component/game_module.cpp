@@ -3,6 +3,7 @@
 #include "game_module.hpp"
 
 #include <utils/hook.hpp>
+#include <game/game.hpp>
 
 namespace game_module
 {
@@ -90,7 +91,7 @@ namespace game_module
 
 	utils::nt::library get_game_module()
 	{
-		static utils::nt::library game{HMODULE(0x140000000)};
+		static utils::nt::library game{HMODULE(game::base_address)};
 		return game;
 	}
 
@@ -110,7 +111,11 @@ namespace game_module
 
 		void post_load() override
 		{
+#ifdef INJECT_HOST_AS_LIB
 			hook_module_resolving();
+#else
+			assert(get_host_module() == get_game_module());
+#endif
 		}
 	};
 }

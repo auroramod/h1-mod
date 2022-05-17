@@ -51,13 +51,13 @@ namespace system_check
 		{
 			static std::unordered_map<std::string, std::string> mp_zone_hashes =
 			{
-				{"patch_common_mp.ff", "3F44B0CFB0B8E0FBD9687C2942204AB7F11E66E6E15C73B8B4A5EB5920115A31"},
+				{"patch_common_mp.ff", "E45EF5F29D12A5A47F405F89FBBEE479C0A90D02141ABF852D481689514134A1"},
 			};
 
 			static std::unordered_map<std::string, std::string> sp_zone_hashes =
 			{
 				// Steam doesn't necessarily deliver this file :(
-				{"patch_common.ff", "BB0617DD94AF2F511571E7184BBEDE76E64D97E5D0DAFDB457F00717F035EBF0"},
+				{"patch_common.ff", "1D32A9770F90ED022AA76F4859B4AB178E194A703383E61AC2CE83B1E828B18F"},
 			};
 
 
@@ -85,7 +85,7 @@ namespace system_check
 	public:
 		void post_load() override
 		{
-			verify_binary_version();
+			//verify_binary_version();
 
 			if (!is_valid())
 			{
@@ -97,4 +97,4 @@ namespace system_check
 	};
 }
 
-REGISTER_COMPONENT(system_check::component)
+//REGISTER_COMPONENT(system_check::component)

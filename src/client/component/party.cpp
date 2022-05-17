@@ -642,4 +642,4 @@ namespace party
 	};
 }
 
-REGISTER_COMPONENT(party::component)
+//REGISTER_COMPONENT(party::component)

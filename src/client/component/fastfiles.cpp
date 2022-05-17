@@ -56,4 +56,4 @@ namespace fastfiles
 	};
 }
 
-REGISTER_COMPONENT(fastfiles::component)
+//REGISTER_COMPONENT(fastfiles::component)

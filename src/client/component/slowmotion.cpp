@@ -50,4 +50,4 @@ namespace slowmotion
 	};
 }
 
-REGISTER_COMPONENT(slowmotion::component)
+//REGISTER_COMPONENT(slowmotion::component)

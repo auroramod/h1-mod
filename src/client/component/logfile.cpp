@@ -314,4 +314,4 @@ namespace logfile
 	};
 }
 
-REGISTER_COMPONENT(logfile::component)
+//REGISTER_COMPONENT(logfile::component)

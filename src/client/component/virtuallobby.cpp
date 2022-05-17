@@ -61,4 +61,4 @@ namespace virtuallobby
 	};
 }
 
-REGISTER_COMPONENT(virtuallobby::component)
+//REGISTER_COMPONENT(virtuallobby::component)

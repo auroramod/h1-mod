@@ -323,4 +323,4 @@ namespace network
 	};
 }
 
-REGISTER_COMPONENT(network::component)
+//REGISTER_COMPONENT(network::component)

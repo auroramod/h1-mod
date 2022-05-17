@@ -440,4 +440,4 @@ namespace dvars
 	};
 }
 
-REGISTER_COMPONENT(dvars::component)
+//REGISTER_COMPONENT(dvars::component)

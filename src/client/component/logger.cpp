@@ -177,4 +177,4 @@ namespace logger
 	};
 }
 
-REGISTER_COMPONENT(logger::component)
+//REGISTER_COMPONENT(logger::component)

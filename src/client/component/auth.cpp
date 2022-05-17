@@ -218,19 +218,19 @@ namespace auth
 			}
 			else
 			{
-				utils::hook::jump(0x140571E07, 0x140571E5A); // H1(1.4)
-				utils::hook::jump(0x14004B223, 0x14004B4F2); // H1(1.4)
-				utils::hook::jump(0x14004B4AD, 0x14004B4F2); // H1(1.4)
-				utils::hook::jump(0x140572F6F, 0x140572FB0); // H1(1.4)
-				utils::hook::jump(0x140573470, 0x1405734B6); // H1(1.4)
+				utils::hook::jump(0x1D6193_b, 0x1D61FA_b); // 1.15
+				utils::hook::jump(0x60153_b, 0x60426_b); // 1.15
+				utils::hook::jump(0x603E1_b, 0x60426_b); // 1.15
+				utils::hook::jump(0x1D7542_b, 0x1D7587_b); // 1.15, MAYBE `1D7553` ON FIRST
+				utils::hook::jump(0x1D7A82_b, 0x1D7AC8_b); // 1.15
 
-				utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true); // H1(1.4)
-				utils::hook::call(0x140250ED2, send_connect_data_stub); // H1(1.4)
+				//utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true); // H1(1.4) couldn't find
+				utils::hook::call(0x12D437_b, send_connect_data_stub); // 1.15
 
 				// Skip checks for sending connect packet
-				utils::hook::jump(0x1402508FC, 0x140250946);
+				utils::hook::jump(0x12CDFC_b, 0x12CE5C_b); // 1.15
 				// Don't instantly timeout the connecting client ? not sure about this
-				utils::hook::set(0x14025136B, 0xC3);
+				//utils::hook::set(0x14025136B, 0xC3); // gonna lookup for this soon
 			}
 
 			command::add("guid", []()
@@ -241,4 +241,4 @@ namespace auth
 	};
 }
 
-REGISTER_COMPONENT(auth::component)
+//REGISTER_COMPONENT(auth::component)

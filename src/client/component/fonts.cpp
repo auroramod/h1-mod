@@ -133,4 +133,4 @@ namespace fonts
 	};
 }
 
-REGISTER_COMPONENT(fonts::component)
+//REGISTER_COMPONENT(fonts::component)

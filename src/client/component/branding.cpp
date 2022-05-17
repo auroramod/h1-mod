@@ -34,7 +34,6 @@ namespace branding
 	public:
 		void post_unpack() override
 		{
-
 			if (game::environment::is_dedi())
 			{
 				return;
@@ -42,24 +41,26 @@ namespace branding
 
 			if (game::environment::is_mp())
 			{
-				localized_strings::override("LUA_MENU_MULTIPLAYER_CAPS", "H1-MOD: MULTIPLAYER\n");
-				localized_strings::override("MENU_MULTIPLAYER_CAPS", "H1-MOD: MULTIPLAYER");
+				//localized_strings::override("LUA_MENU_MULTIPLAYER_CAPS", "H1-MOD: MULTIPLAYER\n");
+				//localized_strings::override("MENU_MULTIPLAYER_CAPS", "H1-MOD: MULTIPLAYER");
 			}
 
-			dvars::override::set_string("version", utils::string::va("H1-Mod %s", VERSION));
+			//dvars::override::set_string("version", utils::string::va("H1-Mod %s", VERSION));
 
 			ui_get_formatted_build_number_hook.create(
-				SELECT_VALUE(0x1403B1C40, 0x1404E74C0), ui_get_formatted_build_number_stub);
+				SELECT_VALUE(0x0, 0x1DF300_b), ui_get_formatted_build_number_stub);
 
 			scheduler::loop([]()
 			{
 				const auto font = game::R_RegisterFont("fonts/fira_mono_bold.ttf", 20);
-
-				game::R_AddCmdDrawText("H1-Mod: " VERSION, 0x7FFFFFFF, font, 10.f,
-					5.f + static_cast<float>(font->pixelHeight), 1.f, 1.f, 0.0f, color, 0);
+				if (font)
+				{
+					game::R_AddCmdDrawText("H1-Mod: " VERSION, 0x7FFFFFFF, font, 10.f,
+					                       5.f + static_cast<float>(font->pixelHeight), 1.f, 1.f, 0.0f, color, 0);
+				}
 			}, scheduler::pipeline::renderer);
 		}
 	};
 }
 
-REGISTER_COMPONENT(branding::component)
+//REGISTER_COMPONENT(branding::component)
