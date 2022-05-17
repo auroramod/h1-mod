@@ -297,7 +297,7 @@ namespace demonware
 
 				if (server)
 				{
-					server->handle_input(buf, len, {s, to, tolen});
+					server->handle_input(buf, len, { s, to, tolen });
 					return len;
 				}
 
@@ -425,9 +425,9 @@ namespace demonware
 			}
 		}
 
-		void bd_logger_stub(char* a1, void* a2, void* a3, void* a4, const char* function, ...)
+		void bd_logger_stub()
 		{
-
+			//printf("logged\n");
 		}
 
 #ifdef DEBUG
@@ -481,6 +481,32 @@ namespace demonware
 			printf("bdAuth: Unknown error\n");
 		}
 #endif
+
+		utils::hook::detour kekw_hook;
+		bool kekw_stub(__int64 a1, __int64 a2, __int64* a3)
+		{
+			// Checks X-Signature header or something
+			utils::hook::set(0x7D4AB0_b, 0xC301B0);
+			// Checks extended_data and extra_data in json object
+			utils::hook::set(0x7D55C0_b, 0xC301B0);
+			return kekw_hook.invoke<bool>(a1, a2, a3);
+		}
+
+		void* allocate_somewhere_near(uint8_t* base_address)
+		{
+			const size_t PAGE_SIZE = 0x1000;
+			size_t offset = 0;
+			while (true)
+			{
+				offset += PAGE_SIZE;
+				auto res = VirtualAlloc(base_address - offset, PAGE_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+				if (res)
+				{
+					std::memset(res, 0, PAGE_SIZE);
+					return res;
+				}
+			}
+		}
 	}
 
 	class component final : public component_interface
@@ -537,52 +563,69 @@ namespace demonware
 
 		void post_unpack() override
 		{
-			utils::hook::jump(SELECT_VALUE(0x140610320, 0x1407400B0), bd_logger_stub);
+			/*
+				mwr has upgraded some networking methods and the gethostbyname import from winsock library is no longer used
+				gethostbyname has been replaced with getaddrinfo
+				btw, still you can't get online..
+			*/
+			//utils::hook::jump(SELECT_VALUE(0, 0x7EBC20_b), bd_logger_stub);
 
 			if (game::environment::is_sp())
 			{
-				utils::hook::set<uint8_t>(0x1405FCA00, 0xC3); // bdAuthSteam
-				utils::hook::set<uint8_t>(0x140333A00, 0xC3); // dwNet
+				//	utils::hook::set<uint8_t>(0x1405FCA00, 0xC3); // bdAuthSteam H1(1.4)
+				//	utils::hook::set<uint8_t>(0x140333A00, 0xC3); // dwNet H1(1.4)
 				return;
 			}
 
-			utils::hook::set<uint8_t>(0x140715039, 0x0);  // CURLOPT_SSL_VERIFYPEER
-			utils::hook::set<uint8_t>(0x140715025, 0xAF); // CURLOPT_SSL_VERIFYHOST
-			utils::hook::set<uint8_t>(0x14095433C, 0x0);  // HTTPS -> HTTP
+			utils::hook::set<uint8_t>(0x7C0AD9_b, 0x0);  // CURLOPT_SSL_VERIFYPEER H1MP64(1.15)
+			utils::hook::set<uint8_t>(0x7C0AC5_b, 0xAF); // CURLOPT_SSL_VERIFYHOST H1MP64(1.15)
+			utils::hook::set<uint8_t>(0xA1327C_b, 0x0);  // HTTPS -> HTTP              [MWR OK][S1X: 0x14088D0E8]
 
 			//HTTPS -> HTTP
-			utils::hook::inject(0x14006DDA9, "http://prod.umbrella.demonware.net/v1.0/");
-			utils::hook::inject(0x14006E11C, "http://prod.umbrella.demonware.net/v1.0/");
-			utils::hook::inject(0x14006E2FB, "http://prod.umbrella.demonware.net/v1.0/");
-			utils::hook::inject(0x14006E9A9, "http://prod.uno.demonware.net/v1.0/");
-			utils::hook::inject(0x14006ED49, "http://prod.uno.demonware.net/v1.0/");
-			utils::hook::inject(0x140728170, "http://%s:%d/auth/");
+			char* umbrella = (char*)allocate_somewhere_near((uint8_t*)game::base_address);
+			std::memcpy(umbrella, "http://prod.umbrella.demonware.net/v1.0/", sizeof("http://prod.umbrella.demonware.net/v1.0/"));
 
-			utils::hook::set<uint8_t>(0x14047F290, 0xC3); // SV_SendMatchData
-			utils::hook::set<uint8_t>(0x140598990, 0xC3); // Live_CheckForFullDisconnect
+			utils::hook::inject(0x8615F_b, umbrella);
+			utils::hook::inject(0x8638C_b, umbrella);
 
-#ifdef DEBUG
-			// yes
-			utils::hook::call(0x140727BEB, l);
-			utils::hook::call(0x140727AFC, i);
-			utils::hook::call(0x140727E49, h);
-			utils::hook::call(0x140727E30, g);
-			utils::hook::call(0x140727E37, f);
-			utils::hook::call(0x140727DF2, e);
-			utils::hook::call(0x140727DF9, d);
-			utils::hook::call(0x140727CFC, c);
-			utils::hook::call(0x140727C82, b);
-			utils::hook::call(0x140727E6A, a);
-#endif
+			char* uno = (char*)allocate_somewhere_near((uint8_t*)game::base_address);
+			std::memcpy(uno, "http://prod.uno.demonware.net/v1.0/", sizeof("http://prod.uno.demonware.net/v1.0/"));
+
+			utils::hook::inject(0x86C56_b, uno);
+			utils::hook::inject(0x86F96_b, uno);
+
+			BYTE bytes[] = { 0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x25, 0x73, 0x3A, 0x25, 0x64, 0x2F, 0x61, 0x75, 0x74, 0x68, 0x2F, 0x0 }; // KEKW
+			std::memcpy((void*)0x9EDB08_b, bytes, sizeof(bytes)); //utils::hook::inject(0x140728170, "http://%s:%d/auth/"); :DDD
+
+			//utils::hook::set<uint8_t>(0x14047F290, 0xC3); // SV_SendMatchData H1MP64(1.4)
+			//utils::hook::set<uint8_t>(0x140598990, 0xC3); // Live_CheckForFullDisconnect H1MP64(1.4)
+
+//#ifdef DEBUG
+//			// yes
+//			utils::hook::call(0x140727BEB, l);
+//			utils::hook::call(0x140727AFC, i);
+//			utils::hook::call(0x140727E49, h);
+//			utils::hook::call(0x140727E30, g);
+//			utils::hook::call(0x140727E37, f);
+//			utils::hook::call(0x140727DF2, e);
+//			utils::hook::call(0x140727DF9, d);
+//			utils::hook::call(0x140727CFC, c);
+//			utils::hook::call(0x140727C82, b);
+//			utils::hook::call(0x140727E6A, a);
+//#endif
 			// Checks X-Signature header or something
-			utils::hook::set(0x140728380, 0xC301B0);
+			//utils::hook::set(0x7D4AB0_b, 0xC301B0);
 			// Checks extended_data and extra_data in json object
-			utils::hook::set(0x140728E90, 0xC301B0);
+			//utils::hook::set(0x7D55C0_b, 0xC301B0);
 			// Update check
-			utils::hook::set(0x1403A5390, 0xC301B0);
-			
+			//utils::hook::set(0x1403A5390, 0xC301B0);
+
 			// Remove some while loop in demonware that freezes the rendering for a few secs at launch
-			utils::hook::nop(0x14057DBC5, 5);
+			//utils::hook::nop(0x14057DBC5, 5);
+
+			MessageBoxA(0, "TEST", "", 0);
+			kekw_hook.create(0x7AC600_b, kekw_stub);
+			MessageBoxA(0, "TEST2", "", 0);
 		}
 
 		void pre_destroy() override
@@ -596,4 +639,4 @@ namespace demonware
 	};
 }
 
-//REGISTER_COMPONENT(demonware::component)
+REGISTER_COMPONENT(demonware::component)
