@@ -4,8 +4,9 @@
   <img alig src="https://cdn.discordapp.com/attachments/895680402142941194/938488726391242842/splash.png"/>
 </p>
 
-An experimental client for Call of Duty Modern Warfare Remastered (version 1.04).  
-Research for the latest Steam version of the game (1.15) is on the `1.15` branch.
+An experimental client for Call of Duty Modern Warfare Remastered (version `1.4.814118.0-0.32767`).  
+Research for the latest Steam version of the game is on the `1.15` branch.
+
 [This project is based on S1x.](https://github.com/XLabsProject/s1x-client)
 
 ## Compile from source
@@ -26,8 +27,8 @@ Research for the latest Steam version of the game (1.15) is on the `1.15` branch
 - [XLabsProject](https://github.com/XLabsProject) - codebase and iw6x/s1x research
 - [quaK](https://github.com/Joelrau) - lots of insight and help
 - [fed](https://github.com/fedddddd) - fixed DW/networking, work from [h2-mod](https://github.com/fedddddd/h2-mod)
-- [mjkzy](https://github.com/mjkzy) - porting code from s1x
-- [Skull](https://github.com/skkuull) - initial porting of s1x
+- [Skull](https://github.com/skkuull) + [mjkzy](https://github.com/mjkzy) - porting code from s1x
+- [momo5502](https://github.com/momo5502) - Arxan/Steam research, developer of x labs clients :D
 
 ## Disclaimer
 
