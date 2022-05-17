@@ -75,7 +75,8 @@ namespace scheduler
 				{
 					new_callbacks_.access([&](task_list& new_tasks)
 					{
-						tasks.insert(tasks.end(), std::move_iterator<task_list::iterator>(new_tasks.begin()), std::move_iterator<task_list::iterator>(new_tasks.end()));
+						tasks.insert(tasks.end(), std::move_iterator<task_list::iterator>(new_tasks.begin()),
+						             std::move_iterator<task_list::iterator>(new_tasks.end()));
 						new_tasks = {};
 					});
 				});
@@ -98,7 +99,7 @@ namespace scheduler
 		void r_end_frame_stub()
 		{
 			execute(pipeline::renderer);
-			r_end_frame_hook.invoke<void>();
+			//r_end_frame_hook.invoke<void>();
 		}
 
 		void server_frame_stub()
@@ -115,7 +116,7 @@ namespace scheduler
 	}
 
 	void schedule(const std::function<bool()>& callback, const pipeline type,
-		const std::chrono::milliseconds delay)
+	              const std::chrono::milliseconds delay)
 	{
 		assert(type >= 0 && type < pipeline::count);
 
@@ -128,7 +129,7 @@ namespace scheduler
 	}
 
 	void loop(const std::function<void()>& callback, const pipeline type,
-		const std::chrono::milliseconds delay)
+	          const std::chrono::milliseconds delay)
 	{
 		schedule([callback]()
 		{
@@ -138,7 +139,7 @@ namespace scheduler
 	}
 
 	void once(const std::function<void()>& callback, const pipeline type,
-		const std::chrono::milliseconds delay)
+	          const std::chrono::milliseconds delay)
 	{
 		schedule([callback]()
 		{
@@ -148,7 +149,7 @@ namespace scheduler
 	}
 
 	void on_game_initialized(const std::function<void()>& callback, const pipeline type,
-		const std::chrono::milliseconds delay)
+	                         const std::chrono::milliseconds delay)
 	{
 		schedule([=]()
 		{
@@ -180,8 +181,21 @@ namespace scheduler
 
 		void post_unpack() override
 		{
-			r_end_frame_hook.create(SELECT_VALUE(0, 0x6A6300_b), scheduler::r_end_frame_stub); // H1-STEAM(1.15)
-			g_run_frame_hook.create(SELECT_VALUE(0, 0x417940_b), scheduler::server_frame_stub); // H1(1.15)
+			utils::hook::jump(SELECT_VALUE(0, 0x6A6300_b), utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.pushad64();
+				a.call_aligned(r_end_frame_stub);
+				a.popad64();
+
+				a.sub(rsp, 0x28);
+				a.call(0x6A5C20_b);
+				a.mov(rax, 0xEAB4308_b);
+				a.mov(rax, qword_ptr(rax));
+				a.jmp(0x6A6310_b);
+			}), true);
+
+			//r_end_frame_hook.create(SELECT_VALUE(0, 0x6A6300_b), scheduler::r_end_frame_stub); // H1-STEAM(1.15)
+			//g_run_frame_hook.create(SELECT_VALUE(0, 0x417940_b), scheduler::server_frame_stub); // H1(1.15)
 			//main_frame_hook.create(SELECT_VALUE(0x1401CE8D0, 0x1400D8310), scheduler::main_frame_stub); can't find
 		}
 
@@ -196,4 +210,4 @@ namespace scheduler
 	};
 }
 
-//REGISTER_COMPONENT(scheduler::component)
+REGISTER_COMPONENT(scheduler::component)
