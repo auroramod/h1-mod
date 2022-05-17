@@ -96,8 +96,8 @@ namespace game
 		float* color, Material* material)> R_AddCmdDrawStretchPic{0x17E5C0, 0x2443A0};
 	WEAK symbol<Font_s* (const char* font, int size)> R_RegisterFont{ 0x4D4100, 0x67F630 }; // H1MP(1.15)
 	WEAK symbol<int(const char* text, int maxChars, Font_s* font)> R_TextWidth{0x4D43B0, 0x5D94A0};
-	WEAK symbol<int(void* font)> R_GetFontHeight{0x5EA360, 0x5D92C0};
-	WEAK symbol<void* (int a1)> R_DrawSomething{0x4D37B0, 0x5D8890};
+	WEAK symbol<int(void* font)> R_GetFontHeight{0x5EA360, 0x67F710};
+	WEAK symbol<void* (int a1)> R_DrawSomething{0x4D37B0, 0x67ECE0};
 	WEAK symbol<void()> R_SyncRenderThread{0x4F8240, 0x5FF3A0};
 	WEAK symbol<void* (const char* text, int maxChars, void* font, int fontHeight, float x, float y, float xScale, float yScale, float rotation, float* color, int style, int cursor_pos, char cursor_char, void* style_unk)> H1_AddBaseDrawTextCmd{ 0x4F3DC0,0x6A3080 }; // H1MP(1.15)
 
