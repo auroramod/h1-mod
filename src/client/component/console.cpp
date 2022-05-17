@@ -28,7 +28,6 @@ namespace console
 			while (true)
 			{
 				std::getline(std::cin, cmd);
-
 			}
 
 			return 0;
@@ -47,11 +46,7 @@ namespace console
 
 	void dispatch_message(const int type, const std::string& message)
 	{
-		//if (native_console())
-		//{
 		printf("%s\n", message.data());
-		//	return;
-		//}
 
 		//game_console::print(type, message);
 		//messages.access([&message](message_queue& msgs)

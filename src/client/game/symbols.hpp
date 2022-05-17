@@ -8,66 +8,66 @@ namespace game
 	 * Functions
 	 **************************************************************/
 
-	WEAK symbol<void(int type, VariableUnion u)> AddRefToValue{0x0, 0x0};
-	WEAK symbol<void(int type, VariableUnion u)> RemoveRefToValue{0x0, 0x0};
-	WEAK symbol<void(unsigned int id)> AddRefToObject{0x0, 0x0};
-	WEAK symbol<void(unsigned int id)> RemoveRefToObject{0x0, 0x0};
-	WEAK symbol<unsigned int(unsigned int id)> AllocThread{0x0, 0x0};
+	WEAK symbol<void(int type, VariableUnion u)> AddRefToValue{0x0, 0x5090E0};
+	WEAK symbol<void(int type, VariableUnion u)> RemoveRefToValue{0x0, 0x50ABF0};
+	WEAK symbol<void(unsigned int id)> AddRefToObject{0x0, 0x5090D0};
+	WEAK symbol<void(unsigned int id)> RemoveRefToObject{0x0, 0x50AAE0};
+	WEAK symbol<unsigned int(unsigned int id)> AllocThread{0x0, 0x509440};
 	WEAK symbol<ObjectVariableValue*(unsigned int* id)> AllocVariable{0x0, 0x0};
 
-	WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{0x0, 0x1CF480}; // 1.15
+	WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{0x0, 0x1CF480};
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* buffer,
-		void (int, int, const char*))> Cbuf_ExecuteBufferInternal{0x0, 0x0};
+		void (int, int, const char*))> Cbuf_ExecuteBufferInternal{0x0, 0x155BC0};
 	WEAK symbol<void(const char* message)> Conbuf_AppendText{0x0, 0x0};
-	WEAK symbol<char*(int start)> ConcatArgs{0x0, 0x0};
+	WEAK symbol<char*(int start)> ConcatArgs{0x0, 0x413050};
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cmd_ExecuteSingleCommand{0x0, 0x0};
-	WEAK symbol<void(const char* cmdName, void(), cmd_function_s* allocedCmd)> Cmd_AddCommandInternal{0x0, 0x0};
-	WEAK symbol<void(const char*)> Cmd_RemoveCommand{0x0, 0x0};
+	WEAK symbol<void(const char* cmdName, void(), cmd_function_s* allocedCmd)> Cmd_AddCommandInternal{0x0, 0x156880};
+	WEAK symbol<void(const char*)> Cmd_RemoveCommand{0x0, 0x157690};
 	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{0x0, 0x0};
 	WEAK symbol<void()> Cmd_EndTokenizeString{0x0, 0x0};
 
-	WEAK symbol<void(void*, void*)> AimAssist_AddToTargetList{0x0, 0x0};
+	WEAK symbol<void(void*, void*)> AimAssist_AddToTargetList{0x0, 0xE66C0};
 
 	WEAK symbol<void(unsigned int weapon, bool isAlternate, 
-		char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{0x0, 0x0};
+		char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{0x0, 0x2E2500};
 
 	WEAK symbol<void()> Com_Frame_Try_Block_Function{0x0, 0x0};
-	WEAK symbol<CodPlayMode()> Com_GetCurrentCoDPlayMode{0x0, 0x0};
-	WEAK symbol<bool()> Com_InFrontend{0x0, 0x0};
-	WEAK symbol<void(float, float, int)> Com_SetSlowMotion{0x0, 0x0};
+	WEAK symbol<CodPlayMode()> Com_GetCurrentCoDPlayMode{0x0, 0x5AEF80};
+	WEAK symbol<bool()> Com_InFrontend{0x0, 0x76A40};
+	WEAK symbol<void(float, float, int)> Com_SetSlowMotion{0x0, 0x17E5F0};
 	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{0x0, 0x0};
-	WEAK symbol<void()> Com_Quit_f{0x0, 0x0};
+	WEAK symbol<void()> Com_Quit_f{0x0, 0x1F9280};
 	WEAK symbol<void(char const* finalMessage)> Com_Shutdown{0x0, 0x0};
 
-	WEAK symbol<void()> Quit{0x0, 0x0};
+	WEAK symbol<void()> Quit{0x0, 0x1F9280};
 
-	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{0x0, 0x0};
-	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{0x0, 0x0};
+	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{0x0, 0x316210};
+	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{0x0, 0x3122F0};
 	WEAK symbol<void(int localClientNum, /*mp::cg_s**/void* cg, 
 		const char* dvar, const char* value)> CG_SetClientDvarFromServer{0x0, 0x0};
 	WEAK symbol<char*(const unsigned int weapon, 
 		bool isAlternate, char* outputBuffer, int bufferLen)> CG_GetWeaponDisplayName{0x0, 0x0};
 
-	WEAK symbol<bool()> CL_IsCgameInitialized{0x0, 0x0};
+	WEAK symbol<bool()> CL_IsCgameInitialized{0x0, 0x76A40};
 	WEAK symbol<void(int a1)> CL_VirtualLobbyShutdown{0x0, 0x0};
 
-	WEAK symbol<void(int hash, const char* name, const char* buffer)> Dvar_SetCommand{0x0, 0x0};
-	WEAK symbol<dvar_t*(const char* name)> Dvar_FindVar{0x0, 0x0};
+	WEAK symbol<void(int hash, const char* name, const char* buffer)> Dvar_SetCommand{0x0, 0x1857D0};
+	WEAK symbol<dvar_t*(const char* name)> Dvar_FindVar{0x0, 0x183EB0};
 	WEAK symbol<void(const dvar_t* dvar)> Dvar_ClearModified{0x0, 0x0};
-	WEAK symbol<void(char* buffer, int index)> Dvar_GetCombinedString{0x0, 0x0};
+	WEAK symbol<void(char* buffer, int index)> Dvar_GetCombinedString{0x0, 0x4EA020};
 	WEAK symbol<const char*(dvar_t* dvar, dvar_value value)> Dvar_ValueToString{0x0, 0x0};
-	WEAK symbol<void(dvar_t* dvar, DvarSetSource source)> Dvar_Reset{0x0, 0x0};
+	WEAK symbol<void(dvar_t* dvar, DvarSetSource source)> Dvar_Reset{0x0, 0x185390};
 	WEAK symbol<void(const char*, const char*, 
-		DvarSetSource)> Dvar_SetFromStringByNameFromSource{0x0, 0x0};
+		DvarSetSource)> Dvar_SetFromStringByNameFromSource{0x0, 0x185BD0};
 
 	WEAK symbol<dvar_t*(int hash, const char* name, bool value, 
-		unsigned int flags)> Dvar_RegisterBool{0x0, 0x0};
+		unsigned int flags)> Dvar_RegisterBool{0x0, 0x182340};
 	WEAK symbol<dvar_t*(int hash, const char* name, int value, int min, int max, 
-		unsigned int flags)> Dvar_RegisterInt{0x0, 0x0};
+		unsigned int flags)> Dvar_RegisterInt{0x0, 0x182A10};
 	WEAK symbol<dvar_t*(int hash, const char* dvarName, float value, float min, 
-		float max, unsigned int flags)> Dvar_RegisterFloat{0x0, 0x0};
+		float max, unsigned int flags)> Dvar_RegisterFloat{0x0, 0x182900};
 	WEAK symbol<dvar_t*(int hash, const char* dvarName, const char* value, 
-		unsigned int flags)> Dvar_RegisterString{0x0, 0x0};
+		unsigned int flags)> Dvar_RegisterString{0x0, 0x182AF0};
 	WEAK symbol<dvar_t*(int dvarName, const char* a2, float x, float y, float z, 
 		float w, float min, float max, unsigned int flags)> Dvar_RegisterVec4{0x0, 0x0};
 
@@ -103,7 +103,7 @@ namespace game
 
 	WEAK symbol<unsigned int(int)> Live_SyncOnlineDataFlags{0x0, 0x0};
 
-	WEAK symbol<Material* (const char* material)> Material_RegisterHandle{0x0, 0x0};
+	WEAK symbol<Material* (const char* material)> Material_RegisterHandle{0x0, 0x692360};
 
 	WEAK symbol<void(netadr_s*, sockaddr*)> NetadrToSockadr{0x0, 0x0};
 	WEAK symbol<void(netsrc_t, netadr_s*, const char*)> NET_OutOfBandPrint{0x0, 0x0};
@@ -112,15 +112,15 @@ namespace game
 
 	WEAK symbol<void(float x, float y, float width, float height, float s0, float t0, float s1, float t1,
 		float* color, Material* material)> R_AddCmdDrawStretchPic{0x0, 0x0};
-	WEAK symbol<Font_s* (const char* font, int size)> R_RegisterFont{0x0, 0x67F630}; // 1.15
+	WEAK symbol<Font_s* (const char* font, int size)> R_RegisterFont{0x0, 0x67F630};
 	WEAK symbol<int(const char* text, int maxChars, Font_s* font)> R_TextWidth{0x0, 0x0};
-	WEAK symbol<int(void* font)> R_GetFontHeight{0x0, 0x67F710}; // 1.15
-	WEAK symbol<void* (int a1)> R_DrawSomething{0x0, 0x67ECE0}; // 1.15
+	WEAK symbol<int(void* font)> R_GetFontHeight{0x0, 0x67F710};
+	WEAK symbol<void* (int a1)> R_DrawSomething{0x0, 0x67ECE0};
 	WEAK symbol<void()> R_SyncRenderThread{0x0, 0x0};
 	WEAK symbol<void* (const char* text, int maxChars, void* font, int fontHeight, float x, 
 		float y, float xScale, float yScale, float rotation, float* color, 
 		int style, int cursor_pos, char cursor_char, 
-		void* style_unk)> H1_AddBaseDrawTextCmd{0x0, 0x6A3080}; // 1.15
+		void* style_unk)> H1_AddBaseDrawTextCmd{0x0, 0x6A3080};
 
 #define R_AddCmdDrawText(TXT, MC, F, X, Y, XS, YS, R, C, S) \
 	H1_AddBaseDrawTextCmd(TXT, MC, F, game::R_GetFontHeight(F), X, Y, XS, YS, R, C, S,-1, 0, game::R_DrawSomething(S))
@@ -220,7 +220,7 @@ namespace game
 	WEAK symbol<unsigned int> gameEntityId{0x0, 0x0};
 
 	WEAK symbol<const char*> command_whitelist{0x0, 0x0};
-	WEAK symbol<cmd_function_s*> cmd_functions{0x0, 0x344DF18}; // 1.15
+	WEAK symbol<cmd_function_s*> cmd_functions{0x0, 0x344DF18};
 	WEAK symbol<CmdArgs> cmd_args{0x0, 0x0};
 
 	WEAK symbol<int> g_poolSize{0x0, 0x0};
@@ -238,7 +238,7 @@ namespace game
 	WEAK symbol<void*> DB_XAssetPool{0x0, 0x0};
 	WEAK symbol<const char*> g_assetNames{0x0, 0x0};
 
-	WEAK symbol<int> keyCatchers{0x0, 0x0};
+	WEAK symbol<int> keyCatchers{0x0, 0x2EC82C4};
 	WEAK symbol<PlayerKeyState> playerKeys{0x0, 0x0};
 
 	WEAK symbol<SOCKET> query_socket{0x0, 0x0};
@@ -247,7 +247,7 @@ namespace game
 
 	namespace mp
 	{
-		WEAK symbol<gentity_s> g_entities{0x0, 0x71F19E0}; // 1.15
+		WEAK symbol<gentity_s> g_entities{0x0, 0x71F19E0};
 		WEAK symbol<client_t> svs_clients{0x0, 0x0};
 		WEAK symbol<int> svs_numclients{0x0, 0x0};
 		WEAK symbol<int> gameTime{0x0, 0x0};

@@ -96,7 +96,7 @@ namespace colors
 			const size_t unk, const size_t unk2)
 		{
 			// CL_GetClientName (CL_GetClientNameAndClantag?)
-			const auto result = utils::hook::invoke<size_t>(0x14025BAA0, local_client_num, index, buf, size, unk, unk2);
+			const auto result = utils::hook::invoke<size_t>(0x343BA0_b, local_client_num, index, buf, size, unk, unk2);
 
 			utils::string::strip(buf, buf, size);
 
@@ -109,11 +109,11 @@ namespace colors
 
 			if (index == '8')
 			{
-				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F142FF8, 0x14FE70634)); // H1(1.4)
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x0, 0xEA749B4_b)); // 1.15
 			}
 			else if (index == '9')
 			{
-				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F142FFC, 0x14FE70638)); // H1(1.4)
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x0, 0xEA749B8_b)); // 1.15
 			}
 			else if (index == ':')
 			{
@@ -121,7 +121,7 @@ namespace colors
 			}
 			else if (index == ';')
 			{
-				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F143004, 0x14FE70640)); // H1(1.4)
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x0, 0xEA749C0_b)); // 1.15
 			}
 			else if (index == '<')
 			{
@@ -147,17 +147,17 @@ namespace colors
 			if (!game::environment::is_sp())
 			{
 				// allows colored name in-game
-				utils::hook::jump(0x140503810, com_clean_name_stub); // H1(1.4)
+				utils::hook::jump(0x5AEDF0_b, com_clean_name_stub); // 1.15
 
 				// don't apply colors to overhead names
-				utils::hook::call(0x1400AB416, get_client_name_stub); // H1(1.4)
+				utils::hook::call(0xF7B85_b, get_client_name_stub); // 1.15
 
 				// patch I_CleanStr
-				utils::hook::jump(0x140503D00, i_clean_str_stub); // H1(1.4)
+				utils::hook::jump(0x5AF2E0_b, i_clean_str_stub); // 1.15
 			}
 
 			// force new colors
-			utils::hook::jump(SELECT_VALUE(0x140524BD0, 0x1406206A0), rb_lookup_color_stub); // H1(1.4)
+			utils::hook::jump(SELECT_VALUE(0x0, 0x6C9460_b), rb_lookup_color_stub); // 1.15
 
 			// add colors
 			add(0, 0, 0); // 0  - Black
@@ -179,4 +179,4 @@ namespace colors
 	};
 }
 
-//REGISTER_COMPONENT(colors::component)
+REGISTER_COMPONENT(colors::component)

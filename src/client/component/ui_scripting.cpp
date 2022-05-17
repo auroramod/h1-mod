@@ -185,22 +185,22 @@ namespace ui_scripting
 
 			scheduler::loop(ui_scripting::lua::engine::run_frame, scheduler::pipeline::lui);
 
-			hks_start_hook.create(SELECT_VALUE(0x1400E4B40, 0x140176A40), hks_start_stub);
-			hks_shutdown_hook.create(SELECT_VALUE(0x1400DD3D0, 0x14016CA80), hks_shutdown_stub);
-			hksi_lual_error_hook.create(SELECT_VALUE(0x1400A5EA0, 0x14012F300), hksi_lual_error_stub);
-			hks_allocator_hook.create(SELECT_VALUE(0x14009B570, 0x14012BAC0), hks_allocator_stub);
-			lui_error_hook.create(SELECT_VALUE(0x14007D7D0, 0x14010C9E0), lui_error_stub);
-			hksi_hks_error_hook.create(SELECT_VALUE(0x14009DD80, 0x14012E390), hksi_hks_error_stub);
+			hks_start_hook.create(SELECT_VALUE(0x0, 0x27A790_b), hks_start_stub); // 1.15
+			hks_shutdown_hook.create(SELECT_VALUE(0x0, 0x2707C0_b), hks_shutdown_stub); // 1.15
+			hksi_lual_error_hook.create(SELECT_VALUE(0x0, 0x22F930_b), hksi_lual_error_stub); // 1.15
+			hks_allocator_hook.create(SELECT_VALUE(0x0, 0x22C010_b), hks_allocator_stub); // 1.15
+			lui_error_hook.create(SELECT_VALUE(0x0, 0x20BA80_b), lui_error_stub); // 1.15
+			hksi_hks_error_hook.create(SELECT_VALUE(0x0, 0x22EA10_b), hksi_hks_error_stub); // 1.15
 
 			if (game::environment::is_mp())
 			{
-				hksi_lual_error_hook2.create(0x1401366B0, hksi_lual_error_stub);
+				hksi_lual_error_hook2.create(0x2365E0_b, hksi_lual_error_stub); // 1.15
 			}
 
 			command::add("lui_restart", []()
 			{
-				utils::hook::invoke<void>(SELECT_VALUE(0x1400DD3D0, 0x14016CA80));
-				utils::hook::invoke<void>(SELECT_VALUE(0x1400E6170, 0x1401780D0));
+				utils::hook::invoke<void>(SELECT_VALUE(0x0, 0x2707C0_b)); // 1.15
+				utils::hook::invoke<void>(SELECT_VALUE(0x0, 0x27BEC0_b)); // 1.15
 			});
 		}
 	};

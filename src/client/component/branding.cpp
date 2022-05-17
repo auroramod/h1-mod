@@ -41,8 +41,8 @@ namespace branding
 
 			if (game::environment::is_mp())
 			{
-				//localized_strings::override("LUA_MENU_MULTIPLAYER_CAPS", "H1-MOD: MULTIPLAYER\n");
-				//localized_strings::override("MENU_MULTIPLAYER_CAPS", "H1-MOD: MULTIPLAYER");
+				localized_strings::override("LUA_MENU_MULTIPLAYER_CAPS", "H1-MOD: MULTIPLAYER\n");
+				localized_strings::override("MENU_MULTIPLAYER_CAPS", "H1-MOD: MULTIPLAYER");
 			}
 
 			//dvars::override::set_string("version", utils::string::va("H1-Mod %s", VERSION));
