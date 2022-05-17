@@ -174,27 +174,6 @@ namespace demonware
 
 			auto* info = new bdFile2;
 
-			// int
-			// int
-			// int
-			// byte (priv)
-			// int64 (owner)
-			// string (platform)
-			// string (file)
-			// blob
-				// size
-				// data
-			// int
-			// int
-			// int
-			// byte
-			// int64
-			// string (platform)
-			// string (file)
-			// blob
-				// size
-				// data
-
 			info->unk1 = 0;
 			info->unk2 = 0;
 			info->unk3 = 0;
@@ -203,14 +182,6 @@ namespace demonware
 			info->platform = platform;
 			info->filename = filename;
 			info->data = data;
-
-			/*info->file_id = *reinterpret_cast<const uint64_t*>(utils::cryptography::sha1::compute(filename).data());
-			info->filename = filename;
-			info->create_time = uint32_t(time(nullptr));
-			info->modified_time = info->create_time;
-			info->file_size = uint32_t(data.size());
-			info->owner_id = uint64_t(owner);
-			info->priv = priv;*/
 
 #ifdef DEBUG
 			printf("[DW]: [bdStorage]: set user file: %s\n", filename.data());
@@ -242,8 +213,6 @@ namespace demonware
 		buffer->read_uint32(&numfiles);
 
 		auto reply = server->create_reply(this->task_id());
-
-		printf("%i\n", numfiles);
 
 		for (uint32_t i = 0; i < numfiles; i++)
 		{

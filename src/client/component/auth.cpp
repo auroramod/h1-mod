@@ -213,33 +213,36 @@ namespace auth
 			// Patch steam id bit check
 			if (game::environment::is_sp())
 			{
-				utils::hook::jump(0x140475C17, 0x140475C6A); // H1(1.4)
-				utils::hook::jump(0x140476AFF, 0x140476B40); // H1(1.4)
-				utils::hook::jump(0x140476FA4, 0x140476FF2); // H1(1.4)
+				//utils::hook::jump(0x140475C17, 0x140475C6A); // H1(1.4)
+				//utils::hook::jump(0x140476AFF, 0x140476B40); // H1(1.4)
+				//utils::hook::jump(0x140476FA4, 0x140476FF2); // H1(1.4)
 			}
 			else
 			{
-				utils::hook::jump(0x1D6193_b, 0x1D61FA_b); // STEAM
-				utils::hook::jump(0x60153_b, 0x60426_b); // STEAM
-				utils::hook::jump(0x603E1_b, 0x60426_b); // STEAM
-				utils::hook::jump(0x1D7542_b, 0x1D7587_b); // STEAM MAYBE `1401D7553` ON FIRST
-				utils::hook::jump(0x1D7A82_b, 0x1D7AC8_b); // STEAM
+				// kill "disconnected from steam" error
+				utils::hook::nop(0x1D61DF_b, 0x11);
+
+				/*utils::hook::nop(0x1D6193_b, 103); // STEAM
+				utils::hook::nop(0x60153_b, 0x60426 - 0x60153); // STEAM
+				utils::hook::nop(0x603E1_b, 0x60426 - 0x603E1); // STEAM
+				utils::hook::nop(0x1D7553_b, 0x1D7587 - 0x1D7553); // STEAM MAYBE `1401D7553` ON FIRST
+				utils::hook::nop(0x1D7A82_b, 0x1D7AC8 - 0x1D7A82); // STEAM*/
 
 				//utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true); // H1(1.4) can't find
-				utils::hook::call(0x12D437_b, send_connect_data_stub); // H1(1.4)
+				//utils::hook::call(0x12D437_b, send_connect_data_stub); // H1(1.4)
 
 				// Skip checks for sending connect packet
-				utils::hook::jump(0x1402508FC, 0x140250946);
+				//utils::hook::jump(0x1402508FC, 0x140250946);
 				// Don't instantly timeout the connecting client ? not sure about this
-				utils::hook::set(0x14025136B, 0xC3);
+				//utils::hook::set(0x14025136B, 0xC3);
 			}
 
-			command::add("guid", []()
-			{
-				printf("Your guid: %llX\n", steam::SteamUser()->GetSteamID().bits);
-			});
+			//command::add("guid", []()
+			//{
+			//	printf("Your guid: %llX\n", steam::SteamUser()->GetSteamID().bits);
+			//});
 		}
 	};
 }
 
-//REGISTER_COMPONENT(auth::component)
+REGISTER_COMPONENT(auth::component)
