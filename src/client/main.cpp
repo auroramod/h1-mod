@@ -57,7 +57,8 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 
 	loader.set_import_resolver([self](const std::string& library, const std::string& function) -> void*
 	{
-		if (library == "steam_api64.dll")
+		if (library == "steam_api64.dll"
+			&& function != "SteamAPI_GetSteamInstallPath") // Arxan requires one valid steam api import - maybe SteamAPI_Shutdown is better?
 		{
 			return self.get_proc<FARPROC>(function);
 		}

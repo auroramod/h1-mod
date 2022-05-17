@@ -9,6 +9,24 @@ namespace arxan
 {
 	namespace
 	{
+		DWORD get_steam_pid()
+		{
+			static DWORD pid = 0; //234567;//GetCurrentProcessId();
+			if (pid) return pid;
+
+			HKEY hRegKey;
+
+			if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Valve\\Steam\\ActiveProcess", 0, KEY_QUERY_VALUE,
+			                  &hRegKey) != ERROR_SUCCESS)
+				return pid;
+
+			DWORD dwLength = sizeof(pid);
+			RegQueryValueExA(hRegKey, "pid", nullptr, nullptr, reinterpret_cast<BYTE*>(&pid), &dwLength);
+			RegCloseKey(hRegKey);
+
+			return pid;
+		}
+
 		utils::hook::detour nt_close_hook;
 		utils::hook::detour nt_query_information_process_hook;
 
@@ -31,7 +49,7 @@ namespace arxan
 						GetWindowThreadProcessId(shell_window, &explorer_pid);
 					}
 
-					static_cast<PPROCESS_BASIC_INFORMATION>(info)->Reserved3 = PVOID(DWORD64(explorer_pid));
+					static_cast<PPROCESS_BASIC_INFORMATION>(info)->Reserved3 = PVOID(DWORD64(get_steam_pid()));
 				}
 				else if (info_class == 30) // ProcessDebugObjectHandle
 				{
