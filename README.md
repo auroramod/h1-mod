@@ -5,7 +5,7 @@
 </p>
 
 An experimental client for Call of Duty Modern Warfare Remastered (version 1.04).  
-Support for the latest version (1.15) is planned for the future.  
+Research for the latest Steam version of the game (1.15) is on the `1.15` branch.
 [This project is based on S1x.](https://github.com/XLabsProject/s1x-client)
 
 ## Compile from source
