@@ -20,16 +20,6 @@ BOOL WINAPI system_parameters_info_a(const UINT uiAction, const UINT uiParam, co
 	return SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
 }
 
-FARPROC WINAPI get_proc_address(const HMODULE hModule, const LPCSTR lpProcName)
-{
-	if (lpProcName == "InitializeCriticalSectionEx"s)
-	{
-		component_loader::post_unpack();
-	}
-
-	return GetProcAddress(hModule, lpProcName);
-}
-
 launcher::mode detect_mode_from_arguments()
 {
 	if (utils::flags::has_flag("dedicated"))
@@ -69,10 +59,6 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 		else if (function == "SystemParametersInfoA")
 		{
 			return system_parameters_info_a;
-		}
-		else if (function == "GetProcAddress")
-		{
-			return get_proc_address;
 		}
 
 		return component_loader::load_import(library, function);
