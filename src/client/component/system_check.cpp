@@ -64,12 +64,13 @@ namespace system_check
 			return verify_hashes(mp_zone_hashes) && (game::environment::is_dedi() || verify_hashes(sp_zone_hashes));
 		}
 
+		// need to update these values 
 		void verify_binary_version()
 		{
 			const auto value = *reinterpret_cast<DWORD*>(0x140001337);
 			if (value != 0xFFB8006D && value != 0xFFB80080)
 			{
-				throw std::runtime_error("Unsupported Call of Duty: Modern Warfare Remastered version(1.4)");
+				throw std::runtime_error("Unsupported Call of Duty: Modern Warfare Remastered version (1.15)");
 			}
 		}
 	}
@@ -90,7 +91,7 @@ namespace system_check
 			if (!is_valid())
 			{
 				MessageBoxA(nullptr, "Your game files are outdated or unsupported.\n"
-					"Please get the latest officially supported Call of Duty: Modern Warfare Remastered 1.4 files, or you will get random crashes and issues.",
+					"Please get the latest officially supported Call of Duty: Modern Warfare Remastered files, or you will get random crashes and issues.",
 					"Invalid game files!", MB_ICONINFORMATION);
 			}
 		}
