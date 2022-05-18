@@ -458,8 +458,8 @@ namespace dvars
 		{
 			if (game::environment::is_mp())
 			{
-				dvar_register_new_hook.create(0x184DF0_b, dvar_register_new_stub);
-				dvar_re_register_hook.create(0x185150_b, dvar_re_register_stub);
+				// dvar_register_new_hook.create(0x184DF0_b, dvar_register_new_stub);
+				// dvar_re_register_hook.create(0x185150_b, dvar_re_register_stub);
 			}
 
 			/*dvar_register_bool_hook.create(SELECT_VALUE(0x1403C47E0, 0x1404FA540), &dvar_register_bool);
