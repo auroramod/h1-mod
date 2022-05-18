@@ -581,38 +581,16 @@ namespace demonware
 			utils::hook::set<uint8_t>(0x7C0AC5_b, 0xAF); // CURLOPT_SSL_VERIFYHOST
 			utils::hook::set<uint8_t>(0xA1327C_b, 0x0);  // HTTPS -> HTTP
 
-			// HTTPS -> HTTP
-			char* umbrella = (char*)allocate_somewhere_near((uint8_t*)game::base_address);
-			std::memcpy(umbrella, "http://prod.umbrella.demonware.net/v1.0/", sizeof("http://prod.umbrella.demonware.net/v1.0/"));
+			std::memcpy(reinterpret_cast<void*>(0x8D0298_b), 
+				"http://prod.umbrella.demonware.net/v1.0/", sizeof("http://prod.umbrella.demonware.net/v1.0/"));
+			std::memcpy(reinterpret_cast<void*>(0x8D05A8_b),
+				"http://prod.uno.demonware.net/v1.0/", sizeof("http://prod.uno.demonware.net/v1.0/"));
+			std::memcpy(reinterpret_cast<void*>(0x9EDB08_b), "http://%s:%d/auth/", sizeof("http://%s:%d/auth/"));
 
-			utils::hook::inject(0x8615F_b, umbrella);
-			utils::hook::inject(0x8638C_b, umbrella);
-
-			char* uno = (char*)allocate_somewhere_near((uint8_t*)game::base_address);
-			std::memcpy(uno, "http://prod.uno.demonware.net/v1.0/", sizeof("http://prod.uno.demonware.net/v1.0/"));
-
-			utils::hook::inject(0x86C56_b, uno);
-			utils::hook::inject(0x86F96_b, uno);
-
-			BYTE bytes[] = { 0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x25, 0x73, 0x3A, 0x25, 0x64, 0x2F, 0x61, 0x75, 0x74, 0x68, 0x2F, 0x0 }; // KEKW
-			std::memcpy((void*)0x9EDB08_b, bytes, sizeof(bytes)); //utils::hook::inject(0x140728170, "http://%s:%d/auth/"); :DDD
-
-			// utils::hook::set<uint8_t>(0x19F8C0_b, 0xC3); SV_SendMatchData, not sure
+			// utils::hook::set<uint8_t>(0x19F8C0_b, 0xC3); // SV_SendMatchData, not sure
+			utils::hook::nop(0x19BB67_b, 5); // LiveStorage_SendMatchDataComplete
 			utils::hook::set<uint8_t>(0x1A3340_b, 0xC3); // Live_CheckForFullDisconnect
 
-//#ifdef DEBUG
-//			// yes
-//			utils::hook::call(0x140727BEB, l);
-//			utils::hook::call(0x140727AFC, i);
-//			utils::hook::call(0x140727E49, h);
-//			utils::hook::call(0x140727E30, g);
-//			utils::hook::call(0x140727E37, f);
-//			utils::hook::call(0x140727DF2, e);
-//			utils::hook::call(0x140727DF9, d);
-//			utils::hook::call(0x140727CFC, c);
-//			utils::hook::call(0x140727C82, b);
-//			utils::hook::call(0x140727E6A, a);
-//#endif
 			// Remove some while loop that freezes the rendering for a few secs while connecting
 			utils::hook::nop(0x625555_b, 5);
 
