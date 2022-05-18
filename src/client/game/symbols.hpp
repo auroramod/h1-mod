@@ -55,7 +55,7 @@ namespace game
 	WEAK symbol<dvar_t*(const char* name)> Dvar_FindVar{0x0, 0x183EB0};
 	WEAK symbol<void(const dvar_t* dvar)> Dvar_ClearModified{0x0, 0x0};
 	WEAK symbol<void(char* buffer, int index)> Dvar_GetCombinedString{0x0, 0x4EA020};
-	WEAK symbol<const char*(dvar_t* dvar, dvar_value value)> Dvar_ValueToString{0x0, 0x187000};
+	WEAK symbol<const char*(dvar_t* dvar, bool is_hashed, dvar_value value)> Dvar_ValueToString{0x0, 0x187000};
 	WEAK symbol<void(dvar_t* dvar, DvarSetSource source)> Dvar_Reset{0x0, 0x185390};
 	WEAK symbol<void(const char*, const char*, 
 		DvarSetSource)> Dvar_SetFromStringByNameFromSource{0x0, 0x185BD0};

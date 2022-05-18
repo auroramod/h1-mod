@@ -22,6 +22,7 @@ namespace command
 	namespace
 	{
 		utils::hook::detour client_command_hook;
+		utils::hook::detour parse_commandline_hook;
 
 		std::unordered_map<std::string, std::function<void(params&)>> handlers;
 		std::unordered_map<std::string, std::function<void(int, params_sv&)>> handlers_sv;
@@ -96,7 +97,7 @@ namespace command
 		void parse_commandline_stub()
 		{
 			parse_command_line();
-			utils::hook::invoke<void>(0x15A4F0_b);
+			parse_commandline_hook.invoke<void>();
 		}
 
 		game::dvar_t* dvar_command_stub()
@@ -114,8 +115,8 @@ namespace command
 			{
 				if (args.size() == 1)
 				{
-					const auto current = game::Dvar_ValueToString(dvar, dvar->current);
-					const auto reset = game::Dvar_ValueToString(dvar, dvar->reset);
+					const auto current = game::Dvar_ValueToString(dvar, true, dvar->current);
+					const auto reset = game::Dvar_ValueToString(dvar, true, dvar->reset);
 
 					console::info("\"%s\" is: \"%s\" default: \"%s\" hash: 0x%08lX\n",
 						args[0], current, reset, dvar->hash);
@@ -127,9 +128,9 @@ namespace command
 				}
 				else
 				{
-					//char command[0x1000] = { 0 }; <-- CRASHES??!?!?!?!
-					//game::Dvar_GetCombinedString(command, 1);
-					//game::Dvar_SetCommand(dvar->hash, "", command);
+					char command[0x1000] = {0};
+					game::Dvar_GetCombinedString(command, 1);
+					game::Dvar_SetCommand(dvar->hash, "", command);
 				}
 
 				return dvar;
@@ -454,8 +455,6 @@ namespace command
 
 	void add(const char* name, const std::function<void(const params&)>& callback)
 	{
-		static game::cmd_function_s cmd_test;
-
 		const auto command = utils::string::to_lower(name);
 
 		if (handlers.find(command) == handlers.end())
@@ -508,8 +507,8 @@ namespace command
 			}
 			else
 			{
-				utils::hook::call(0x157D8F_b, parse_commandline_stub);
-				//utils::hook::jump(0x4E9F40_b, dvar_command_stub);
+				// parse_commandline_hook.create(0x157D50_b, parse_commandline_stub);
+				utils::hook::jump(0x4E9F40_b, dvar_command_stub, true);
 
 				add_commands_mp();
 			}

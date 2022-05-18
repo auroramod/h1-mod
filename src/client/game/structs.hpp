@@ -881,11 +881,14 @@ namespace game
 	enum dvar_type : std::int8_t
 	{
 		boolean = 0,
+		boolean_hashed = 10,
 		value = 1,
+		value_hashed = 11,
 		vec2 = 2,
 		vec3 = 3,
 		vec4 = 4,
 		integer = 5,
+		integer_hashed = 12,
 		enumeration = 6,
 		string = 7,
 		color = 8,

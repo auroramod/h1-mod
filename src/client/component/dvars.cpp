@@ -249,6 +249,38 @@ namespace dvars
 	utils::hook::detour dvar_set_string_hook;
 	utils::hook::detour dvar_set_from_string_hook;
 
+	utils::hook::detour dvar_re_register_hook;
+	utils::hook::detour dvar_register_new_hook;
+
+	game::dvar_type get_normal_type(const game::dvar_type type)
+	{
+		switch (type)
+		{
+		case game::dvar_type::boolean_hashed:
+			return game::dvar_type::boolean;
+		case game::dvar_type::integer_hashed:
+			return game::dvar_type::integer;
+		case game::dvar_type::value_hashed:
+			return game::dvar_type::value;
+		default:
+			return type;
+		}
+	}
+
+	void dvar_re_register_stub(game::dvar_t* dvar, const int hash, const char* name, game::dvar_type type,
+		const unsigned int flags, game::dvar_value* value, game::dvar_limits* domain)
+	{
+		type = get_normal_type(type);
+		dvar_re_register_hook.invoke<void>(dvar, hash, name, type, flags, value, domain);
+	}
+
+	game::dvar_t* dvar_register_new_stub(const int hash, const char* name, game::dvar_type type,
+		const unsigned int flags, game::dvar_value* value, game::dvar_limits* domain)
+	{
+		type = get_normal_type(type);
+		return dvar_register_new_hook.invoke<game::dvar_t*>(hash, name, type, flags, value, domain);
+	}
+
 	game::dvar_t* dvar_register_bool(const int hash, const char* name, bool value, unsigned int flags)
 	{
 		auto* var = find_dvar(override::register_bool_overrides, hash);
@@ -424,7 +456,13 @@ namespace dvars
 	public:
 		void post_unpack() override
 		{
-			dvar_register_bool_hook.create(SELECT_VALUE(0x1403C47E0, 0x1404FA540), &dvar_register_bool);
+			if (game::environment::is_mp())
+			{
+				dvar_register_new_hook.create(0x184DF0_b, dvar_register_new_stub);
+				dvar_re_register_hook.create(0x185150_b, dvar_re_register_stub);
+			}
+
+			/*dvar_register_bool_hook.create(SELECT_VALUE(0x1403C47E0, 0x1404FA540), &dvar_register_bool);
 			dvar_register_float_hook.create(SELECT_VALUE(0x1403C4BB0, 0x1404FA910), &dvar_register_float);
 			dvar_register_int_hook.create(SELECT_VALUE(0x1403C4CC0, 0x1404FAA20), &dvar_register_int);
 			dvar_register_string_hook.create(SELECT_VALUE(0x1403C4DA0, 0x1404FAB00), &dvar_register_string);
@@ -435,9 +473,9 @@ namespace dvars
 			dvar_set_float_hook.create(SELECT_VALUE(0x1403C7420, 0x1404FD360), &dvar_set_float);
 			dvar_set_int_hook.create(SELECT_VALUE(0x1403C76C0, 0x1404FD5E0), &dvar_set_int);
 			dvar_set_string_hook.create(SELECT_VALUE(0x1403C7900, 0x1404FD8D0), &dvar_set_string);
-			dvar_set_from_string_hook.create(SELECT_VALUE(0x1403C7620, 0x1404FD520), &dvar_set_from_string);
+			dvar_set_from_string_hook.create(SELECT_VALUE(0x1403C7620, 0x1404FD520), &dvar_set_from_string);*/
 		}
 	};
 }
 
-//REGISTER_COMPONENT(dvars::component)
+REGISTER_COMPONENT(dvars::component)

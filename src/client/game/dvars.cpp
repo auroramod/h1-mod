@@ -72,9 +72,11 @@ namespace dvars
 		switch (type)
 		{
 		case game::dvar_type::boolean:
+		case game::dvar_type::boolean_hashed:
 			return "Domain is 0 or 1"s;
 
 		case game::dvar_type::value:
+		case game::dvar_type::value_hashed:
 			if (domain.value.min == -FLT_MAX)
 			{
 				if (domain.value.max == FLT_MAX)
@@ -106,6 +108,7 @@ namespace dvars
 			return dvar_get_vector_domain(4, domain);
 
 		case game::dvar_type::integer:
+		case game::dvar_type::integer_hashed:
 			if (domain.enumeration.stringCount == INT_MIN)
 			{
 				if (domain.integer.max == INT_MAX)
