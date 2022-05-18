@@ -89,7 +89,7 @@ namespace auth
 			return utils::string::va("0x%lX", value);
 		}
 
-		int send_connect_data_stub(game::netsrc_t sock, game::netadr_s* adr, const char* format, const int len)
+		bool send_connect_data(game::netsrc_t sock, game::netadr_s* adr, const char* format, const int len)
 		{
 			std::string connect_string(format, len);
 			game::SV_Cmd_TokenizeString(connect_string.data());
@@ -162,7 +162,7 @@ namespace auth
 
 			if (xuid != key.get_hash())
 			{
-				//MessageBoxA(nullptr, steam_id.data(), std::to_string(key.get_hash()).data(), 0);
+				MessageBoxA(nullptr, steam_id.data(), std::to_string(key.get_hash()).data(), 0);
 				network::send(*from, "error",
 					utils::string::va("XUID doesn't match the certificate: %llX != %llX", xuid, key.get_hash()), '\n');
 				return;
@@ -177,22 +177,43 @@ namespace auth
 			game::SV_DirectConnect(from);
 		}
 
-		// CAN'T FIND
-		//void* get_direct_connect_stub()
-		//{
-		//	return utils::hook::assemble([](utils::hook::assembler& a)
-		//	{
-		//		a.lea(rcx, qword_ptr(rsp, 0x20));
-		//		a.movaps(xmmword_ptr(rsp, 0x20), xmm0);
+		void* get_direct_connect_stub()
+		{
+			return utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.lea(rcx, qword_ptr(rsp, 0x20));
+				a.movaps(xmmword_ptr(rsp, 0x20), xmm0);
 
-		//		a.pushad64();
-		//		a.mov(rdx, rsi);
-		//		a.call_aligned(direct_connect);
-		//		a.popad64();
+				a.pushad64();
+				a.mov(rdx, rsi);
+				a.call_aligned(direct_connect);
+				a.popad64();
 
-		//		a.jmp(0x140488CE2); // H1MP64(1.4)
-		//	});
-		//}
+				a.jmp(0x1CAF64_b);
+			});
+		}
+
+		void* get_send_connect_data_stub()
+		{
+			return utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				const auto false_ = a.newLabel();
+				const auto original = a.newLabel();
+
+				a.mov(ecx, eax);
+				a.lea(r8, qword_ptr(rbp, 0x4C0));
+				a.mov(r9d, ebx);
+				a.lea(rdx, qword_ptr(rsp, 0x30));
+
+				a.pushad64();
+				a.call_aligned(send_connect_data);
+				a.test(al, al);
+				a.popad64();
+
+				a.mov(rbx, qword_ptr(rsp, 0x9F0));
+				a.jmp(0x12D446_b);
+			});
+		}
 	}
 
 	uint64_t get_guid()
@@ -228,19 +249,17 @@ namespace auth
 				utils::hook::nop(0x1D7553_b, 0x1D7587 - 0x1D7553); // STEAM MAYBE `1401D7553` ON FIRST
 				utils::hook::nop(0x1D7A82_b, 0x1D7AC8 - 0x1D7A82); // STEAM*/
 
-				//utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true); // H1(1.4) can't find
-				//utils::hook::call(0x12D437_b, send_connect_data_stub); // H1(1.4)
+				utils::hook::jump(0x1CAE70_b, get_direct_connect_stub(), true);
+				utils::hook::jump(0x12D426_b, get_send_connect_data_stub(), true);
 
-				// Skip checks for sending connect packet
-				//utils::hook::jump(0x1402508FC, 0x140250946);
 				// Don't instantly timeout the connecting client ? not sure about this
-				//utils::hook::set(0x14025136B, 0xC3);
+				utils::hook::set(0x12D93C_b, 0xC3);
 			}
 
-			//command::add("guid", []()
-			//{
-			//	printf("Your guid: %llX\n", steam::SteamUser()->GetSteamID().bits);
-			//});
+			command::add("guid", []()
+			{
+				printf("Your guid: %llX\n", steam::SteamUser()->GetSteamID().bits);
+			});
 		}
 	};
 }

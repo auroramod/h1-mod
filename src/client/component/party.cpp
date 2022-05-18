@@ -71,11 +71,11 @@ namespace party
 			perform_game_initialization();
 
 			// exit from virtuallobby
-			utils::hook::invoke<void>(0x140256D40, 1);
+			utils::hook::invoke<void>(0x13C9C0_b, 1);
 
 			// CL_ConnectFromParty
 			char session_info[0x100] = {};
-			utils::hook::invoke<void>(0x140251560, 0, session_info, &target, mapname.data(), gametype.data());
+			utils::hook::invoke<void>(0x12DFF0_b, 0, session_info, &target, mapname.data(), gametype.data());
 		}
 
 		std::string get_dvar_string(const std::string& dvar)
@@ -129,12 +129,12 @@ namespace party
 				if (game::CL_IsCgameInitialized())
 				{
 					// CL_ForwardCommandToServer
-					utils::hook::invoke<void>(0x140253480, 0, "disconnect");
+					// utils::hook::invoke<void>(0x140253480, 0, "disconnect");
 					// CL_WritePacket
-					utils::hook::invoke<void>(0x14024DB10, 0);
+					// utils::hook::invoke<void>(0x14024DB10, 0);
 				}
 				// CL_Disconnect
-				utils::hook::invoke<void>(0x140252060, 0);
+				// utils::hook::invoke<void>(0x140252060, 0);
 			}
 		}
 
@@ -148,15 +148,15 @@ namespace party
 
 		const auto drop_reason_stub = utils::hook::assemble([](utils::hook::assembler& a)
 		{
-			a.mov(rdx, rdi);
-			a.mov(ecx, 2);
-			a.jmp(0x140251F78);
+			// a.mov(rdx, rdi);
+			// a.mov(ecx, 2);
+			// a.jmp(0x140251F78);
 		});
 
 		void menu_error(const std::string& error)
 		{
-			utils::hook::invoke<void>(0x1400DACC0, error.data(), "MENU_NOTICE");
-			utils::hook::set(0x142C1DA98, 1);
+			//utils::hook::invoke<void>(0x1400DACC0, error.data(), "MENU_NOTICE");
+			//utils::hook::set(0x142C1DA98, 1);
 		}
 	}
 
@@ -318,20 +318,20 @@ namespace party
 			}
 
 			// hook disconnect command function
-			utils::hook::jump(0x1402521C7, disconnect_stub);
+			// utils::hook::jump(0x1402521C7, disconnect_stub);
 
 			// detour CL_Disconnect to clear motd
-			cldisconnect_hook.create(0x140252060, cl_disconnect_stub);
+			// cldisconnect_hook.create(0x140252060, cl_disconnect_stub);
 
 			if (game::environment::is_mp())
 			{
 				// show custom drop reason
-				utils::hook::nop(0x140251EFB, 13);
-				utils::hook::jump(0x140251EFB, drop_reason_stub, true);
+				// utils::hook::nop(0x140251EFB, 13);
+				// utils::hook::jump(0x140251EFB, drop_reason_stub, true);
 			}
 
 			// enable custom kick reason in GScr_KickPlayer
-			utils::hook::set<uint8_t>(0x140376A1D, 0xEB);
+			// utils::hook::set<uint8_t>(0x140376A1D, 0xEB);
 
 			command::add("map", [](const command::params& argument)
 			{
@@ -349,11 +349,11 @@ namespace party
 				{
 					return;
 				}
-				*reinterpret_cast<int*>(0x14A3A91D0) = 1; // sv_map_restart
-				*reinterpret_cast<int*>(0x14A3A91D4) = 1; // sv_loadScripts
-				*reinterpret_cast<int*>(0x14A3A91D8) = 0; // sv_migrate
+				// *reinterpret_cast<int*>(0x14A3A91D0) = 1; // sv_map_restart
+				// *reinterpret_cast<int*>(0x14A3A91D4) = 1; // sv_loadScripts
+				// *reinterpret_cast<int*>(0x14A3A91D8) = 0; // sv_migrate
 
-				utils::hook::invoke<void>(0x14047E7F0); // SV_CheckLoadGame
+				// utils::hook::invoke<void>(0x14047E7F0); // SV_CheckLoadGame
 			});
 
 			command::add("fast_restart", []()
@@ -546,7 +546,7 @@ namespace party
 				printf("%s\n", message.data());
 			});
 
-			utils::hook::call(0x1404C6E8D, didyouknow_stub); // allow custom didyouknow based on sv_motd
+			// utils::hook::call(0x1404C6E8D, didyouknow_stub); // allow custom didyouknow based on sv_motd
 
 			network::on("getInfo", [](const game::netadr_s& target, const std::string_view& data)
 			{
@@ -573,7 +573,7 @@ namespace party
 			network::on("infoResponse", [](const game::netadr_s& target, const std::string_view& data)
 			{
 				const utils::info_string info{data};
-				server_list::handle_info_response(target, info);
+				// server_list::handle_info_response(target, info);
 
 				if (connect_state.host != target)
 				{
@@ -642,4 +642,4 @@ namespace party
 	};
 }
 
-//REGISTER_COMPONENT(party::component)
+REGISTER_COMPONENT(party::component)

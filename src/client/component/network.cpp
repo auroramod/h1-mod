@@ -116,11 +116,11 @@ namespace network
 			address.sin_family = AF_INET;
 			address.sin_port = ntohs(static_cast<short>(port));
 
-			const auto sock = ::socket(AF_INET, SOCK_DGRAM, protocol);
+			const auto sock = socket(AF_INET, SOCK_DGRAM, protocol);
 
 			u_long arg = 1;
 			ioctlsocket(sock, FIONBIO, &arg);
-			char optval[4] = { 1 };
+			char optval[4] = {1};
 			setsockopt(sock, 0xFFFF, 32, optval, 4);
 
 			if (bind(sock, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != -1)
@@ -229,8 +229,8 @@ namespace network
 				}
 
 				// redirect dw_sendto to raw socket
-				utils::hook::call(0x5BDB47_b, dw_send_to_stub);
-				utils::hook::jump(game::Sys_SendPacket, dw_send_to_stub);
+				utils::hook::jump(0x5EEC90_b, dw_send_to_stub, true);
+				utils::hook::jump(game::Sys_SendPacket, dw_send_to_stub, true);
 
 				// intercept command handling
 				utils::hook::jump(0x12F387_b, utils::hook::assemble(handle_command_stub), true);
@@ -238,8 +238,8 @@ namespace network
 				// handle xuid without secure connection
 				utils::hook::nop(0x554222_b, 6);
 
-				utils::hook::jump(0x4F1800_b, net_compare_address);
-				utils::hook::jump(0x4F1850_b, net_compare_base_address);
+				utils::hook::jump(0x4F1800_b, net_compare_address, true);
+				utils::hook::jump(0x4F1850_b, net_compare_base_address, true);
 
 				// don't establish secure conenction
 				utils::hook::set<uint8_t>(0x358C8D_b, 0xEB);
@@ -248,33 +248,29 @@ namespace network
 				utils::hook::set<uint8_t>(0x12CD0F_b, 0xEB);
 
 				// ignore unregistered connection
-				utils::hook::jump(0x54E2D1_b, 0x54E270_b);
+				utils::hook::jump(0x54E2D1_b, 0x54E270_b, true);
 				utils::hook::set<uint8_t>(0x54E2C6_b, 0xEB);
 
 				// disable xuid verification
 				utils::hook::set<uint8_t>(0x728BF_b, 0xEB);
-				//utils::hook::set<uint8_t>(0x14005B649, 0xEB); // not found
 
 				// disable xuid verification
 				utils::hook::nop(0x5509D9_b, 2);
 				utils::hook::set<uint8_t>(0x550A36_b, 0xEB);
 
 				// ignore configstring mismatch
-				//utils::hook::set<uint8_t>(0x1402591C9, 0xEB); // not found
+				utils::hook::set<uint8_t>(0x341261_b, 0xEB);
 
 				// ignore dw handle in SV_PacketEvent
 				utils::hook::set<uint8_t>(0x1CBC22_b, 0xEB);
-				utils::hook::call(0x1CBC16_b, &net_compare_address);
+				utils::hook::jump(0x4F1850_b, &net_compare_address, true);
 
 				// ignore dw handle in SV_FindClientByAddress
 				utils::hook::set<uint8_t>(0x1CB24D_b, 0xEB);
-				utils::hook::call(0x1CB241_b, &net_compare_address);
 
 				// ignore dw handle in SV_DirectConnect
 				utils::hook::set<uint8_t>(0x54DFE8_b, 0xEB);
 				utils::hook::set<uint8_t>(0x54E1FD_b, 0xEB);
-				utils::hook::call(0x54DFDB_b, &net_compare_address);
-				utils::hook::call(0x54E1F0_b, &net_compare_address);
 
 				// increase cl_maxpackets
 				dvars::override::register_int("cl_maxpackets", 1000, 1, 1000, game::DVAR_FLAG_SAVED);
@@ -283,7 +279,7 @@ namespace network
 				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_FLAG_NONE);
 
 				// ignore impure client
-				utils::hook::jump(0x54EDD3_b, 0x54EE69_b);
+				utils::hook::jump(0x54EDD3_b, 0x54EE69_b, true);
 
 				// don't send checksum
 				utils::hook::set<uint8_t>(0x59E628_b, 0);
@@ -292,12 +288,12 @@ namespace network
 				utils::hook::set(0x59E8B0_b, 0xC301B0);
 
 				// don't try to reconnect client
-				utils::hook::call(0x54E18C_b, reconnect_migratated_client);
+				utils::hook::jump(0x54D220_b, reconnect_migratated_client, true);
 				utils::hook::nop(0x54E168_b, 4); // this crashes when reconnecting for some reason
 
 				// allow server owner to modify net_port before the socket bind
-				utils::hook::call(0x5BD2B5_b, register_netport_stub);
-				utils::hook::call(0x5BD3F0_b, register_netport_stub);
+				// utils::hook::call(0x5BD2B5_b, register_netport_stub);
+				// utils::hook::call(0x5BD3F0_b, register_netport_stub);
 
 				// increase allowed packet size
 				const auto max_packet_size = 0x20000;
@@ -316,10 +312,10 @@ namespace network
 
 				// Use our own socket since the game's socket doesn't work with non localhost addresses
 				// why? no idea
-				utils::hook::jump(0x5BD210_b, create_socket);
+				utils::hook::jump(0x5BD210_b, create_socket, true);
 			}
 		}
 	};
 }
 
-//REGISTER_COMPONENT(network::component)
+REGISTER_COMPONENT(network::component)

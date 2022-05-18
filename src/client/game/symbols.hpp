@@ -105,10 +105,10 @@ namespace game
 
 	WEAK symbol<Material* (const char* material)> Material_RegisterHandle{0x0, 0x692360};
 
-	WEAK symbol<void(netadr_s*, sockaddr*)> NetadrToSockadr{0x0, 0x0};
-	WEAK symbol<void(netsrc_t, netadr_s*, const char*)> NET_OutOfBandPrint{0x0, 0x0};
-	WEAK symbol<void(netsrc_t sock, int length, const void* data, const netadr_s* to)> NET_SendLoopPacket{0x0, 0x0};
-	WEAK symbol<bool(const char* s, netadr_s* a)> NET_StringToAdr{0x0, 0x0};
+	WEAK symbol<void(netadr_s*, sockaddr*)> NetadrToSockadr{0x0, 0x59E580};
+	WEAK symbol<void(netsrc_t, netadr_s*, const char*)> NET_OutOfBandPrint{0x0, 0x4F1EB0};
+	WEAK symbol<void(netsrc_t sock, int length, const void* data, const netadr_s* to)> NET_SendLoopPacket{0x0, 0x4F2070};
+	WEAK symbol<bool(const char* s, netadr_s* a)> NET_StringToAdr{0x0, 0x4F2150};
 
 	WEAK symbol<void(float x, float y, float width, float height, float s0, float t0, float s1, float t1,
 		float* color, Material* material)> R_AddCmdDrawStretchPic{0x0, 0x0};
@@ -167,13 +167,13 @@ namespace game
 	WEAK symbol<const char*(scr_string_t stringValue)> SL_ConvertToString{0x0, 0x0};
 	WEAK symbol<unsigned int(const char* str)> SL_GetCanonicalString{0x0, 0x0};
 
-	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{0x0, 0x0};
+	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{0x0, 0x54DBF0};
 	WEAK symbol<void(int arg, char* buffer, int bufferLength)> SV_Cmd_ArgvBuffer{0x0, 0x0};
-	WEAK symbol<void(const char* text_in)> SV_Cmd_TokenizeString{0x0, 0x0};
-	WEAK symbol<void()> SV_Cmd_EndTokenizedString{0x0, 0x0};
+	WEAK symbol<void(const char* text_in)> SV_Cmd_TokenizeString{0x0, 0x1CACE0};
+	WEAK symbol<void()> SV_Cmd_EndTokenizedString{0x0, 0x1CACA0};
 
 	WEAK symbol<mp::gentity_s*(const char* name)> SV_AddBot{0x0, 0x0};
-	WEAK symbol<bool(int clientNum)> SV_BotIsBot{0x0, 0x0};
+	WEAK symbol<bool(int clientNum)> SV_BotIsBot{0x0, 0x53B6D0};
 	WEAK symbol<const char* ()> SV_BotGetRandomName{0x0, 0x0};
 	WEAK symbol<int(mp::gentity_s* ent)> SV_SpawnTestClient{0x0, 0x0};
 
@@ -194,7 +194,7 @@ namespace game
 		Sys_BuildAbsPath{0x0, 0x0};
 	WEAK symbol<int()> Sys_Milliseconds{0x0, 0x0};
 	WEAK symbol<bool()> Sys_IsDatabaseReady2{0x0, 0x4F79C0};
-	WEAK symbol<bool(int, void const*, const netadr_s*)> Sys_SendPacket{0x0, 0x0};
+	WEAK symbol<bool(int, void const*, const netadr_s*)> Sys_SendPacket{0x0, 0x5BDA90};
 	WEAK symbol<bool(const char* path)> Sys_FileExists{0x0, 0x0};
 
 	WEAK symbol<const char* (const char*)> UI_GetMapDisplayName{0x0, 0x0};
@@ -211,7 +211,7 @@ namespace game
 	 * Variables
 	 **************************************************************/
 
-	WEAK symbol<CmdArgs> sv_cmd_args{0x0, 0x0};
+	WEAK symbol<CmdArgs> sv_cmd_args{0x0, 0x2ED1EB0};
 
 	WEAK symbol<int> g_script_error_level{0x0, 0x0};
 	WEAK symbol<jmp_buf> g_script_error{0x0, 0x0};
@@ -241,7 +241,7 @@ namespace game
 	WEAK symbol<int> keyCatchers{0x0, 0x2EC82C4};
 	WEAK symbol<PlayerKeyState> playerKeys{0x0, 0x0};
 
-	WEAK symbol<SOCKET> query_socket{0x0, 0x0};
+	WEAK symbol<SOCKET> query_socket{0x0, 0xC9DCD38};
 
 	WEAK symbol<DWORD> threadIds{0x0, 0x0};
 
