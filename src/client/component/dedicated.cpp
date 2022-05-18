@@ -207,7 +207,8 @@ namespace dedicated
 			// delay startup commands until the initialization is done
 			utils::hook::call(0x157DDA_b, execute_startup_command);
 
-			// delay console commands until the initialization is done // COULDN'T FOUND
+			// Cbuf_AddText is inlined
+			// delay console commands until the initialization is done
 			//utils::hook::call(0x1400D808C, execute_console_command);
 			//utils::hook::nop(0x1400D80A4, 5);
 
@@ -242,8 +243,8 @@ namespace dedicated
 			utils::hook::set<uint8_t>(0x690F30_b, 0xC3); // gfx stuff during fastfile loading
 			utils::hook::set<uint8_t>(0x690E00_b, 0xC3); // ^
 			utils::hook::set<uint8_t>(0x690ED0_b, 0xC3); // ^
-			//utils::hook::set<uint8_t>(0x1402C1180, 0xC3); // ^ NOT FOUND?
-			utils::hook::set<uint8_t>(0x690E50_b, 0xC3); // ^ MAAAAAAAAAAAYBE NOTTTT
+			//utils::hook::set<uint8_t>(0x1402C1180, 0xC3); // ^ NOT FOUND
+			utils::hook::set<uint8_t>(0x690E50_b, 0xC3); // ^ NOT SURE
 			utils::hook::set<uint8_t>(0x651BA0_b, 0xC3); // directx stuff
 			utils::hook::set<uint8_t>(0x681950_b, 0xC3); // ^
 			utils::hook::set<uint8_t>(0x6CE390_b, 0xC3); // ^ - mutex
@@ -267,7 +268,7 @@ namespace dedicated
 			utils::hook::set<uint8_t>(0x687D20_b, 0xC3); // R_Shutdown
 			utils::hook::set<uint8_t>(0x652BA0_b, 0xC3); // shutdown stuff
 			utils::hook::set<uint8_t>(0x687DF0_b, 0xC3); // ^
-			//utils::hook::set<uint8_t>(0x1405DFE50, 0xC3); // ^ COULDN'T FOUND
+			//utils::hook::set<uint8_t>(0x1405DFE50, 0xC3); // ^ NOT FOUND
 
 			// utils::hook::set<uint8_t>(0x1404B67E0, 0xC3); // sound crashes (H1 - questionable, function looks way different)
 
