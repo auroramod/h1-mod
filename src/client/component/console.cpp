@@ -16,12 +16,8 @@ namespace console
 	{
 		DWORD WINAPI console(LPVOID)
 		{
-			FreeConsole();
-			AllocConsole();
-			AttachConsole(GetCurrentProcessId());
-
-			(void)freopen("CONIN$", "r", stdin);
-			(void)freopen("CONOUT$", "w", stdout);
+			ShowWindow(GetConsoleWindow(), SW_SHOW);
+			SetConsoleTitle("H1-Mod");
 
 			std::string cmd;
 

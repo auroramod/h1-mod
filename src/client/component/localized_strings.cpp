@@ -49,4 +49,4 @@ namespace localized_strings
 	};
 }
 
-REGISTER_COMPONENT(localized_strings::component)
+//REGISTER_COMPONENT(localized_strings::component)
