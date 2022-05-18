@@ -508,6 +508,12 @@ namespace demonware
 				}
 			}
 		}
+
+		void request_start_match_stub()
+		{
+			const auto* args = "StartServer";
+			utils::hook::invoke<void>(0x1E35B0_b, 0, &args);
+		}
 	}
 
 	class component final : public component_interface
@@ -616,6 +622,13 @@ namespace demonware
 			utils::hook::set(0x47A6D0_b, 0xC301B0);
 			// Remove update failed popup
 			utils::hook::set(0x47B2B0_b, 0xC301B0);
+
+			// xpartygo -> just start the match
+			utils::hook::jump(0x355B80_b, request_start_match_stub, true);
+
+			utils::hook::set(0x396AD0_b, 0xC301B0); // DB_IsZoneLoaded("ffotd")
+			utils::hook::set(0x4DD600_b, 0xC300B0); // dont use ffotd
+			utils::hook::set(0x4DD5B0_b, 0xC300B0); // dont dl ffotd
 		}
 
 		void pre_destroy() override
