@@ -15,7 +15,7 @@ namespace game
 	WEAK symbol<unsigned int(unsigned int id)> AllocThread{0x0, 0x509440};
 	WEAK symbol<ObjectVariableValue*(unsigned int* id)> AllocVariable{0x0, 0x0};
 
-	WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{0x0, 0x1CF480};
+	WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cbuf_AddText{0x0, 0x1CF480};
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* buffer,
 		void (int, int, const char*))> Cbuf_ExecuteBufferInternal{0x0, 0x155BC0};
 	WEAK symbol<void(const char* message)> Conbuf_AppendText{0x0, 0x0};

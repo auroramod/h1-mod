@@ -9,6 +9,7 @@ namespace console
 	enum console_type
 	{
 		con_type_error = 1,
+		con_type_dev = 2,
 		con_type_warning = 3,
 		con_type_info = 7
 	};
@@ -19,6 +20,14 @@ namespace console
 	void error(const char* fmt, Args&&... args)
 	{
 		print(con_type_error, fmt, std::forward<Args>(args)...);
+	}
+
+	template <typename... Args>
+	void debug(const char* fmt, Args&&... args)
+	{
+#ifdef DEBUG
+		print(2, fmt, std::forward<Args>(args)...);
+#endif
 	}
 
 	template <typename... Args>

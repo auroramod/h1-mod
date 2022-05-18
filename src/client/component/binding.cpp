@@ -103,7 +103,7 @@ namespace binding
 
 				if (static_cast<size_t>(key) < custom_binds.size() && !custom_binds[key].empty())
 				{
-					game::Cbuf_AddText(local_client_num, utils::string::va("%s\n", custom_binds[key].data()));
+					game::Cbuf_AddText(local_client_num, 0, utils::string::va("%s\n", custom_binds[key].data()));
 				}
 
 				return;

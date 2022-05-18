@@ -14,6 +14,8 @@ namespace console
 {
 	namespace
 	{
+		static bool ingame = false;
+
 		DWORD WINAPI console(LPVOID)
 		{
 			ShowWindow(GetConsoleWindow(), SW_SHOW);
@@ -24,6 +26,10 @@ namespace console
 			while (true)
 			{
 				std::getline(std::cin, cmd);
+				if (ingame)
+				{
+					game::Cbuf_AddText(0, 0, cmd.data());
+				}
 			}
 
 			return 0;
@@ -45,10 +51,6 @@ namespace console
 		printf("%s\n", message.data());
 
 		//game_console::print(type, message);
-		//messages.access([&message](message_queue& msgs)
-		//	{
-		//		msgs.emplace(message);
-		//	});
 	}
 
 	void print(const int type, const char* fmt, ...)
@@ -67,6 +69,16 @@ namespace console
 		void post_start() override
 		{
 			CreateThread(0, 0, console, 0, 0, 0);
+		}
+
+		void post_unpack() override
+		{
+			ingame = true;
+		}
+
+		void pre_destroy() override
+		{
+			ingame = false;
 		}
 	};
 }

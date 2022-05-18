@@ -493,7 +493,7 @@ namespace command
 		}
 		else
 		{
-			game::Cbuf_AddText(0, command.data());
+			game::Cbuf_AddText(0, 0, command.data());
 		}
 	}
 

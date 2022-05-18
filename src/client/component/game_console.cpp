@@ -680,7 +680,7 @@ namespace game_console
 
 				if (key == game::keyNum_t::K_ENTER)
 				{
-					game::Cbuf_AddText(0, utils::string::va("%s \n", fixed_input.data()));
+					game::Cbuf_AddText(0, 0, utils::string::va("%s \n", fixed_input.data()));
 
 					if (history_index != -1)
 					{

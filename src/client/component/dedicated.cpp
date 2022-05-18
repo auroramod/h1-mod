@@ -83,8 +83,8 @@ namespace dedicated
 		{
 			if (game::Live_SyncOnlineDataFlags(0) == 0)
 			{
-				game::Cbuf_AddText(client, command);
-				game::Cbuf_AddText(client, "\n");
+				game::Cbuf_AddText(client, 0, command);
+				game::Cbuf_AddText(client, 0, "\n");
 			}
 			else
 			{
@@ -99,8 +99,8 @@ namespace dedicated
 
 			for (const auto& command : queue)
 			{
-				game::Cbuf_AddText(0, command.data());
-				game::Cbuf_AddText(0, "\n");
+				game::Cbuf_AddText(0, 0, command.data());
+				game::Cbuf_AddText(0, 0, "\n");
 			}
 		}
 
