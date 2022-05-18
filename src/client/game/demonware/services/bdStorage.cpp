@@ -18,7 +18,7 @@ namespace demonware
 		this->register_task(12, &bdStorage::unk12);
 
 		this->map_publisher_resource("motd-.*\\.txt", DW_MOTD);
-		this->map_publisher_resource("ffotd-.*\\.ff", DW_FASTFILE);
+		// this->map_publisher_resource("ffotd-.*\\.ff", DW_FASTFILE);
 		this->map_publisher_resource("playlists(_.+)?\\.aggr", DW_PLAYLISTS);
 	}
 

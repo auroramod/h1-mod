@@ -100,7 +100,6 @@ namespace scheduler
 		void r_end_frame_stub()
 		{
 			execute(pipeline::renderer);
-			//r_end_frame_hook.invoke<void>();
 		}
 
 		void server_frame_stub()
@@ -109,10 +108,14 @@ namespace scheduler
 			execute(pipeline::server);
 		}
 
-		void main_frame_stub()
+		void* main_frame_stub()
 		{
-			main_frame_hook.invoke<void>();
-			execute(pipeline::main);
+			const auto _0 = gsl::finally([]()
+			{
+				execute(pipeline::main);
+			});
+
+			return main_frame_hook.invoke<void*>();
 		}
 
 		void hks_frame_stub()
@@ -204,9 +207,8 @@ namespace scheduler
 				a.jmp(0x6A6310_b);
 			}), true);
 
-			//r_end_frame_hook.create(SELECT_VALUE(0x0, 0x6A6300_b), scheduler::r_end_frame_stub);
 			//g_run_frame_hook.create(SELECT_VALUE(0x0, 0x417940_b), scheduler::server_frame_stub);
-			//main_frame_hook.create(SELECT_VALUE(0x0, 0x0), scheduler::main_frame_stub);
+			main_frame_hook.create(SELECT_VALUE(0x0, 0x3438B0_b), scheduler::main_frame_stub);
 			//hks_frame_hook.create(SELECT_VALUE(0x0, 0x0), scheduler::hks_frame_stub); // no scripting for now
 		}
 

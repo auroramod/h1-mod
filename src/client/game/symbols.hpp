@@ -101,7 +101,7 @@ namespace game
 
 	WEAK symbol<const char* (int, int, int)> Key_KeynumToString{0x0, 0x0};
 
-	WEAK symbol<unsigned int(int)> Live_SyncOnlineDataFlags{0x0, 0x0};
+	WEAK symbol<unsigned int(int)> Live_SyncOnlineDataFlags{0x0, 0x1A5C10};
 
 	WEAK symbol<Material* (const char* material)> Material_RegisterHandle{0x0, 0x692360};
 
@@ -193,7 +193,7 @@ namespace game
 	WEAK symbol<void(char* path, int pathSize, Sys_Folder folder, const char* filename, const char* ext)>
 		Sys_BuildAbsPath{0x0, 0x0};
 	WEAK symbol<int()> Sys_Milliseconds{0x0, 0x0};
-	WEAK symbol<bool()> Sys_IsDatabaseReady2{0x0, 0x0};
+	WEAK symbol<bool()> Sys_IsDatabaseReady2{0x0, 0x4F79C0};
 	WEAK symbol<bool(int, void const*, const netadr_s*)> Sys_SendPacket{0x0, 0x0};
 	WEAK symbol<bool(const char* path)> Sys_FileExists{0x0, 0x0};
 
