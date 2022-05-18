@@ -482,14 +482,15 @@ namespace demonware
 		}
 #endif
 
-		utils::hook::detour kekw_hook;
-		bool kekw_stub(__int64 a1, __int64 a2, __int64* a3)
+		utils::hook::detour handle_auth_reply_hook;
+		bool handle_auth_reply_stub(void* a1, void* a2, void* a3)
 		{
-			// Checks X-Signature header or something
+			// Skip bdAuth::validateResponseSignature
 			utils::hook::set(0x7D4AB0_b, 0xC301B0);
-			// Checks extended_data and extra_data in json object
+			// Skip bdAuth::processPlatformData
 			utils::hook::set(0x7D55C0_b, 0xC301B0);
-			return kekw_hook.invoke<bool>(a1, a2, a3);
+
+			return handle_auth_reply_hook.invoke<bool>(a1, a2, a3);
 		}
 
 		void* allocate_somewhere_near(uint8_t* base_address)
@@ -563,13 +564,6 @@ namespace demonware
 
 		void post_unpack() override
 		{
-			/*
-				mwr has upgraded some networking methods and the gethostbyname import from winsock library is no longer used
-				gethostbyname has been replaced with getaddrinfo
-				btw, still you can't get online..
-			*/
-			//utils::hook::jump(SELECT_VALUE(0, 0x7EBC20_b), bd_logger_stub);
-
 			if (game::environment::is_sp())
 			{
 				//	utils::hook::set<uint8_t>(0x1405FCA00, 0xC3); // bdAuthSteam H1(1.4)
@@ -577,11 +571,11 @@ namespace demonware
 				return;
 			}
 
-			utils::hook::set<uint8_t>(0x7C0AD9_b, 0x0);  // CURLOPT_SSL_VERIFYPEER H1MP64(1.15)
-			utils::hook::set<uint8_t>(0x7C0AC5_b, 0xAF); // CURLOPT_SSL_VERIFYHOST H1MP64(1.15)
-			utils::hook::set<uint8_t>(0xA1327C_b, 0x0);  // HTTPS -> HTTP              [MWR OK][S1X: 0x14088D0E8]
+			utils::hook::set<uint8_t>(0x7C0AD9_b, 0x0);  // CURLOPT_SSL_VERIFYPEER
+			utils::hook::set<uint8_t>(0x7C0AC5_b, 0xAF); // CURLOPT_SSL_VERIFYHOST
+			utils::hook::set<uint8_t>(0xA1327C_b, 0x0);  // HTTPS -> HTTP
 
-			//HTTPS -> HTTP
+			// HTTPS -> HTTP
 			char* umbrella = (char*)allocate_somewhere_near((uint8_t*)game::base_address);
 			std::memcpy(umbrella, "http://prod.umbrella.demonware.net/v1.0/", sizeof("http://prod.umbrella.demonware.net/v1.0/"));
 
@@ -597,8 +591,8 @@ namespace demonware
 			BYTE bytes[] = { 0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x25, 0x73, 0x3A, 0x25, 0x64, 0x2F, 0x61, 0x75, 0x74, 0x68, 0x2F, 0x0 }; // KEKW
 			std::memcpy((void*)0x9EDB08_b, bytes, sizeof(bytes)); //utils::hook::inject(0x140728170, "http://%s:%d/auth/"); :DDD
 
-			//utils::hook::set<uint8_t>(0x14047F290, 0xC3); // SV_SendMatchData H1MP64(1.4)
-			//utils::hook::set<uint8_t>(0x140598990, 0xC3); // Live_CheckForFullDisconnect H1MP64(1.4)
+			// utils::hook::set<uint8_t>(0x19F8C0_b, 0xC3); SV_SendMatchData, not sure
+			utils::hook::set<uint8_t>(0x1A3340_b, 0xC3); // Live_CheckForFullDisconnect
 
 //#ifdef DEBUG
 //			// yes
@@ -613,19 +607,15 @@ namespace demonware
 //			utils::hook::call(0x140727C82, b);
 //			utils::hook::call(0x140727E6A, a);
 //#endif
-			// Checks X-Signature header or something
-			//utils::hook::set(0x7D4AB0_b, 0xC301B0);
-			// Checks extended_data and extra_data in json object
-			//utils::hook::set(0x7D55C0_b, 0xC301B0);
-			// Update check
-			//utils::hook::set(0x1403A5390, 0xC301B0);
+			// Remove some while loop that freezes the rendering for a few secs while connecting
+			utils::hook::nop(0x625555_b, 5);
 
-			// Remove some while loop in demonware that freezes the rendering for a few secs at launch
-			//utils::hook::nop(0x14057DBC5, 5);
+			handle_auth_reply_hook.create(0x7AC600_b, handle_auth_reply_stub);
 
-			MessageBoxA(0, "TEST", "", 0);
-			kekw_hook.create(0x7AC600_b, kekw_stub);
-			MessageBoxA(0, "TEST2", "", 0);
+			// Skip update check in Live_SyncOnlineDataFlags
+			utils::hook::set(0x47A6D0_b, 0xC301B0);
+			// Remove update failed popup
+			utils::hook::set(0x47B2B0_b, 0xC301B0);
 		}
 
 		void pre_destroy() override
