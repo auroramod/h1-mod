@@ -214,8 +214,6 @@ namespace demonware
 
 		auto reply = server->create_reply(this->task_id());
 
-		printf("%i\n", numfiles);
-
 		for (uint32_t i = 0; i < numfiles; i++)
 		{
 			std::string filename, data;
