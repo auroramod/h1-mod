@@ -4,8 +4,9 @@
   <img alig src="https://cdn.discordapp.com/attachments/895680402142941194/938488726391242842/splash.png"/>
 </p>
 
-An experimental client for Call of Duty Modern Warfare Remastered (version 1.04).  
-Support for the latest version (1.15) is planned for the future.  
+An experimental client for the latest Steam version of Call of Duty: Modern Warfare Remastered (version `1.15.1251288.0-0.32767`).
+This branch is being actively worked on and researched. For now, refer to the `develop`/`main` branch for playable versions.
+
 [This project is based on S1x.](https://github.com/XLabsProject/s1x-client)
 
 ## Compile from source
