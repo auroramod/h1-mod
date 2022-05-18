@@ -73,7 +73,7 @@ namespace patches
 			}
 
 			// CG_SetClientDvarFromServer
-			utils::hook::invoke<void>(0x140236120, a1, a2, dvar, value);
+			utils::hook::invoke<void>(0x11AA90_b, a1, a2, dvar, value);
 		}
 
 		const char* db_read_raw_file_stub(const char* filename, char* buf, const int size)
@@ -230,12 +230,12 @@ namespace patches
 			utils::hook::inject(0x140480955, VERSION);
 
 			// prevent servers overriding our fov
-			utils::hook::call(0x14023279E, set_client_dvar_from_server_stub);
-			utils::hook::nop(0x1400DAF69, 5);
-			utils::hook::nop(0x140190C16, 5);
-			utils::hook::set<uint8_t>(0x14021D22A, 0xEB);
+			utils::hook::call(0xF4500_b, set_client_dvar_from_server_stub);
+			// utils::hook::nop(0x1400DAF69, 5);
+			// utils::hook::nop(0x140190C16, 5);
+			utils::hook::set<uint8_t>(0x307F39_b, 0xEB);
 
-			// some anti tamper thing that kills performance
+			// some anti tamper thing that kills performance (not needed in H1?)
 			dvars::override::register_int("dvl", 0, 0, 0, game::DVAR_FLAG_READ);
 
 			// unlock safeArea_*
