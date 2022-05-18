@@ -207,21 +207,20 @@ namespace dedicated
 			// delay startup commands until the initialization is done
 			utils::hook::call(0x157DDA_b, execute_startup_command);
 
-			// Cbuf_AddText is inlined
 			// delay console commands until the initialization is done
-			//utils::hook::call(0x1400D808C, execute_console_command);
-			//utils::hook::nop(0x1400D80A4, 5);
+			//utils::hook::call(0x1400D808C, execute_console_command);	// Cbuf_AddText is inlined
+			//utils::hook::nop(0x1400D80A4, 5);							// ^
 
 			// patch GScr_SetDynamicDvar to behave better
 			gscr_set_dynamic_dvar_hook.create(0x43CF60_b, &gscr_set_dynamic_dvar);
 
-			//utils::hook::nop(0x1404ED90E, 5); // don't load config file // NOT FOUND
-			utils::hook::nop(0x156C46_b, 5); // ^ // NOT SURE
+			//utils::hook::nop(0x1404ED90E, 5);	// don't load config file (NOTE: Cbuf_AddText is inlined)
+			utils::hook::nop(0x156C46_b, 5); // ^
 			utils::hook::set<uint8_t>(0x17F470_b, 0xC3); // don't save config file
 			utils::hook::set<uint8_t>(0x351AA0_b, 0xC3); // disable self-registration
 			utils::hook::set<uint8_t>(0x5BF4E0_b, 0xC3); // init sound system (1)
-			utils::hook::set<uint8_t>(0x702650_b, 0xC3); // init sound system (2) NOT SURE
-			//utils::hook::set<uint8_t>(0x140620D10, 0xC3); // render thread ARXAN'D
+			utils::hook::set<uint8_t>(0x701820_b, 0xC3); // init sound system (2) (Skull says 0x702650, I say otherwise)
+			utils::hook::set<uint8_t>(0x6C9B10_b, 0xC3); // render thread
 			utils::hook::set<uint8_t>(0x343950_b, 0xC3); // called from Com_Frame, seems to do renderer stuff
 			utils::hook::set<uint8_t>(0x12CCA0_b, 0xC3); // CL_CheckForResend, which tries to connect to the local server constantly
 			utils::hook::set<uint8_t>(0x67ADCE_b, 0x00); // r_loadForRenderer default to 0 NOT SURE
@@ -243,8 +242,8 @@ namespace dedicated
 			utils::hook::set<uint8_t>(0x690F30_b, 0xC3); // gfx stuff during fastfile loading
 			utils::hook::set<uint8_t>(0x690E00_b, 0xC3); // ^
 			utils::hook::set<uint8_t>(0x690ED0_b, 0xC3); // ^
-			//utils::hook::set<uint8_t>(0x1402C1180, 0xC3); // ^ NOT FOUND
-			utils::hook::set<uint8_t>(0x690E50_b, 0xC3); // ^ NOT SURE
+			utils::hook::set<uint8_t>(0x39C610_b, 0xC3); // ^
+			utils::hook::set<uint8_t>(0x690E50_b, 0xC3); // ^
 			utils::hook::set<uint8_t>(0x651BA0_b, 0xC3); // directx stuff
 			utils::hook::set<uint8_t>(0x681950_b, 0xC3); // ^
 			utils::hook::set<uint8_t>(0x6CE390_b, 0xC3); // ^ - mutex
@@ -268,7 +267,7 @@ namespace dedicated
 			utils::hook::set<uint8_t>(0x687D20_b, 0xC3); // R_Shutdown
 			utils::hook::set<uint8_t>(0x652BA0_b, 0xC3); // shutdown stuff
 			utils::hook::set<uint8_t>(0x687DF0_b, 0xC3); // ^
-			//utils::hook::set<uint8_t>(0x1405DFE50, 0xC3); // ^ NOT FOUND
+			utils::hook::set<uint8_t>(0x686DE0_b, 0xC3); // ^
 
 			// utils::hook::set<uint8_t>(0x1404B67E0, 0xC3); // sound crashes (H1 - questionable, function looks way different)
 
