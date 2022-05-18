@@ -69,9 +69,9 @@ namespace stats
 
 			if (game::environment::is_dedi())
 			{
-				utils::hook::jump(0x140413E60, is_item_unlocked);
-				utils::hook::jump(0x140413860, is_item_unlocked);
-				utils::hook::jump(0x140412B70, is_item_unlocked);
+				utils::hook::jump(0x19E6E0_b, is_item_unlocked);
+				utils::hook::jump(0x19E070_b, is_item_unlocked);
+				utils::hook::jump(0x19D390_b, is_item_unlocked);
 			}
 			else
 			{
@@ -80,12 +80,12 @@ namespace stats
 				dvars::register_bool("cg_unlockall_classes", false, game::DVAR_FLAG_SAVED,
 					"Whether classes should be locked based on the player's stats or always unlocked.");
 
-				is_item_unlocked_hook.create(0x140413E60, is_item_unlocked_stub);
-				is_item_unlocked_hook2.create(0x140413860, is_item_unlocked_stub2);
-				is_item_unlocked_hook3.create(0x140412B70, is_item_unlocked_stub3);
+				is_item_unlocked_hook.create(0x19E6E0_b, is_item_unlocked_stub);
+				is_item_unlocked_hook2.create(0x19E070_b, is_item_unlocked_stub2);
+				is_item_unlocked_hook3.create(0x19D390_b, is_item_unlocked_stub3);
 			}
 		}
 	};
 }
 
-//REGISTER_COMPONENT(stats::component)
+REGISTER_COMPONENT(stats::component)

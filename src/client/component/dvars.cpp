@@ -462,18 +462,18 @@ namespace dvars
 				// dvar_re_register_hook.create(0x185150_b, dvar_re_register_stub);
 			}
 
-			/*dvar_register_bool_hook.create(SELECT_VALUE(0x1403C47E0, 0x1404FA540), &dvar_register_bool);
-			dvar_register_float_hook.create(SELECT_VALUE(0x1403C4BB0, 0x1404FA910), &dvar_register_float);
-			dvar_register_int_hook.create(SELECT_VALUE(0x1403C4CC0, 0x1404FAA20), &dvar_register_int);
-			dvar_register_string_hook.create(SELECT_VALUE(0x1403C4DA0, 0x1404FAB00), &dvar_register_string);
-			dvar_register_vector2_hook.create(SELECT_VALUE(0x1403C4E80, 0x1404FABE0), &dvar_register_vector2);
-			dvar_register_vector3_hook.create(SELECT_VALUE(0x1403C4FC0, 0x1404FACE0), &dvar_register_vector3);
+			dvar_register_bool_hook.create(SELECT_VALUE(0x0, 0x182340_b), &dvar_register_bool); // good
+			//dvar_register_float_hook.create(SELECT_VALUE(0x0, 0x182900_b), &dvar_register_float); // FLOAT HASHED (TYPE 11 INSTEAD OF 1)
+			dvar_register_int_hook.create(SELECT_VALUE(0x0, 0x182A10_b), &dvar_register_int); // goood
+			//dvar_register_string_hook.create(SELECT_VALUE(0x0, 0x182AF0_b), &dvar_register_string); // INT HASHED (TYPE 12, INSTEAD OF 7)
+			//dvar_register_vector2_hook.create(SELECT_VALUE(0x0, 0x182BD0_b), &dvar_register_vector2); // STRING (TYPE 7 INSTEAD OF 2)
+			//dvar_register_vector3_hook.create(SELECT_VALUE(0x0, 0x182CB0_b), &dvar_register_vector3); // VEC2 (TYPE 2 INSTEAD OF 3)
 
-			dvar_set_bool_hook.create(SELECT_VALUE(0x1403C7020, 0x1404FCDF0), &dvar_set_bool);
-			dvar_set_float_hook.create(SELECT_VALUE(0x1403C7420, 0x1404FD360), &dvar_set_float);
-			dvar_set_int_hook.create(SELECT_VALUE(0x1403C76C0, 0x1404FD5E0), &dvar_set_int);
-			dvar_set_string_hook.create(SELECT_VALUE(0x1403C7900, 0x1404FD8D0), &dvar_set_string);
-			dvar_set_from_string_hook.create(SELECT_VALUE(0x1403C7620, 0x1404FD520), &dvar_set_from_string);*/
+			dvar_set_bool_hook.create(SELECT_VALUE(0x0, 0x185520_b), &dvar_set_bool); // good
+			dvar_set_float_hook.create(SELECT_VALUE(0x0, 0x185AA0_b), &dvar_set_float); // good
+			dvar_set_int_hook.create(SELECT_VALUE(0x0, 0x185D10_b), &dvar_set_int); // good
+			dvar_set_string_hook.create(SELECT_VALUE(0x0, 0x186080_b), &dvar_set_string); // good
+			dvar_set_from_string_hook.create(SELECT_VALUE(0x0, 0x185C60_b), &dvar_set_from_string); // good
 		}
 	};
 }

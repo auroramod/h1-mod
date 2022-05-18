@@ -366,13 +366,13 @@ namespace server_list
 			lui_open_menu_hook.create(game::LUI_OpenMenu, lui_open_menu_stub);
 
 			// replace UI_RunMenuScript call in LUI_CoD_LuaCall_RefreshServerList to our refresh_servers
-			utils::hook::call(0x14018A0C9, &refresh_server_list);
-			utils::hook::call(0x14018A5DE, &join_server);
-			utils::hook::nop(0x14018A5FD, 5);
+			utils::hook::call(0x28E049_b, &refresh_server_list);
+			utils::hook::call(0x28E55E_b, &join_server);
+			utils::hook::nop(0x28E57D_b, 5);
 
 			// do feeder stuff
-			utils::hook::call(0x14018A199, &ui_feeder_count);
-			utils::hook::call(0x14018A3B1, &ui_feeder_item_text);
+			utils::hook::call(0x28E119_b, &ui_feeder_count);
+			utils::hook::call(0x28E331_b, &ui_feeder_item_text);
 
 			scheduler::loop(do_frame_work, scheduler::pipeline::main);
 
