@@ -63,8 +63,8 @@ namespace command
 			static std::string comand_line_buffer = GetCommandLineA();
 			auto* command_line = comand_line_buffer.data();
 
-			auto& com_num_console_lines = *reinterpret_cast<int*>(0x142623FB4);
-			auto* com_console_lines = reinterpret_cast<char**>(0x142623FC0);
+			auto& com_num_console_lines = *reinterpret_cast<int*>(0x35634B8_b);
+			auto* com_console_lines = reinterpret_cast<char**>(0x35634C0_b);
 
 			auto inq = false;
 			com_console_lines[0] = command_line;
@@ -96,7 +96,7 @@ namespace command
 		void parse_commandline_stub()
 		{
 			parse_command_line();
-			utils::hook::invoke<void>(0x1400D8210);
+			utils::hook::invoke<void>(0x15A4F0_b);
 		}
 
 		game::dvar_t* dvar_command_stub()
@@ -127,9 +127,9 @@ namespace command
 				}
 				else
 				{
-					char command[0x1000] = { 0 };
-					game::Dvar_GetCombinedString(command, 1);
-					game::Dvar_SetCommand(dvar->hash, "", command);
+					//char command[0x1000] = { 0 }; <-- CRASHES??!?!?!?!
+					//game::Dvar_GetCombinedString(command, 1);
+					//game::Dvar_SetCommand(dvar->hash, "", command);
 				}
 
 				return dvar;
@@ -340,12 +340,12 @@ namespace command
 		// parse the commandline if it's not parsed
 		parse_command_line();
 
-		auto& com_num_console_lines = *reinterpret_cast<int*>(0x142623FB4);
-		auto* com_console_lines = reinterpret_cast<char**>(0x142623FC0);
+		auto& com_num_console_lines = *reinterpret_cast<int*>(0x35634B8_b);
+		auto* com_console_lines = reinterpret_cast<char**>(0x35634C0_b);
 
 		for (int i = 0; i < com_num_console_lines; i++)
 		{
-			game::Cmd_TokenizeString(com_console_lines[i]);
+			game::Cmd_TokenizeString(com_console_lines[i]); // need to re-create this function
 
 			// only +set dvar value
 			if (game::Cmd_Argc() >= 3 && game::Cmd_Argv(0) == "set"s && game::Cmd_Argv(1) == dvar)
@@ -353,7 +353,7 @@ namespace command
 				game::Dvar_SetCommand(game::generateHashValue(game::Cmd_Argv(1)), "", game::Cmd_Argv(2));
 			}
 
-			game::Cmd_EndTokenizeString();
+			game::Cmd_EndTokenizeString(); // need to re-create this function
 		}
 	}
 
@@ -508,8 +508,8 @@ namespace command
 			}
 			else
 			{
-				utils::hook::call(0x1400D728F, parse_commandline_stub);
-				utils::hook::jump(0x14041D750, dvar_command_stub);
+				utils::hook::call(0x157D8F_b, parse_commandline_stub);
+				//utils::hook::jump(0x4E9F40_b, dvar_command_stub);
 
 				add_commands_mp();
 			}
@@ -723,7 +723,7 @@ namespace command
 
 		static void add_commands_mp()
 		{
-			client_command_hook.create(0x140336000, &client_command);
+			client_command_hook.create(0x4132E0_b, &client_command);
 
 			add_sv("god", [](const int client_num, const params_sv&)
 			{
@@ -818,4 +818,4 @@ namespace command
 	};
 }
 
-//REGISTER_COMPONENT(command::component)
+REGISTER_COMPONENT(command::component)

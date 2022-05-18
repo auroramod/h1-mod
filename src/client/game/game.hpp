@@ -68,6 +68,8 @@ namespace game
 	const char* SV_Cmd_Argv(int index);
 
 	bool VirtualLobby_Loaded();
+
+	void SV_GameSendServerCommand(int clientNum, svscmd_type type, const char* text);
 }
 
 uintptr_t operator"" _b(const uintptr_t ptr);

@@ -20,11 +20,11 @@ namespace game
 		void (int, int, const char*))> Cbuf_ExecuteBufferInternal{0x0, 0x155BC0};
 	WEAK symbol<void(const char* message)> Conbuf_AppendText{0x0, 0x0};
 	WEAK symbol<char*(int start)> ConcatArgs{0x0, 0x413050};
-	WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cmd_ExecuteSingleCommand{0x0, 0x0};
+	WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cmd_ExecuteSingleCommand{0x0, 0x156E90};
 	WEAK symbol<void(const char* cmdName, void(), cmd_function_s* allocedCmd)> Cmd_AddCommandInternal{0x0, 0x156880};
 	WEAK symbol<void(const char*)> Cmd_RemoveCommand{0x0, 0x157690};
-	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{0x0, 0x0};
-	WEAK symbol<void()> Cmd_EndTokenizeString{0x0, 0x0};
+	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{0x0, 0x0}; // not a function
+	WEAK symbol<void()> Cmd_EndTokenizeString{0x0, 0x0}; // not a function
 
 	WEAK symbol<void(void*, void*)> AimAssist_AddToTargetList{0x0, 0xE66C0};
 
@@ -39,7 +39,7 @@ namespace game
 	WEAK symbol<void()> Com_Quit_f{0x0, 0x1F9280};
 	WEAK symbol<void(char const* finalMessage)> Com_Shutdown{0x0, 0x0};
 
-	WEAK symbol<void()> Quit{0x0, 0x1F9280};
+	WEAK symbol<void()> Quit{0x0, 0x17CF50};
 
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{0x0, 0x316210};
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{0x0, 0x3122F0};
@@ -55,7 +55,7 @@ namespace game
 	WEAK symbol<dvar_t*(const char* name)> Dvar_FindVar{0x0, 0x183EB0};
 	WEAK symbol<void(const dvar_t* dvar)> Dvar_ClearModified{0x0, 0x0};
 	WEAK symbol<void(char* buffer, int index)> Dvar_GetCombinedString{0x0, 0x4EA020};
-	WEAK symbol<const char*(dvar_t* dvar, dvar_value value)> Dvar_ValueToString{0x0, 0x0};
+	WEAK symbol<const char*(dvar_t* dvar, dvar_value value)> Dvar_ValueToString{0x0, 0x187000};
 	WEAK symbol<void(dvar_t* dvar, DvarSetSource source)> Dvar_Reset{0x0, 0x185390};
 	WEAK symbol<void(const char*, const char*, 
 		DvarSetSource)> Dvar_SetFromStringByNameFromSource{0x0, 0x185BD0};
@@ -86,7 +86,7 @@ namespace game
 	WEAK symbol<void(VariableValue* result, unsigned int classnum, 
 		int entnum, int offset)> GetEntityFieldValue{0x0, 0x0};
 
-	WEAK symbol<int(const char* fname)> generateHashValue{0x0, 0x0};
+	WEAK symbol<int(const char* fname)> generateHashValue{0x0, 0x183F80};
 
 	WEAK symbol<void()> G_Glass_Update{0x0, 0x0};
 	WEAK symbol<int(int clientNum)> G_GetClientScore{0x0, 0x0};
@@ -186,7 +186,7 @@ namespace game
 	WEAK symbol<bool(const char* map)> SV_MapExists{0x0, 0x0};
 	WEAK symbol<void(mp::client_t*, const char*, int)> SV_ExecuteClientCommand{0x0, 0x0};
 	WEAK symbol<void(int localClientNum)> SV_FastRestart{0x0, 0x0};
-	WEAK symbol<void(int clientNum, svscmd_type type, const char* text)> SV_GameSendServerCommand{0x0, 0x0};
+	WEAK symbol<void(void* cl, int type, const char* fmt, ...)> SV_SendServerCommand{0x0, 0x1CC040};
 
 	WEAK symbol<void()> Sys_ShowConsole{0x0, 0x0};
 	WEAK symbol<void(const char* error, ...)> Sys_Error{0x0, 0x0};
@@ -221,7 +221,7 @@ namespace game
 
 	WEAK symbol<const char*> command_whitelist{0x0, 0x0};
 	WEAK symbol<cmd_function_s*> cmd_functions{0x0, 0x344DF18};
-	WEAK symbol<CmdArgs> cmd_args{0x0, 0x0};
+	WEAK symbol<CmdArgs> cmd_args{0x0, 0x2ED1E00};
 
 	WEAK symbol<int> g_poolSize{0x0, 0x0};
 	WEAK symbol<scr_classStruct_t> g_classMap{0x0, 0x0};
@@ -248,15 +248,15 @@ namespace game
 	namespace mp
 	{
 		WEAK symbol<gentity_s> g_entities{0x0, 0x71F19E0};
-		WEAK symbol<client_t> svs_clients{0x0, 0x0};
-		WEAK symbol<int> svs_numclients{0x0, 0x0};
+		WEAK symbol<client_t> svs_clients{0x0, 0x2DC3390};
+		WEAK symbol<int> svs_numclients{0x0, 0x2DC338C};
 		WEAK symbol<int> gameTime{0x0, 0x0};
 
 		WEAK symbol<int> ping{0x0, 0x0};
 
 		WEAK symbol<int> sv_serverId_value{0x0, 0x0};
 
-		WEAK symbol<bool> virtualLobby_loaded{0x0, 0x0};
+		WEAK symbol<bool> virtualLobby_loaded{0x0, 0x2E6EC9D};
 	}
 
 	namespace sp

@@ -36,6 +36,14 @@ namespace game
 		return !game::environment::is_sp() && *mp::virtualLobby_loaded == 1;
 	}
 
+	void SV_GameSendServerCommand(int clientNum, svscmd_type type, const char* text)
+	{
+		if (clientNum == -1)
+			SV_SendServerCommand(0, type, "%s", text);
+		else
+			SV_SendServerCommand(&mp::svs_clients[clientNum], type, "%s", text);
+	}
+
 	namespace environment
 	{
 		launcher::mode mode = launcher::mode::none;
