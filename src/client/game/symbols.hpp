@@ -239,7 +239,7 @@ namespace game
 	WEAK symbol<const char*> g_assetNames{0x0, 0x0};
 
 	WEAK symbol<int> keyCatchers{0x0, 0x2EC82C4};
-	WEAK symbol<PlayerKeyState> playerKeys{0x0, 0x2999D00};
+	WEAK symbol<PlayerKeyState> playerKeys{0x0, 0x2999E1C};
 
 	WEAK symbol<SOCKET> query_socket{0x0, 0xC9DCD38};
 
