@@ -5,6 +5,8 @@
 #include "game/game.hpp"
 #include "command.hpp"
 
+#include <utils/thread.hpp>
+
 namespace game_console
 {
 	void print(int type, const std::string& data);
@@ -14,26 +16,8 @@ namespace console
 {
 	namespace
 	{
-		static bool ingame = false;
-
-		DWORD WINAPI console(LPVOID)
-		{
-			ShowWindow(GetConsoleWindow(), SW_SHOW);
-			SetConsoleTitle("H1-Mod");
-
-			std::string cmd;
-
-			while (true)
-			{
-				std::getline(std::cin, cmd);
-				if (ingame)
-				{
-					game::Cbuf_AddText(0, 0, cmd.data());
-				}
-			}
-
-			return 0;
-		}
+		bool kill = false;
+		std::thread console_thread;
 	}
 
 	std::string format(va_list* ap, const char* message)
@@ -43,7 +27,7 @@ namespace console
 		const auto count = _vsnprintf_s(buffer, sizeof(buffer), sizeof(buffer), message, *ap);
 
 		if (count < 0) return {};
-		return { buffer, static_cast<size_t>(count) };
+		return {buffer, static_cast<size_t>(count)};
 	}
 
 	void dispatch_message(const int type, const std::string& message)
@@ -66,19 +50,36 @@ namespace console
 	class component final : public component_interface
 	{
 	public:
-		void post_start() override
+		component()
 		{
-			CreateThread(0, 0, console, 0, 0, 0);
+			ShowWindow(GetConsoleWindow(), SW_HIDE);
 		}
 
 		void post_unpack() override
 		{
-			ingame = true;
+			ShowWindow(GetConsoleWindow(), SW_SHOW);
+			SetConsoleTitle("H1-Mod");
+
+			console_thread = utils::thread::create_named_thread("Console", []()
+			{
+				std::string cmd;
+
+				while (!kill)
+				{
+					std::getline(std::cin, cmd);
+					game::Cbuf_AddText(0, 0, cmd.data());
+				}
+			});
 		}
 
 		void pre_destroy() override
 		{
-			ingame = false;
+			kill = true;
+
+			if (console_thread.joinable())
+			{
+				console_thread.join();
+			}
 		}
 	};
 }

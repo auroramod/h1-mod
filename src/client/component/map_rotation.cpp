@@ -9,9 +9,10 @@
 
 namespace map_rotation
 {
-	DWORD previousPriority;
 	namespace
 	{
+		DWORD previous_priority{};
+
 		void set_dvar(const std::string& dvar, const std::string& value)
 		{
 			command::execute(utils::string::va("%s \"%s\"", dvar.data(), value.data()), true);
@@ -84,10 +85,10 @@ namespace map_rotation
 				scheduler::on_game_initialized([]()
 				{
 					//printf("=======================setting OLD priority=======================\n");
-					SetPriorityClass(GetCurrentProcess(), previousPriority);
+					SetPriorityClass(GetCurrentProcess(), previous_priority);
 				}, scheduler::pipeline::main, 1s);
 
-				previousPriority = GetPriorityClass(GetCurrentProcess());
+				previous_priority = GetPriorityClass(GetCurrentProcess());
 				//printf("=======================setting NEW priority=======================\n");
 				SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 			}
@@ -147,7 +148,6 @@ namespace map_rotation
 				return scheduler::cond_end;
 			}, scheduler::pipeline::main, 1s);
 		}
-
 	}
 
 	class component final : public component_interface
@@ -170,11 +170,11 @@ namespace map_rotation
 			command::add("map_rotate", &perform_map_rotation);
 
 			// Hook GScr_ExitLevel 
-			utils::hook::jump(0x140376630, &trigger_map_rotation); // not sure if working
+			utils::hook::jump(0xE2670_b, &trigger_map_rotation, true); // not sure if working
 
-			previousPriority = GetPriorityClass(GetCurrentProcess());
+			previous_priority = GetPriorityClass(GetCurrentProcess());
 		}
 	};
 }
 
-//REGISTER_COMPONENT(map_rotation::component)
+REGISTER_COMPONENT(map_rotation::component)
