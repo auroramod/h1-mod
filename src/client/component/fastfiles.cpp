@@ -51,9 +51,9 @@ namespace fastfiles
 		void post_unpack() override
 		{
 			db_try_load_x_file_internal_hook.create(
-				SELECT_VALUE(0x1401CDDD0, 0x1402BFFE0), &db_try_load_x_file_internal);
+				SELECT_VALUE(0, 0x39A620_b), &db_try_load_x_file_internal);
 		}
 	};
 }
 
-//REGISTER_COMPONENT(fastfiles::component)
+REGISTER_COMPONENT(fastfiles::component)

@@ -69,9 +69,9 @@ namespace stats
 
 			if (game::environment::is_dedi())
 			{
-				utils::hook::jump(0x19E6E0_b, is_item_unlocked);
-				utils::hook::jump(0x19E070_b, is_item_unlocked);
-				utils::hook::jump(0x19D390_b, is_item_unlocked);
+				utils::hook::jump(0x19E6E0_b, is_item_unlocked, true);
+				utils::hook::jump(0x19E070_b, is_item_unlocked, true);
+				utils::hook::jump(0x19D390_b, is_item_unlocked, true);
 			}
 			else
 			{
@@ -88,4 +88,4 @@ namespace stats
 	};
 }
 
-REGISTER_COMPONENT(stats::component)
+// REGISTER_COMPONENT(stats::component)
