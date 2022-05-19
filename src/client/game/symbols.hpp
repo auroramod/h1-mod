@@ -48,7 +48,7 @@ namespace game
 	WEAK symbol<char*(const unsigned int weapon, 
 		bool isAlternate, char* outputBuffer, int bufferLen)> CG_GetWeaponDisplayName{0x0, 0x0};
 
-	WEAK symbol<bool()> CL_IsCgameInitialized{0x0, 0x76A40};
+	WEAK symbol<bool()> CL_IsCgameInitialized{0x0, 0x33C640};
 	WEAK symbol<void(int a1)> CL_VirtualLobbyShutdown{0x0, 0x0};
 
 	WEAK symbol<void(int hash, const char* name, const char* buffer)> Dvar_SetCommand{0x0, 0x1857D0};
@@ -69,7 +69,7 @@ namespace game
 	WEAK symbol<dvar_t*(int hash, const char* dvarName, const char* value, 
 		unsigned int flags)> Dvar_RegisterString{0x0, 0x182AF0};
 	WEAK symbol<dvar_t*(int dvarName, const char* a2, float x, float y, float z, 
-		float w, float min, float max, unsigned int flags)> Dvar_RegisterVec4{0x0, 0x0};
+		float w, float min, float max, unsigned int flags)> Dvar_RegisterVec4{0x0, 0x183010};
 
 	WEAK symbol<long long(const char* qpath, char** buffer)> FS_ReadFile{0x0, 0x0};
 	WEAK symbol<void(void* buffer)> FS_FreeFile{0x0, 0x0};
@@ -111,9 +111,9 @@ namespace game
 	WEAK symbol<bool(const char* s, netadr_s* a)> NET_StringToAdr{0x0, 0x4F2150};
 
 	WEAK symbol<void(float x, float y, float width, float height, float s0, float t0, float s1, float t1,
-		float* color, Material* material)> R_AddCmdDrawStretchPic{0x0, 0x0};
+		float* color, Material* material)> R_AddCmdDrawStretchPic{0x0, 0x33B2B0};
 	WEAK symbol<Font_s* (const char* font, int size)> R_RegisterFont{0x0, 0x67F630};
-	WEAK symbol<int(const char* text, int maxChars, Font_s* font)> R_TextWidth{0x0, 0x0};
+	WEAK symbol<int(const char* text, int maxChars, Font_s* font)> R_TextWidth{0x0, 0x67F8F0};
 	WEAK symbol<int(void* font)> R_GetFontHeight{0x0, 0x67F710};
 	WEAK symbol<void* (int a1)> R_DrawSomething{0x0, 0x67ECE0};
 	WEAK symbol<void()> R_SyncRenderThread{0x0, 0x0};
@@ -144,7 +144,7 @@ namespace game
 	WEAK symbol<unsigned int(int classnum, unsigned int entnum)> Scr_GetEntityId{0x0, 0x0};
 	WEAK symbol<int(unsigned int classnum, int entnum, int offset)> Scr_SetObjectField{0x0, 0x0};
 
-	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetViewPlacement{0x0, 0x0};
+	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetViewPlacement{0x0, 0x362840};
 
 	WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)>
 	DB_EnumXAssets_Internal{0x0, 0x0};
@@ -181,7 +181,7 @@ namespace game
 	WEAK symbol<int(int clientNum)> SV_GetClientPing{0x0, 0x0};
 	WEAK symbol<playerState_s* (int num)> SV_GetPlayerstateForClientNum{0x0, 0x0};
 	WEAK symbol<void(int index, const char* string)> SV_SetConfigstring{0x0, 0x0};
-	WEAK symbol<bool()> SV_Loaded{0x0, 0x0};
+	WEAK symbol<bool()> SV_Loaded{0x0, 0x553970};
 	WEAK symbol<void(int clientNum, const char* reason)> SV_KickClientNum{0x0, 0x0};
 	WEAK symbol<bool(const char* map)> SV_MapExists{0x0, 0x0};
 	WEAK symbol<void(mp::client_t*, const char*, int)> SV_ExecuteClientCommand{0x0, 0x0};
@@ -198,11 +198,11 @@ namespace game
 	WEAK symbol<bool(const char* path)> Sys_FileExists{0x0, 0x0};
 
 	WEAK symbol<const char* (const char*)> UI_GetMapDisplayName{0x0, 0x0};
-	WEAK symbol<const char* (const char*)> UI_GetGameTypeDisplayName{0x0, 0x0};
+	WEAK symbol<const char* (const char*)> UI_GetGameTypeDisplayName{0x0, 0x4DD8C0};
 	WEAK symbol<void(unsigned int localClientNum, const char** args)> UI_RunMenuScript{0x0, 0x0};
 	WEAK symbol<int(const char* text, int maxChars, Font_s* font, float scale)> UI_TextWidth{0x0, 0x0};
 
-	WEAK symbol<const char*(const char* string)> UI_SafeTranslateString{0x0, 0x0};
+	WEAK symbol<const char*(const char* string)> UI_SafeTranslateString{0x0, 0x4E8BC0};
 
 	WEAK symbol<void* (jmp_buf* Buf, int Value)> longjmp{0x0, 0x0};
 	WEAK symbol<int(jmp_buf* Buf)> _setjmp{0x0, 0x0};
@@ -239,7 +239,7 @@ namespace game
 	WEAK symbol<const char*> g_assetNames{0x0, 0x0};
 
 	WEAK symbol<int> keyCatchers{0x0, 0x2EC82C4};
-	WEAK symbol<PlayerKeyState> playerKeys{0x0, 0x0};
+	WEAK symbol<PlayerKeyState> playerKeys{0x0, 0x2999D00};
 
 	WEAK symbol<SOCKET> query_socket{0x0, 0xC9DCD38};
 

@@ -391,7 +391,7 @@ namespace game_console
 				const auto width = (con.screen_max[0] - con.screen_min[0]) - 12.0f;
 				const auto height = ((con.screen_max[1] - con.screen_min[1]) - 32.0f) - 12.0f;
 
-				game::R_AddCmdDrawText("H1-Mod 1.4", 0x7FFFFFFF, console_font, x,
+				game::R_AddCmdDrawText("H1-Mod 1.15", 0x7FFFFFFF, console_font, x,
 					((height - 16.0f) + y) + console_font->pixelHeight, 1.0f, 1.0f, 0.0f, color_title, 0);
 
 				draw_output_scrollbar(x, y, width, height, output);
@@ -586,7 +586,9 @@ namespace game_console
 				return false;
 			}
 
-			if (game::playerKeys[local_client_num].keys[game::keyNum_t::K_SHIFT].down)
+			const auto shift_down = game::playerKeys[local_client_num].keys[game::keyNum_t::K_SHIFT].down;
+			console::info("shift down? %d", shift_down);
+			if (shift_down)
 			{
 				if (!(*game::keyCatchers & 1))
 					toggle_console();
@@ -721,13 +723,12 @@ namespace game_console
 				return;
 			}
 
-			//scheduler::loop(draw_console, scheduler::pipeline::renderer);
+			scheduler::loop(draw_console, scheduler::pipeline::renderer);
 		}
 
 		void post_unpack() override
 		{
 			scheduler::loop(draw_console, scheduler::pipeline::renderer);
-
 
 			if (game::environment::is_dedi())
 			{
@@ -797,4 +798,4 @@ namespace game_console
 	};
 }
 
-//REGISTER_COMPONENT(game_console::component)
+REGISTER_COMPONENT(game_console::component)
