@@ -49,22 +49,6 @@ namespace patches
 			return std::string{ username, username_len - 1 };
 		}
 
-		utils::hook::detour com_register_dvars_hook;
-
-		void com_register_dvars_stub()
-		{
-			if (game::environment::is_mp())
-			{
-				// Make name save
-				dvars::register_string("name", get_login_username().data(), game::DVAR_FLAG_SAVED, "Player name.");
-
-				// Disable data validation error popup
-				dvars::register_int("data_validation_allow_drop", 0, 0, 0, game::DVAR_FLAG_NONE, "");
-			}
-
-			return com_register_dvars_hook.invoke<void>();
-		}
-
 		utils::hook::detour set_client_dvar_from_server_hook;
 
 		void set_client_dvar_from_server_stub(void* a1, void* a2, const char* dvar, const char* value)
@@ -149,6 +133,17 @@ namespace patches
 
 			game::AimAssist_AddToTargetList(a1, a2);
 		}
+
+		void* sub_5BB990_stub()
+		{
+			auto v0 = !utils::hook::invoke<bool>(0x1B19E0_b, 0x3426D20_b);
+			auto result = *reinterpret_cast<void**>(0x3426D20_b);
+			if (v0)
+			{
+				result = reinterpret_cast<void*>(0xB807260_b);
+			}
+			return result;
+		}
 	}
 
 	class component final : public component_interface
@@ -156,16 +151,13 @@ namespace patches
 	public:
 		void post_unpack() override
 		{
-			// Register dvars
-			//com_register_dvars_hook.create(SELECT_VALUE(0x140351B80, 0x1400D9320), &com_register_dvars_stub);
-
 			// Unlock fps in main menu
 			utils::hook::set<BYTE>(SELECT_VALUE(0, 0x34396B_b), 0xEB);
 
 			if (!game::environment::is_dedi())
 			{
 				// Fix mouse lag
-				// utils::hook::nop(SELECT_VALUE(0x1403E3C05, 0x1404DB1AF), 6);
+				utils::hook::nop(SELECT_VALUE(0, 0x5BFF89_b), 6);
 				scheduler::loop([]()
 				{
 					SetThreadExecutionState(ES_DISPLAY_REQUIRED);
@@ -193,7 +185,17 @@ namespace patches
 		static void patch_mp()
 		{
 			// Use name dvar
-			//utils::hook::jump(0x5BB9C0_b, &live_get_local_client_name, true);
+			utils::hook::nop(0x5BB990_b, 0x27); // clear function
+			// jmp from 0x5BB9C0 to 0x5BB9A2 (leave some space for far jmp above)
+			utils::hook::set<uint16_t>(0x5BB9C0_b, 0xE0EB);
+			utils::hook::jump(0x5BB9A2_b, &live_get_local_client_name, true);
+			utils::hook::jump(0x5BB990_b, sub_5BB990_stub, true); // replace original function
+
+			// Make name save
+			dvars::override::register_string("name", get_login_username().data(), game::DVAR_FLAG_SAVED);
+
+			// Disable data validation error popup
+			dvars::override::register_int("data_validation_allow_drop", 0, 0, 0, game::DVAR_FLAG_NONE);
 
 			// Patch SV_KickClientNum
 			/*sv_kick_client_num_hook.create(0x14047ED00, &sv_kick_client_num);
