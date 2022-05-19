@@ -183,7 +183,7 @@ namespace game
 	WEAK symbol<void(int index, const char* string)> SV_SetConfigstring{0x0, 0x0};
 	WEAK symbol<bool()> SV_Loaded{0x0, 0x553970};
 	WEAK symbol<void(int clientNum, const char* reason)> SV_KickClientNum{0x0, 0x0};
-	WEAK symbol<bool(const char* map)> SV_MapExists{0x0, 0x0};
+	WEAK symbol<bool(const char* map)> SV_MapExists{0x0, 0x54C0C0};
 	WEAK symbol<void(mp::client_t*, const char*, int)> SV_ExecuteClientCommand{0x0, 0x0};
 	WEAK symbol<void(int localClientNum)> SV_FastRestart{0x0, 0x0};
 	WEAK symbol<void(void* cl, int type, const char* fmt, ...)> SV_SendServerCommand{0x0, 0x1CC040};
@@ -199,7 +199,7 @@ namespace game
 
 	WEAK symbol<const char* (const char*)> UI_GetMapDisplayName{0x0, 0x0};
 	WEAK symbol<const char* (const char*)> UI_GetGameTypeDisplayName{0x0, 0x4DD8C0};
-	WEAK symbol<void(unsigned int localClientNum, const char** args)> UI_RunMenuScript{0x0, 0x0};
+	WEAK symbol<void(unsigned int localClientNum, const char** args)> UI_RunMenuScript{0x0, 0x1E35B0};
 	WEAK symbol<int(const char* text, int maxChars, Font_s* font, float scale)> UI_TextWidth{0x0, 0x0};
 
 	WEAK symbol<const char*(const char* string)> UI_SafeTranslateString{0x0, 0x4E8BC0};

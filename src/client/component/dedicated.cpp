@@ -215,7 +215,7 @@ namespace dedicated
 			gscr_set_dynamic_dvar_hook.create(0x43CF60_b, &gscr_set_dynamic_dvar);
 
 			utils::hook::nop(0x189514_b, 248); // don't load config file
-			utils::hook::nop(0x156C46_b, 5); // ^ // NOT SURE
+			utils::hook::nop(0x156C46_b, 5); // ^
 			utils::hook::set<uint8_t>(0x17F470_b, 0xC3); // don't save config file
 			utils::hook::set<uint8_t>(0x351AA0_b, 0xC3); // disable self-registration
 			utils::hook::set<uint8_t>(0x5BF4E0_b, 0xC3); // init sound system (1)
@@ -268,7 +268,7 @@ namespace dedicated
 			utils::hook::set<uint8_t>(0x687D20_b, 0xC3); // R_Shutdown
 			utils::hook::set<uint8_t>(0x652BA0_b, 0xC3); // shutdown stuff
 			utils::hook::set<uint8_t>(0x687DF0_b, 0xC3); // ^
-			utils::hook::set<uint8_t>(0x686DE0_b, 0xC3); // ^ COULDN'T FOUND
+			utils::hook::set<uint8_t>(0x686DE0_b, 0xC3); // ^
 
 			// utils::hook::set<uint8_t>(0x1404B67E0, 0xC3); // sound crashes (H1 - questionable, function looks way different)
 
@@ -288,9 +288,9 @@ namespace dedicated
 			// Reduce min required memory
 			utils::hook::set<uint64_t>(0x5B7F37_b, 0x80000000);
 
-			utils::hook::set(0x399E10_b, 0xC3); // some loop
-			utils::hook::set(0x1D48B0_b, 0xC3); // related to shader caching / techsets / fastfilesc
-			utils::hook::set(0x3A1940_b, 0xC3); // DB_ReadPackedLoadedSounds
+			utils::hook::set<uint8_t>(0x399E10_b, 0xC3); // some loop
+			utils::hook::set<uint8_t>(0x1D48B0_b, 0xC3); // related to shader caching / techsets / fastfilesc
+			utils::hook::set<uint8_t>(0x3A1940_b, 0xC3); // DB_ReadPackedLoadedSounds
 
 			// initialize the game after onlinedataflags is 32 (workaround)
 			scheduler::schedule([=]()

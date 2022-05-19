@@ -512,7 +512,7 @@ namespace demonware
 		void request_start_match_stub()
 		{
 			const auto* args = "StartServer";
-			utils::hook::invoke<void>(0x1E35B0_b, 0, &args);
+			game::UI_RunMenuScript(0, &args);
 		}
 	}
 

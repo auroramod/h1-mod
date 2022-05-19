@@ -148,15 +148,15 @@ namespace party
 
 		const auto drop_reason_stub = utils::hook::assemble([](utils::hook::assembler& a)
 		{
-			// a.mov(rdx, rdi);
-			// a.mov(ecx, 2);
-			// a.jmp(0x140251F78);
+			a.mov(rdx, rsi);
+			a.mov(ecx, 2);
+			a.jmp(0x12EF27_b);
 		});
 
 		void menu_error(const std::string& error)
 		{
-			//utils::hook::invoke<void>(0x1400DACC0, error.data(), "MENU_NOTICE");
-			//utils::hook::set(0x142C1DA98, 1);
+			utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE");
+			utils::hook::set(0x2ED2F78_b, 1);
 		}
 	}
 
@@ -282,7 +282,6 @@ namespace party
 			}
 
 			console::info("Starting map: %s\n", mapname.data());
-
 			auto* gametype = game::Dvar_FindVar("g_gametype");
 			if (gametype && gametype->current.string)
 			{
@@ -326,12 +325,12 @@ namespace party
 			if (game::environment::is_mp())
 			{
 				// show custom drop reason
-				// utils::hook::nop(0x140251EFB, 13);
-				// utils::hook::jump(0x140251EFB, drop_reason_stub, true);
+				// utils::hook::nop(0x12EF4E_b, 13);
+				// utils::hook::jump(0x12EF4E_b, drop_reason_stub, true);
 			}
 
 			// enable custom kick reason in GScr_KickPlayer
-			// utils::hook::set<uint8_t>(0x140376A1D, 0xEB);
+			// utils::hook::set<uint8_t>(0xE423D_b, 0xEB);
 
 			command::add("map", [](const command::params& argument)
 			{
@@ -349,11 +348,12 @@ namespace party
 				{
 					return;
 				}
-				// *reinterpret_cast<int*>(0x14A3A91D0) = 1; // sv_map_restart
-				// *reinterpret_cast<int*>(0x14A3A91D4) = 1; // sv_loadScripts
-				// *reinterpret_cast<int*>(0x14A3A91D8) = 0; // sv_migrate
 
-				// utils::hook::invoke<void>(0x14047E7F0); // SV_CheckLoadGame
+				*reinterpret_cast<int*>(0xB7B8E60_b) = 1; // sv_map_restart
+				*reinterpret_cast<int*>(0xB7B8E64_b) = 1; // sv_loadScripts
+				*reinterpret_cast<int*>(0xB7B8E68_b) = 0; // sv_migrate
+
+				utils::hook::invoke<void>(0x54BD50_b); // SV_CheckLoadGame
 			});
 
 			command::add("fast_restart", []()
