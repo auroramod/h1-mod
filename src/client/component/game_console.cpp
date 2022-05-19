@@ -587,11 +587,12 @@ namespace game_console
 			}
 
 			const auto shift_down = game::playerKeys[local_client_num].keys[game::keyNum_t::K_SHIFT].down;
-			console::info("shift down? %d", shift_down);
 			if (shift_down)
 			{
 				if (!(*game::keyCatchers & 1))
+				{
 					toggle_console();
+				}
 
 				toggle_console_output();
 				return false;
