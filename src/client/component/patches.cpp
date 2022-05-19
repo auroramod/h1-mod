@@ -46,7 +46,23 @@ namespace patches
 				return "Unknown Soldier";
 			}
 
-			return std::string{ username, username_len - 1 };
+			return std::string{username, username_len - 1};
+		}
+
+		utils::hook::detour com_register_dvars_hook;
+
+		void com_register_dvars_stub()
+		{
+			if (game::environment::is_mp())
+			{
+				// Make name save
+				dvars::register_string("name", get_login_username().data(), game::DVAR_FLAG_SAVED, "Player name.");
+
+				// Disable data validation error popup
+				dvars::register_int("data_validation_allow_drop", 0, 0, 0, game::DVAR_FLAG_NONE, "");
+			}
+
+			return com_register_dvars_hook.invoke<void>();
 		}
 
 		utils::hook::detour set_client_dvar_from_server_hook;
@@ -151,6 +167,9 @@ namespace patches
 	public:
 		void post_unpack() override
 		{
+			// Register dvars
+			com_register_dvars_hook.create(SELECT_VALUE(0, 0x15BB60_b), &com_register_dvars_stub);
+
 			// Unlock fps in main menu
 			utils::hook::set<BYTE>(SELECT_VALUE(0, 0x34396B_b), 0xEB);
 
