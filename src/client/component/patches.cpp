@@ -235,7 +235,7 @@ namespace patches
 			// utils::hook::nop(0x140190C16, 5);
 			utils::hook::set<uint8_t>(0x307F39_b, 0xEB);
 
-			// some anti tamper thing that kills performance (not needed in H1?)
+			// some [data validation] anti tamper thing that kills performance
 			dvars::override::register_int("dvl", 0, 0, 0, game::DVAR_FLAG_READ);
 
 			// unlock safeArea_*
