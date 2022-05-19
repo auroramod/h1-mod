@@ -232,8 +232,8 @@ namespace game
 
 	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0x0, 0x0};
 
-	WEAK symbol<int> dvarCount{0x0, 0x0};
-	WEAK symbol<dvar_t> dvarPool{0x0, 0x0};
+	WEAK symbol<int> dvarCount{0x0, 0x2999C34};
+	WEAK symbol<dvar_t> dvarPool{0x0, 0x344DF20};
 
 	WEAK symbol<void*> DB_XAssetPool{0x0, 0x0};
 	WEAK symbol<const char*> g_assetNames{0x0, 0x0};
