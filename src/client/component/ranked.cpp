@@ -27,21 +27,19 @@ namespace ranked
 				dvars::override::register_bool("xblive_privatematch", false, game::DVAR_FLAG_REPLICATED);
 			}
 
-			if (game::environment::is_dedi() && !utils::flags::has_flag("unranked"))
+			if (game::environment::is_dedi())
 			{
 				dvars::override::register_bool("xblive_privatematch", false, game::DVAR_FLAG_REPLICATED | game::DVAR_FLAG_WRITE);
-
-				// Skip some check in _menus.gsc
-				dvars::register_bool("force_ranking", true, game::DVAR_FLAG_WRITE, "");
+				dvars::register_bool("force_ranking", true, game::DVAR_FLAG_WRITE, ""); // Skip some check in _menus.gsc
 			}
 
 			// Always run bots, even if xblive_privatematch is 0
-			utils::hook::set(0x1401D9300, 0xC301B0); // BG_BotSystemEnabled
-			utils::hook::set(0x1401D90D0, 0xC301B0); // BG_AISystemEnabled
-			utils::hook::set(0x1401D92A0, 0xC301B0); // BG_BotFastFileEnabled
-			utils::hook::set(0x1401D9400, 0xC301B0); // BG_BotsUsingTeamDifficulty
+			utils::hook::set(0x2C10B0_b, 0xC301B0); // BG_BotSystemEnabled
+			utils::hook::set(0x2C0E60_b, 0xC301B0); // BG_AISystemEnabled
+			utils::hook::set(0x2C1040_b, 0xC301B0); // BG_BotFastFileEnabled
+			utils::hook::set(0x2C11B0_b, 0xC301B0); // BG_BotsUsingTeamDifficulty
 		}
 	};
 }
 
-//REGISTER_COMPONENT(ranked::component)
+REGISTER_COMPONENT(ranked::component)

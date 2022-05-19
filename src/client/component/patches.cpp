@@ -65,6 +65,8 @@ namespace patches
 			return com_register_dvars_hook.invoke<void>();
 		}
 
+		utils::hook::detour set_client_dvar_from_server_hook;
+
 		void set_client_dvar_from_server_stub(void* a1, void* a2, const char* dvar, const char* value)
 		{
 			if (dvar == "cg_fov"s || dvar == "cg_fovMin"s)
@@ -72,8 +74,7 @@ namespace patches
 				return;
 			}
 
-			// CG_SetClientDvarFromServer
-			utils::hook::invoke<void>(0x11AA90_b, a1, a2, dvar, value);
+			set_client_dvar_from_server_hook.invoke<void>(0x11AA90_b, a1, a2, dvar, value);
 		}
 
 		const char* db_read_raw_file_stub(const char* filename, char* buf, const int size)
@@ -156,15 +157,15 @@ namespace patches
 		void post_unpack() override
 		{
 			// Register dvars
-			com_register_dvars_hook.create(SELECT_VALUE(0x140351B80, 0x1400D9320), &com_register_dvars_stub);
+			//com_register_dvars_hook.create(SELECT_VALUE(0x140351B80, 0x1400D9320), &com_register_dvars_stub);
 
 			// Unlock fps in main menu
-			utils::hook::set<BYTE>(SELECT_VALUE(0x14018D47B, 0x14025B86B), 0xEB);
+			utils::hook::set<BYTE>(SELECT_VALUE(0, 0x34396B_b), 0xEB);
 
 			if (!game::environment::is_dedi())
 			{
 				// Fix mouse lag
-				utils::hook::nop(SELECT_VALUE(0x1403E3C05, 0x1404DB1AF), 6);
+				// utils::hook::nop(SELECT_VALUE(0x1403E3C05, 0x1404DB1AF), 6);
 				scheduler::loop([]()
 				{
 					SetThreadExecutionState(ES_DISPLAY_REQUIRED);
@@ -177,11 +178,11 @@ namespace patches
 			dvars::override::register_float("cg_fovMin", 1.f, 1.0f, 90.f, game::DvarFlags::DVAR_FLAG_SAVED);
 
 			// Allow kbam input when gamepad is enabled
-			utils::hook::nop(SELECT_VALUE(0x14018797E, 0x14024EF60), 2);
-			utils::hook::nop(SELECT_VALUE(0x1401856DC, 0x14024C6B0), 6);
+			// utils::hook::nop(SELECT_VALUE(0x14018797E, 0x14024EF60), 2);
+			// utils::hook::nop(SELECT_VALUE(0x1401856DC, 0x14024C6B0), 6);
 
 			// Allow executing custom cfg files with the "exec" command
-			utils::hook::call(SELECT_VALUE(0x140343855, 0x140403E28), db_read_raw_file_stub);
+			// utils::hook::call(SELECT_VALUE(0x140343855, 0x140403E28), db_read_raw_file_stub);
 
 			if (!game::environment::is_sp())
 			{
@@ -192,10 +193,10 @@ namespace patches
 		static void patch_mp()
 		{
 			// Use name dvar
-			utils::hook::jump(0x14050FF90, &live_get_local_client_name);
+			//utils::hook::jump(0x5BB9C0_b, &live_get_local_client_name, true);
 
 			// Patch SV_KickClientNum
-			sv_kick_client_num_hook.create(0x14047ED00, &sv_kick_client_num);
+			/*sv_kick_client_num_hook.create(0x14047ED00, &sv_kick_client_num);
 
 			// block changing name in-game
 			utils::hook::set<uint8_t>(0x14047FC90, 0xC3);
@@ -218,29 +219,29 @@ namespace patches
 
 			// disable elite_clan
 			dvars::override::register_int("elite_clan_active", 0, 0, 0, game::DVAR_FLAG_NONE);
-			utils::hook::set<uint8_t>(0x140585680, 0xC3); // don't register commands
+			utils::hook::set<uint8_t>(0x140585680, 0xC3); // don't register commands*/
 
 			// disable codPointStore
 			dvars::override::register_int("codPointStore_enabled", 0, 0, 0, game::DVAR_FLAG_NONE);
 
 			// don't register every replicated dvar as a network dvar
-			utils::hook::nop(0x14039E58E, 5); // dvar_foreach
+			utils::hook::nop(0x47408E_b, 5); // dvar_foreach
 
 			// patch "Server is different version" to show the server client version
-			utils::hook::inject(0x140480955, VERSION);
+			// utils::hook::inject(0x140480955, VERSION);
 
 			// prevent servers overriding our fov
-			utils::hook::call(0xF4500_b, set_client_dvar_from_server_stub);
-			// utils::hook::nop(0x1400DAF69, 5);
-			// utils::hook::nop(0x140190C16, 5);
+			set_client_dvar_from_server_hook.create(0x11AA90_b, set_client_dvar_from_server_stub);
+			utils::hook::nop(0x17DA96_b, 0x16);
+			utils::hook::nop(0xE00BE_b, 0x17);
 			utils::hook::set<uint8_t>(0x307F39_b, 0xEB);
 
 			// some [data validation] anti tamper thing that kills performance
 			dvars::override::register_int("dvl", 0, 0, 0, game::DVAR_FLAG_READ);
 
 			// unlock safeArea_*
-			utils::hook::jump(0x1402624F5, 0x140262503);
-			utils::hook::jump(0x14026251C, 0x140262547);
+			/*utils::hook::jump(0x1402624F5, 0x140262503);
+			utils::hook::jump(0x14026251C, 0x140262547);*/
 			dvars::override::register_float("safeArea_adjusted_horizontal", 1, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_float("safeArea_adjusted_vertical", 1, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_float("safeArea_horizontal", 1, 0, 1, game::DVAR_FLAG_SAVED);
@@ -262,7 +263,7 @@ namespace patches
 			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
 
 			// Prevent clients from ending the game as non host by sending 'end_game' lui notification
-			cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub);
+			/*cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub);
 
 			// Prevent clients from sending invalid reliableAcknowledge
 			utils::hook::call(0x1404899C6, sv_execute_client_message_stub);
@@ -275,7 +276,7 @@ namespace patches
 				utils::hook::jump(0x140578C40, free);
 				utils::hook::jump(0x140578D30, realloc);
 				utils::hook::jump(0x140578B60, _aligned_realloc);
-			}
+			}*/
 
 			// Change default hostname and make it replicated
 			dvars::override::register_string("sv_hostname", "^2H1-Mod^7 Default Server", game::DVAR_FLAG_REPLICATED);
@@ -283,4 +284,4 @@ namespace patches
 	};
 }
 
-//REGISTER_COMPONENT(patches::component)
+REGISTER_COMPONENT(patches::component)

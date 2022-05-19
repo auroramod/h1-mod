@@ -237,8 +237,11 @@ namespace dvars
 	}
 
 	utils::hook::detour dvar_register_bool_hook;
+	utils::hook::detour dvar_register_bool_hashed_hook;
 	utils::hook::detour dvar_register_float_hook;
+	utils::hook::detour dvar_register_float_hashed_hook;
 	utils::hook::detour dvar_register_int_hook;
+	utils::hook::detour dvar_register_int_hashed_hook;
 	utils::hook::detour dvar_register_string_hook;
 	utils::hook::detour dvar_register_vector2_hook;
 	utils::hook::detour dvar_register_vector3_hook;
@@ -248,38 +251,6 @@ namespace dvars
 	utils::hook::detour dvar_set_int_hook;
 	utils::hook::detour dvar_set_string_hook;
 	utils::hook::detour dvar_set_from_string_hook;
-
-	utils::hook::detour dvar_re_register_hook;
-	utils::hook::detour dvar_register_new_hook;
-
-	game::dvar_type get_normal_type(const game::dvar_type type)
-	{
-		switch (type)
-		{
-		case game::dvar_type::boolean_hashed:
-			return game::dvar_type::boolean;
-		case game::dvar_type::integer_hashed:
-			return game::dvar_type::integer;
-		case game::dvar_type::value_hashed:
-			return game::dvar_type::value;
-		default:
-			return type;
-		}
-	}
-
-	void dvar_re_register_stub(game::dvar_t* dvar, const int hash, const char* name, game::dvar_type type,
-		const unsigned int flags, game::dvar_value* value, game::dvar_limits* domain)
-	{
-		type = get_normal_type(type);
-		dvar_re_register_hook.invoke<void>(dvar, hash, name, type, flags, value, domain);
-	}
-
-	game::dvar_t* dvar_register_new_stub(const int hash, const char* name, game::dvar_type type,
-		const unsigned int flags, game::dvar_value* value, game::dvar_limits* domain)
-	{
-		type = get_normal_type(type);
-		return dvar_register_new_hook.invoke<game::dvar_t*>(hash, name, type, flags, value, domain);
-	}
 
 	game::dvar_t* dvar_register_bool(const int hash, const char* name, bool value, unsigned int flags)
 	{
@@ -291,6 +262,18 @@ namespace dvars
 		}
 
 		return dvar_register_bool_hook.invoke<game::dvar_t*>(hash, name, value, flags);
+	}
+
+	game::dvar_t* dvar_register_bool_hashed(const int hash, const char* name, bool value, unsigned int flags)
+	{
+		auto* var = find_dvar(override::register_bool_overrides, hash);
+		if (var)
+		{
+			value = var->value;
+			flags = var->flags;
+		}
+
+		return dvar_register_bool_hashed_hook.invoke<game::dvar_t*>(hash, name, value, flags);
 	}
 
 	game::dvar_t* dvar_register_float(const int hash, const char* name, float value, float min, float max, unsigned int flags)
@@ -307,6 +290,20 @@ namespace dvars
 		return dvar_register_float_hook.invoke<game::dvar_t*>(hash, name, value, min, max, flags);
 	}
 
+	game::dvar_t* dvar_register_float_hashed(const int hash, const char* name, float value, float min, float max, unsigned int flags)
+	{
+		auto* var = find_dvar(override::register_float_overrides, hash);
+		if (var)
+		{
+			value = var->value;
+			min = var->min;
+			max = var->max;
+			flags = var->flags;
+		}
+
+		return dvar_register_float_hashed_hook.invoke<game::dvar_t*>(hash, name, value, min, max, flags);
+	}
+
 	game::dvar_t* dvar_register_int(const int hash, const char* name, int value, int min, int max, unsigned int flags)
 	{
 		auto* var = find_dvar(override::register_int_overrides, hash);
@@ -319,6 +316,20 @@ namespace dvars
 		}
 
 		return dvar_register_int_hook.invoke<game::dvar_t*>(hash, name, value, min, max, flags);
+	}
+
+	game::dvar_t* dvar_register_int_hashed(const int hash, const char* name, int value, int min, int max, unsigned int flags)
+	{
+		auto* var = find_dvar(override::register_int_overrides, hash);
+		if (var)
+		{
+			value = var->value;
+			min = var->min;
+			max = var->max;
+			flags = var->flags;
+		}
+
+		return dvar_register_int_hashed_hook.invoke<game::dvar_t*>(hash, name, value, min, max, flags);
 	}
 
 	game::dvar_t* dvar_register_string(const int hash, const char* name, const char* value, unsigned int flags)
@@ -456,24 +467,21 @@ namespace dvars
 	public:
 		void post_unpack() override
 		{
-			if (game::environment::is_mp())
-			{
-				// dvar_register_new_hook.create(0x184DF0_b, dvar_register_new_stub);
-				// dvar_re_register_hook.create(0x185150_b, dvar_re_register_stub);
-			}
+			dvar_register_bool_hook.create(SELECT_VALUE(0x0, 0x182340_b), &dvar_register_bool);
+			dvar_register_bool_hashed_hook.create(SELECT_VALUE(0x0, 0x182420_b), &dvar_register_bool_hashed);
+			dvar_register_float_hook.create(SELECT_VALUE(0x0, 0x1827F0_b), &dvar_register_float);
+			dvar_register_float_hashed_hook.create(SELECT_VALUE(0x0, 0x182900_b), &dvar_register_float_hashed);
+			dvar_register_int_hook.create(SELECT_VALUE(0x0, 0x182A10_b), &dvar_register_int);
+			dvar_register_int_hashed_hook.create(SELECT_VALUE(0x0, 0x182AF0_b), &dvar_register_int_hashed);
+			dvar_register_string_hook.create(SELECT_VALUE(0x0, 0x182BD0_b), &dvar_register_string);
+			dvar_register_vector2_hook.create(SELECT_VALUE(0x0, 0x182CB0_b), &dvar_register_vector2);
+			dvar_register_vector3_hook.create(SELECT_VALUE(0x0, 0x182DB0_b), &dvar_register_vector3);
 
-			dvar_register_bool_hook.create(SELECT_VALUE(0x0, 0x182340_b), &dvar_register_bool); // good
-			//dvar_register_float_hook.create(SELECT_VALUE(0x0, 0x182900_b), &dvar_register_float); // FLOAT HASHED (TYPE 11 INSTEAD OF 1)
-			dvar_register_int_hook.create(SELECT_VALUE(0x0, 0x182A10_b), &dvar_register_int); // goood
-			//dvar_register_string_hook.create(SELECT_VALUE(0x0, 0x182AF0_b), &dvar_register_string); // INT HASHED (TYPE 12, INSTEAD OF 7)
-			//dvar_register_vector2_hook.create(SELECT_VALUE(0x0, 0x182BD0_b), &dvar_register_vector2); // STRING (TYPE 7 INSTEAD OF 2)
-			//dvar_register_vector3_hook.create(SELECT_VALUE(0x0, 0x182CB0_b), &dvar_register_vector3); // VEC2 (TYPE 2 INSTEAD OF 3)
-
-			dvar_set_bool_hook.create(SELECT_VALUE(0x0, 0x185520_b), &dvar_set_bool); // good
-			dvar_set_float_hook.create(SELECT_VALUE(0x0, 0x185AA0_b), &dvar_set_float); // good
-			dvar_set_int_hook.create(SELECT_VALUE(0x0, 0x185D10_b), &dvar_set_int); // good
-			dvar_set_string_hook.create(SELECT_VALUE(0x0, 0x186080_b), &dvar_set_string); // good
-			dvar_set_from_string_hook.create(SELECT_VALUE(0x0, 0x185C60_b), &dvar_set_from_string); // good
+			dvar_set_bool_hook.create(SELECT_VALUE(0x0, 0x185520_b), &dvar_set_bool);
+			dvar_set_float_hook.create(SELECT_VALUE(0x0, 0x185AA0_b), &dvar_set_float);
+			dvar_set_int_hook.create(SELECT_VALUE(0x0, 0x185D10_b), &dvar_set_int);
+			dvar_set_string_hook.create(SELECT_VALUE(0x0, 0x186080_b), &dvar_set_string);
+			dvar_set_from_string_hook.create(SELECT_VALUE(0x0, 0x185C60_b), &dvar_set_from_string);
 		}
 	};
 }

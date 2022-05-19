@@ -118,8 +118,8 @@ namespace command
 					const auto current = game::Dvar_ValueToString(dvar, true, dvar->current);
 					const auto reset = game::Dvar_ValueToString(dvar, true, dvar->reset);
 
-					console::info("\"%s\" is: \"%s\" default: \"%s\" hash: 0x%08lX\n",
-						args[0], current, reset, dvar->hash);
+					console::info("\"%s\" is: \"%s\" default: \"%s\" hash: 0x%08lX type: %i\n",
+						args[0], current, reset, dvar->hash, dvar->type);
 
 					const auto dvar_info = dvars::dvar_get_description(args[0]);
 
