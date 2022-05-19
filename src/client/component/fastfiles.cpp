@@ -18,7 +18,7 @@ namespace fastfiles
 
 		void db_try_load_x_file_internal(const char* zone_name, const int flags)
 		{
-			printf("Loading fastfile %s\n", zone_name);
+			console::info("Loading fastfile %s\n", zone_name);
 			current_fastfile.access([&](std::string& fastfile)
 			{
 				fastfile = zone_name;

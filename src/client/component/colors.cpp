@@ -147,17 +147,30 @@ namespace colors
 			if (!game::environment::is_sp())
 			{
 				// allows colored name in-game
-				utils::hook::jump(0x5AEDF0_b, com_clean_name_stub); // 1.15
+				utils::hook::jump(0x5AEDF0_b, com_clean_name_stub, true);
 
 				// don't apply colors to overhead names
-				utils::hook::call(0xF7B85_b, get_client_name_stub); // 1.15
+				utils::hook::jump(0xF7B6A_b, utils::hook::assemble([](utils::hook::assembler& a)
+				{
+					a.lea(rax, qword_ptr(rbp, -0x10));
+					a.mov(dword_ptr(rsp, 0x28), 0xB);
+					a.mov(r9d, 0x20);
+					a.mov(qword_ptr(rsp, 0x20), rax);
+					a.lea(r8, qword_ptr(rbp));
+
+					a.pushad64();
+					a.call_aligned(get_client_name_stub);
+					a.popad64();
+
+					a.jmp(0xF7B8A_b);
+				}), true);
 
 				// patch I_CleanStr
-				utils::hook::jump(0x5AF2E0_b, i_clean_str_stub); // 1.15
+				utils::hook::jump(0x5AF2E0_b, i_clean_str_stub, true);
 			}
 
 			// force new colors
-			utils::hook::jump(SELECT_VALUE(0x0, 0x6C9460_b), rb_lookup_color_stub); // 1.15
+			utils::hook::jump(SELECT_VALUE(0x0, 0x6C9460_b), rb_lookup_color_stub, true);
 
 			// add colors
 			add(0, 0, 0); // 0  - Black
@@ -179,4 +192,4 @@ namespace colors
 	};
 }
 
-//REGISTER_COMPONENT(colors::component)
+REGISTER_COMPONENT(colors::component)

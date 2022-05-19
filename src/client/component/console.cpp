@@ -6,6 +6,7 @@
 #include "command.hpp"
 
 #include <utils/thread.hpp>
+#include <utils/hook.hpp>
 
 namespace game_console
 {
@@ -32,9 +33,8 @@ namespace console
 
 	void dispatch_message(const int type, const std::string& message)
 	{
-		printf("%s\n", message.data());
-
-		//game_console::print(type, message);
+		printf(message.data());
+		game_console::print(type, message);
 	}
 
 	void print(const int type, const char* fmt, ...)

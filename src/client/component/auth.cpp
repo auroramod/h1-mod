@@ -243,12 +243,6 @@ namespace auth
 				// kill "disconnected from steam" error
 				utils::hook::nop(0x1D61DF_b, 0x11);
 
-				/*utils::hook::nop(0x1D6193_b, 103); // STEAM
-				utils::hook::nop(0x60153_b, 0x60426 - 0x60153); // STEAM
-				utils::hook::nop(0x603E1_b, 0x60426 - 0x603E1); // STEAM
-				utils::hook::nop(0x1D7553_b, 0x1D7587 - 0x1D7553); // STEAM MAYBE `1401D7553` ON FIRST
-				utils::hook::nop(0x1D7A82_b, 0x1D7AC8 - 0x1D7A82); // STEAM*/
-
 				utils::hook::jump(0x1CAE70_b, get_direct_connect_stub(), true);
 				utils::hook::jump(0x12D426_b, get_send_connect_data_stub(), true);
 
