@@ -134,7 +134,7 @@ namespace game
 		unsigned int paramcount)> VM_Execute{0x0, 0x0};
 
 	WEAK symbol<void(unsigned int id, scr_string_t stringValue, 
-		unsigned int paramcount)> Scr_NotifyId{0x0, 0x0};
+		unsigned int paramcount)> Scr_NotifyId{0x0, 0x510340};
 	WEAK symbol<const float*(const float* v)> Scr_AllocVector{0x0, 0x0};
 	WEAK symbol<float(int index)> Scr_GetFloat{0x0, 0x0};
 	WEAK symbol<const char*(int index)> Scr_GetString{0x0, 0x0};
@@ -163,7 +163,7 @@ namespace game
 	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0x0, 0x0};
 
 	WEAK symbol<scr_string_t(const char* str)> SL_FindString{0x0, 0x0};
-	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{0x0, 0x0};
+	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{0x0, 0x5083A0};
 	WEAK symbol<const char*(scr_string_t stringValue)> SL_ConvertToString{0x0, 0x0};
 	WEAK symbol<unsigned int(const char* str)> SL_GetCanonicalString{0x0, 0x0};
 
@@ -172,10 +172,10 @@ namespace game
 	WEAK symbol<void(const char* text_in)> SV_Cmd_TokenizeString{0x0, 0x1CACE0};
 	WEAK symbol<void()> SV_Cmd_EndTokenizedString{0x0, 0x1CACA0};
 
-	WEAK symbol<mp::gentity_s*(const char* name)> SV_AddBot{0x0, 0x0};
+	WEAK symbol<mp::gentity_s*(const char* name)> SV_AddBot{0x0, 0x54D4F0};
 	WEAK symbol<bool(int clientNum)> SV_BotIsBot{0x0, 0x53B6D0};
-	WEAK symbol<const char* ()> SV_BotGetRandomName{0x0, 0x0};
-	WEAK symbol<int(mp::gentity_s* ent)> SV_SpawnTestClient{0x0, 0x0};
+	WEAK symbol<const char* ()> SV_BotGetRandomName{0x0, 0x53ABD0};
+	WEAK symbol<int(mp::gentity_s* ent)> SV_SpawnTestClient{0x0, 0x550580};
 
 	WEAK symbol<const char* (int clientNum)> SV_GetGuid{0x0, 0x0};
 	WEAK symbol<int(int clientNum)> SV_GetClientPing{0x0, 0x0};
@@ -227,7 +227,7 @@ namespace game
 	WEAK symbol<scr_classStruct_t> g_classMap{0x0, 0x0};
 
 	WEAK symbol<scrVarGlob_t> scr_VarGlob{0x0, 0x0};
-	WEAK symbol<scrVmPub_t> scr_VmPub{0x0, 0x0};
+	WEAK symbol<scrVmPub_t> scr_VmPub{0x0, 0xB7AE3C0};
 	WEAK symbol<function_stack_t> scr_function_stack{0x0, 0x0};
 
 	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0x0, 0x0};

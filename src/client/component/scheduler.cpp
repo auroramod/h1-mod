@@ -207,7 +207,7 @@ namespace scheduler
 				a.jmp(0x6A6310_b);
 			}), true);
 
-			//g_run_frame_hook.create(SELECT_VALUE(0x0, 0x417940_b), scheduler::server_frame_stub);
+			g_run_frame_hook.create(SELECT_VALUE(0x0, 0x417940_b), scheduler::server_frame_stub);
 			main_frame_hook.create(SELECT_VALUE(0x0, 0x3438B0_b), scheduler::main_frame_stub);
 			//hks_frame_hook.create(SELECT_VALUE(0x0, 0x0), scheduler::hks_frame_stub); // no scripting for now
 		}
