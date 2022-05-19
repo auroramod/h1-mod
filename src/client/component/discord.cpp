@@ -53,7 +53,6 @@ namespace discord
 				discord_presence.matchSecret = "";
 				discord_presence.joinSecret = "";
 				discord_presence.partyId = "";
-				discord_presence.state = "";
 			}
 			else
 			{
@@ -103,7 +102,7 @@ namespace discord
 						discord_presence.partyPrivacy = DISCORD_PARTY_PUBLIC;
 					}
 
-					discord_presence.partySize = *reinterpret_cast<int*>(0x1429864C4);
+					discord_presence.partySize = 1; //*reinterpret_cast<int*>(0x1429864C4);
 					discord_presence.partyMax = max_clients;
 					discord_presence.state = clean_hostname;
 					discord_presence.largeImageKey = map;
@@ -188,13 +187,13 @@ namespace discord
 			handlers.ready = ready;
 			handlers.errored = errored;
 			handlers.disconnected = errored;
-			handlers.joinGame = join_game;
+			handlers.joinGame = nullptr; //join_game
 			handlers.spectateGame = nullptr;
-			handlers.joinRequest = join_request;
+			handlers.joinRequest = nullptr; //join_request
 
 			Discord_Initialize("947125042930667530", &handlers, 1, nullptr);
 
-			scheduler::once(download_default_avatar, scheduler::pipeline::async);
+			//scheduler::once(download_default_avatar, scheduler::pipeline::async);
 
 			scheduler::once([]()
 			{
@@ -285,4 +284,4 @@ namespace discord
 	};
 }
 
-//REGISTER_COMPONENT(discord::component)
+REGISTER_COMPONENT(discord::component)
