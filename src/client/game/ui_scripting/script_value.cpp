@@ -2,9 +2,79 @@
 #include "execution.hpp"
 #include "types.hpp"
 #include "script_value.hpp"
+#include "../../component/ui_scripting.hpp"
 
 namespace ui_scripting
 {
+	hks_object::hks_object(const game::hks::HksObject& value)
+	{
+		this->assign(value);
+	}
+
+	hks_object::hks_object(const hks_object& other) noexcept
+	{
+		this->operator=(other);
+	}
+
+	hks_object::hks_object(hks_object&& other) noexcept
+	{
+		this->operator=(std::move(other));
+	}
+
+	hks_object& hks_object::operator=(const hks_object& other) noexcept
+	{
+		if (this != &other)
+		{
+			this->release();
+			this->assign(other.value_);
+		}
+
+		return *this;
+	}
+
+	hks_object& hks_object::operator=(hks_object&& other) noexcept
+	{
+		if (this != &other)
+		{
+			this->release();
+			this->value_ = other.value_;
+			other.value_.t = game::hks::TNONE;
+		}
+
+		return *this;
+	}
+
+	hks_object::~hks_object()
+	{
+		this->release();
+	}
+
+	const game::hks::HksObject& hks_object::get() const
+	{
+		return this->value_;
+	}
+
+	void hks_object::assign(const game::hks::HksObject& value)
+	{
+		this->value_ = value;
+
+		const auto state = *game::hks::lua_state;
+		const auto top = state->m_apistack.top;
+
+		push_value(this->value_);
+		this->ref_ = game::hks::hksi_luaL_ref(*game::hks::lua_state, -10000);
+		state->m_apistack.top = top;
+	}
+
+	void hks_object::release()
+	{
+		if (this->ref_)
+		{
+			game::hks::hksi_luaL_unref(*game::hks::lua_state, -10000, this->ref_);
+			this->value_.t = game::hks::TNONE;
+		}
+	}
+
 	/***************************************************************
 	 * Constructors
 	 **************************************************************/
@@ -32,6 +102,24 @@ namespace ui_scripting
 		this->value_ = obj;
 	}
 
+	script_value::script_value(const long long value)
+	{
+		game::hks::HksObject obj{};
+		obj.t = game::hks::TUI64;
+		obj.v.i64 = value;
+
+		this->value_ = obj;
+	}
+
+	script_value::script_value(const unsigned long long value)
+	{
+		game::hks::HksObject obj{};
+		obj.t = game::hks::TUI64;
+		obj.v.ui64 = value;
+
+		this->value_ = obj;
+	}
+
 	script_value::script_value(const bool value)
 	{
 		game::hks::HksObject obj{};
@@ -55,46 +143,68 @@ namespace ui_scripting
 	{
 	}
 
-	script_value::script_value(const char* value)
+	script_value::script_value(const char* value, const size_t len)
 	{
 		game::hks::HksObject obj{};
 
 		const auto state = *game::hks::lua_state;
-		state->m_apistack.top = state->m_apistack.base;
+		if (state == nullptr)
+		{
+			return;
+		}
 
-		game::hks::hksi_lua_pushlstring(state, value, (unsigned int)strlen(value));
+		const auto top = state->m_apistack.top;
+		game::hks::hksi_lua_pushlstring(state, value, static_cast<unsigned int>(len));
 		obj = state->m_apistack.top[-1];
+		state->m_apistack.top = top;
 
 		this->value_ = obj;
 	}
 
+	script_value::script_value(const char* value)
+		: script_value(value, strlen(value))
+	{
+	}
+
 	script_value::script_value(const std::string& value)
-		: script_value(value.data())
+		: script_value(value.data(), value.size())
 	{
 	}
 
 	script_value::script_value(const lightuserdata& value)
 	{
-		this->value_.t = game::hks::TLIGHTUSERDATA;
-		this->value_.v.ptr = value.ptr;
+		game::hks::HksObject obj{};
+		obj.t = game::hks::TLIGHTUSERDATA;
+		obj.v.ptr = value.ptr;
+
+		this->value_ = obj;
 	}
 
 	script_value::script_value(const userdata& value)
 	{
-		this->value_.t = game::hks::TUSERDATA;
-		this->value_.v.ptr = value.ptr;
+		game::hks::HksObject obj{};
+		obj.t = game::hks::TUSERDATA;
+		obj.v.ptr = value.ptr;
+
+		this->value_ = obj;
 	}
 
 	script_value::script_value(const table& value)
 	{
-		this->value_.t = game::hks::TTABLE;
-		this->value_.v.ptr = value.ptr;
+		game::hks::HksObject obj{};
+		obj.t = game::hks::TTABLE;
+		obj.v.ptr = value.ptr;
+
+		this->value_ = obj;
 	}
 
 	script_value::script_value(const function& value)
 	{
-		this->value_.t = value.type;
-		this->value_.v.ptr = value.ptr;
+		game::hks::HksObject obj{};
+		obj.t = value.type;
+		obj.v.ptr = value.ptr;
+
+		this->value_ = obj;
 	}
 
 	/***************************************************************
@@ -124,6 +234,34 @@ namespace ui_scripting
 	unsigned int script_value::get() const
 	{
 		return static_cast<unsigned int>(this->get_raw().v.number);
+	}
+
+	/***************************************************************
+	 * Integer 64
+	 **************************************************************/
+
+	template <>
+	bool script_value::is<long long>() const
+	{
+		return this->get_raw().t == game::hks::TUI64;
+	}
+
+	template <>
+	bool script_value::is<unsigned long long>() const
+	{
+		return this->is<long long>();
+	}
+
+	template <>
+	long long script_value::get() const
+	{
+		return static_cast<long long>(this->get_raw().v.ui64);
+	}
+
+	template <>
+	unsigned long long script_value::get() const
+	{
+		return static_cast<unsigned long long>(this->get_raw().v.ui64);
 	}
 
 	/***************************************************************
@@ -260,7 +398,7 @@ namespace ui_scripting
 	template <>
 	function script_value::get() const
 	{
-		return { this->get_raw().v.cClosure, this->get_raw().t };
+		return {this->get_raw().v.cClosure, this->get_raw().t};
 	}
 
 	/***************************************************************
@@ -269,6 +407,43 @@ namespace ui_scripting
 
 	const game::hks::HksObject& script_value::get_raw() const
 	{
-		return this->value_;
+		return this->value_.get();
+	}
+
+	bool script_value::operator==(const script_value& other) const
+	{
+		if (this->get_raw().t != other.get_raw().t)
+		{
+			return false;
+		}
+
+		if (this->get_raw().t == game::hks::TSTRING)
+		{
+			return this->get<std::string>() == other.get<std::string>();
+		}
+
+		return this->get_raw().v.native == other.get_raw().v.native;
+	}
+
+	arguments script_value::operator()() const
+	{
+		return this->as<function>()();
+	}
+
+	arguments script_value::operator()(const arguments& arguments) const
+	{
+		return this->as<function>()(arguments);
+	}
+
+	function_argument::function_argument(const arguments& args, const script_value& value, const int index)
+		: values_(args)
+		  , value_(value)
+		  , index_(index)
+	{
+	}
+
+	function_arguments::function_arguments(const arguments& values)
+		: values_(values)
+	{
 	}
 }

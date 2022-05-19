@@ -15,14 +15,6 @@ namespace lui
 	public:
 		void post_unpack() override
 		{
-			// Don't show create cod account popup
-			//utils::hook::set<uint32_t>(0x14017C957, 0);
-
-//#ifdef _DEBUG
-			// Enable development menus (causes issues in sp)
-			//utils::hook::set<uint32_t>(SELECT_VALUE(0x1400B4ABC, 0x1401AB779), 1);
-//#endif
-
 			command::add("lui_open", [](const command::params& params)
 			{
 				if (params.size() <= 1)
@@ -55,4 +47,4 @@ namespace lui
 	};
 }
 
-//REGISTER_COMPONENT(lui::component)
+REGISTER_COMPONENT(lui::component)

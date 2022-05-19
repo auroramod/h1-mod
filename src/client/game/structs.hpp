@@ -1566,6 +1566,10 @@ namespace game
 
 	namespace hks
 	{
+		struct lua_State;
+		struct HashTable;
+		struct cclosure;
+
 		struct GenericChunkHeader
 		{
 			unsigned __int64 m_flags;
@@ -1591,9 +1595,6 @@ namespace game
 			char m_data[30];
 		};
 
-		struct HashTable;
-		struct cclosure;
-
 		union HksValue
 		{
 			cclosure* cClosure;
@@ -1605,6 +1606,8 @@ namespace game
 			void* thread;
 			void* ptr;
 			float number;
+			long long i64;
+			unsigned long long ui64;
 			unsigned int native;
 			bool boolean;
 		};
@@ -1690,6 +1693,14 @@ namespace game
 
 		enum HksError
 		{
+			HKS_NO_ERROR = 0x0,
+			HKS_ERRSYNTAX = 0xFFFFFFFC,
+			HKS_ERRFILE = 0xFFFFFFFB,
+			HKS_ERRRUN = 0xFFFFFF9C,
+			HKS_ERRMEM = 0xFFFFFF38,
+			HKS_ERRERR = 0xFFFFFED4,
+			HKS_THROWING_ERROR = 0xFFFFFE0C,
+			HKS_GC_YIELD = 0x1,
 		};
 
 		struct lua_Debug
@@ -1708,24 +1719,6 @@ namespace game
 			char short_src[512];
 			int callstack_level;
 			int is_tail_call;
-		};
-
-		struct lua_State : ChunkHeader
-		{
-			void* m_global;
-			CallStack m_callStack;
-			ApiStack m_apistack;
-			UpValue* pending;
-			HksObject globals;
-			HksObject m_cEnv;
-			CallSite* m_callsites;
-			int m_numberOfCCalls;
-			void* m_context;
-			InternString* m_name;
-			lua_State* m_nextState;
-			lua_State* m_nextStateStack;
-			Status m_status;
-			HksError m_error;
 		};
 
 		using lua_function = int(__fastcall*)(lua_State*);
@@ -1765,6 +1758,232 @@ namespace game
 			__int16 m_flags;
 			InternString* m_name;
 			HksObject m_upvalues[1];
+		};
+
+		enum HksCompilerSettings_BytecodeSharingFormat
+		{
+			BYTECODE_DEFAULT = 0x0,
+			BYTECODE_INPLACE = 0x1,
+			BYTECODE_REFERENCED = 0x2,
+		};
+
+		enum HksCompilerSettings_IntLiteralOptions
+		{
+			INT_LITERALS_NONE = 0x0,
+			INT_LITERALS_LUD = 0x1,
+			INT_LITERALS_32BIT = 0x1,
+			INT_LITERALS_UI64 = 0x2,
+			INT_LITERALS_64BIT = 0x2,
+			INT_LITERALS_ALL = 0x3,
+		};
+
+		struct HksCompilerSettings
+		{
+			int m_emitStructCode;
+			const char** m_stripNames;
+			int m_emitGlobalMemoization;
+			int _m_isHksGlobalMemoTestingMode;
+			HksCompilerSettings_BytecodeSharingFormat m_bytecodeSharingFormat;
+			HksCompilerSettings_IntLiteralOptions m_enableIntLiterals;
+			int(__fastcall* m_debugMap)(const char*, int);
+		};
+
+		enum HksBytecodeSharingMode
+		{
+			HKS_BYTECODE_SHARING_OFF = 0x0,
+			HKS_BYTECODE_SHARING_ON = 0x1,
+			HKS_BYTECODE_SHARING_SECURE = 0x2,
+		};
+
+		struct HksGcWeights
+		{
+			int m_removeString;
+			int m_finalizeUserdataNoMM;
+			int m_finalizeUserdataGcMM;
+			int m_cleanCoroutine;
+			int m_removeWeak;
+			int m_markObject;
+			int m_traverseString;
+			int m_traverseUserdata;
+			int m_traverseCoroutine;
+			int m_traverseWeakTable;
+			int m_freeChunk;
+			int m_sweepTraverse;
+		};
+
+		struct GarbageCollector_Stack
+		{
+			void* m_storage;
+			unsigned int m_numEntries;
+			unsigned int m_numAllocated;
+		};
+
+		struct ProtoList
+		{
+			void** m_protoList;
+			unsigned __int16 m_protoSize;
+			unsigned __int16 m_protoAllocSize;
+		};
+
+		struct GarbageCollector
+		{
+			int m_target;
+			int m_stepsLeft;
+			int m_stepLimit;
+			HksGcWeights m_costs;
+			int m_unit;
+			_SETJMP_FLOAT128(*m_jumpPoint)[16];
+			lua_State* m_mainState;
+			lua_State* m_finalizerState;
+			void* m_memory;
+			int m_phase;
+			GarbageCollector_Stack m_resumeStack;
+			GarbageCollector_Stack m_greyStack;
+			GarbageCollector_Stack m_remarkStack;
+			GarbageCollector_Stack m_weakStack;
+			int m_finalizing;
+			HksObject m_safeTableValue;
+			lua_State* m_startOfStateStackList;
+			lua_State* m_endOfStateStackList;
+			lua_State* m_currentState;
+			HksObject m_safeValue;
+			void* m_compiler;
+			void* m_bytecodeReader;
+			void* m_bytecodeWriter;
+			int m_pauseMultiplier;
+			int m_stepMultiplier;
+			bool m_stopped;
+			int(__fastcall* m_gcPolicy)(lua_State*);
+			unsigned __int64 m_pauseTriggerMemoryUsage;
+			int m_stepTriggerCountdown;
+			unsigned int m_stringTableIndex;
+			unsigned int m_stringTableSize;
+			UserData* m_lastBlackUD;
+			UserData* m_activeUD;
+		};
+
+		enum MemoryManager_ChunkColor
+		{
+			RED = 0x0,
+			BLACK = 0x1,
+		};
+
+		struct ChunkList
+		{
+			ChunkHeader m_prevToStart;
+		};
+
+		enum Hks_DeleteCheckingMode
+		{
+			HKS_DELETE_CHECKING_OFF = 0x0,
+			HKS_DELETE_CHECKING_ACCURATE = 0x1,
+			HKS_DELETE_CHECKING_SAFE = 0x2,
+		};
+
+		struct MemoryManager
+		{
+			void* (__fastcall* m_allocator)(void*, void*, unsigned __int64, unsigned __int64);
+			void* m_allocatorUd;
+			MemoryManager_ChunkColor m_chunkColor;
+			unsigned __int64 m_used;
+			unsigned __int64 m_highwatermark;
+			ChunkList m_allocationList;
+			ChunkList m_sweepList;
+			ChunkHeader* m_lastKeptChunk;
+			lua_State* m_state;
+			ChunkList m_deletedList;
+			int m_deleteMode;
+			Hks_DeleteCheckingMode m_deleteCheckingMode;
+		};
+
+		struct StaticStringCache
+		{
+			HksObject m_objects[41];
+		};
+
+		enum HksBytecodeEndianness
+		{
+			HKS_BYTECODE_DEFAULT_ENDIAN = 0x0,
+			HKS_BYTECODE_BIG_ENDIAN = 0x1,
+			HKS_BYTECODE_LITTLE_ENDIAN = 0x2,
+		};
+
+		struct RuntimeProfileData_Stats
+		{
+			unsigned __int64 hksTime;
+			unsigned __int64 callbackTime;
+			unsigned __int64 gcTime;
+			unsigned __int64 cFinalizerTime;
+			unsigned __int64 compilerTime;
+			unsigned int hkssTimeSamples;
+			unsigned int callbackTimeSamples;
+			unsigned int gcTimeSamples;
+			unsigned int compilerTimeSamples;
+			unsigned int num_newuserdata;
+			unsigned int num_tablerehash;
+			unsigned int num_pushstring;
+			unsigned int num_pushcfunction;
+			unsigned int num_newtables;
+		};
+
+		struct RuntimeProfileData
+		{
+			__int64 stackDepth;
+			__int64 callbackDepth;
+			unsigned __int64 lastTimer;
+			RuntimeProfileData_Stats frameStats;
+			unsigned __int64 gcStartTime;
+			unsigned __int64 finalizerStartTime;
+			unsigned __int64 compilerStartTime;
+			unsigned __int64 compilerStartGCTime;
+			unsigned __int64 compilerStartGCFinalizerTime;
+			unsigned __int64 compilerCallbackStartTime;
+			__int64 compilerDepth;
+			void* outFile;
+			lua_State* rootState;
+		};
+
+		struct HksGlobal
+		{
+			MemoryManager m_memory;
+			GarbageCollector m_collector;
+			StringTable m_stringTable;
+			HksBytecodeSharingMode m_bytecodeSharingMode;
+			unsigned int m_tableVersionInitializer;
+			HksObject m_registry;
+			ProtoList m_protoList;
+			HashTable* m_structProtoByName;
+			ChunkList m_userDataList;
+			lua_State* m_root;
+			StaticStringCache m_staticStringCache;
+			void* m_debugger;
+			void* m_profiler;
+			RuntimeProfileData m_runProfilerData;
+			HksCompilerSettings m_compilerSettings;
+			int(__fastcall* m_panicFunction)(lua_State*);
+			void* m_luaplusObjectList;
+			int m_heapAssertionFrequency;
+			int m_heapAssertionCount;
+			void (*m_logFunction)(lua_State*, const char*, ...);
+			HksBytecodeEndianness m_bytecodeDumpEndianness;
+		};
+
+		struct lua_State : ChunkHeader
+		{
+			HksGlobal* m_global;
+			CallStack m_callStack;
+			ApiStack m_apistack;
+			UpValue* pending;
+			HksObject globals;
+			HksObject m_cEnv;
+			CallSite* m_callsites;
+			int m_numberOfCCalls;
+			void* m_context;
+			InternString* m_name;
+			lua_State* m_nextState;
+			lua_State* m_nextStateStack;
+			Status m_status;
+			HksError m_error;
 		};
 	}
 }

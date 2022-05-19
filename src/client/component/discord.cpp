@@ -10,7 +10,6 @@
 #include "materials.hpp"
 #include "discord.hpp"
 
-#include "ui_scripting.hpp"
 #include "game/ui_scripting/execution.hpp"
 
 #include <utils/string.hpp>
@@ -187,13 +186,13 @@ namespace discord
 			handlers.ready = ready;
 			handlers.errored = errored;
 			handlers.disconnected = errored;
-			handlers.joinGame = nullptr; //join_game
+			handlers.joinGame = nullptr;
 			handlers.spectateGame = nullptr;
-			handlers.joinRequest = nullptr; //join_request
+			handlers.joinRequest = nullptr;
 
 			Discord_Initialize("947125042930667530", &handlers, 1, nullptr);
 
-			//scheduler::once(download_default_avatar, scheduler::pipeline::async);
+			scheduler::once(download_default_avatar, scheduler::pipeline::async);
 
 			scheduler::once([]()
 			{

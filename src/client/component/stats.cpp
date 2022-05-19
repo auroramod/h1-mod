@@ -88,4 +88,4 @@ namespace stats
 	};
 }
 
-// REGISTER_COMPONENT(stats::component)
+REGISTER_COMPONENT(stats::component)

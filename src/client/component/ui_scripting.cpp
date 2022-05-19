@@ -7,164 +7,339 @@
 #include "scheduler.hpp"
 #include "command.hpp"
 
-#include "ui_scripting.hpp"
+#include "localized_strings.hpp"
+#include "console.hpp"
+#include "game_module.hpp"
+#include "fps.hpp"
+#include "server_list.hpp"
 
-#include "game/ui_scripting/lua/engine.hpp"
 #include "game/ui_scripting/execution.hpp"
-#include "game/ui_scripting/lua/error.hpp"
+#include "game/scripting/execution.hpp"
+
+#include "ui_scripting.hpp"
 
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
+#include <utils/io.hpp>
 
 namespace ui_scripting
 {
 	namespace
 	{
-		std::unordered_map<game::hks::cclosure*, sol::protected_function> converted_functions;
+		std::unordered_map<game::hks::cclosure*, std::function<arguments(const function_arguments& args)>> converted_functions;
 
-		utils::hook::detour hksi_lual_error_hook;
-		utils::hook::detour hksi_lual_error_hook2;
 		utils::hook::detour hks_start_hook;
 		utils::hook::detour hks_shutdown_hook;
-		utils::hook::detour hks_allocator_hook;
-		utils::hook::detour hks_frame_hook;
-		utils::hook::detour lui_error_hook;
-		utils::hook::detour hksi_hks_error_hook;
+		utils::hook::detour hks_package_require_hook;
 
-		bool error_hook_enabled = false;
+		utils::hook::detour hks_load_hook;
+		utils::hook::detour db_find_xasset_header_hook;
 
-		void hksi_lual_error_stub(game::hks::lua_State* s, const char* fmt, ...)
+		struct script
 		{
-			char va_buffer[2048] = {0};
+			std::string name;
+			std::string root;
+		};
 
-			va_list ap;
-			va_start(ap, fmt);
-			vsprintf_s(va_buffer, fmt, ap);
-			va_end(ap);
+		struct globals_t
+		{
+			std::string in_require_script;
+			std::vector<script> loaded_scripts;
+			bool load_raw_script{};
+			std::string raw_script_name{};
+		};
 
-			const auto formatted = std::string(va_buffer);
+		globals_t globals{};
 
-			if (!error_hook_enabled)
+		bool is_loaded_script(const std::string& name)
+		{
+			for (auto i = globals.loaded_scripts.begin(); i != globals.loaded_scripts.end(); ++i)
 			{
-				return hksi_lual_error_hook.invoke<void>(s, formatted.data());
+				if (i->name == name)
+				{
+					return true;
+				}
 			}
 
-			throw std::runtime_error(formatted);
+			return false;
 		}
 
-		int hksi_hks_error_stub(game::hks::lua_State* s, int a2)
+		std::string get_root_script(const std::string& name)
 		{
-			if (!error_hook_enabled)
+			for (auto i = globals.loaded_scripts.begin(); i != globals.loaded_scripts.end(); ++i)
 			{
-				return hksi_hks_error_hook.invoke<int>(s, a2);
+				if (i->name == name)
+				{
+					return i->root;
+				}
 			}
 
-			throw std::runtime_error("unknown error");
+			return {};
 		}
 
-		void lui_error_stub(game::hks::lua_State* s)
+		table get_globals()
 		{
-			if (!error_hook_enabled)
+			const auto state = *game::hks::lua_state;
+			return state->globals.v.table;
+		}
+
+		void print_error(const std::string& error)
+		{
+			console::error("************** LUI script execution error **************\n");
+			console::error("%s\n", error.data());
+			console::error("********************************************************\n");
+		}
+
+		void print_loading_script(const std::string& name)
+		{
+			console::info("Loading LUI script '%s'\n", name.data());
+		}
+
+		std::string get_current_script()
+		{
+			const auto state = *game::hks::lua_state;
+			game::hks::lua_Debug info{};
+			game::hks::hksi_lua_getstack(state, 1, &info);
+			game::hks::hksi_lua_getinfo(state, "nSl", &info);
+			return info.short_src;
+		}
+
+		int load_buffer(const std::string& name, const std::string& data)
+		{
+			const auto state = *game::hks::lua_state;
+			const auto sharing_mode = state->m_global->m_bytecodeSharingMode;
+			state->m_global->m_bytecodeSharingMode = game::hks::HKS_BYTECODE_SHARING_ON;
+			const auto _0 = gsl::finally([&]()
 			{
-				lui_error_hook.invoke<void>(s);
+				state->m_global->m_bytecodeSharingMode = sharing_mode;
+			});
+
+			game::hks::HksCompilerSettings compiler_settings{};
+			return game::hks::hksi_hksL_loadbuffer(state, &compiler_settings, data.data(), data.size(), name.data());
+		}
+
+		void load_script(const std::string& name, const std::string& data)
+		{
+			globals.loaded_scripts.push_back({name, name});
+
+			const auto lua = get_globals();
+			const auto load_results = lua["loadstring"](data, name);
+
+			if (load_results[0].is<function>())
+			{
+				const auto results = lua["pcall"](load_results);
+				if (!results[0].as<bool>())
+				{
+					print_error(results[1].as<std::string>());
+				}
+			}
+			else if (load_results[1].is<std::string>())
+			{
+				print_error(load_results[1].as<std::string>());
+			}
+		}
+
+		void load_scripts(const std::string& script_dir)
+		{
+			if (!utils::io::directory_exists(script_dir))
+			{
+				return;
 			}
 
-			const auto count = static_cast<int>(s->m_apistack.top - s->m_apistack.base);
-			const auto arguments = get_return_values(count);
+			const auto scripts = utils::io::list_files(script_dir);
 
-			std::string error_str = "LUI Error";
-			if (count && arguments[0].is<std::string>())
+			for (const auto& script : scripts)
 			{
-				error_str = arguments[0].as<std::string>();
+				std::string data{};
+				if (std::filesystem::is_directory(script) && utils::io::read_file(script + "/__init__.lua", &data))
+				{
+					print_loading_script(script);
+					load_script(script + "/__init__.lua", data);
+				}
 			}
+		}
 
-			throw std::runtime_error(error_str);
+		void setup_functions()
+		{
+			const auto lua = get_globals();
+
+			lua["io"]["fileexists"] = utils::io::file_exists;
+			lua["io"]["writefile"] = utils::io::write_file;
+			lua["io"]["movefile"] = utils::io::move_file;
+			lua["io"]["filesize"] = utils::io::file_size;
+			lua["io"]["createdirectory"] = utils::io::create_directory;
+			lua["io"]["directoryexists"] = utils::io::directory_exists;
+			lua["io"]["directoryisempty"] = utils::io::directory_is_empty;
+			lua["io"]["listfiles"] = utils::io::list_files;
+			lua["io"]["removefile"] = utils::io::remove_file;
+			lua["io"]["readfile"] = static_cast<std::string(*)(const std::string&)>(utils::io::read_file);
+
+			using game = table;
+			auto game_type = game();
+			lua["game"] = game_type;
+
+			game_type["getfps"] = [](const game&)
+			{
+				return fps::get_fps();
+			};
+
+			game_type["getping"] = [](const game&)
+			{
+				//return *::game::mp::ping;
+			};
+
+			game_type["issingleplayer"] = [](const game&)
+			{
+				return ::game::environment::is_sp();
+			};
+
+			game_type["ismultiplayer"] = [](const game&)
+			{
+				return ::game::environment::is_mp();
+			};
+
+			game_type["addlocalizedstring"] = [](const game&, const std::string& string,
+				const std::string& value)
+			{
+				localized_strings::override(string, value);
+			};
+		}
+
+		void start()
+		{
+			globals = {};
+
+			const auto lua = get_globals();
+			lua["EnableGlobals"]();
+
+			setup_functions();
+
+			lua["print"] = function(reinterpret_cast<game::hks::lua_function>(0x209EB0_b));
+			lua["table"]["unpack"] = lua["unpack"];
+			lua["luiglobals"] = lua;
+
+			load_scripts("h1-mod/ui_scripts/");
+			load_scripts("data/ui_scripts/");
+		}
+
+		void try_start()
+		{
+			try
+			{
+				start();
+			}
+			catch (const std::exception& e)
+			{
+				console::error("Failed to load LUI scripts: %s\n", e.what());
+			}
 		}
 
 		void* hks_start_stub(char a1)
 		{
-			const auto _1 = gsl::finally([]()
-			{
-				ui_scripting::lua::engine::start();
-			});
-
+			const auto _0 = gsl::finally(&try_start);
 			return hks_start_hook.invoke<void*>(a1);
 		}
 
 		void hks_shutdown_stub()
 		{
 			converted_functions.clear();
-			ui_scripting::lua::engine::stop();
-			hks_shutdown_hook.invoke<void*>();
+			globals = {};
+			return hks_shutdown_hook.invoke<void>();
 		}
 
-		void* hks_allocator_stub(void* userData, void* oldMemory, unsigned __int64 oldSize, unsigned __int64 newSize)
+		void* hks_package_require_stub(game::hks::lua_State* state)
 		{
-			const auto closure = reinterpret_cast<game::hks::cclosure*>(oldMemory);
-			if (converted_functions.find(closure) != converted_functions.end())
+			const auto script = get_current_script();
+			const auto root = get_root_script(script);
+			globals.in_require_script = root;
+			return hks_package_require_hook.invoke<void*>(state);
+		}
+
+		game::XAssetHeader db_find_xasset_header_stub(game::XAssetType type, const char* name, int allow_create_default)
+		{
+			if (type != 0x3D || !is_loaded_script(globals.in_require_script))
 			{
-				converted_functions.erase(closure);
+				return db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, name, allow_create_default);
 			}
 
-			return hks_allocator_hook.invoke<void*>(userData, oldMemory, oldSize, newSize);
-		}
-	}
+			const auto folder = globals.in_require_script.substr(0, globals.in_require_script.find_last_of("/\\"));
+			const std::string name_ = name;
+			const std::string target_script = folder + "/" + name_ + ".lua";
 
-	int main_function_handler(game::hks::lua_State* state)
-	{
-		const auto value = state->m_apistack.base[-1];
-		if (value.t != game::hks::TCFUNCTION)
+			if (utils::io::file_exists(target_script))
+			{
+				globals.load_raw_script = true;
+				globals.raw_script_name = target_script;
+				return static_cast<game::XAssetHeader>(reinterpret_cast<game::LuaFile*>(1));
+			}
+			else if (name_.starts_with("ui/LUI/"))
+			{
+				return db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, name, allow_create_default);
+			}
+
+			return static_cast<game::XAssetHeader>(nullptr);
+		}
+
+		int hks_load_stub(game::hks::lua_State* state, void* compiler_options, 
+			void* reader, void* reader_data, const char* chunk_name)
 		{
+			if (globals.load_raw_script)
+			{
+				globals.load_raw_script = false;
+				globals.loaded_scripts.push_back({globals.raw_script_name, globals.in_require_script});
+				return load_buffer(globals.raw_script_name, utils::io::read_file(globals.raw_script_name));
+			}
+			else
+			{
+				return hks_load_hook.invoke<int>(state, compiler_options, reader,
+					reader_data, chunk_name);
+			}
+		}
+
+		int main_handler(game::hks::lua_State* state)
+		{
+			const auto value = state->m_apistack.base[-1];
+			if (value.t != game::hks::TCFUNCTION)
+			{
+				return 0;
+			}
+
+			const auto closure = value.v.cClosure;
+			if (converted_functions.find(closure) == converted_functions.end())
+			{
+				return 0;
+			}
+
+			const auto& function = converted_functions[closure];
+
+			try
+			{
+				const auto args = get_return_values();
+				const auto results = function(args);
+
+				for (const auto& result : results)
+				{
+					push_value(result);
+				}
+
+				return static_cast<int>(results.size());
+			}
+			catch (const std::exception& e)
+			{
+				game::hks::hksi_luaL_error(state, e.what());
+			}
+
 			return 0;
 		}
-
-		const auto closure = reinterpret_cast<game::hks::cclosure*>(value.v.cClosure);
-		if (converted_functions.find(closure) == converted_functions.end())
-		{
-			return 0;
-		}
-
-		const auto& function = converted_functions[closure];
-		const auto count = static_cast<int>(state->m_apistack.top - state->m_apistack.base);
-		const auto arguments = get_return_values(count);
-		const auto s = function.lua_state();
-
-		std::vector<sol::lua_value> converted_args;
-
-		for (const auto& argument : arguments)
-		{
-			converted_args.push_back(lua::convert(s, argument));
-		}
-
-		const auto results = function(sol::as_args(converted_args));
-		lua::handle_error(results);
-
-		for (const auto& result : results)
-		{
-			push_value(lua::convert({s, result}));
-		}
-
-		return results.return_count();
 	}
 
-	void add_converted_function(game::hks::cclosure* closure, const sol::protected_function& function)
+	template <typename F>
+	game::hks::cclosure* convert_function(F f)
 	{
-		converted_functions[closure] = function;
-	}
-
-	void clear_converted_functions()
-	{
-		converted_functions.clear();
-	}
-
-	void enable_error_hook()
-	{
-		error_hook_enabled = true;
-	}
-
-	void disable_error_hook()
-	{
-		error_hook_enabled = false;
+		const auto state = *game::hks::lua_state;
+		const auto closure = game::hks::cclosure_Create(state, main_handler, 0, 0, 0);
+		converted_functions[closure] = wrap_function(f);
+		return closure;
 	}
 
 	bool lui_running()
@@ -178,32 +353,25 @@ namespace ui_scripting
 
 		void post_unpack() override
 		{
-			if (game::environment::is_dedi())
+			if (!game::environment::is_mp())
 			{
 				return;
 			}
 
-			scheduler::loop(ui_scripting::lua::engine::run_frame, scheduler::pipeline::lui);
+			db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
+			hks_load_hook.create(0x22C180_b, hks_load_stub);
 
-			hks_start_hook.create(SELECT_VALUE(0x0, 0x27A790_b), hks_start_stub); // 1.15
-			hks_shutdown_hook.create(SELECT_VALUE(0x0, 0x2707C0_b), hks_shutdown_stub); // 1.15
-			hksi_lual_error_hook.create(SELECT_VALUE(0x0, 0x22F930_b), hksi_lual_error_stub); // 1.15
-			hks_allocator_hook.create(SELECT_VALUE(0x0, 0x22C010_b), hks_allocator_stub); // 1.15
-			lui_error_hook.create(SELECT_VALUE(0x0, 0x20BA80_b), lui_error_stub); // 1.15
-			hksi_hks_error_hook.create(SELECT_VALUE(0x0, 0x22EA10_b), hksi_hks_error_stub); // 1.15
-
-			if (game::environment::is_mp())
-			{
-				hksi_lual_error_hook2.create(0x2365E0_b, hksi_lual_error_stub); // 1.15
-			}
+			hks_package_require_hook.create(0x214040_b, hks_package_require_stub);
+			hks_start_hook.create(0x27A790_b, hks_start_stub);
+			hks_shutdown_hook.create(0x2707C0_b, hks_shutdown_stub);
 
 			command::add("lui_restart", []()
 			{
-				utils::hook::invoke<void>(SELECT_VALUE(0x0, 0x2707C0_b)); // 1.15
-				utils::hook::invoke<void>(SELECT_VALUE(0x0, 0x27BEC0_b)); // 1.15
+				utils::hook::invoke<void>(0x2707C0_b);
+				utils::hook::invoke<void>(0x27BEC0_b);
 			});
 		}
 	};
 }
 
-//REGISTER_COMPONENT(ui_scripting::component)
+REGISTER_COMPONENT(ui_scripting::component)

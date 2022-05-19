@@ -99,7 +99,7 @@ namespace game
 
 	WEAK symbol<char*(char* string)> I_CleanStr{0x0, 0x0};
 
-	WEAK symbol<const char* (int, int, int)> Key_KeynumToString{0x0, 0x0};
+	WEAK symbol<const char* (int, int, int)> Key_KeynumToString{0x0, 0x199990};
 
 	WEAK symbol<unsigned int(int)> Live_SyncOnlineDataFlags{0x0, 0x1A5C10};
 
@@ -151,14 +151,14 @@ namespace game
 	WEAK symbol<const char*(const XAsset* asset)> DB_GetXAssetName{0x0, 0x0};
 	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x0, 0x0};
 	WEAK symbol<XAssetHeader(XAssetType type, const char* name, 
-		int createDefault)> DB_FindXAssetHeader{0x0, 0x0};
+		int createDefault)> DB_FindXAssetHeader{0x0, 0x3950C0};
 
 	WEAK symbol<void(int clientNum, const char* menu, 
-		int a3, int a4, unsigned int a5)> LUI_OpenMenu{0x0, 0x0};
+		int a3, int a4, unsigned int a5)> LUI_OpenMenu{0x0, 0x1E1210};
 	WEAK symbol<bool(int clientNum, const char* name, hks::lua_State* s)> LUI_BeginEvent{0x0, 0x0};
 	WEAK symbol<void(hks::lua_State* s)> LUI_EndEvent{0x0, 0x0};
-	WEAK symbol<void()> LUI_EnterCriticalSection{0x0, 0x0};
-	WEAK symbol<void()> LUI_LeaveCriticalSection{0x0, 0x0};
+	WEAK symbol<void()> LUI_EnterCriticalSection{0x0, 0x2669B0};
+	WEAK symbol<void()> LUI_LeaveCriticalSection{0x0, 0x26BDC0};
 
 	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0x0, 0x0};
 
@@ -266,17 +266,22 @@ namespace game
 
 	namespace hks
 	{
-		WEAK symbol<lua_State*> lua_state{0x0, 0x0};
-		WEAK symbol<void(lua_State* s, const char* str, unsigned int l)> hksi_lua_pushlstring{0x0, 0x0};
-		WEAK symbol<HksObject*(HksObject* result, lua_State* s, const HksObject* table, const HksObject* key)> hks_obj_getfield{0x0, 0x0};
-		WEAK symbol<void(lua_State* s, const HksObject* tbl, const HksObject* key, const HksObject* val)> hks_obj_settable{0x0, 0x0};
-		WEAK symbol<HksObject* (HksObject* result, lua_State* s, const HksObject* table, const HksObject* key)> hks_obj_gettable{0x0, 0x0};
-		WEAK symbol<void(lua_State* s, int nargs, int nresults, const unsigned int* pc)> vm_call_internal{0x0, 0x0};
-		WEAK symbol<HashTable*(lua_State* s, unsigned int arraySize, unsigned int hashSize)> Hashtable_Create{0x0, 0x0};
+		WEAK symbol<lua_State*> lua_state{0, 0x36647F8};
+		WEAK symbol<void(lua_State* s, const char* str, unsigned int l)> hksi_lua_pushlstring{0, 0x79800};
+		WEAK symbol<HksObject*(HksObject* result, lua_State* s, const HksObject* table, const HksObject* key)> hks_obj_getfield{0, 0x22CB90};
+		WEAK symbol<void(lua_State* s, const HksObject* tbl, const HksObject* key, const HksObject* val)> hks_obj_settable{0, 0x22DDB0};
+		WEAK symbol<HksObject* (HksObject* result, lua_State* s, const HksObject* table, const HksObject* key)> hks_obj_gettable{0, 0x22D070};
+		WEAK symbol<void(lua_State* s, int nargs, int nresults, const unsigned int* pc)> vm_call_internal{0, 0x25D2F0};
+		WEAK symbol<HashTable*(lua_State* s, unsigned int arraySize, unsigned int hashSize)> Hashtable_Create{0, 0x21B030};
 		WEAK symbol<cclosure*(lua_State* s, lua_function function, int num_upvalues, 
-			int internal_, int profilerTreatClosureAsFunc)> cclosure_Create{0x0, 0x0};
-		WEAK symbol<int(lua_State* s, int t)> hksi_luaL_ref{0x0, 0x0};
-		WEAK symbol<void(lua_State* s, int t, int ref)> hksi_luaL_unref{0x0, 0x0};
-		WEAK symbol<void(lua_State* s, HksObject* lfp)> closePendingUpvalues{0x0, 0x0};
+			int internal_, int profilerTreatClosureAsFunc)> cclosure_Create{0, 0x21B250};
+		WEAK symbol<int(lua_State* s, int t)> hksi_luaL_ref{0, 0x236CC0};
+		WEAK symbol<void(lua_State* s, int t, int ref)> hksi_luaL_unref{0, 0x22FC40};
+		WEAK symbol<int(lua_State* s, const HksCompilerSettings* options, const char* buff, 
+			unsigned __int64 sz, const char* name)> hksi_hksL_loadbuffer{0, 0x22E620};
+		WEAK symbol<int(lua_State* s, const char* what, lua_Debug* ar)> hksi_lua_getinfo{0, 0x22FFE0};
+		WEAK symbol<int(lua_State* s, int level, lua_Debug* ar)> hksi_lua_getstack{0, 0x2302B0};
+		WEAK symbol<void(lua_State* s, const char* fmt, ...)> hksi_luaL_error{0, 0x22F930};
+		WEAK symbol<const char*> typenames{0, 0x10AD750};
 	}
 }

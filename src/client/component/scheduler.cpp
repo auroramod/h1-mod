@@ -89,7 +89,7 @@ namespace scheduler
 		utils::hook::detour r_end_frame_hook;
 		utils::hook::detour g_run_frame_hook;
 		utils::hook::detour main_frame_hook;
-		//utils::hook::detour hks_frame_hook; //no scripting for now
+		utils::hook::detour hks_frame_hook;
 
 		void execute(const pipeline type)
 		{
@@ -209,7 +209,7 @@ namespace scheduler
 
 			g_run_frame_hook.create(SELECT_VALUE(0x0, 0x417940_b), scheduler::server_frame_stub);
 			main_frame_hook.create(SELECT_VALUE(0x0, 0x3438B0_b), scheduler::main_frame_stub);
-			//hks_frame_hook.create(SELECT_VALUE(0x0, 0x0), scheduler::hks_frame_stub); // no scripting for now
+			hks_frame_hook.create(SELECT_VALUE(0x0, 0x2792E0_b), scheduler::hks_frame_stub);
 		}
 
 		void pre_destroy() override

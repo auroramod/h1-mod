@@ -1,126 +1,140 @@
 #pragma once
 #include "game/game.hpp"
 #include "script_value.hpp"
+#include "../../component/ui_scripting.hpp"
 
 namespace ui_scripting
 {
-	class lightuserdata
-	{
-	public:
-		lightuserdata(void*);
+    class lightuserdata
+    {
+    public:
+        lightuserdata(void*);
+        void* ptr;
+    };
 
-		bool operator==(const lightuserdata& other);
-		bool operator!=(const lightuserdata& other);
+    class userdata_value;
 
-		void* ptr;
-	};
+    class userdata
+    {
+    public:
+        userdata(void*);
 
-	class userdata
-	{
-	public:
-		userdata(void*);
+        userdata(const userdata& other);
+        userdata(userdata&& other) noexcept;
 
-		userdata(const userdata& other);
-		userdata(userdata&& other) noexcept;
+        ~userdata();
 
-		~userdata();
+        userdata& operator=(const userdata& other);
+        userdata& operator=(userdata&& other) noexcept;
 
-		userdata& operator=(const userdata& other);
-		userdata& operator=(userdata&& other) noexcept;
+        script_value get(const script_value& key) const;
+        void set(const script_value& key, const script_value& value) const;
 
-		bool operator==(const userdata& other);
-		bool operator!=(const userdata& other);
+        userdata_value operator[](const script_value& key) const;
 
-		script_value get(const script_value& key) const;
-		void set(const script_value& key, const script_value& value) const;
+        void* ptr;
 
-		void* ptr;
+    private:
+        void add();
+        void release();
 
-	private:
-		void add();
-		void release();
+        int ref{};
+    };
 
-		int ref{};
-	};
+    class userdata_value : public script_value
+    {
+    public:
+        userdata_value(const userdata& table, const script_value& key);
+        void operator=(const script_value& value);
+        bool operator==(const script_value& value);
+    private:
+        userdata userdata_;
+        script_value key_;
+    };
 
-	class table
-	{
-	public:
-		table();
-		table(game::hks::HashTable* ptr_);
+    class table_value;
 
-		table(const table& other);
-		table(table&& other) noexcept;
+    class table
+    {
+    public:
+        table();
+        table(game::hks::HashTable* ptr_);
 
-		~table();
+        table(const table& other);
+        table(table&& other) noexcept;
 
-		table& operator=(const table& other);
-		table& operator=(table&& other) noexcept;
+        ~table();
 
-		bool operator==(const table& other);
-		bool operator!=(const table& other);
+        table& operator=(const table& other);
+        table& operator=(table&& other) noexcept;
 
-		script_value get(const script_value& key) const;
-		void set(const script_value& key, const script_value& value) const;
+        script_value get(const script_value& key) const;
+        void set(const script_value& key, const script_value& value) const;
 
-		game::hks::HashTable* ptr;
+        table_value operator[](const script_value& key) const;
 
-	private:
-		void add();
-		void release();
+        game::hks::HashTable* ptr;
 
-		int ref{};
-	};
+    private:
+        void add();
+        void release();
 
-	class function
-	{
-	public:
-		function(game::hks::cclosure*, game::hks::HksObjectType);
+        int ref{};
+    };
 
-		function(const function& other);
-		function(function&& other) noexcept;
+    class table_value : public script_value
+    {
+    public:
+        table_value(const table& table, const script_value& key);
+        void operator=(const script_value& value);
+        void operator=(const table_value& value);
+        bool operator==(const script_value& value);
+        bool operator==(const table_value& value);
+    private:
+        table table_;
+        script_value key_;
+    };
 
-		~function();
+    class function
+    {
+    public:
+        function(game::hks::lua_function);
+        function(game::hks::cclosure*, game::hks::HksObjectType);
 
-		function& operator=(const function& other);
-		function& operator=(function&& other) noexcept;
+        template <typename F>
+        function(F f)
+        {
+            this->ptr = ui_scripting::convert_function(f);
+            this->type = game::hks::TCFUNCTION;
+        }
 
-		bool operator==(const function& other);
-		bool operator!=(const function& other);
+        function(const function& other);
+        function(function&& other) noexcept;
 
-		arguments call(const arguments& arguments) const;
+        ~function();
 
-		game::hks::cclosure* ptr;
-		game::hks::HksObjectType type;
+        function& operator=(const function& other);
+        function& operator=(function&& other) noexcept;
 
-	private:
-		void add();
-		void release();
+        arguments call(const arguments& arguments) const;
 
-		int ref{};
-	};
+        arguments operator()(const arguments& arguments) const;
 
-	class stack final
-	{
-	public:
-		stack();
+        template<class ...T>
+        arguments operator()(T... arguments) const
+        {
+            return this->call({arguments...});
+        }
 
-		void save(int num_args);
-		void fix();
+        arguments operator()() const;
 
-		stack(stack&&) = delete;
-		stack(const stack&) = delete;
-		stack& operator=(stack&&) = delete;
-		stack& operator=(const stack&) = delete;
+        game::hks::cclosure* ptr;
+        game::hks::HksObjectType type;
 
-	private:
-		game::hks::lua_State* state;
+    private:
+        void add();
+        void release();
 
-		int num_args_;
-		int num_calls_;
-
-		uint64_t base_bottom_;
-		uint64_t top_bottom_;
-		uint64_t callstack_;
-	};
+        int ref{};
+    };
 }
