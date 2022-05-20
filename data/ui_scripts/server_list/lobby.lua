@@ -27,13 +27,13 @@ function menu_xboxlive(f16_arg0, f16_arg1)
         menu:AddCACButton()
         menu:AddBarracksButton()
         menu:AddPersonalizationButton()
-        -- menu:AddDepotButton()
+        menu:AddDepotButton()
     end
 
-    serverListButton = menu:AddButton("@MENU_PRIVATE_MATCH", MPLobbyOnline.OnPrivateMatch,
+    local privateMatchButton = menu:AddButton("@MENU_PRIVATE_MATCH", MPLobbyOnline.OnPrivateMatch,
         MPLobbyOnline.disablePrivateMatchButton)
-    serverListButton:rename("menu_xboxlive_private_match")
-    serverListButton:setDisabledRefreshRate(500)
+    privateMatchButton:rename("menu_xboxlive_private_match")
+    privateMatchButton:setDisabledRefreshRate(500)
     if not Engine.IsCoreMode() then
         local leaderboardButton = menu:AddButton("@LUA_MENU_LEADERBOARD", "OpLeaderboardMain")
         leaderboardButton:rename("OperatorMenu_leaderboard")
