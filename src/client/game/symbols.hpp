@@ -160,7 +160,7 @@ namespace game
 	WEAK symbol<void()> LUI_EnterCriticalSection{0x0, 0x2669B0};
 	WEAK symbol<void()> LUI_LeaveCriticalSection{0x0, 0x26BDC0};
 
-	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0x0, 0x0};
+	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0x0, 0x389F70};
 
 	WEAK symbol<scr_string_t(const char* str)> SL_FindString{0x0, 0x0};
 	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{0x0, 0x5083A0};
@@ -192,13 +192,13 @@ namespace game
 	WEAK symbol<void(const char* error, ...)> Sys_Error{0x0, 0x0};
 	WEAK symbol<void(char* path, int pathSize, Sys_Folder folder, const char* filename, const char* ext)>
 		Sys_BuildAbsPath{0x0, 0x0};
-	WEAK symbol<int()> Sys_Milliseconds{0x0, 0x0};
+	WEAK symbol<int()> Sys_Milliseconds{0x0, 0x5BDDF0};
 	WEAK symbol<bool()> Sys_IsDatabaseReady2{0x0, 0x4F79C0};
 	WEAK symbol<bool(int, void const*, const netadr_s*)> Sys_SendPacket{0x0, 0x5BDA90};
 	WEAK symbol<bool(const char* path)> Sys_FileExists{0x0, 0x0};
 
-	WEAK symbol<const char* (const char*)> UI_GetMapDisplayName{0x0, 0x0};
-	WEAK symbol<const char* (const char*)> UI_GetGameTypeDisplayName{0x0, 0x4DD8C0};
+	WEAK symbol<const char*(const char*)> UI_GetMapDisplayName{0x0, 0x4DDEE0};
+	WEAK symbol<const char*(const char*)> UI_GetGameTypeDisplayName{0x0, 0x4DD8C0};
 	WEAK symbol<void(unsigned int localClientNum, const char** args)> UI_RunMenuScript{0x0, 0x1E35B0};
 	WEAK symbol<int(const char* text, int maxChars, Font_s* font, float scale)> UI_TextWidth{0x0, 0x0};
 

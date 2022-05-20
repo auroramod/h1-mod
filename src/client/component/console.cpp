@@ -33,7 +33,7 @@ namespace console
 
 	void dispatch_message(const int type, const std::string& message)
 	{
-		printf(message.data());
+		printf("%s", message.data());
 		game_console::print(type, message);
 	}
 

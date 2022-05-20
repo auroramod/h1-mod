@@ -573,7 +573,7 @@ namespace party
 			network::on("infoResponse", [](const game::netadr_s& target, const std::string_view& data)
 			{
 				const utils::info_string info{data};
-				// server_list::handle_info_response(target, info);
+				server_list::handle_info_response(target, info);
 
 				if (connect_state.host != target)
 				{

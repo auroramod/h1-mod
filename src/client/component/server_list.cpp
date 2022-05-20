@@ -118,8 +118,7 @@ namespace server_list
 			return diff > server_limit ? server_limit : static_cast<int>(diff);
 		}
 
-		const char* ui_feeder_item_text(int /*localClientNum*/, void* /*a2*/, void* /*a3*/, const int index,
-			const int column)
+		const char* ui_feeder_item_text(const int index, const int column)
 		{
 			std::lock_guard<std::mutex> _(mutex);
 
@@ -366,13 +365,65 @@ namespace server_list
 			lui_open_menu_hook.create(game::LUI_OpenMenu, lui_open_menu_stub);
 
 			// replace UI_RunMenuScript call in LUI_CoD_LuaCall_RefreshServerList to our refresh_servers
-			utils::hook::call(0x28E049_b, &refresh_server_list);
-			utils::hook::call(0x28E55E_b, &join_server);
+			utils::hook::jump(0x28E049_b, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.pushad64();
+				a.call_aligned(refresh_server_list);
+				a.popad64();
+
+				a.xor_(eax, eax);
+				a.mov(rbx, qword_ptr(rsp, 0x38));
+				a.add(rsp, 0x20);
+				a.pop(rdi);
+				a.ret();
+			}), true);
+			
+			utils::hook::jump(0x28E557_b, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.mov(r8d, edi);
+				a.mov(ecx, eax);
+				a.mov(ebx, eax);
+
+				a.pushad64();
+				a.call_aligned(join_server);
+				a.popad64();
+
+				a.jmp(0x28E563_b);
+			}), true);
+
 			utils::hook::nop(0x28E57D_b, 5);
 
 			// do feeder stuff
-			utils::hook::call(0x28E119_b, &ui_feeder_count);
-			utils::hook::call(0x28E331_b, &ui_feeder_item_text);
+			utils::hook::jump(0x28E117_b, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.mov(ecx, eax);
+
+				a.pushad64();
+				a.call_aligned(ui_feeder_count);
+				a.movd(xmm0, eax);
+				a.popad64();
+
+				a.mov(rax, qword_ptr(rbx, 0x48));
+				a.cvtdq2ps(xmm0, xmm0);
+				a.mov(rdi, 0x28E12B_b);
+				a.jmp(rdi);
+			}), true);
+
+			utils::hook::jump(0x28E331_b, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.push(rax);
+				a.pushad64();
+				a.mov(rcx, r9); // index
+				a.mov(rdx, qword_ptr(rsp, 0x88 + 0x20)); // column
+				a.call_aligned(ui_feeder_item_text);
+				a.mov(qword_ptr(rsp, 0x80), rax);
+				a.popad64();
+				a.pop(rax);
+
+				a.mov(rsi, qword_ptr(rsp, 0x90));
+				a.mov(rdi, rax);
+				a.jmp(0x28E341_b);
+			}), true);
 
 			scheduler::loop(do_frame_work, scheduler::pipeline::main);
 
@@ -423,4 +474,4 @@ namespace server_list
 	};
 }
 
-//REGISTER_COMPONENT(server_list::component)
+REGISTER_COMPONENT(server_list::component)
