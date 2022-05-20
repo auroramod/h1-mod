@@ -723,18 +723,16 @@ namespace game_console
 			{
 				return;
 			}
-
-			scheduler::loop(draw_console, scheduler::pipeline::renderer);
 		}
 
 		void post_unpack() override
 		{
-			scheduler::loop(draw_console, scheduler::pipeline::renderer);
-
 			if (game::environment::is_dedi())
 			{
 				return;
 			}
+
+			scheduler::loop(draw_console, scheduler::pipeline::renderer);
 
 			// initialize our structs
 			con.cursor = 0;
