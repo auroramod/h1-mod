@@ -21,6 +21,7 @@
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
+#include <utils/binary_resource.hpp>
 
 namespace ui_scripting
 {
@@ -34,6 +35,8 @@ namespace ui_scripting
 
 		utils::hook::detour hks_load_hook;
 		utils::hook::detour db_find_xasset_header_hook;
+
+		const auto lui_common = utils::nt::load_resource(LUI_COMMON);
 
 		struct script
 		{
@@ -185,7 +188,7 @@ namespace ui_scripting
 
 			game_type["getping"] = [](const game&)
 			{
-				//return *::game::mp::ping;
+				return *::game::mp::ping;
 			};
 
 			game_type["issingleplayer"] = [](const game&)
@@ -217,6 +220,8 @@ namespace ui_scripting
 			lua["print"] = function(reinterpret_cast<game::hks::lua_function>(0x209EB0_b));
 			lua["table"]["unpack"] = lua["unpack"];
 			lua["luiglobals"] = lua;
+
+			load_script("lui_common", lui_common);
 
 			load_scripts("h1-mod/ui_scripts/");
 			load_scripts("data/ui_scripts/");

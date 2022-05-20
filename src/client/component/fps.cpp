@@ -5,6 +5,7 @@
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
+#include "dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
@@ -87,8 +88,6 @@ namespace fps
 			cg_perf.previous_ms = cg_perf.current_ms;
 
 			perf_calc_fps(&cg_perf, cg_perf.frame_ms);
-
-			utils::hook::invoke<void>(SELECT_VALUE(0x1405487A0, 0x1406575A0));
 		}
 
 		void cg_draw_fps()
@@ -98,14 +97,17 @@ namespace fps
 				const auto fps = fps::get_fps();
 
 				const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
-				const auto fps_string = utils::string::va("%i", fps);
+				if (font)
+				{
+					const auto fps_string = utils::string::va("%i", fps);
 
-				const auto x = (game::ScrPlace_GetViewPlacement()->realViewportSize[0] - 15.0f) - game::R_TextWidth(
-					fps_string, 0x7FFFFFFF, font);
-				const auto y = font->pixelHeight + 10.f;
+					const auto x = (game::ScrPlace_GetViewPlacement()->realViewportSize[0] - 15.0f) - 
+						game::R_TextWidth(fps_string, 0x7FFFFFFF, font);
+					const auto y = font->pixelHeight + 10.f;
 
-				const auto fps_color = fps >= 60 ? fps_color_good : (fps >= 30 ? fps_color_ok : fps_color_bad);
-				game::R_AddCmdDrawText(fps_string, 0x7FFFFFFF, font, x, y, 1.f, 1.f, 0.0f, fps_color, 6);
+					const auto fps_color = fps >= 60 ? fps_color_good : (fps >= 30 ? fps_color_ok : fps_color_bad);
+					game::R_AddCmdDrawText(fps_string, 0x7FFFFFFF, font, x, y, 1.f, 1.f, 0.0f, fps_color, 6);
+				}
 			}
 		}
 
@@ -124,8 +126,7 @@ namespace fps
 			}
 		}
 
-		game::dvar_t* cg_draw_fps_register_stub(const char* name, const char** _enum, const int value, unsigned int /*flags*/,
-			const char* desc)
+		game::dvar_t* cg_draw_fps_register_stub()
 		{
 			cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_FLAG_SAVED, "Draw frames per second");
 			return cg_drawfps;
@@ -151,22 +152,31 @@ namespace fps
 
 			// fps setup
 			cg_perf.perf_start = std::chrono::high_resolution_clock::now();
-			utils::hook::call(SELECT_VALUE(0x14018D261, 0x14025B747), &perf_update);
 
-			// change cg_drawfps flags to saved
-			utils::hook::call(SELECT_VALUE(0x140139F48, 0x140222A46), &cg_draw_fps_register_stub);
+			utils::hook::jump(SELECT_VALUE(0, 0x343847_b), utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.pushad64();
+				a.call_aligned(perf_update);
+				a.popad64();
+
+				a.call(0x702250_b);
+				a.mov(edx, 3);
+				a.xor_(ecx, ecx);
+				a.jmp(0x343853_b);
+			}), true);
+
+			// Don't register cg_drawfps
+			utils::hook::nop(0x31D74F_b, 0x1C);
+			utils::hook::nop(0x31D76F_b, 0x7);
 
 			scheduler::loop(cg_draw_fps, scheduler::pipeline::renderer);
 
-			if (game::environment::is_sp())
-			{
-				cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_FLAG_SAVED, "Draw frames per second");
-			}
+			cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_FLAG_SAVED, "Draw frames per second");
 
 			if (game::environment::is_mp())
 			{
 				// fix ping value
-				utils::hook::nop(0x14025AC41, 2);
+				utils::hook::nop(0x342C6C_b, 2);
 
 				cg_drawping = dvars::register_int("cg_drawPing", 0, 0, 1, game::DVAR_FLAG_SAVED, "Choose to draw ping");
 
@@ -179,4 +189,4 @@ namespace fps
 	};
 }
 
-//REGISTER_COMPONENT(fps::component)
+REGISTER_COMPONENT(fps::component)

@@ -41,16 +41,6 @@ namespace stats
 			return is_item_unlocked_hook2.invoke<int>(a1, a2, a3, a4, a5, a6);
 		}
 
-		int is_item_unlocked_stub3(int a1)
-		{
-			if (cg_unlock_all_items->current.enabled)
-			{
-				return 0;
-			}
-
-			return is_item_unlocked_hook3.invoke<int>(a1);
-		}
-
 		int is_item_unlocked()
 		{
 			return 0;
@@ -75,14 +65,15 @@ namespace stats
 			}
 			else
 			{
+				is_item_unlocked_hook.create(0x19E6E0_b, is_item_unlocked_stub);
+				is_item_unlocked_hook2.create(0x19E070_b, is_item_unlocked_stub2);
+
 				cg_unlock_all_items = dvars::register_bool("cg_unlockall_items", false, game::DVAR_FLAG_SAVED,
 					"Whether items should be locked based on the player's stats or always unlocked.");
 				dvars::register_bool("cg_unlockall_classes", false, game::DVAR_FLAG_SAVED,
 					"Whether classes should be locked based on the player's stats or always unlocked.");
-
-				is_item_unlocked_hook.create(0x19E6E0_b, is_item_unlocked_stub);
-				is_item_unlocked_hook2.create(0x19E070_b, is_item_unlocked_stub2);
-				is_item_unlocked_hook3.create(0x19D390_b, is_item_unlocked_stub3);
+				dvars::register_bool("cg_unlockall_loot", false, game::DVAR_FLAG_SAVED,
+					"Whether loot should be locked based on the player's stats or always unlocked.");
 			}
 		}
 	};
