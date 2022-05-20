@@ -405,8 +405,7 @@ namespace server_list
 
 				a.mov(rax, qword_ptr(rbx, 0x48));
 				a.cvtdq2ps(xmm0, xmm0);
-				a.mov(rdi, 0x28E12B_b);
-				a.jmp(rdi);
+				a.jmp(0x28E12B_b);
 			}), true);
 
 			utils::hook::jump(0x28E331_b, utils::hook::assemble([](utils::hook::assembler& a)

@@ -150,7 +150,7 @@ namespace colors
 				utils::hook::jump(0x5AEDF0_b, com_clean_name_stub, true);
 
 				// don't apply colors to overhead names
-				utils::hook::jump(0xF7B6A_b, utils::hook::assemble([](utils::hook::assembler& a)
+				/*utils::hook::jump(0xF7B6A_b, utils::hook::assemble([](utils::hook::assembler& a)
 				{
 					a.lea(rax, qword_ptr(rbp, -0x10));
 					a.mov(dword_ptr(rsp, 0x28), 0xB);
@@ -158,12 +158,15 @@ namespace colors
 					a.mov(qword_ptr(rsp, 0x20), rax);
 					a.lea(r8, qword_ptr(rbp));
 
+					a.push(rax);
 					a.pushad64();
 					a.call_aligned(get_client_name_stub);
+					a.mov(qword_ptr(rsp, 0x80), rax);
 					a.popad64();
+					a.pop(rax);
 
 					a.jmp(0xF7B8A_b);
-				}), true);
+				}), true);*/
 
 				// patch I_CleanStr
 				utils::hook::jump(0x5AF2E0_b, i_clean_str_stub, true);
