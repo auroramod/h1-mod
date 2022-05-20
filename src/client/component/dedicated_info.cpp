@@ -1,5 +1,4 @@
 #include <std_include.hpp>
-#include "console.hpp"
 #include "loader/component_loader.hpp"
 #include "game/game.hpp"
 #include "scheduler.hpp"
@@ -22,7 +21,7 @@ namespace dedicated_info
 				auto* sv_running = game::Dvar_FindVar("sv_running");
 				if (!sv_running || !sv_running->current.enabled)
 				{
-					console::set_title("H1-Mod Dedicated Server");
+					SetConsoleTitle("H1-Mod Dedicated Server");
 					return;
 				}
 
@@ -54,7 +53,7 @@ namespace dedicated_info
 				utils::string::strip(sv_hostname->current.string, cleaned_hostname.data(),
 				static_cast<int>(strlen(sv_hostname->current.string)) + 1);
 
-				console::set_title(utils::string::va("%s on %s [%d/%d] (%d)", cleaned_hostname.data(),
+				SetConsoleTitle(utils::string::va("%s on %s [%d/%d] (%d)", cleaned_hostname.data(),
 				mapname->current.string, client_count,
 				sv_maxclients->current.integer, bot_count));
 			}, scheduler::pipeline::main, 1s);
@@ -62,4 +61,4 @@ namespace dedicated_info
 	};
 }
 
-//REGISTER_COMPONENT(dedicated_info::component)
+REGISTER_COMPONENT(dedicated_info::component)
