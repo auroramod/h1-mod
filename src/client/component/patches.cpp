@@ -124,10 +124,10 @@ namespace patches
 
 			command::params_sv params{};
 			const auto menu_id = atoi(params.get(1));
-			const auto client = svs_clients[ent->s.entityNum];
+			const auto client = &svs_clients[ent->s.entityNum];
 
 			// 22 => "end_game"
-			if (menu_id == 22 && client.header.remoteAddress.type != game::NA_LOOPBACK)
+			if (menu_id == 22 && client->header.remoteAddress.type != game::NA_LOOPBACK)
 			{
 				return;
 			}
@@ -308,6 +308,9 @@ namespace patches
 
 			// Change default hostname and make it replicated
 			dvars::override::register_string("sv_hostname", "^2H1-Mod^7 Default Server", game::DVAR_FLAG_REPLICATED);
+
+			// Dont free server/client memory on asset loading (fixes crashing on map rotation)
+			utils::hook::nop(0x132474_b, 5);
 		}
 	};
 }

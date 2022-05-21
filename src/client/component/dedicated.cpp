@@ -316,9 +316,6 @@ namespace dedicated
 			// Workaround for server spamming 'exec default_xboxlive.cfg' when not running
 			ui_set_active_menu_hook.create(0x1E4D80_b, ui_set_active_menu_stub);
 
-			// Dont free server client memory on asset loading
-			utils::hook::nop(0x132474_b, 5);
-
 			// initialize the game after onlinedataflags is 32 (workaround)
 			scheduler::schedule([=]()
 			{
