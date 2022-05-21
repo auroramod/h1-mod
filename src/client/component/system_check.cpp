@@ -67,8 +67,8 @@ namespace system_check
 		// need to update these values 
 		void verify_binary_version()
 		{
-			const auto value = *reinterpret_cast<DWORD*>(0x140001337);
-			if (value != 0xFFB8006D && value != 0xFFB80080)
+			const auto value = *reinterpret_cast<DWORD*>(0x1337_b);
+			if (value != 0x60202B6A && value != 0xBC0E9FE)
 			{
 				throw std::runtime_error("Unsupported Call of Duty: Modern Warfare Remastered version (1.15)");
 			}
@@ -86,7 +86,7 @@ namespace system_check
 	public:
 		void post_load() override
 		{
-			//verify_binary_version();
+			verify_binary_version();
 
 			if (!is_valid())
 			{
@@ -98,4 +98,4 @@ namespace system_check
 	};
 }
 
-//REGISTER_COMPONENT(system_check::component)
+REGISTER_COMPONENT(system_check::component)

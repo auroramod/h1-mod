@@ -175,7 +175,6 @@ int main()
 		try
 		{
 			//apply_proper_directory();
-			//remove_crash_file();
 
 			if (!component_loader::post_start()) return 0;
 

@@ -203,8 +203,8 @@ namespace materials
 			}
 
 			material_register_handle_hook.create(game::Material_RegisterHandle, material_register_handle_stub);
-			db_material_streaming_fail_hook.create(SELECT_VALUE(0x1401D3180, 0x1402C6260), db_material_streaming_fail_stub);
-			db_get_material_index_hook.create(SELECT_VALUE(0x1401CAD00, 0x1402BBB20), db_get_material_index_stub);
+			db_material_streaming_fail_hook.create(0x3A1600_b, db_material_streaming_fail_stub);
+			db_get_material_index_hook.create(0x396000_b, db_get_material_index_stub);
 		}
 	};
 }
