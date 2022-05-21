@@ -126,12 +126,16 @@ namespace dedicated
 
 		void kill_server()
 		{
-			for (auto i = 0; i < *game::mp::svs_numclients; ++i)
+			const auto* svs_clients = *game::mp::svs_clients;
+			if (svs_clients != nullptr)
 			{
-				if (game::mp::svs_clients[i].header.state >= 3)
+				for (auto i = 0; i < *game::mp::svs_numclients; ++i)
 				{
-					game::SV_GameSendServerCommand(i, game::SV_CMD_CAN_IGNORE,
-					                               utils::string::va("r \"%s\"", "EXE_ENDOFGAME"));
+					if (svs_clients[i].header.state >= 3)
+					{
+						game::SV_GameSendServerCommand(i, game::SV_CMD_CAN_IGNORE,
+							utils::string::va("r \"%s\"", "EXE_ENDOFGAME"));
+					}
 				}
 			}
 
@@ -155,6 +159,34 @@ namespace dedicated
 			}, scheduler::main, 3s);
 
 			game::Com_Error(game::ERR_DROP, "%s", buffer);
+		}
+
+		utils::hook::detour ui_set_active_menu_hook;
+		void ui_set_active_menu_stub(void* a1, int a2)
+		{
+			static auto done = false;
+			if (done && (a2 == 6 || a2 == 7))
+			{
+				return;
+			}
+
+			if (a2 == 6 || a2 == 7)
+			{
+				done = true;
+			}
+
+			ui_set_active_menu_hook.invoke<void>(a1, a2);
+		}
+
+		utils::hook::detour sub_552830_hook;
+		void* sub_552830_stub()
+		{
+			// sub_554D00 svs_clients along with other svs stuff
+			// Upon loading a 2nd map (ex. doing map mp_bog; map mp_crash) sub_552830 is called instead of sub_554D00
+			// But svs stuff is already deallocated so it will read bad memory -> crash
+			// Calling sub_554D00 makes sure it reallocates that stuff first 
+			utils::hook::invoke<void>(0x554D00_b);
+			return sub_552830_hook.invoke<void*>();
 		}
 	}
 
@@ -291,6 +323,11 @@ namespace dedicated
 			utils::hook::set<uint8_t>(0x399E10_b, 0xC3); // some loop
 			utils::hook::set<uint8_t>(0x1D48B0_b, 0xC3); // related to shader caching / techsets / fastfilesc
 			utils::hook::set<uint8_t>(0x3A1940_b, 0xC3); // DB_ReadPackedLoadedSounds
+
+			// Workaround for server spamming 'exec default_xboxlive.cfg' when not running
+			ui_set_active_menu_hook.create(0x1E4D80_b, ui_set_active_menu_stub);
+
+			sub_552830_hook.create(0x552830_b, sub_552830_stub);
 
 			// initialize the game after onlinedataflags is 32 (workaround)
 			scheduler::schedule([=]()

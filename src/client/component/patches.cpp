@@ -115,12 +115,19 @@ namespace patches
 		utils::hook::detour cmd_lui_notify_server_hook;
 		void cmd_lui_notify_server_stub(game::mp::gentity_s* ent)
 		{
+			const auto svs_clients = *game::mp::svs_clients;
+			if (svs_clients == nullptr)
+			{
+				return;
+			}
+
+
 			command::params_sv params{};
 			const auto menu_id = atoi(params.get(1));
-			const auto client = &game::mp::svs_clients[ent->s.entityNum];
+			const auto client = svs_clients[ent->s.entityNum];
 
 			// 22 => "end_game"
-			if (menu_id == 22 && client->header.remoteAddress.type != game::NA_LOOPBACK)
+			if (menu_id == 22 && client.header.remoteAddress.type != game::NA_LOOPBACK)
 			{
 				return;
 			}
@@ -217,10 +224,10 @@ namespace patches
 			dvars::override::register_int("data_validation_allow_drop", 0, 0, 0, game::DVAR_FLAG_NONE);
 
 			// Patch SV_KickClientNum
-			/*sv_kick_client_num_hook.create(0x14047ED00, &sv_kick_client_num);
+			sv_kick_client_num_hook.create(game::SV_KickClientNum, &sv_kick_client_num);
 
 			// block changing name in-game
-			utils::hook::set<uint8_t>(0x14047FC90, 0xC3);
+			/*utils::hook::set<uint8_t>(0x14047FC90, 0xC3);
 
 			// patch "Couldn't find the bsp for this map." error to not be fatal in mp
 			utils::hook::call(0x1402BA26B, bsp_sys_error_stub);

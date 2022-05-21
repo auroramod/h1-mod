@@ -95,7 +95,7 @@ namespace bots
 					num_bots = atoi(params.get(1));
 				}
 
-				num_bots = std::min(num_bots, *game::mp::svs_numclients);;
+				num_bots = std::min(num_bots, *game::mp::svs_numclients);
 
 				for (auto i = 0; i < num_bots; i++)
 				{

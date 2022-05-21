@@ -1522,19 +1522,13 @@ namespace game
 			char __pad0[265164];
 			int reliableSequence;
 			int reliableAcknowledge;
-			char __pad1[265832];
-			gentity_s* gentity; // 268976
-			char name[32]; // 268984
-			char __pad2[8];
-			int nextSnapshotTime; // 269024
-			char __pad3[544];
-			LiveClientDropType liveDropRequest; //269572
-			char __pad4[24];
-			TestClientType testClient; // 269600
-			char __pad5[347912];
-		}; // size = 879616
+			char __pad1[397928];
+			gentity_s* gentity;
+			char name[32];
+			char __pad5[348752];
+		}; // size = 1011960
 
-		static_assert(sizeof(client_t) == 879616);
+		static_assert(sizeof(client_t) == 1011960);
 	}
 
 	namespace sp

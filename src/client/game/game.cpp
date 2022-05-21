@@ -36,15 +36,21 @@ namespace game
 		return !game::environment::is_sp() && *mp::virtualLobby_loaded == 1;
 	}
 
-	void SV_GameSendServerCommand(int clientNum, svscmd_type type, const char* text)
+	void SV_GameSendServerCommand(int client_num, svscmd_type type, const char* text)
 	{
-		if (clientNum == -1)
+		if (*mp::svs_clients == nullptr)
+		{
+			return;
+		}
+
+		if (client_num == -1)
 		{
 			SV_SendServerCommand(0, type, "%s", text);
 		}
 		else
 		{
-			SV_SendServerCommand(&mp::svs_clients[clientNum], type, "%s", text);
+			printf("%s\n", mp::svs_clients[client_num]->name);
+			SV_SendServerCommand(mp::svs_clients[client_num], type, "%s", text);
 		}
 	}
 
