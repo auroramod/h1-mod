@@ -226,7 +226,17 @@ namespace dedicated
 			utils::hook::jump(0x135600_b, init_dedicated_server, true);
 
 			// delay startup commands until the initialization is done
-			// utils::hook::call(0x157DDA_b, execute_startup_command);
+			utils::hook::jump(0x157DD3_b, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.lea(r8, qword_ptr(rsp, 0x20));
+				a.xor_(ecx, ecx);
+
+				a.pushad64();
+				a.call_aligned(execute_startup_command);
+				a.popad64();
+
+				a.jmp(0x157DDF_b);
+			}), true);//
 
 			// delay console commands until the initialization is done // COULDN'T FOUND
 			// utils::hook::call(0x1400D808C, execute_console_command);

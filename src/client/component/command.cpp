@@ -507,7 +507,7 @@ namespace command
 			}
 			else
 			{
-				// parse_commandline_hook.create(0x157D50_b, parse_commandline_stub);
+				parse_commandline_hook.create(0x157D50_b, parse_commandline_stub);
 				utils::hook::jump(0x4E9F40_b, dvar_command_stub, true);
 
 				add_commands_mp();
