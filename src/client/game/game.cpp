@@ -49,7 +49,6 @@ namespace game
 		}
 		else
 		{
-			printf("%s\n", mp::svs_clients[client_num]->name);
 			SV_SendServerCommand(mp::svs_clients[client_num], type, "%s", text);
 		}
 	}
