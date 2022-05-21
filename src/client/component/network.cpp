@@ -131,20 +131,6 @@ namespace network
 			closesocket(sock);
 			return 0;
 		}
-
-		utils::hook::detour clear_client_state_hook;
-		void clear_client_state_stub(int a1)
-		{
-			// Kinda shit but it works
-			// does a bunch of memset on bad pointers if called while connecting
-			__try
-			{
-				clear_client_state_hook.invoke<void>(a1);
-			}
-			__except (EXCEPTION_EXECUTE_HANDLER)
-			{
-			}
-		}
 	}
 
 	void on(const std::string& command, const callback& callback)
@@ -277,7 +263,6 @@ namespace network
 
 				// ignore dw handle in SV_PacketEvent
 				utils::hook::set<uint8_t>(0x1CBC22_b, 0xEB);
-				utils::hook::jump(0x4F1850_b, &net_compare_address, true);
 
 				// ignore dw handle in SV_FindClientByAddress
 				utils::hook::set<uint8_t>(0x1CB24D_b, 0xEB);
@@ -327,9 +312,6 @@ namespace network
 				// Use our own socket since the game's socket doesn't work with non localhost addresses
 				// why? no idea
 				utils::hook::jump(0x5BD210_b, create_socket, true);
-
-				// Prevent client from crashing if disconnected while connecting
-				clear_client_state_hook.create(0x12D950_b, clear_client_state_stub);
 			}
 		}
 	};
