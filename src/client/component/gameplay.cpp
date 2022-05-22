@@ -16,6 +16,10 @@ namespace gameplay
 	{
 		utils::hook::detour pm_weapon_use_ammo_hook;
 		utils::hook::detour pm_player_trace_hook;
+		utils::hook::detour pm_crashland_hook;
+		utils::hook::detour jump_apply_slowdown_hook;
+		utils::hook::detour stuck_in_client_hook;
+		utils::hook::detour cm_transformed_capsule_trace_hook;
 
 		game::dvar_t* jump_slowDownEnable;
 		game::dvar_t* jump_enableFallDamage;
@@ -24,15 +28,15 @@ namespace gameplay
 		{
 			if (jump_slowDownEnable->current.enabled)
 			{
-				utils::hook::invoke<void>(0x2BD0B0_b, ps);
+				jump_apply_slowdown_hook.invoke<void>(ps);
 			}
 		}
 
-		int stuck_in_client_stub(void* entity)
+		void stuck_in_client_stub(void* entity)
 		{
 			if (dvars::g_playerEjection->current.enabled)
 			{
-				return utils::hook::invoke<int>(0x4035F0_b, entity); // StuckInClient
+				stuck_in_client_hook.invoke<void>(entity);
 			}
 		}
 
@@ -41,8 +45,8 @@ namespace gameplay
 		{
 			if (dvars::g_playerCollision->current.enabled)
 			{
-				utils::hook::invoke<void>(0x4D63C0_b,
-					results, start, end, bounds, capsule, contents, origin, angles); // CM_TransformedCapsuleTrace
+				cm_transformed_capsule_trace_hook.invoke<void>(results, start, end, 
+					bounds, capsule, contents, origin, angles);
 			}
 		}
 
@@ -50,7 +54,7 @@ namespace gameplay
 		{
 			if (jump_enableFallDamage->current.enabled)
 			{
-				utils::hook::invoke<void>(0x2CB070_b, ps, pml);
+				pm_crashland_hook.invoke<void>(ps, pml);
 			}
 		}
 
@@ -74,7 +78,7 @@ namespace gameplay
 
 				a.mov(rax, qword_ptr(reinterpret_cast<int64_t>(&dvars::pm_bouncing)));
 				a.mov(al, byte_ptr(rax, 0x10));
-				a.cmp(byte_ptr(rbp, -0x2D), al);
+				a.cmp(al, 0);
 
 				a.pop(rax);
 				a.jz(no_bounce);
@@ -180,12 +184,11 @@ namespace gameplay
 				game::DVAR_FLAG_REPLICATED, "Firing weapon will not decrease clip ammo");
 			pm_weapon_use_ammo_hook.create(0x2DF830_b, &pm_weapon_use_ammo_stub);
 			
-			utils::hook::nop(0x4006AD_b, 15);
+			/*utils::hook::nop(0x4006AD_b, 15);
 			utils::hook::jump(0x4006AD_b, g_speed_stub(), true);
 			dvars::g_speed = dvars::register_int("g_speed", 190, 0, 1000,
 				game::DVAR_FLAG_REPLICATED, "changes the speed of the player");
 
-			// Implement bouncing dvar
 			dvars::pm_bouncing = dvars::register_bool("pm_bouncing", false,
 				game::DVAR_FLAG_REPLICATED, "Enable bouncing");
 			utils::hook::jump(0x2D39A4_b, pm_bouncing_stub_mp(), true);
@@ -193,45 +196,41 @@ namespace gameplay
 			dvars::g_gravity = dvars::register_int("g_gravity", 800, 0, 1000, game::DVAR_FLAG_REPLICATED,
 				"Game gravity in inches per second squared");
 			utils::hook::jump(0x3FF812_b, client_end_frame_stub(), true);
-			utils::hook::nop(0x3FF808_b, 1); // Nop skipped opcode
+			utils::hook::nop(0x3FF808_b, 1);
 
-			// NEED SOME WORK
 			// Influence PM_JitterPoint code flow so the trace->startsolid checks are 'ignored' 
-			//pm_player_trace_hook.create(0x2D14C0_b, &pm_player_trace_stub);
-			//If g_enableElevators is 1 the 'ducked' flag will always be removed from the player state
-			//utils::hook::jump(0x2C9F90_b, utils::hook::assemble(pm_trace_stub), true);
+			pm_player_trace_hook.create(0x2D14C0_b, &pm_player_trace_stub);
+			// If g_enableElevators is 1 the 'ducked' flag will always be removed from the player state
+			utils::hook::jump(0x2C9F90_b, utils::hook::assemble(pm_trace_stub), true);
+			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DvarFlags::DVAR_FLAG_NONE, "Enables Elevators");
 
-			//dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DvarFlags::DVAR_FLAG_NONE, "Enables Elevators");
+			auto* timescale = dvars::register_float("timescale", 1.0f, 0.1f, 50.0f, game::DVAR_FLAG_REPLICATED, "Changes Timescale of the game");
+			utils::hook::inject(0x15B204_b, &timescale->current.value); // Com_GetTimeScale
+			utils::hook::inject(0x17D241_b, &timescale->current.value); // Com_Restart
+			utils::hook::inject(0x17E609_b, &timescale->current.value); // Com_SetSlowMotion
+			utils::hook::inject(0x17E626_b, &timescale->current.value); // Com_SetSlowMotion
+			utils::hook::inject(0x17E69C_b, &timescale->current.value); // Com_SetSlowMotion
+			// utils::hook::inject(0x1400DB9CC, &timescale->current.value); // Com_ErrorCleanup_Shutdown (Inlined)
+			utils::hook::inject(0x17EAD0_b, &timescale->current.value); // Com_TimeScaleMsec (Crash)
+			utils::hook::inject(0x17EFE2_b, &timescale->current.value); // Com_UpdateSlowMotion
+			utils::hook::inject(0x17F00C_b, &timescale->current.value); // Com_UpdateSlowMotion
+			*/
 
-			// NEEDS SOME WORK & REVISION
-			//auto* timescale = dvars::register_float("timescale", 1.0f, 0.1f, 50.0f, game::DVAR_FLAG_REPLICATED, "Changes Timescale of the game");
-			//utils::hook::inject(0x15B204_b, &timescale->current.value); // Com_GetTimeScale
-			//utils::hook::inject(0x17D241_b, &timescale->current.value); // Com_Restart
-			//utils::hook::inject(0x17E609_b, &timescale->current.value); // Com_SetSlowMotion
-			//utils::hook::inject(0x17E626_b, &timescale->current.value); // Com_SetSlowMotion
-			//utils::hook::inject(0x17E69C_b, &timescale->current.value); // Com_SetSlowMotion
-			//utils::hook::inject(0x1400DB9CC, &timescale->current.value); // Com_ErrorCleanup_Shutdown (INLINED)
-			//utils::hook::inject(0x17EAD2_b, &timescale->current.value); // Com_TimeScaleMsec (CAUSING A CRASH)
-			//utils::hook::inject(0x17EFE2_b, &timescale->current.value); // Com_UpdateSlowMotion
-			//utils::hook::inject(0x17F00C_b, &timescale->current.value); // Com_UpdateSlowMotion
+			jump_apply_slowdown_hook.create(0x2BD0B0_b, jump_apply_slowdown_stub);
+			jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_FLAG_REPLICATED, "Slow player movement after jumping");
 
-			//utils::hook::call(0x2D10D0_b, jump_apply_slowdown_stub);
-			//jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_FLAG_REPLICATED, "Slow player movement after jumping");
+			pm_crashland_hook.create(0x2CB070_b, pm_crashland_stub);
+			jump_enableFallDamage = dvars::register_bool("jump_enableFallDamage", true, game::DVAR_FLAG_REPLICATED, "Enable fall damage");
 
-			//utils::hook::call(0x2CCC9D_b, pm_crashland_stub);
-			//jump_enableFallDamage = dvars::register_bool("jump_enableFallDamage", true, game::DVAR_FLAG_REPLICATED, "Enable fall damage");
+			dvars::g_playerEjection = dvars::register_bool("g_playerEjection", true, game::DVAR_FLAG_REPLICATED,
+				"Flag whether player ejection is on or off");
+			stuck_in_client_hook.create(0x4035F0_b, stuck_in_client_stub);
 
-			//dvars::g_playerEjection = dvars::register_bool("g_playerEjection", true, game::DVAR_FLAG_REPLICATED,
-			//	"Flag whether player ejection is on or off");
-			//utils::hook::call(0x3FFC00_b, stuck_in_client_stub);
-
-			// Implement player collision dvar
 			dvars::g_playerCollision = dvars::register_bool("g_playerCollision", true, game::DVAR_FLAG_REPLICATED,
 				"Flag whether player collision is on or off");
-			utils::hook::call(0x567CCF_b, cm_transformed_capsule_trace_stub); // SV_ClipMoveToEntity
-			utils::hook::call(0x337850_b, cm_transformed_capsule_trace_stub); // CG_ClipMoveToEntity
+			cm_transformed_capsule_trace_hook.create(0x4D63C0_b, cm_transformed_capsule_trace_stub);
 		}
 	};
 }
 
-//REGISTER_COMPONENT(gameplay::component)
+REGISTER_COMPONENT(gameplay::component)
