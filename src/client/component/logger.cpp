@@ -110,50 +110,6 @@ namespace logger
 
 			console::info(buffer);
 		}
-
-		void lui_error()
-		{
-			utils::hook::call(0x140162809, print_warning);
-			utils::hook::call(0x140162815, print_warning);
-			utils::hook::call(0x14016281D, print_warning);
-			utils::hook::call(0x140162829, print_warning);
-
-			utils::hook::call(0x140162E32, print_warning);
-			utils::hook::call(0x140162E3E, print_warning);
-			utils::hook::call(0x140162E46, print_warning);
-			utils::hook::call(0x140162E52, print_warning);
-
-			utils::hook::call(0x140168435, print_warning);
-			utils::hook::call(0x140168441, print_warning);
-			utils::hook::call(0x140168449, print_warning);
-			utils::hook::call(0x140168455, print_warning);
-
-			utils::hook::call(0x14016914D, print_warning);
-			utils::hook::call(0x140169161, print_warning);
-
-			utils::hook::call(0x140169C04, print_warning);
-			utils::hook::call(0x140169C0C, print_warning);
-			utils::hook::call(0x140169C18, print_warning); 
-
-			utils::hook::call(0x140169CB7, print_warning);
-			utils::hook::call(0x140169CDE, print_warning);
-			utils::hook::call(0x140169CEA, print_warning);
-			utils::hook::call(0x140169D03, print_warning);
-
-			utils::hook::call(0x14016BE72, print_warning);
-			utils::hook::call(0x14016C020, print_warning);
-		}
-
-		void lui_interface_debug_print()
-		{
-			utils::hook::call(0x14015C0B2, print_warning);
-			utils::hook::call(0x140162453, print_warning);
-			utils::hook::call(0x1401625DF, print_warning);
-			utils::hook::call(0x14016713C, print_dev);
-			utils::hook::call(0x1401687CD, print_dev);
-			utils::hook::call(0x14016BB8A, print_dev);
-			utils::hook::call(0x14016CA9C, print_dev);
-		}
 	}
 
 	class component final : public component_interface
@@ -163,13 +119,9 @@ namespace logger
 		{
 			if (game::environment::is_mp())
 			{
-				lui_error();
-				lui_interface_debug_print();
-			}
+				// utils::hook::jump(0x27E210_b, print_warning, true);
+				utils::hook::jump(0x27CBB0_b, print_dev, true);
 
-			if (!game::environment::is_sp())
-			{
-				utils::hook::call(0x14051347F, print_com_error);
 			}
 
 			com_error_hook.create(game::Com_Error, com_error_stub);
@@ -177,4 +129,4 @@ namespace logger
 	};
 }
 
-//REGISTER_COMPONENT(logger::component)
+REGISTER_COMPONENT(logger::component)
