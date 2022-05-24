@@ -1448,6 +1448,13 @@ namespace game
 	{
 	};
 
+	// made up
+	struct client_state_t
+	{
+		char __pad0[0x4A5C];
+		int num_players;
+	};
+
 	enum PlayerHandIndex
 	{
 		WEAPON_HAND_DEFAULT = 0x0,

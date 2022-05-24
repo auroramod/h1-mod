@@ -101,7 +101,16 @@ namespace discord
 						discord_presence.partyPrivacy = DISCORD_PARTY_PUBLIC;
 					}
 
-					discord_presence.partySize = 1; //*reinterpret_cast<int*>(0x1429864C4);
+					const auto client_state = *game::mp::client_state;
+					if (client_state != nullptr)
+					{
+						discord_presence.partySize = client_state->num_players;
+					}
+					else
+					{
+						discord_presence.partySize = 0;
+					}
+
 					discord_presence.partyMax = max_clients;
 					discord_presence.state = clean_hostname;
 					discord_presence.largeImageKey = map;

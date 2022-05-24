@@ -257,6 +257,8 @@ namespace game
 		WEAK symbol<int> sv_serverId_value{0x0, 0x0};
 
 		WEAK symbol<bool> virtualLobby_loaded{0x0, 0x2E6EC9D};
+
+		WEAK symbol<client_state_t*> client_state{0x0, 0x2EC84F0};
 	}
 
 	namespace sp
