@@ -61,7 +61,7 @@ namespace mods
 				utils::io::create_directory("mods");
 			}
 
-			db_release_xassets_hook.create(SELECT_VALUE(0x1401CD560, 0x1402BF160), db_release_xassets_stub);
+			db_release_xassets_hook.create(SELECT_VALUE(0x0, 0x399740_b), db_release_xassets_stub);
 
 			command::add("loadmod", [](const command::params& params)
 			{

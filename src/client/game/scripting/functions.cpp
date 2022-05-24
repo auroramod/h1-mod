@@ -59,8 +59,8 @@ namespace scripting
 
 		script_function get_function_by_index(const unsigned index)
 		{
-			static const auto function_table = SELECT_VALUE(0x14B1D1B90, 0x149813EF0);
-			static const auto method_table = SELECT_VALUE(0x14B1D33A0, 0x149815700);
+			static const auto function_table = SELECT_VALUE(0x14B1D1B90, 0xAC85070_b);
+			static const auto method_table = SELECT_VALUE(0x14B1D33A0, 0xAC85070_b);
 
 			if (index < 0x301)
 			{

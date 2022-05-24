@@ -63,7 +63,7 @@ namespace branding
 			//dvars::override::set_string("version", utils::string::va("H1-Mod %s", VERSION));
 
 			ui_get_formatted_build_number_hook.create(
-				SELECT_VALUE(0x0, 0x1DF300_b), ui_get_formatted_build_number_stub);
+				SELECT_VALUE(0x406EC0_b, 0x1DF300_b), ui_get_formatted_build_number_stub);
 		}
 	};
 }

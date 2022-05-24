@@ -234,9 +234,9 @@ namespace auth
 			// Patch steam id bit check
 			if (game::environment::is_sp())
 			{
-				//utils::hook::jump(0x140475C17, 0x140475C6A); // H1(1.4)
-				//utils::hook::jump(0x140476AFF, 0x140476B40); // H1(1.4)
-				//utils::hook::jump(0x140476FA4, 0x140476FF2); // H1(1.4)
+				utils::hook::jump(0x4FA1B3_b, 0x4FA21A_b);
+				utils::hook::jump(0x4FB272_b, 0x4FB2B7_b);
+				utils::hook::jump(0x140476FA4, 0x4FB7D3_b);
 			}
 			else
 			{

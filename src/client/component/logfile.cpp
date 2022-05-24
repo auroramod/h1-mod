@@ -58,7 +58,7 @@ namespace logfile
 
 		std::string convert_mod(const int meansOfDeath)
 		{
-			const auto value = reinterpret_cast<game::scr_string_t**>(0x140FEC3F0)[meansOfDeath];
+			const auto value = reinterpret_cast<game::scr_string_t**>(0x10B5290_b)[meansOfDeath];
 			const auto string = game::SL_ConvertToString(*value);
 			return string;
 		}
@@ -68,7 +68,7 @@ namespace logfile
 			const bool isAlternate, const float* vDir, const unsigned int hitLoc, int psTimeOffset, int deathAnimDuration)
 		{
 			{
-				const std::string hitloc = reinterpret_cast<const char**>(0x140FEC4D0)[hitLoc];
+				const std::string hitloc = reinterpret_cast<const char**>(0x10B5370_b)[hitLoc];
 				const auto mod_ = convert_mod(meansOfDeath);
 
 				const auto weapon_ = get_weapon_name(weapon, isAlternate);
@@ -110,7 +110,7 @@ namespace logfile
 			const float* vDir, const unsigned int hitLoc, const int timeOffset)
 		{
 			{
-				const std::string hitloc = reinterpret_cast<const char**>(0x140FEC4D0)[hitLoc];
+				const std::string hitloc = reinterpret_cast<const char**>(0x10B5370_b)[hitLoc];
 				const auto mod_ = convert_mod(meansOfDeath);
 
 				const auto weapon_ = get_weapon_name(weapon, isAlternate);
@@ -178,7 +178,7 @@ namespace logfile
 			}
 
 			// ClientCommand
-			return utils::hook::invoke<void>(0x140336000, clientNum);
+			return utils::hook::invoke<void>(0x4132E0_b, clientNum);
 		}
 
 		void g_shutdown_game_stub(const int freeScripts)
@@ -189,7 +189,7 @@ namespace logfile
 			}
 
 			// G_ShutdownGame
-			return utils::hook::invoke<void>(0x140345A60, freeScripts);
+			return utils::hook::invoke<void>(0x422F30_b, freeScripts);
 		}
 
 		unsigned int local_id_to_entity(unsigned int local_id)
@@ -254,7 +254,7 @@ namespace logfile
 			a.inc(r14);
 			a.mov(dword_ptr(rbp, 0xA4), r15d);
 
-			a.jmp(SELECT_VALUE(0x140376663, 0x140444653));
+			a.jmp(SELECT_VALUE(0x0, 0x5111B3_b));
 
 			a.bind(replace);
 
@@ -296,20 +296,20 @@ namespace logfile
 	public:
 		void post_unpack() override
 		{
-			utils::hook::jump(SELECT_VALUE(0x140376655, 0x140444645), utils::hook::assemble(vm_execute_stub), true);
+			utils::hook::jump(SELECT_VALUE(0x0, 0x444645_b), utils::hook::assemble(vm_execute_stub), true);
 
 			if (game::environment::is_sp())
 			{
 				return;
 			}
 
-			utils::hook::call(0x14048191D, client_command_stub);
+			utils::hook::call(0x54EB46_b, client_command_stub);
 
-			scr_player_damage_hook.create(0x14037DC50, scr_player_damage_stub);
-			scr_player_killed_hook.create(0x14037DF30, scr_player_killed_stub);
+			scr_player_damage_hook.create(0x1CE780_b, scr_player_damage_stub);
+			scr_player_killed_hook.create(0x1CEA60_b, scr_player_killed_stub);
 
-			utils::hook::call(0x140484EC0, g_shutdown_game_stub);
-			utils::hook::call(0x1404853C1, g_shutdown_game_stub);
+			utils::hook::call(0x5520E0_b, g_shutdown_game_stub);
+			utils::hook::call(0x5525E1_b, g_shutdown_game_stub);
 		}
 	};
 }

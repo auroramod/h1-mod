@@ -186,24 +186,24 @@ namespace scripting
 	public:
 		void post_unpack() override
 		{
-			vm_notify_hook.create(SELECT_VALUE(0x140379A00, 0x1404479F0), vm_notify_stub);
+			vm_notify_hook.create(SELECT_VALUE(0x0, 0x514560_b), vm_notify_stub);
 
-			scr_add_class_field_hook.create(SELECT_VALUE(0x140370370, 0x14043E2C0), scr_add_class_field_stub);
+			scr_add_class_field_hook.create(SELECT_VALUE(0x0, 0x50AE20_b), scr_add_class_field_stub);
 
-			scr_set_thread_position_hook.create(SELECT_VALUE(0x14036A180, 0x140437D10), scr_set_thread_position_stub);
-			process_script_hook.create(SELECT_VALUE(0x1403737E0, 0x1404417E0), process_script_stub);
+			scr_set_thread_position_hook.create(SELECT_VALUE(0x0, 0x504870_b), scr_set_thread_position_stub);
+			process_script_hook.create(SELECT_VALUE(0x0, 0x50E340_b), process_script_stub);
 			sl_get_canonical_string_hook.create(game::SL_GetCanonicalString, sl_get_canonical_string_stub);
 
 			if (!game::environment::is_sp())
 			{
-				scr_load_level_hook.create(SELECT_VALUE(0x1402A5BE0, 0x1403727C0), scr_load_level_stub);
+				scr_load_level_hook.create(SELECT_VALUE(0x0, 0x450FC0_b), scr_load_level_stub);
 			}
 			else
 			{
-				vm_execute_hook.create(SELECT_VALUE(0x140376590, 0x140444580), vm_execute_stub);
+				vm_execute_hook.create(SELECT_VALUE(0x0, 0x5110E0_b), vm_execute_stub);
 			}
 
-			g_shutdown_game_hook.create(SELECT_VALUE(0x140277D40, 0x140345A60), g_shutdown_game_stub);
+			g_shutdown_game_hook.create(SELECT_VALUE(0x0, 0x422F30_b), g_shutdown_game_stub);
 
 			db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
 			g_dump_scripts = dvars::register_bool("g_dumpScripts", false, game::DVAR_FLAG_NONE, "Dump GSC scripts");

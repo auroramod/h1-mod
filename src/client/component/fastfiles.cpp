@@ -51,7 +51,7 @@ namespace fastfiles
 		void post_unpack() override
 		{
 			db_try_load_x_file_internal_hook.create(
-				SELECT_VALUE(0, 0x39A620_b), &db_try_load_x_file_internal);
+				SELECT_VALUE(0x1F5700_b, 0x39A620_b), &db_try_load_x_file_internal);
 		}
 	};
 }
