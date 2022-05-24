@@ -2,14 +2,9 @@
 #include "loader/component_loader.hpp"
 #include "scheduler.hpp"
 
-#include "game/scripting/entity.hpp"
-#include "game/scripting/execution.hpp"
-#include "game/scripting/lua/value_conversion.hpp"
-#include "game/scripting/lua/error.hpp"
+#include "logfile.hpp"
 
 #include <utils/hook.hpp>
-
-#include "logfile.hpp"
 
 namespace logfile
 {
@@ -19,6 +14,9 @@ namespace logfile
 	{
 		utils::hook::detour scr_player_killed_hook;
 		utils::hook::detour scr_player_damage_hook;
+
+		utils::hook::detour client_command_hook;
+		utils::hook::detour g_shutdown_game_hook;
 
 		std::vector<sol::protected_function> player_killed_callbacks;
 		std::vector<sol::protected_function> player_damage_callbacks;
@@ -147,51 +145,6 @@ namespace logfile
 				meansOfDeath, weapon, isAlternate, vPoint, vDir, hitLoc, timeOffset);
 		}
 
-		void client_command_stub(const int clientNum)
-		{
-			auto self = &game::mp::g_entities[clientNum];
-			char cmd[1024] = {0};
-
-			game::SV_Cmd_ArgvBuffer(0, cmd, 1024);
-
-			if (cmd == "say"s || cmd == "say_team"s)
-			{
-				auto hidden = false;
-				std::string message(game::ConcatArgs(1));
-
-				hidden = message[1] == '/';
-				message.erase(0, hidden ? 2 : 1);
-
-				scheduler::once([cmd, message, self]()
-				{
-					const scripting::entity level{*game::levelEntityId};
-					const scripting::entity player{game::Scr_GetEntityId(self->s.entityNum, 0)};
-
-					scripting::notify(level, cmd, {player, message});
-					scripting::notify(player, cmd, {message});
-				}, scheduler::pipeline::server);
-
-				if (hidden)
-				{
-					return;
-				}
-			}
-
-			// ClientCommand
-			return utils::hook::invoke<void>(0x4132E0_b, clientNum);
-		}
-
-		void g_shutdown_game_stub(const int freeScripts)
-		{
-			{
-				const scripting::entity level{*game::levelEntityId};
-				scripting::notify(level, "shutdownGame_called", {1});
-			}
-
-			// G_ShutdownGame
-			return utils::hook::invoke<void>(0x422F30_b, freeScripts);
-		}
-
 		unsigned int local_id_to_entity(unsigned int local_id)
 		{
 			const auto variable = game::scr_VarGlob->objectVariableValue[local_id];
@@ -291,27 +244,55 @@ namespace logfile
 		hook_enabled = false;
 	}
 
+	bool client_command_stub(const int client_num)
+	{
+		auto self = &game::mp::g_entities[client_num];
+		char cmd[1024] = {0};
+
+		game::SV_Cmd_ArgvBuffer(0, cmd, 1024);
+
+		if (cmd == "say"s || cmd == "say_team"s)
+		{
+			auto hidden = false;
+			std::string message(game::ConcatArgs(1));
+
+			hidden = message[1] == '/';
+			message.erase(0, hidden ? 2 : 1);
+
+			scheduler::once([cmd, message, self, hidden]()
+			{
+				const scripting::entity level{*game::levelEntityId};
+				const scripting::entity player{game::Scr_GetEntityId(self->s.entityNum, 0)};
+
+				scripting::notify(level, cmd, {player, message, hidden});
+				scripting::notify(player, cmd, {message, hidden});
+			}, scheduler::pipeline::server);
+
+			if (hidden)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	class component final : public component_interface
 	{
 	public:
 		void post_unpack() override
 		{
-			utils::hook::jump(SELECT_VALUE(0x0, 0x444645_b), utils::hook::assemble(vm_execute_stub), true);
+			utils::hook::jump(SELECT_VALUE(0x0, 0x5111A5_b), utils::hook::assemble(vm_execute_stub), true);
 
 			if (game::environment::is_sp())
 			{
 				return;
 			}
 
-			utils::hook::call(0x54EB46_b, client_command_stub);
-
 			scr_player_damage_hook.create(0x1CE780_b, scr_player_damage_stub);
 			scr_player_killed_hook.create(0x1CEA60_b, scr_player_killed_stub);
-
-			utils::hook::call(0x5520E0_b, g_shutdown_game_stub);
-			utils::hook::call(0x5525E1_b, g_shutdown_game_stub);
 		}
 	};
 }
 
-//REGISTER_COMPONENT(logfile::component)
+REGISTER_COMPONENT(logfile::component)

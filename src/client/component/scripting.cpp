@@ -94,6 +94,7 @@ namespace scripting
 				script_function_table.clear();
 			}
 
+			scripting::notify(*game::levelEntityId, "shutdownGame_called", {1});
 			lua::engine::stop();
 			return g_shutdown_game_hook.invoke<void>(free_scripts);
 		}
@@ -159,26 +160,6 @@ namespace scripting
 			scripting::token_map[str] = result;
 			return result;
 		}
-
-		game::XAssetHeader db_find_xasset_header_stub(game::XAssetType type, const char* name, int allow_create_default)
-		{
-			const auto result = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, name, allow_create_default);
-			if (!g_dump_scripts->current.enabled || type != game::XAssetType::ASSET_TYPE_SCRIPTFILE)
-			{
-				return result;
-			}
-
-			std::string buffer;
-			buffer.append(result.scriptfile->name, strlen(result.scriptfile->name) + 1);
-			buffer.append(reinterpret_cast<char*>(&result.scriptfile->compressedLen), 4);
-			buffer.append(reinterpret_cast<char*>(&result.scriptfile->len), 4);
-			buffer.append(reinterpret_cast<char*>(&result.scriptfile->bytecodeLen), 4);
-			buffer.append(result.scriptfile->buffer, result.scriptfile->compressedLen);
-			buffer.append(result.scriptfile->bytecode, result.scriptfile->bytecodeLen);
-			utils::io::write_file(utils::string::va("gsc_dump/%s.gscbin", name), buffer);
-
-			return result;
-		}
 	}
 
 	class component final : public component_interface
@@ -205,9 +186,6 @@ namespace scripting
 
 			g_shutdown_game_hook.create(SELECT_VALUE(0x0, 0x422F30_b), g_shutdown_game_stub);
 
-			db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
-			g_dump_scripts = dvars::register_bool("g_dumpScripts", false, game::DVAR_FLAG_NONE, "Dump GSC scripts");
-
 			scheduler::loop([]()
 			{
 				lua::engine::run_frame();
@@ -216,4 +194,4 @@ namespace scripting
 	};
 }
 
-//REGISTER_COMPONENT(scripting::component)
+REGISTER_COMPONENT(scripting::component)

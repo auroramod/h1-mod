@@ -12,6 +12,7 @@
 #include "game_module.hpp"
 #include "fps.hpp"
 #include "server_list.hpp"
+#include "filesystem.hpp"
 
 #include "game/ui_scripting/execution.hpp"
 #include "game/scripting/execution.hpp"
@@ -223,8 +224,19 @@ namespace ui_scripting
 
 			load_script("lui_common", lui_common);
 
-			load_scripts("h1-mod/ui_scripts/");
-			load_scripts("data/ui_scripts/");
+			for (const auto& path : filesystem::get_search_paths())
+			{
+				load_scripts(path + "/ui_scripts/");
+				if (game::environment::is_sp())
+				{
+					load_scripts(path + "/ui_scripts/sp/");
+				}
+				else
+				{
+					load_scripts(path + "/ui_scripts/mp/");
+				}
+			}
+
 		}
 
 		void try_start()

@@ -6,6 +6,7 @@
 #include "game_console.hpp"
 #include "fastfiles.hpp"
 #include "scheduler.hpp"
+#include "logfile.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -40,6 +41,11 @@ namespace command
 
 		void client_command(const int client_num)
 		{
+			if (!logfile::client_command_stub(client_num))
+			{
+				return;
+			}
+
 			params_sv params = {};
 
 			const auto command = utils::string::to_lower(params[0]);

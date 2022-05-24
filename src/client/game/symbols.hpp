@@ -74,7 +74,7 @@ namespace game
 		float w, float min, float max, unsigned int flags)> Dvar_RegisterVec4{0x0, 0x183010};
 
 	WEAK symbol<long long(const char* qpath, char** buffer)> FS_ReadFile{0x0, 0x1EC690};
-	WEAK symbol<void(void* buffer)> FS_FreeFile{0x0, 0x0};
+	WEAK symbol<void(void* buffer)> FS_FreeFile{0x0, 0x59E2F0};
 	WEAK symbol<void(const char* gameName)> FS_Startup{0x0, 0x0};
 	WEAK symbol<void(const char* path, const char* dir)> FS_AddLocalizedGameDirectory{0x0, 0x1878F0};
 
@@ -204,8 +204,8 @@ namespace game
 
 	WEAK symbol<const char*(const char* string)> UI_SafeTranslateString{0x0, 0x4E8BC0};
 
-	WEAK symbol<void*(jmp_buf* Buf, int Value)> longjmp{0x0, 0x0};
-	WEAK symbol<int(jmp_buf* Buf)> _setjmp{0x0, 0x0};
+	WEAK symbol<void*(jmp_buf* Buf, int Value)> longjmp{0x0, 0x826710};
+	WEAK symbol<int(jmp_buf* Buf)> _setjmp{0x0, 0x8A3190};
 
 	/***************************************************************
 	 * Variables
