@@ -84,13 +84,13 @@ namespace steam
 				result_handlers_[result.call]->run(result.data, false, result.call);
 			}
 
-			for (const auto& callback : callback_list_)
+			/*for (const auto& callback : callback_list_)
 			{
 				if (callback && callback->get_i_callback() == result.type)
 				{
 					callback->run(result.data, false, 0);
 				}
-			}
+			}*/
 
 			if (result.data)
 			{
