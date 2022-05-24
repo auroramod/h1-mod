@@ -196,8 +196,8 @@ namespace patches
 			dvars::override::register_float("cg_fovMin", 1.f, 1.0f, 90.f, game::DvarFlags::DVAR_FLAG_SAVED);
 
 			// Allow kbam input when gamepad is enabled
-			// utils::hook::nop(SELECT_VALUE(0x14018797E, 0x14024EF60), 2);
-			// utils::hook::nop(SELECT_VALUE(0x1401856DC, 0x14024C6B0), 6);
+			utils::hook::nop(SELECT_VALUE(0x0, 0x135EFB_b), 2);
+			utils::hook::nop(SELECT_VALUE(0x0, 0x13388F_b), 6);
 
 			// Allow executing custom cfg files with the "exec" command
 			// utils::hook::call(SELECT_VALUE(0x140343855, 0x140403E28), db_read_raw_file_stub);
