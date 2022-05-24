@@ -320,6 +320,11 @@ namespace server_list
 			return;
 		}
 
+		if (info.get("gamename") != "H1")
+		{
+			return;
+		}
+
 		int start_time{};
 		const auto now = game::Sys_Milliseconds();
 
