@@ -236,7 +236,7 @@ namespace auth
 			{
 				utils::hook::jump(0x4FA1B3_b, 0x4FA21A_b);
 				utils::hook::jump(0x4FB272_b, 0x4FB2B7_b);
-				utils::hook::jump(0x140476FA4, 0x4FB7D3_b);
+				utils::hook::jump(0x4FB781_b, 0x4FB7D3_b);
 			}
 			else
 			{
