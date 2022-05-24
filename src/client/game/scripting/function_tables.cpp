@@ -1542,7 +1542,7 @@ namespace scripting
 		{"getweaponammoclip", 0x82F5}, // SP 0x140265380 MP 0x1403293A0
 		{"getweaponammostock", 0x82F6}, // SP 0x1402655D0 MP 0x140329580
 		{"_meth_82f7", 0x82F7}, // SP 0x140265820 MP 0x140329990
-		{"stoplocalsound", 0x82F8}, // SP 0x140265F20 MP 0x14032A3B0
+		{"setclientomnvar", 0x82F8}, // SP 0x140265F20 MP 0x14032A3B0
 		{"setclientdvar", 0x82F9}, // SP 0x140266410 MP 0x14032A990
 		{"setclientdvars", 0x82FA}, // SP 0x1402666C0 MP 0x14032B260
 		{"_meth_82fb", 0x82FB}, // SP 0x000000000 MP 0x14032AC30
