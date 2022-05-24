@@ -629,7 +629,7 @@ namespace command
 
 		static void add_commands_sp()
 		{
-			add("god", []()
+			/*add("god", []()
 			{
 				if (!game::SV_Loaded())
 				{
@@ -679,16 +679,6 @@ namespace command
 				toggle_client_flag(2, "ufo");
 			});
 
-			add("give", [](const params& params)
-			{
-				if (!game::SV_Loaded())
-				{
-					return;
-				}
-
-				cmd_give_weapon(0, params.get_all());
-			});
-
 			add("dropweapon", [](const params& params)
 			{
 				if (!game::SV_Loaded())
@@ -717,6 +707,16 @@ namespace command
 				}
 
 				cmd_kill(0);
+			});*/
+			
+			add("give", [](const params& params)
+			{
+				if (!game::SV_Loaded())
+				{
+					return;
+				}
+
+				cmd_give_weapon(0, params.get_all());
 			});
 		}
 
