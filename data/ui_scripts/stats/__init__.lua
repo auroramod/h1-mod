@@ -169,12 +169,3 @@ Cac.IsCustomClassLocked = function(...)
 
 	return isclasslocked(...)
 end
-
-local getlockstate = Engine.GetItemLockState
-Engine.GetItemLockState = function(...)
-	local status, state, msg = getlockstate(...)
-	if (state == Cac.ItemLockStatus.NotInInventory and Engine.GetDvarBool("cg_unlockall_loot")) then
-		return "Unlocked", 0, ""
-	end
-	return status, state, msg
-end
