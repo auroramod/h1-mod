@@ -124,15 +124,15 @@ namespace binding
 			}
 
 			// write all bindings to config file
-			utils::hook::call(SELECT_VALUE(0x1AC953_b, 0x199E8F_b), key_write_bindings_to_buffer_stub);
+			utils::hook::jump(SELECT_VALUE(0x1AC980_b, 0x199ED0_b), key_write_bindings_to_buffer_stub, true);
 
 			// links a custom command to an index
-			utils::hook::jump(SELECT_VALUE(0x377280_b, 0x1572B0_b), key_get_binding_for_cmd_stub);
+			utils::hook::jump(SELECT_VALUE(0x377280_b, 0x1572B0_b), key_get_binding_for_cmd_stub, true);
 
 			// execute custom binds
-			cl_execute_key_hook.create(SELECT_VALUE(0x1A8350_b, 0x23BD2A_b), &cl_execute_key_stub);
+			cl_execute_key_hook.create(SELECT_VALUE(0x1A8350_b, 0x130610_b), &cl_execute_key_stub);
 		}
 	};
 }
 
-//REGISTER_COMPONENT(binding::component)
+REGISTER_COMPONENT(binding::component)

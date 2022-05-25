@@ -219,7 +219,7 @@ namespace game
 	WEAK symbol<unsigned int> levelEntityId{0x0, 0xB1100B0};
 	WEAK symbol<unsigned int> gameEntityId{0x0, 0xB1100B4};
 
-	WEAK symbol<const char*> command_whitelist{0x0, 0x0};
+	WEAK symbol<const char*> command_whitelist{0x115ADF0, 0x10ACB70};
 	WEAK symbol<cmd_function_s*> cmd_functions{0x0, 0x344DF18};
 	WEAK symbol<CmdArgs> cmd_args{0x0, 0x2ED1E00};
 
