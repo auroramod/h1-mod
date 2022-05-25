@@ -200,7 +200,7 @@ namespace patches
 			utils::hook::nop(SELECT_VALUE(0x1A9DDC_b, 0x13388F_b), 6);
 
 			// Allow executing custom cfg files with the "exec" command
-			utils::hook::call(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
+			utils::hook::jump(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
 
 			if (!game::environment::is_sp())
 			{
@@ -230,16 +230,10 @@ namespace patches
 			utils::hook::set<uint8_t>(0x54CFF0_b, 0xC3);
 
 			// patch "Couldn't find the bsp for this map." error to not be fatal in mp
-			utils::hook::call(0x39465B_b, bsp_sys_error_stub);
-
-			// client side aim assist dvar
-			dvars::aimassist_enabled = dvars::register_bool("aimassist_enabled", true,
-				game::DvarFlags::DVAR_FLAG_SAVED,
-				"Enables aim assist for controllers");
-			utils::hook::call(0xE857F_b, aim_assist_add_to_target_list);
+			utils::hook::jump(0x39465B_b, bsp_sys_error_stub);
 
 			// isProfanity
-			//utils::hook::set(0x1402877D0, 0xC3C033); // inlined?
+			utils::hook::set(0x361AA0_b, 0xC3C033); // inlined?
 
 			// disable elite_clan
 			dvars::override::register_int("elite_clan_active", 0, 0, 0, game::DVAR_FLAG_NONE);
@@ -290,7 +284,7 @@ namespace patches
 			cmd_lui_notify_server_hook.create(0x412D50_b, cmd_lui_notify_server_stub);
 
 			// Prevent clients from sending invalid reliableAcknowledge
-			utils::hook::call(0x1CBD06_b, sv_execute_client_message_stub);
+			utils::hook::jump(0x1CBD06_b, sv_execute_client_message_stub);
 
 			// "fix" for rare 'Out of memory error' error
 			if (utils::flags::has_flag("memoryfix"))
