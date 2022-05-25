@@ -270,15 +270,7 @@ namespace console
 
 		void post_unpack() override
 		{
-			if (game::environment::is_dedi())
-			{
-				ShowWindow(GetConsoleWindow(), SW_HIDE);
-			}
-			else
-			{
-				ShowWindow(GetConsoleWindow(), SW_SHOW);
-			}
-
+			ShowWindow(GetConsoleWindow(), SW_SHOW);
 			SetConsoleTitle("H1-Mod");
 
 			con.kill_event = CreateEvent(NULL, TRUE, FALSE, NULL);
