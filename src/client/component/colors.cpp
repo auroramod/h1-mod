@@ -173,7 +173,7 @@ namespace colors
 			}
 
 			// force new colors
-			utils::hook::jump(SELECT_VALUE(0x0, 0x6C9460_b), rb_lookup_color_stub, true);
+			utils::hook::jump(SELECT_VALUE(0x5B17E0_b, 0x6C9460_b), rb_lookup_color_stub, true);
 
 			// add colors
 			add(0, 0, 0); // 0  - Black

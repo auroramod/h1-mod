@@ -53,6 +53,18 @@ namespace game
 		}
 	}
 
+	void Cbuf_AddText(int local_client_num, int controller_index, const char* cmd)
+	{
+		if (game::environment::is_sp())
+		{
+			sp::Cbuf_AddText(local_client_num, cmd);
+		}
+		else
+		{
+			mp::Cbuf_AddText(local_client_num, controller_index, cmd);
+		}
+	}
+
 	namespace environment
 	{
 		launcher::mode mode = launcher::mode::none;

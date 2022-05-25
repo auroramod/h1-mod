@@ -467,21 +467,25 @@ namespace dvars
 	public:
 		void post_unpack() override
 		{
-			dvar_register_bool_hook.create(SELECT_VALUE(0x0, 0x182340_b), &dvar_register_bool);
-			dvar_register_bool_hashed_hook.create(SELECT_VALUE(0x0, 0x182420_b), &dvar_register_bool_hashed);
-			dvar_register_float_hook.create(SELECT_VALUE(0x0, 0x1827F0_b), &dvar_register_float);
-			dvar_register_float_hashed_hook.create(SELECT_VALUE(0x0, 0x182900_b), &dvar_register_float_hashed);
-			dvar_register_int_hook.create(SELECT_VALUE(0x0, 0x182A10_b), &dvar_register_int);
-			dvar_register_int_hashed_hook.create(SELECT_VALUE(0x0, 0x182AF0_b), &dvar_register_int_hashed);
-			dvar_register_string_hook.create(SELECT_VALUE(0x0, 0x182BD0_b), &dvar_register_string);
-			dvar_register_vector2_hook.create(SELECT_VALUE(0x0, 0x182CB0_b), &dvar_register_vector2);
-			dvar_register_vector3_hook.create(SELECT_VALUE(0x0, 0x182DB0_b), &dvar_register_vector3);
+			dvar_register_bool_hook.create(SELECT_VALUE(0x419220_b, 0x182340_b), &dvar_register_bool);
+			dvar_register_float_hook.create(SELECT_VALUE(0x4195F0_b, 0x1827F0_b), &dvar_register_float);
+			dvar_register_int_hook.create(SELECT_VALUE(0x419700_b, 0x182A10_b), &dvar_register_int);
+			dvar_register_string_hook.create(SELECT_VALUE(0x4197E0_b, 0x182BD0_b), &dvar_register_string);
+			dvar_register_vector2_hook.create(SELECT_VALUE(0x4198C0_b, 0x182CB0_b), &dvar_register_vector2);
+			dvar_register_vector3_hook.create(SELECT_VALUE(0x419A00_b, 0x182DB0_b), &dvar_register_vector3);
 
-			dvar_set_bool_hook.create(SELECT_VALUE(0x0, 0x185520_b), &dvar_set_bool);
-			dvar_set_float_hook.create(SELECT_VALUE(0x0, 0x185AA0_b), &dvar_set_float);
-			dvar_set_int_hook.create(SELECT_VALUE(0x0, 0x185D10_b), &dvar_set_int);
-			dvar_set_string_hook.create(SELECT_VALUE(0x0, 0x186080_b), &dvar_set_string);
-			dvar_set_from_string_hook.create(SELECT_VALUE(0x0, 0x185C60_b), &dvar_set_from_string);
+			if (!game::environment::is_sp())
+			{
+				dvar_register_bool_hashed_hook.create(SELECT_VALUE(0x0, 0x182420_b), &dvar_register_bool_hashed);
+				dvar_register_float_hashed_hook.create(SELECT_VALUE(0x0, 0x182900_b), &dvar_register_float_hashed);
+				dvar_register_int_hashed_hook.create(SELECT_VALUE(0x0, 0x182AF0_b), &dvar_register_int_hashed);
+			}
+
+			dvar_set_bool_hook.create(SELECT_VALUE(0x41B820_b, 0x185520_b), &dvar_set_bool);
+			dvar_set_float_hook.create(SELECT_VALUE(0x41BC60_b, 0x185AA0_b), &dvar_set_float);
+			dvar_set_int_hook.create(SELECT_VALUE(0x41BEE0_b, 0x185D10_b), &dvar_set_int);
+			dvar_set_string_hook.create(SELECT_VALUE(0x41C0F0_b, 0x186080_b), &dvar_set_string);
+			dvar_set_from_string_hook.create(SELECT_VALUE(0x41BE20_b, 0x185C60_b), &dvar_set_from_string);
 		}
 	};
 }

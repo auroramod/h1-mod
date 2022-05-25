@@ -15,6 +15,8 @@ namespace fps
 {
 	namespace
 	{
+		utils::hook::detour sub_5D6810_hook;
+
 		game::dvar_t* cg_drawfps;
 		game::dvar_t* cg_drawping;
 
@@ -131,6 +133,12 @@ namespace fps
 			cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_FLAG_SAVED, "Draw frames per second");
 			return cg_drawfps;
 		}
+
+		void sub_5D6810_stub()
+		{
+			perf_update();
+			sub_5D6810_hook.invoke<void>();
+		}
 	}
 
 	int get_fps()
@@ -153,21 +161,32 @@ namespace fps
 			// fps setup
 			cg_perf.perf_start = std::chrono::high_resolution_clock::now();
 
-			utils::hook::jump(SELECT_VALUE(0, 0x343847_b), utils::hook::assemble([](utils::hook::assembler& a)
+			if (game::environment::is_mp())
 			{
-				a.pushad64();
-				a.call_aligned(perf_update);
-				a.popad64();
+				utils::hook::jump(SELECT_VALUE(0, 0x343847_b), utils::hook::assemble([](utils::hook::assembler& a)
+				{
+					a.pushad64();
+					a.call_aligned(perf_update);
+					a.popad64();
 
-				a.call(0x702250_b);
-				a.mov(edx, 3);
-				a.xor_(ecx, ecx);
-				a.jmp(0x343853_b);
-			}), true);
+					a.call(0x702250_b);
+					a.mov(edx, 3);
+					a.xor_(ecx, ecx);
+					a.jmp(0x343853_b);
+				}), true);
 
-			// Don't register cg_drawfps
-			utils::hook::nop(0x31D74F_b, 0x1C);
-			utils::hook::nop(0x31D76F_b, 0x7);
+				// Don't register cg_drawfps
+				utils::hook::nop(0x31D74F_b, 0x1C);
+				utils::hook::nop(0x31D76F_b, 0x7);
+			}
+			else
+			{
+				sub_5D6810_hook.create(0x5D6810_b, sub_5D6810_stub);
+
+				// Don't register cg_drawfps
+				utils::hook::nop(0x15C97D_b, 0x20);
+				utils::hook::nop(0x15C9A1_b, 0x7);
+			}
 
 			scheduler::loop(cg_draw_fps, scheduler::pipeline::renderer);
 

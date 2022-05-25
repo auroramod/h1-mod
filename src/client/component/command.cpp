@@ -514,10 +514,10 @@ namespace command
 			else
 			{
 				parse_commandline_hook.create(0x157D50_b, parse_commandline_stub);
-				utils::hook::jump(0x4E9F40_b, dvar_command_stub, true);
-
 				add_commands_mp();
 			}
+
+			utils::hook::jump(SELECT_VALUE(0x3A7C80_b, 0x4E9F40_b), dvar_command_stub, true);
 
 			add_commands_generic();
 		}

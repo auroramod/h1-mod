@@ -207,7 +207,7 @@ namespace logfile
 			a.inc(r14);
 			a.mov(dword_ptr(rbp, 0xA4), r15d);
 
-			a.jmp(SELECT_VALUE(0x0, 0x5111B3_b));
+			a.jmp(SELECT_VALUE(0x3CA153_b, 0x5111B3_b));
 
 			a.bind(replace);
 
@@ -282,7 +282,7 @@ namespace logfile
 	public:
 		void post_unpack() override
 		{
-			utils::hook::jump(SELECT_VALUE(0x0, 0x5111A5_b), utils::hook::assemble(vm_execute_stub), true);
+			utils::hook::jump(SELECT_VALUE(0x3CA145_b, 0x5111A5_b), utils::hook::assemble(vm_execute_stub), true);
 
 			if (game::environment::is_sp())
 			{

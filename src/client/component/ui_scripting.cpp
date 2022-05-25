@@ -218,7 +218,7 @@ namespace ui_scripting
 
 			setup_functions();
 
-			lua["print"] = function(reinterpret_cast<game::hks::lua_function>(0x209EB0_b));
+			lua["print"] = function(reinterpret_cast<game::hks::lua_function>(SELECT_VALUE(0x93490_b, 0x209EB0_b)));
 			lua["table"]["unpack"] = lua["unpack"];
 			lua["luiglobals"] = lua;
 
@@ -370,22 +370,22 @@ namespace ui_scripting
 
 		void post_unpack() override
 		{
-			if (!game::environment::is_mp())
+			if (game::environment::is_dedi())
 			{
 				return;
 			}
 
 			db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
-			hks_load_hook.create(0x22C180_b, hks_load_stub);
+			hks_load_hook.create(SELECT_VALUE(0xB46F0_b, 0x22C180_b), hks_load_stub);
 
-			hks_package_require_hook.create(0x214040_b, hks_package_require_stub);
-			hks_start_hook.create(0x27A790_b, hks_start_stub);
-			hks_shutdown_hook.create(0x2707C0_b, hks_shutdown_stub);
+			hks_package_require_hook.create(SELECT_VALUE(0x90070_b, 0x214040_b), hks_package_require_stub);
+			hks_start_hook.create(SELECT_VALUE(0x103C50_b, 0x27A790_b), hks_start_stub);
+			hks_shutdown_hook.create(SELECT_VALUE(0xFB370_b, 0x2707C0_b), hks_shutdown_stub);
 
 			command::add("lui_restart", []()
 			{
-				utils::hook::invoke<void>(0x2707C0_b);
-				utils::hook::invoke<void>(0x27BEC0_b);
+				utils::hook::invoke<void>(SELECT_VALUE(0xFB370_b, 0x2707C0_b));
+				utils::hook::invoke<void>(SELECT_VALUE(0x1052C0_b, 0x27BEC0_b));
 			});
 		}
 	};

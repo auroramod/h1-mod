@@ -538,6 +538,11 @@ namespace demonware
 
 		void post_load() override
 		{
+			if (game::environment::is_sp())
+			{
+				return;
+			}
+
 			server_thread = utils::thread::create_named_thread("Demonware", server_main);
 		}
 
