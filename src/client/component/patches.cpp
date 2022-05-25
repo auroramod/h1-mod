@@ -93,7 +93,7 @@ namespace patches
 			}
 
 			// DB_ReadRawFile
-			return utils::hook::invoke<const char*>(SELECT_VALUE(0x1401CD4F0, 0x1402BEF10), filename, buf, size);
+			return utils::hook::invoke<const char*>(SELECT_VALUE(0x1F4D00_b, 0x3994B0_b), filename, buf, size);
 		}
 
 		void bsp_sys_error_stub(const char* error, const char* arg1)
@@ -146,7 +146,7 @@ namespace patches
 				return;
 			}
 
-			utils::hook::invoke<void>(0x140481A00, client, msg);
+			utils::hook::invoke<void>(0x54EC50_b, client, msg);
 		}
 
 		void aim_assist_add_to_target_list(void* a1, void* a2)
@@ -175,15 +175,15 @@ namespace patches
 		void post_unpack() override
 		{
 			// Register dvars
-			com_register_dvars_hook.create(SELECT_VALUE(0, 0x15BB60_b), &com_register_dvars_stub);
+			com_register_dvars_hook.create(SELECT_VALUE(0x385BE0_b, 0x15BB60_b), &com_register_dvars_stub);
 
 			// Unlock fps in main menu
-			utils::hook::set<BYTE>(SELECT_VALUE(0, 0x34396B_b), 0xEB);
+			utils::hook::set<BYTE>(SELECT_VALUE(0x1B1EAB_b, 0x34396B_b), 0xEB);
 
 			if (!game::environment::is_dedi())
 			{
 				// Fix mouse lag
-				utils::hook::nop(SELECT_VALUE(0, 0x5BFF89_b), 6);
+				utils::hook::nop(SELECT_VALUE(0x4631F9_b, 0x5BFF89_b), 6);
 				scheduler::loop([]()
 				{
 					SetThreadExecutionState(ES_DISPLAY_REQUIRED);
@@ -196,11 +196,11 @@ namespace patches
 			dvars::override::register_float("cg_fovMin", 1.f, 1.0f, 90.f, game::DvarFlags::DVAR_FLAG_SAVED);
 
 			// Allow kbam input when gamepad is enabled
-			utils::hook::nop(SELECT_VALUE(0x0, 0x135EFB_b), 2);
-			utils::hook::nop(SELECT_VALUE(0x0, 0x13388F_b), 6);
+			utils::hook::nop(SELECT_VALUE(0x1AC0CE_b, 0x135EFB_b), 2);
+			utils::hook::nop(SELECT_VALUE(0x1A9DDC_b, 0x13388F_b), 6);
 
 			// Allow executing custom cfg files with the "exec" command
-			// utils::hook::call(SELECT_VALUE(0x140343855, 0x140403E28), db_read_raw_file_stub);
+			utils::hook::call(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
 
 			if (!game::environment::is_sp())
 			{
@@ -227,27 +227,23 @@ namespace patches
 			sv_kick_client_num_hook.create(game::SV_KickClientNum, &sv_kick_client_num);
 
 			// block changing name in-game
-			/*utils::hook::set<uint8_t>(0x14047FC90, 0xC3);
+			utils::hook::set<uint8_t>(0x54CFF0_b, 0xC3);
 
 			// patch "Couldn't find the bsp for this map." error to not be fatal in mp
-			utils::hook::call(0x1402BA26B, bsp_sys_error_stub);
+			utils::hook::call(0x39465B_b, bsp_sys_error_stub);
 
 			// client side aim assist dvar
 			dvars::aimassist_enabled = dvars::register_bool("aimassist_enabled", true,
 				game::DvarFlags::DVAR_FLAG_SAVED,
 				"Enables aim assist for controllers");
-			utils::hook::call(0x14009EE9E, aim_assist_add_to_target_list);
+			utils::hook::call(0xE857F_b, aim_assist_add_to_target_list);
 
 			// isProfanity
-			utils::hook::set(0x1402877D0, 0xC3C033);
-
-			// disable emblems
-			dvars::override::register_int("emblems_active", 0, 0, 0, game::DVAR_FLAG_NONE);
-			utils::hook::set<uint8_t>(0x140479590, 0xC3); // don't register commands
+			//utils::hook::set(0x1402877D0, 0xC3C033); // inlined?
 
 			// disable elite_clan
 			dvars::override::register_int("elite_clan_active", 0, 0, 0, game::DVAR_FLAG_NONE);
-			utils::hook::set<uint8_t>(0x140585680, 0xC3); // don't register commands*/
+			utils::hook::set<uint8_t>(0x62D2F0_b, 0xC3); // don't register commands
 
 			// disable codPointStore
 			dvars::override::register_int("codPointStore_enabled", 0, 0, 0, game::DVAR_FLAG_NONE);
@@ -256,7 +252,7 @@ namespace patches
 			utils::hook::nop(0x47408E_b, 5); // dvar_foreach
 
 			// patch "Server is different version" to show the server client version
-			// utils::hook::inject(0x140480955, VERSION);
+			//utils::hook::inject(0x54DCE5_b, VERSION); // we can't inject
 
 			// prevent servers overriding our fov
 			set_client_dvar_from_server_hook.create(0x11AA90_b, set_client_dvar_from_server_stub);
@@ -291,20 +287,20 @@ namespace patches
 			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
 
 			// Prevent clients from ending the game as non host by sending 'end_game' lui notification
-			/*cmd_lui_notify_server_hook.create(0x140335A70, cmd_lui_notify_server_stub);
+			cmd_lui_notify_server_hook.create(0x412D50_b, cmd_lui_notify_server_stub);
 
 			// Prevent clients from sending invalid reliableAcknowledge
-			utils::hook::call(0x1404899C6, sv_execute_client_message_stub);
+			utils::hook::call(0x1CBD06_b, sv_execute_client_message_stub);
 
 			// "fix" for rare 'Out of memory error' error
 			if (utils::flags::has_flag("memoryfix"))
 			{
-				utils::hook::jump(0x140578BE0, malloc);
-				utils::hook::jump(0x140578B00, _aligned_malloc);
-				utils::hook::jump(0x140578C40, free);
-				utils::hook::jump(0x140578D30, realloc);
-				utils::hook::jump(0x140578B60, _aligned_realloc);
-			}*/
+				utils::hook::jump(0x6200C0_b, malloc);
+				utils::hook::jump(0x61FFE0_b, _aligned_malloc);
+				utils::hook::jump(0x620120_b, free);
+				utils::hook::jump(0x620210_b, realloc);
+				utils::hook::jump(0x620040_b, _aligned_realloc);
+			}
 
 			// Change default hostname and make it replicated
 			dvars::override::register_string("sv_hostname", "^2H1-Mod^7 Default Server", game::DVAR_FLAG_REPLICATED);
