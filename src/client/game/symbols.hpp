@@ -48,7 +48,7 @@ namespace game
 	WEAK symbol<void()> Com_Quit_f{0x0, 0x1F9280};
 	WEAK symbol<void(char const* finalMessage)> Com_Shutdown{0x0, 0x0};
 
-	WEAK symbol<void()> Quit{0x105FF0, 0x17CF50};
+	WEAK symbol<void()> Quit{0x3A5A20, 0x17CF50};
 
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{0x0, 0x316210};
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{0x0, 0x3122F0};

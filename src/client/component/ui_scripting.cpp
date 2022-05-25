@@ -35,7 +35,6 @@ namespace ui_scripting
 		utils::hook::detour hks_package_require_hook;
 
 		utils::hook::detour hks_load_hook;
-		utils::hook::detour db_find_xasset_header_hook;
 
 		const auto lui_common = utils::nt::load_resource(LUI_COMMON);
 
@@ -274,9 +273,9 @@ namespace ui_scripting
 
 		game::XAssetHeader db_find_xasset_header_stub(game::XAssetType type, const char* name, int allow_create_default)
 		{
-			if (type != 0x3D || !is_loaded_script(globals.in_require_script))
+			if (!is_loaded_script(globals.in_require_script))
 			{
-				return db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, name, allow_create_default);
+				return game::DB_FindXAssetHeader(type, name, allow_create_default);
 			}
 
 			const auto folder = globals.in_require_script.substr(0, globals.in_require_script.find_last_of("/\\"));
@@ -291,7 +290,7 @@ namespace ui_scripting
 			}
 			else if (name_.starts_with("ui/LUI/"))
 			{
-				return db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, name, allow_create_default);
+				return game::DB_FindXAssetHeader(type, name, allow_create_default);
 			}
 
 			return static_cast<game::XAssetHeader>(nullptr);
@@ -375,7 +374,47 @@ namespace ui_scripting
 				return;
 			}
 
-			db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
+			utils::hook::jump(SELECT_VALUE(0xE7419_b, 0x25E809_b), utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				const auto loc = a.newLabel();
+
+				a.push(rax);
+				a.pushad64();
+				a.call_aligned(db_find_xasset_header_stub);
+				a.mov(qword_ptr(rsp, 0x80), rax);
+				a.popad64();
+				a.pop(rax);
+
+				a.mov(rcx, r13);
+				a.test(rax, rax);
+				a.jnz(loc);
+
+				a.jmp(SELECT_VALUE(0xE7426_b, 0x25E816_b));
+
+				a.bind(loc);
+				a.jmp(SELECT_VALUE(0xE748A_b, 0x25E87A_b));
+			}), true);
+
+			utils::hook::jump(SELECT_VALUE(0xE72CB_b, 0x25E6BB_b), utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				const auto loc = a.newLabel();
+
+				a.push(rax);
+				a.pushad64();
+				a.call_aligned(db_find_xasset_header_stub);
+				a.mov(qword_ptr(rsp, 0x80), rax);
+				a.popad64();
+				a.pop(rax);
+
+				a.test(rax, rax);
+				a.jnz(loc);
+
+				a.jmp(SELECT_VALUE(0xE72D9_b, 0x25E6C9_b));
+
+				a.bind(loc);
+				a.jmp(SELECT_VALUE(0xE73EC_b, 0x25E7DC_b));
+			}), true);
+
 			hks_load_hook.create(SELECT_VALUE(0xB46F0_b, 0x22C180_b), hks_load_stub);
 
 			hks_package_require_hook.create(SELECT_VALUE(0x90070_b, 0x214040_b), hks_package_require_stub);
