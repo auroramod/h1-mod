@@ -713,7 +713,7 @@ namespace command
 				}
 
 				cmd_kill(0);
-			});*/
+			});
 			
 			add("give", [](const params& params)
 			{
@@ -723,14 +723,14 @@ namespace command
 				}
 
 				cmd_give_weapon(0, params.get_all());
-			});
+			});*/
 		}
 
 		static void add_commands_mp()
 		{
 			client_command_hook.create(0x4132E0_b, &client_command);
 
-			add_sv("god", [](const int client_num, const params_sv&)
+			/*add_sv("god", [](const int client_num, const params_sv&)
 			{
 				if (!check_cheats(client_num))
 				{
@@ -778,7 +778,7 @@ namespace command
 				}
 
 				toggle_client_flag(client_num, 2, "noclip");
-			});
+			});*/
 
 			add_sv("give", [](const int client_num, const params_sv& params)
 			{
