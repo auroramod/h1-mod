@@ -44,14 +44,18 @@ bool apply_aslr_patch(std::string* data)
 {
 	// mp binary, sp binary
 	if (data->size() != 0x1B97788 && data->size() != 0x1346D88)
+	{
 		return false;
+	}
 
 	auto* dos_header = reinterpret_cast<PIMAGE_DOS_HEADER>(&data->at(0));
 	auto* nt_headers = reinterpret_cast<PIMAGE_NT_HEADERS>(&data->at(dos_header->e_lfanew));
 	auto* optional_header = &nt_headers->OptionalHeader;
 
-	if(optional_header->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE)
+	if (optional_header->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE)
+	{
 		optional_header->DllCharacteristics &= ~(IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE);
+	}
 
 	return true;
 }

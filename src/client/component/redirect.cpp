@@ -1,8 +1,10 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+
+#include "game_module.hpp"
+
 #include <utils/nt.hpp>
 #include <utils/string.hpp>
-#include "game_module.hpp"
 
 namespace redirect
 {
@@ -80,4 +82,4 @@ namespace redirect
 	};
 }
 
-//REGISTER_COMPONENT(redirect::component)
+REGISTER_COMPONENT(redirect::component)
