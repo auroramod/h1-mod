@@ -32,8 +32,17 @@ namespace game
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cmd_ExecuteSingleCommand{0x376FF0, 0x156E90};
 	WEAK symbol<void(const char* cmdName, void(), cmd_function_s* allocedCmd)> Cmd_AddCommandInternal{0x376A40, 0x156880};
 	WEAK symbol<void(const char*)> Cmd_RemoveCommand{0x377670, 0x157690};
-	WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{0x377790, 0x0}; // not a function
-	WEAK symbol<void()> Cmd_EndTokenizeString{0x0, 0x0}; // not a function
+
+	namespace sp
+	{
+		WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{0x377790, 0x0};
+		WEAK symbol<void()> Cmd_EndTokenizeString{0x376C90, 0x0};
+	}
+
+	namespace mp
+	{
+		WEAK symbol<void(const char* text_in, int limit)> Cmd_TokenizeStringWithLimit{0x0, 0x157A40};
+	}
 
 	WEAK symbol<void(void*, void*)> AimAssist_AddToTargetList{0x0, 0xE66C0};
 
@@ -230,6 +239,7 @@ namespace game
 	WEAK symbol<const char*> command_whitelist{0x115ADF0, 0x10ACB70};
 	WEAK symbol<cmd_function_s*> cmd_functions{0xB490038, 0x344DF18};
 	WEAK symbol<CmdArgs> cmd_args{0xB48FEE0, 0x2ED1E00};
+	WEAK symbol<CmdArgsPrivate> cmd_argsPrivate{0, 0x3513F20};
 
 	WEAK symbol<int> g_poolSize{0x0, 0x0};
 

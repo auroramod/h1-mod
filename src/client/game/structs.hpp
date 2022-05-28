@@ -850,6 +850,15 @@ namespace game
 		const char** argv[8];
 	};
 
+	struct CmdArgsPrivate
+	{
+		char textPool[8192];
+		const char* argvPool[512];
+		int usedTextPool[8];
+		int totalUsedArgvPool;
+		int totalUsedTextPool;
+	};
+
 	struct cmd_function_s
 	{
 		cmd_function_s* next;

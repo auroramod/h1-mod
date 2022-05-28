@@ -65,6 +65,33 @@ namespace game
 		}
 	}
 
+	void Cmd_TokenizeString(const char* text)
+	{
+		if (game::environment::is_sp())
+		{
+			sp::Cmd_TokenizeString(text);
+		}
+		else
+		{
+			const auto a2 = 512 - *reinterpret_cast<int*>(0x3516F40_b);
+			mp::Cmd_TokenizeStringWithLimit(text, a2);
+		}
+	}
+
+	void Cmd_EndTokenizeString()
+	{
+		if (game::environment::is_sp())
+		{
+			return sp::Cmd_EndTokenizeString();
+		}
+
+		const auto nesting = cmd_args->nesting;
+		const auto argc = cmd_args->argc[nesting];
+		--cmd_args->nesting;
+		cmd_argsPrivate->totalUsedArgvPool -= argc;
+		cmd_argsPrivate->totalUsedTextPool -= cmd_argsPrivate->usedTextPool[nesting];
+	}
+
 	namespace environment
 	{
 		launcher::mode mode = launcher::mode::none;

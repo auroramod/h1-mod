@@ -291,8 +291,8 @@ namespace network
 				utils::hook::nop(0x54E168_b, 4); // this crashes when reconnecting for some reason
 
 				// allow server owner to modify net_port before the socket bind
-				// utils::hook::call(0x5BD2B5_b, register_netport_stub);
-				// utils::hook::call(0x5BD3F0_b, register_netport_stub);
+				utils::hook::call(0x5BD2B5_b, register_netport_stub);
+				utils::hook::call(0x5BD3F0_b, register_netport_stub);
 
 				// increase allowed packet size
 				const auto max_packet_size = 0x20000;

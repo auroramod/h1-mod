@@ -72,6 +72,9 @@ namespace game
 	void SV_GameSendServerCommand(int clientNum, svscmd_type type, const char* text);
 
 	void Cbuf_AddText(int local_client_num, int controller_index, const char* cmd);
+
+	void Cmd_TokenizeString(const char* text);
+	void Cmd_EndTokenizeString();
 }
 
 uintptr_t operator"" _b(const uintptr_t ptr);
