@@ -60,7 +60,7 @@ void get_aslr_patched_binary(std::string* binary, std::string* data)
 	{
 		throw std::runtime_error(utils::string::va(
 			"Could not create aslr patched binary!\n(%s)", 
-			*binary->data()
+			binary->data()
 		));
 	}
 
