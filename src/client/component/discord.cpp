@@ -195,9 +195,13 @@ namespace discord
 			handlers.ready = ready;
 			handlers.errored = errored;
 			handlers.disconnected = errored;
-			handlers.joinGame = nullptr;
 			handlers.spectateGame = nullptr;
-			handlers.joinRequest = nullptr;
+
+			if (game::environment::is_mp())
+			{
+				handlers.joinGame = join_game;
+				handlers.joinRequest = join_request;
+			}
 
 			Discord_Initialize("947125042930667530", &handlers, 1, nullptr);
 

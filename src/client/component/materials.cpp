@@ -209,4 +209,4 @@ namespace materials
 	};
 }
 
-//REGISTER_COMPONENT(materials::component)
+REGISTER_COMPONENT(materials::component)

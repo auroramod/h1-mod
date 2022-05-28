@@ -138,7 +138,7 @@ namespace game
 	H1_AddBaseDrawTextCmd(TXT, MC, F, game::R_GetFontHeight(F), X, Y, XS, YS, R, C, S, CP, CC, game::R_GetSomething(S))
 
 	WEAK symbol<char* (GfxImage* image, uint32_t width, uint32_t height, uint32_t depth, uint32_t mipCount,
-		uint32_t imageFlags, DXGI_FORMAT imageFormat, const char* name, const D3D11_SUBRESOURCE_DATA* initData)> Image_Setup{0x0, 0x0};
+		uint32_t imageFlags, DXGI_FORMAT imageFormat, const char* name, const D3D11_SUBRESOURCE_DATA* initData)> Image_Setup{0x560740, 0x683890};
 
 	WEAK symbol<unsigned int(unsigned int localId, const char* pos, 
 		unsigned int paramcount)> VM_Execute{0x3C9E50, 0x510EB0};
