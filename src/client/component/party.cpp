@@ -111,15 +111,16 @@ namespace party
 			return false;
 		}
 
-		void didyouknow_stub(const char* dvar_name, const char* string)
+		const char* get_didyouknow_stub(void* a1, int a2, int a3)
 		{
-			if (!party::sv_motd.empty())
+			if (party::sv_motd.empty())
 			{
-				string = party::sv_motd.data();
+				return utils::hook::invoke<const char*>(0x5A0AC0_b, a1, a2, a3);
 			}
-
-			// This function either does Dvar_SetString or Dvar_RegisterString for the given dvar
-			utils::hook::invoke<void>(0x1404FB210, dvar_name, string);
+			else
+			{
+				return utils::string::va("%s", party::sv_motd.data());
+			}
 		}
 
 		void disconnect()
@@ -145,13 +146,6 @@ namespace party
 			party::clear_sv_motd();
 			cl_disconnect_hook.invoke<void>(a1);
 		}
-
-		const auto drop_reason_stub = utils::hook::assemble([](utils::hook::assembler& a)
-		{
-			a.mov(rdx, rsi);
-			a.mov(ecx, 2);
-			a.jmp(0x12EF27_b);
-		});
 
 		void menu_error(const std::string& error)
 		{
@@ -334,14 +328,22 @@ namespace party
 			if (game::environment::is_mp())
 			{
 				// show custom drop reason
-				// utils::hook::nop(0x12EF4E_b, 13);
-				// utils::hook::jump(0x12EF4E_b, drop_reason_stub, true);
+				utils::hook::nop(0x12EF4E_b, 13);
+				utils::hook::jump(0x12EF4E_b, utils::hook::assemble([](utils::hook::assembler& a)
+				{
+					a.mov(rdx, rsi);
+					a.mov(ecx, 2);
+					a.jmp(0x12EF27_b);
+				}), true);
 
 				command::add("disconnect", disconnect);
 			}
 
 			// enable custom kick reason in GScr_KickPlayer
 			utils::hook::set<uint8_t>(0xE423D_b, 0xEB);
+
+			// allow custom didyouknow based on sv_motd
+			utils::hook::call(0x1A8A3A_b, get_didyouknow_stub);
 
 			command::add("map", [](const command::params& argument)
 			{
@@ -556,8 +558,6 @@ namespace party
 				                               utils::string::va("%c \"%s\"", 84, message.data()));
 				printf("%s\n", message.data());
 			});
-
-			// utils::hook::call(0x1404C6E8D, didyouknow_stub); // allow custom didyouknow based on sv_motd
 
 			network::on("getInfo", [](const game::netadr_s& target, const std::string_view& data)
 			{

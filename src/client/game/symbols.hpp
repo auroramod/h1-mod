@@ -197,7 +197,7 @@ namespace game
 	WEAK symbol<void(void* cl, int type, const char* fmt, ...)> SV_SendServerCommand{0x0, 0x1CC040};
 
 	WEAK symbol<void()> Sys_ShowConsole{0x0, 0x0};
-	WEAK symbol<void(const char* error, ...)> Sys_Error{0x0, 0x0};
+	WEAK symbol<void(const char* error, ...)> Sys_Error{0x0, 0x1D8710};
 	WEAK symbol<void(char* path, int pathSize, Sys_Folder folder, const char* filename, const char* ext)>
 		Sys_BuildAbsPath{0x42C330, 0x0};
 	WEAK symbol<int()> Sys_Milliseconds{0x462B30, 0x5BDDF0};

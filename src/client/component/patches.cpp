@@ -121,7 +121,6 @@ namespace patches
 				return;
 			}
 
-
 			command::params_sv params{};
 			const auto menu_id = atoi(params.get(1));
 			const auto client = &svs_clients[ent->s.entityNum];
@@ -152,20 +151,11 @@ namespace patches
 		void aim_assist_add_to_target_list(void* a1, void* a2)
 		{
 			if (!dvars::aimassist_enabled->current.enabled)
+			{
 				return;
+			}
 
 			game::AimAssist_AddToTargetList(a1, a2);
-		}
-
-		void* sub_5BB990_stub()
-		{
-			auto v0 = !utils::hook::invoke<bool>(0x1B19E0_b, 0x3426D20_b);
-			auto result = *reinterpret_cast<void**>(0x3426D20_b);
-			if (v0)
-			{
-				result = reinterpret_cast<void*>(0xB807260_b);
-			}
-			return result;
 		}
 	}
 
@@ -200,7 +190,7 @@ namespace patches
 			utils::hook::nop(SELECT_VALUE(0x1A9DDC_b, 0x13388F_b), 6);
 
 			// Allow executing custom cfg files with the "exec" command
-			// utils::hook::jump(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
+			utils::hook::call(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
 
 			if (!game::environment::is_sp())
 			{
@@ -210,15 +200,7 @@ namespace patches
 
 		static void patch_mp()
 		{
-			// Use name dvar
-			utils::hook::nop(0x5BB990_b, 0x27); // clear function
-			// jmp from 0x5BB9C0 to 0x5BB9A2 (leave some space for far jmp above)
-			utils::hook::set<uint16_t>(0x5BB9C0_b, 0xE0EB);
-			utils::hook::jump(0x5BB9A2_b, &live_get_local_client_name, true);
-			utils::hook::jump(0x5BB990_b, sub_5BB990_stub, true); // replace original function
-
-			// Make name save
-			dvars::override::register_string("name", get_login_username().data(), game::DVAR_FLAG_SAVED);
+			utils::hook::jump(0x5BB9C0_b, &live_get_local_client_name);
 
 			// Disable data validation error popup
 			dvars::override::register_int("data_validation_allow_drop", 0, 0, 0, game::DVAR_FLAG_NONE);
@@ -230,20 +212,16 @@ namespace patches
 			utils::hook::set<uint8_t>(0x54CFF0_b, 0xC3);
 
 			// client side aim assist dvar
-			/*dvars::aimassist_enabled = dvars::register_bool("aimassist_enabled", true,
+			dvars::aimassist_enabled = dvars::register_bool("aimassist_enabled", true,
 				game::DvarFlags::DVAR_FLAG_SAVED,
 				"Enables aim assist for controllers");
-			utils::hook::call(0xE857F_b, aim_assist_add_to_target_list);*/
+			utils::hook::call(0xE857F_b, aim_assist_add_to_target_list);
 
 			// patch "Couldn't find the bsp for this map." error to not be fatal in mp
-			// utils::hook::jump(0x39465B_b, bsp_sys_error_stub);
+			utils::hook::call(0x39465B_b, bsp_sys_error_stub);
 
 			// isProfanity
-			utils::hook::set(0x361AA0_b, 0xC3C033); // inlined?
-
-			/*// disable emblems
-			dvars::override::register_int("emblems_active", 0, 0, 0, game::DVAR_FLAG_NONE);
-			utils::hook::set<uint8_t>(0x140479590, 0xC3); // don't register commands*/
+			utils::hook::set(0x361AA0_b, 0xC3C033);
 
 			// disable elite_clan
 			dvars::override::register_int("elite_clan_active", 0, 0, 0, game::DVAR_FLAG_NONE);
@@ -256,7 +234,7 @@ namespace patches
 			utils::hook::nop(0x47408E_b, 5); // dvar_foreach
 
 			// patch "Server is different version" to show the server client version
-			//utils::hook::inject(0x54DCE5_b, VERSION); // we can't inject
+			utils::hook::inject(0x54DCE5_b, VERSION);
 
 			// prevent servers overriding our fov
 			set_client_dvar_from_server_hook.create(0x11AA90_b, set_client_dvar_from_server_stub);
@@ -268,8 +246,8 @@ namespace patches
 			dvars::override::register_int("dvl", 0, 0, 0, game::DVAR_FLAG_READ);
 
 			// unlock safeArea_*
-			/*utils::hook::jump(0x1402624F5, 0x140262503);
-			utils::hook::jump(0x14026251C, 0x140262547);*/
+			utils::hook::jump(0x347BC9_b, 0x347BD3_b);
+			utils::hook::jump(0x347BF0_b, 0x347C17_b);
 			dvars::override::register_float("safeArea_adjusted_horizontal", 1, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_float("safeArea_adjusted_vertical", 1, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_float("safeArea_horizontal", 1, 0, 1, game::DVAR_FLAG_SAVED);
@@ -294,7 +272,7 @@ namespace patches
 			cmd_lui_notify_server_hook.create(0x412D50_b, cmd_lui_notify_server_stub);
 
 			// Prevent clients from sending invalid reliableAcknowledge
-			// utils::hook::jump(0x1CBD06_b, sv_execute_client_message_stub);
+			utils::hook::call(0x1CBD06_b, sv_execute_client_message_stub);
 
 			// "fix" for rare 'Out of memory error' error
 			if (utils::flags::has_flag("memoryfix"))
