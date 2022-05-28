@@ -3,7 +3,7 @@
 #pragma comment(linker, "/stack:0x1000000")
 
 #ifdef INJECT_HOST_AS_LIB
-//#pragma comment(linker, "/base:0x160000000")
+#pragma comment(linker, "/base:0x160000000")
 #else
 #pragma comment(linker, "/base:0x140000000")
 #pragma comment(linker, "/merge:.data=.cld")
