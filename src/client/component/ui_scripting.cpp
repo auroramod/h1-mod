@@ -188,7 +188,12 @@ namespace ui_scripting
 
 			game_type["getping"] = [](const game&)
 			{
-				return *::game::mp::ping;
+				if ((*::game::mp::client_state) == nullptr)
+				{
+					return 0;
+				}
+
+				return (*::game::mp::client_state)->ping;
 			};
 
 			game_type["issingleplayer"] = [](const game&)

@@ -115,10 +115,10 @@ namespace fps
 
 		void cg_draw_ping()
 		{
-			if (cg_drawping->current.integer > 0 && game::CL_IsCgameInitialized() && !game::VirtualLobby_Loaded())
+			if (cg_drawping->current.integer > 0 && game::CL_IsCgameInitialized() && !game::VirtualLobby_Loaded() && *game::mp::client_state)
 			{
 				const auto font = game::R_RegisterFont("fonts/consolefont", 20);
-				const auto ping_string = utils::string::va("Ping: %i", *game::mp::ping);
+				const auto ping_string = utils::string::va("Ping: %i", (*game::mp::client_state)->ping);
 
 				const auto x = (game::ScrPlace_GetViewPlacement()->realViewportSize[0] - 375.0f) - game::R_TextWidth(
 					ping_string, 0x7FFFFFFF, font);

@@ -1460,9 +1460,14 @@ namespace game
 	// made up
 	struct client_state_t
 	{
-		char __pad0[0x4A5C];
+		char __pad0[0x4A50];
+		int ping;
+		char __pad1[0x8];
 		int num_players;
 	};
+
+	static_assert(offsetof(client_state_t, ping) == 0x4A50);
+	static_assert(offsetof(client_state_t, num_players) == 0x4A5C);
 
 	enum PlayerHandIndex
 	{
