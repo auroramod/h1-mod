@@ -60,9 +60,9 @@ namespace game_module
 
 		DWORD __stdcall get_module_file_name_a(HMODULE hmodule, const LPSTR filename, const DWORD size)
 		{
-			if (!hmodule)
+			if (!hmodule || utils::nt::library(hmodule) == get_game_module())
 			{
-				hmodule = get_game_module();
+				hmodule = get_host_module();
 			}
 
 			return file_name_a_hook.invoke<DWORD>(hmodule, filename, size);
@@ -70,9 +70,9 @@ namespace game_module
 
 		DWORD __stdcall get_module_file_name_w(HMODULE hmodule, const LPWSTR filename, const DWORD size)
 		{
-			if (!hmodule)
+			if (!hmodule || utils::nt::library(hmodule) == get_game_module())
 			{
-				hmodule = get_game_module();
+				hmodule = get_host_module();
 			}
 
 			return file_name_w_hook.invoke<DWORD>(hmodule, filename, size);
