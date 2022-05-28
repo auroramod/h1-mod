@@ -40,7 +40,7 @@ launcher::mode detect_mode_from_arguments()
 	return launcher::mode::none;
 }
 
-bool apply_dslr_patch(std::string* data)
+bool apply_aslr_patch(std::string* data)
 {
 	if (data->size() < 0x1EE || (data->at(0x1EE) != static_cast<char>(0x60) && data->at(0x1EE) != static_cast<char>(0x20)))
 	{
@@ -56,7 +56,7 @@ void get_aslr_patched_binary(std::string* binary, std::string* data)
 {
 	std::string patched_binary = "h1-mod\\" + *binary;
 
-	if (!apply_dslr_patch(data))
+	if (!apply_aslr_patch(data))
 	{
 		throw std::runtime_error(utils::string::va(
 			"Could not create aslr patched binary!\n(%s)", 
