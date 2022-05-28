@@ -40,6 +40,38 @@ launcher::mode detect_mode_from_arguments()
 	return launcher::mode::none;
 }
 
+bool apply_dslr_patch(std::string* data)
+{
+	if (data->size() < 0x1EE || (data->at(0x1EE) != static_cast<char>(0x60) && data->at(0x1EE) != static_cast<char>(0x20)))
+	{
+		// what the fuck is wrong with this binary data?
+		return false;
+	}
+
+	data->at(0x1EE) = static_cast<char>(0x20);
+	return true;
+}
+
+void get_aslr_patched_binary(std::string* binary, std::string* data)
+{
+	std::string patched_binary = "h1-mod\\" + *binary;
+
+	if (!apply_dslr_patch(data))
+	{
+		throw std::runtime_error(utils::string::va(
+			"Could not create aslr patched binary!\n(%s)", 
+			*binary->data()
+		));
+	}
+
+	if (!utils::io::file_exists(patched_binary))
+	{
+		utils::io::write_file(patched_binary, *data, false);
+	}
+
+	*binary = patched_binary;
+}
+
 FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 {
 	loader loader;
@@ -86,6 +118,8 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 			"Failed to read game binary (%s)!\nPlease copy the h1-mod.exe into your Call of Duty: Modern Warfare Remastered installation folder and run it from there.",
 			binary.data()));
 	}
+
+	get_aslr_patched_binary(&binary, &data);
  
 #ifdef INJECT_HOST_AS_LIB
 	return loader.load_library(binary, base_address);
