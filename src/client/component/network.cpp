@@ -67,18 +67,18 @@ namespace network
 			a.jmp(0x12F3AC_b);
 		}
 
-		int net_compare_base_address(const game::netadr_s* a1, const game::netadr_s* a2)
+		int net_compare_base_address(const game::netadr_s* a, const game::netadr_s* b)
 		{
-			if (a1->type == a2->type)
+			if (a->type == b->type)
 			{
-				switch (a1->type)
+				switch (a->type)
 				{
 				case game::netadrtype_t::NA_BOT:
 				case game::netadrtype_t::NA_LOOPBACK:
-					return a1->port == a2->port;
+					return a->port == b->port;
 
 				case game::netadrtype_t::NA_IP:
-					return !memcmp(a1->ip, a2->ip, 4);
+					return !memcmp(a->ip, b->ip, 4);
 				case game::netadrtype_t::NA_BROADCAST:
 					return true;
 				default:
@@ -89,9 +89,9 @@ namespace network
 			return false;
 		}
 
-		int net_compare_address(const game::netadr_s* a1, const game::netadr_s* a2)
+		int net_compare_address(const game::netadr_s* a, const game::netadr_s* b)
 		{
-			return net_compare_base_address(a1, a2) && a1->port == a2->port;
+			return net_compare_base_address(a, b) && a->port == b->port;
 		}
 
 		void reconnect_migratated_client(void*, game::netadr_s* from, const int, const int, const char*,
@@ -138,10 +138,10 @@ namespace network
 		get_callbacks()[utils::string::to_lower(command)] = callback;
 	}
 
-	int dw_send_to_stub(const int size, const char* src, game::netadr_s* a3)
+	int dw_send_to_stub(const int size, const char* src, game::netadr_s* to)
 	{
 		sockaddr s = {};
-		game::NetadrToSockadr(a3, &s);
+		game::NetadrToSockadr(to, &s);
 		return sendto(*game::query_socket, src, size, 0, &s, 16) >= 0;
 	}
 

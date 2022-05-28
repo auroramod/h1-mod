@@ -162,20 +162,20 @@ namespace dedicated
 		}
 
 		utils::hook::detour ui_set_active_menu_hook;
-		void ui_set_active_menu_stub(void* a1, int a2)
+		void ui_set_active_menu_stub(void* localClientNum, int menu)
 		{
 			static auto done = false;
-			if (done && (a2 == 6 || a2 == 7))
+			if (done && (menu == 6 || menu == 7))
 			{
 				return;
 			}
 
-			if (a2 == 6 || a2 == 7)
+			if (menu == 6 || menu == 7)
 			{
 				done = true;
 			}
 
-			ui_set_active_menu_hook.invoke<void>(a1, a2);
+			ui_set_active_menu_hook.invoke<void>(localClientNum, menu);
 		}
 	}
 

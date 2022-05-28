@@ -57,9 +57,6 @@ namespace patches
 			{
 				// Make name save
 				dvars::register_string("name", get_login_username().data(), game::DVAR_FLAG_SAVED, "Player name.");
-
-				// Disable data validation error popup
-				dvars::register_int("data_validation_allow_drop", 0, 0, 0, game::DVAR_FLAG_NONE, "");
 			}
 
 			return com_register_dvars_hook.invoke<void>();
@@ -67,14 +64,14 @@ namespace patches
 
 		utils::hook::detour set_client_dvar_from_server_hook;
 
-		void set_client_dvar_from_server_stub(void* a1, void* a2, const char* dvar, const char* value)
+		void set_client_dvar_from_server_stub(void* clientNum, void* cgameGlob, const char* dvar, const char* value)
 		{
 			if (dvar == "cg_fov"s || dvar == "cg_fovMin"s)
 			{
 				return;
 			}
 
-			set_client_dvar_from_server_hook.invoke<void>(0x11AA90_b, a1, a2, dvar, value);
+			set_client_dvar_from_server_hook.invoke<void>(0x11AA90_b, clientNum, cgameGlob, dvar, value);
 		}
 
 		const char* db_read_raw_file_stub(const char* filename, char* buf, const int size)
@@ -148,14 +145,14 @@ namespace patches
 			utils::hook::invoke<void>(0x54EC50_b, client, msg);
 		}
 
-		void aim_assist_add_to_target_list(void* a1, void* a2)
+		void aim_assist_add_to_target_list(void* aaGlob, void* screenTarget)
 		{
 			if (!dvars::aimassist_enabled->current.enabled)
 			{
 				return;
 			}
 
-			game::AimAssist_AddToTargetList(a1, a2);
+			game::AimAssist_AddToTargetList(aaGlob, screenTarget);
 		}
 	}
 

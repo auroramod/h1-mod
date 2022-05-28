@@ -259,18 +259,18 @@ namespace server_list
 
 		utils::hook::detour lui_open_menu_hook;
 
-		void lui_open_menu_stub(int controllerIndex, const char* menu, int a3, int a4, unsigned int a5)
+		void lui_open_menu_stub(int controllerIndex, const char* menuName, int isPopup, int isModal, unsigned int isExclusive)
 		{
 #ifdef DEBUG
-			console::info("[LUI] %s\n", menu);
+			console::info("[LUI] %s\n", menuName);
 #endif
 
-			if (!strcmp(menu, "menu_systemlink_join"))
+			if (!strcmp(menuName, "menu_systemlink_join"))
 			{
 				refresh_server_list();
 			}
 
-			lui_open_menu_hook.invoke<void>(controllerIndex, menu, a3, a4, a5);
+			lui_open_menu_hook.invoke<void>(controllerIndex, menuName, isPopup, isModal, isExclusive);
 		}
 	}
 

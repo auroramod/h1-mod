@@ -111,16 +111,13 @@ namespace party
 			return false;
 		}
 
-		const char* get_didyouknow_stub(void* a1, int a2, int a3)
+		const char* get_didyouknow_stub(void* table, int row, int column)
 		{
 			if (party::sv_motd.empty())
 			{
-				return utils::hook::invoke<const char*>(0x5A0AC0_b, a1, a2, a3);
+				return utils::hook::invoke<const char*>(0x5A0AC0_b, table, row, column);
 			}
-			else
-			{
-				return utils::string::va("%s", party::sv_motd.data());
-			}
+			return utils::string::va("%s", party::sv_motd.data());
 		}
 
 		void disconnect()
@@ -141,10 +138,10 @@ namespace party
 
 		utils::hook::detour cl_disconnect_hook;
 
-		void cl_disconnect_stub(int a1)
+		void cl_disconnect_stub(int showMainMenu) // possibly bool
 		{
 			party::clear_sv_motd();
-			cl_disconnect_hook.invoke<void>(a1);
+			cl_disconnect_hook.invoke<void>(showMainMenu);
 		}
 
 		void menu_error(const std::string& error)
