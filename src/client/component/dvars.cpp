@@ -503,7 +503,7 @@ namespace dvars
 			dvar_register_string_hook.create(SELECT_VALUE(0x4197E0_b, 0x182BD0_b), &dvar_register_string);
 			dvar_register_vector2_hook.create(SELECT_VALUE(0x4198C0_b, 0x182CB0_b), &dvar_register_vector2);
 			dvar_register_vector3_hook.create(SELECT_VALUE(0x419A00_b, 0x182DB0_b), &dvar_register_vector3);
-			dvar_register_enum_hook.create(SELECT_VALUE(0x0, 0x182700_b), &dvar_register_enum);
+			dvar_register_enum_hook.create(SELECT_VALUE(0x419500_b, 0x182700_b), &dvar_register_enum);
 
 			if (!game::environment::is_sp())
 			{
