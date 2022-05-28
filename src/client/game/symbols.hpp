@@ -71,7 +71,7 @@ namespace game
 
 	WEAK symbol<void(int hash, const char* name, const char* buffer)> Dvar_SetCommand{0x41BAD0, 0x1857D0};
 	WEAK symbol<dvar_t*(const char* name)> Dvar_FindVar{0x41A600, 0x183EB0};
-	WEAK symbol<void(const dvar_t* dvar)> Dvar_ClearModified{0x0, 0x0};
+	WEAK symbol<void(const dvar_t* dvar)> Dvar_ClearModified{0x0, 0x183D50};
 	WEAK symbol<void(char* buffer, int index)> Dvar_GetCombinedString{0x3A7D60, 0x4EA020};
 	WEAK symbol<const char*(dvar_t* dvar, bool is_hashed, dvar_value value)> Dvar_ValueToString{0x41CE00, 0x187000};
 	WEAK symbol<void(dvar_t* dvar, DvarSetSource source)> Dvar_Reset{0x41B5F0, 0x185390};
@@ -135,7 +135,7 @@ namespace game
 	WEAK symbol<int(const char* text, int maxChars, Font_s* font)> R_TextWidth{0x55C7A0, 0x67F8F0};
 	WEAK symbol<int(void* font)> R_GetFontHeight{0x55C5C0, 0x67F710};
 	WEAK symbol<void*(int a1)> R_GetSomething{0x55BB90, 0x67ECE0};
-	WEAK symbol<void()> R_SyncRenderThread{0x0, 0x0};
+	WEAK symbol<void()> R_SyncRenderThread{0x0, 0x6A78C0};
 	WEAK symbol<void*(const char* text, int maxChars, void* font, int fontHeight, float x, 
 		float y, float xScale, float yScale, float rotation, float* color, 
 		int style, int cursor_pos, char cursor_char, 
@@ -247,7 +247,7 @@ namespace game
 	WEAK symbol<scrVmPub_t> scr_VmPub{0xC3F4E20, 0xB7AE3C0};
 	WEAK symbol<function_stack_t> scr_function_stack{0xC4015C0, 0xB7B8940};
 
-	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0x0, 0x0};
+	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0x0, 0xE9213F0};
 
 	WEAK symbol<int> dvarCount{0xC90E550, 0x2999C34};
 	WEAK symbol<dvar_t> dvarPool{0xC90E560, 0x344DF20};
