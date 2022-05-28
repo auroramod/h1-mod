@@ -352,7 +352,7 @@ namespace command
 
 		for (int i = 0; i < com_num_console_lines; i++)
 		{
-			game::Cmd_TokenizeString(com_console_lines[i]); // need to re-create this function
+			game::Cmd_TokenizeString(com_console_lines[i]);
 
 			// only +set dvar value
 			if (game::Cmd_Argc() >= 3 && game::Cmd_Argv(0) == "set"s && game::Cmd_Argv(1) == dvar)
@@ -360,7 +360,7 @@ namespace command
 				game::Dvar_SetCommand(game::generateHashValue(game::Cmd_Argv(1)), "", game::Cmd_Argv(2));
 			}
 
-			game::Cmd_EndTokenizeString(); // need to re-create this function
+			game::Cmd_EndTokenizeString();
 		}
 	}
 

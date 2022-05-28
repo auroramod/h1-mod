@@ -229,8 +229,8 @@ namespace network
 				}
 
 				// redirect dw_sendto to raw socket
-				utils::hook::jump(0x5EEC90_b, dw_send_to_stub, true);
-				utils::hook::jump(game::Sys_SendPacket, dw_send_to_stub, true);
+				utils::hook::jump(0x5EEC90_b, dw_send_to_stub);
+				utils::hook::jump(game::Sys_SendPacket, dw_send_to_stub);
 
 				// intercept command handling
 				utils::hook::jump(0x12F387_b, utils::hook::assemble(handle_command_stub), true);
@@ -238,8 +238,8 @@ namespace network
 				// handle xuid without secure connection
 				utils::hook::nop(0x554222_b, 6);
 
-				utils::hook::jump(0x4F1800_b, net_compare_address, true);
-				utils::hook::jump(0x4F1850_b, net_compare_base_address, true);
+				utils::hook::jump(0x4F1800_b, net_compare_address);
+				utils::hook::jump(0x4F1850_b, net_compare_base_address);
 
 				// don't establish secure conenction
 				utils::hook::set<uint8_t>(0x358C8D_b, 0xEB);
@@ -278,7 +278,7 @@ namespace network
 				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_FLAG_NONE);
 
 				// ignore impure client
-				utils::hook::jump(0x54EDD3_b, 0x54EE69_b, true);
+				utils::hook::jump(0x54EDD3_b, 0x54EE69_b);
 
 				// don't send checksum
 				utils::hook::set<uint8_t>(0x59E628_b, 0);
@@ -287,11 +287,11 @@ namespace network
 				utils::hook::set(0x59E8B0_b, 0xC301B0);
 
 				// don't try to reconnect client
-				utils::hook::jump(0x54D220_b, reconnect_migratated_client, true);
+				utils::hook::jump(0x54D220_b, reconnect_migratated_client);
 				utils::hook::nop(0x54E168_b, 4); // this crashes when reconnecting for some reason
 
 				// allow server owner to modify net_port before the socket bind
-				utils::hook::call(0x5BD2B5_b, register_netport_stub);
+				utils::hook::call(0x5BD032_b, register_netport_stub);
 				utils::hook::call(0x5BD3F0_b, register_netport_stub);
 
 				// increase allowed packet size
@@ -311,7 +311,7 @@ namespace network
 
 				// Use our own socket since the game's socket doesn't work with non localhost addresses
 				// why? no idea
-				utils::hook::jump(0x5BD210_b, create_socket, true);
+				utils::hook::jump(0x5BD210_b, create_socket);
 			}
 		}
 	};
