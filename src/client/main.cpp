@@ -42,13 +42,17 @@ launcher::mode detect_mode_from_arguments()
 
 bool apply_aslr_patch(std::string* data)
 {
-	if (data->size() < 0x1EE || (data->at(0x1EE) != static_cast<char>(0x60) && data->at(0x1EE) != static_cast<char>(0x20)))
-	{
-		// what the fuck is wrong with this binary data?
+	// mp binary, sp binary
+	if (data->size() != 0x1B97788 && data->size() != 0x1346D88)
 		return false;
-	}
 
-	data->at(0x1EE) = static_cast<char>(0x20);
+	auto* dos_header = reinterpret_cast<PIMAGE_DOS_HEADER>(&data->at(0));
+	auto* nt_headers = reinterpret_cast<PIMAGE_NT_HEADERS>(&data->at(dos_header->e_lfanew));
+	auto* optional_header = &nt_headers->OptionalHeader;
+
+	if(optional_header->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE)
+		optional_header->DllCharacteristics &= ~(IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE);
+
 	return true;
 }
 
@@ -56,17 +60,14 @@ void get_aslr_patched_binary(std::string* binary, std::string* data)
 {
 	std::string patched_binary = "h1-mod\\" + *binary;
 
-	if (!apply_aslr_patch(data))
+	if (!apply_aslr_patch(data) ||
+		(!utils::io::file_exists(patched_binary) &&
+			!utils::io::write_file(patched_binary, *data, false)))
 	{
 		throw std::runtime_error(utils::string::va(
-			"Could not create aslr patched binary!\n(%s)", 
+			"Could not create aslr patched binary!\n(%s)",
 			binary->data()
 		));
-	}
-
-	if (!utils::io::file_exists(patched_binary))
-	{
-		utils::io::write_file(patched_binary, *data, false);
 	}
 
 	*binary = patched_binary;
