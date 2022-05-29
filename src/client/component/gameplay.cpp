@@ -72,24 +72,24 @@ namespace gameplay
 			return utils::hook::assemble([](utils::hook::assembler& a)
 			{
 				const auto no_bounce = a.newLabel();
-				const auto loc_1401EAF9D = a.newLabel();
+				const auto loc_2D395D = a.newLabel();
 
 				a.push(rax);
 
 				a.mov(rax, qword_ptr(reinterpret_cast<int64_t>(&dvars::pm_bouncing)));
 				a.mov(al, byte_ptr(rax, 0x10));
-				a.cmp(al, 0);
+				a.cmp(byte_ptr(rbp, -0x7D), al);
 
 				a.pop(rax);
 				a.jz(no_bounce);
 				a.jmp(0x2D39C0_b);
 
 				a.bind(no_bounce);
-				a.cmp(dword_ptr(rsp, 0x70), 0);
-				a.jnz(loc_1401EAF9D);
+				a.cmp(dword_ptr(rsp, 0x44), 0);
+				a.jnz(loc_2D395D);
 				a.jmp(0x2D39B1_b);
 
-				a.bind(loc_1401EAF9D);
+				a.bind(loc_2D395D);
 				a.jmp(0x2D395D_b);
 			});
 		}
@@ -184,7 +184,7 @@ namespace gameplay
 				game::DVAR_FLAG_REPLICATED, "Firing weapon will not decrease clip ammo");
 			pm_weapon_use_ammo_hook.create(0x2DF830_b, &pm_weapon_use_ammo_stub);
 			
-			/*utils::hook::nop(0x4006AD_b, 15);
+			utils::hook::nop(0x4006AD_b, 15);
 			utils::hook::jump(0x4006AD_b, g_speed_stub(), true);
 			dvars::g_speed = dvars::register_int("g_speed", 190, 0, 1000,
 				game::DVAR_FLAG_REPLICATED, "changes the speed of the player");
@@ -198,11 +198,12 @@ namespace gameplay
 			utils::hook::jump(0x3FF812_b, client_end_frame_stub(), true);
 			utils::hook::nop(0x3FF808_b, 1);
 
-			// Influence PM_JitterPoint code flow so the trace->startsolid checks are 'ignored' 
+			/*
+			// Influence PM_JitterPoint code flow so the trace->startsolid checks are 'ignored'
 			pm_player_trace_hook.create(0x2D14C0_b, &pm_player_trace_stub);
 			// If g_enableElevators is 1 the 'ducked' flag will always be removed from the player state
 			utils::hook::jump(0x2C9F90_b, utils::hook::assemble(pm_trace_stub), true);
-			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DvarFlags::DVAR_FLAG_NONE, "Enables Elevators");
+			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DvarFlags::DVAR_FLAG_NONE, "Enables Elevators");			
 
 			auto* timescale = dvars::register_float("timescale", 1.0f, 0.1f, 50.0f, game::DVAR_FLAG_REPLICATED, "Changes Timescale of the game");
 			utils::hook::inject(0x15B204_b, &timescale->current.value); // Com_GetTimeScale
