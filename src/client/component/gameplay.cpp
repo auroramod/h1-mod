@@ -21,6 +21,10 @@ namespace gameplay
 		utils::hook::detour stuck_in_client_hook;
 		utils::hook::detour cm_transformed_capsule_trace_hook;
 
+		utils::hook::detour client_end_frame_hook;
+		utils::hook::detour g_damage_client_hook;
+		utils::hook::detour g_damage_hook;
+
 		game::dvar_t* jump_slowDownEnable;
 		game::dvar_t* jump_enableFallDamage;
 
@@ -168,6 +172,52 @@ namespace gameplay
 			a.bind(allsolid);
 			a.jmp(0x2C9F9F_b);
 		};
+
+		void client_end_frame_stub2(game::mp::gentity_s* entity)
+		{
+			client_end_frame_hook.invoke<void>(entity);
+
+			if ((entity->client->flags & 1)) // noclip
+			{
+				entity->client->pm_type = 2;
+			}
+			else if ((entity->client->flags & 2)) // ufo
+			{
+				entity->client->pm_type = 3;
+			}
+		}
+
+		void g_damage_client_stub(game::mp::gentity_s* targ, const game::mp::gentity_s* inflictor, game::mp::gentity_s* attacker, 
+			const float* dir, const float* point, int damage, int dflags, int mod, 
+			const unsigned int weapon, bool is_alternate, unsigned int hit_loc, int time_offset)
+		{
+			if ((targ->client->flags & 1) || (targ->client->flags & 2)) // noclip, ufo
+			{
+				return;
+			}
+
+			g_damage_client_hook.invoke<void>(targ, inflictor, attacker, dir, point, damage, dflags, mod, 
+				weapon, is_alternate, hit_loc, time_offset);
+		}
+
+		void g_damage_stub(game::mp::gentity_s* targ, const game::mp::gentity_s* inflictor, game::mp::gentity_s* attacker,
+			const float* dir, const float* point, int damage, int dflags, int mod,
+			const unsigned int weapon, bool is_alternate, unsigned int hit_loc,
+			unsigned int model_index, unsigned int part_name, int time_offset)
+		{
+			if (targ->flags & 1) // godmode
+			{
+				return;
+			}
+
+			if (targ->flags & 2) // demigod
+			{
+				damage = 1;
+			}
+
+			g_damage_hook.invoke<void>(targ, inflictor, attacker, dir, point, damage, dflags, mod, weapon, 
+				is_alternate, hit_loc, model_index, part_name, time_offset);
+		}
 	}
 
 	class component final : public component_interface
@@ -230,6 +280,11 @@ namespace gameplay
 			dvars::g_playerCollision = dvars::register_bool("g_playerCollision", true, game::DVAR_FLAG_REPLICATED,
 				"Flag whether player collision is on or off");
 			cm_transformed_capsule_trace_hook.create(0x4D63C0_b, cm_transformed_capsule_trace_stub);
+
+			// Make noclip work
+			client_end_frame_hook.create(0x3FF7D0_b, client_end_frame_stub2);
+			g_damage_client_hook.create(0x414F10_b, g_damage_client_stub);
+			g_damage_hook.create(0x414A10_b, g_damage_stub);
 		}
 	};
 }

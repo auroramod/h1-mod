@@ -1501,11 +1501,16 @@ namespace game
 
 		struct gclient_s
 		{
-			char __pad0[18834];
-			char name[32]; // 18720
-			char __pad1[622];
+			char __pad0[2];
+			char pm_type; // 2
+			char __pad1[18831];
+			char name[32]; // 18834
+			char __pad2[622];
 			int flags; // 19488 
 		}; // size = ?
+
+		static_assert(offsetof(gclient_s, name) == 18834);
+		static_assert(offsetof(gclient_s, flags) == 19488);
 
 		struct EntityState
 		{

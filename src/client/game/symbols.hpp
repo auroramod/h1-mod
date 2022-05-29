@@ -59,8 +59,8 @@ namespace game
 
 	WEAK symbol<void()> Quit{0x3A5A20, 0x17CF50};
 
-	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{0x0, 0x316210};
-	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{0x0, 0x3122F0};
+	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{0x15B3B0, 0x316210};
+	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessageBold{0x15B110, 0x3122F0};
 	WEAK symbol<void(int localClientNum, /*mp::cg_s**/void* cg, 
 		const char* dvar, const char* value)> CG_SetClientDvarFromServer{0x0, 0x0};
 	WEAK symbol<char*(const unsigned int weapon, 
@@ -112,8 +112,8 @@ namespace game
 	WEAK symbol<unsigned int(const char* name)> G_GetWeaponForName{0x2F20F0, 0x461180};
 	WEAK symbol<int(playerState_s* ps, unsigned int weapon, int dualWield, 
 		int startInAltMode, int, int, int, char, ...)> G_GivePlayerWeapon{0x2F24F0, 0x461600};
-	WEAK symbol<void(playerState_s* ps, unsigned int weapon, int hadWeapon)> G_InitializeAmmo{0x0, 0x41C170};
-	WEAK symbol<void(int clientNum, unsigned int weapon)> G_SelectWeapon{0x0, 0x462560};
+	WEAK symbol<void(playerState_s* ps, unsigned int weapon, int hadWeapon)> G_InitializeAmmo{0x29D9E0, 0x41C170};
+	WEAK symbol<void(int clientNum, unsigned int weapon)> G_SelectWeapon{0x2F2EA0, 0x462560};
 	WEAK symbol<int(playerState_s* ps, unsigned int weapon)> G_TakePlayerWeapon{0x2F3050, 0x462770};
 
 	WEAK symbol<char*(char* string)> I_CleanStr{0x4293E0, 0x5AF2E0};
@@ -196,7 +196,7 @@ namespace game
 
 	WEAK symbol<const char*(int clientNum)> SV_GetGuid{0x0, 0x551D90};
 	WEAK symbol<int(int clientNum)> SV_GetClientPing{0x0, 0x551D70};
-	WEAK symbol<playerState_s* (int num)> SV_GetPlayerstateForClientNum{0x0, 0x551E10};
+	WEAK symbol<playerState_s* (int num)> SV_GetPlayerstateForClientNum{0x4C3F10, 0x551E10};
 	WEAK symbol<void(int index, const char* string)> SV_SetConfigstring{0x0, 0x553E60};
 	WEAK symbol<bool()> SV_Loaded{0x4C4810, 0x553970};
 	WEAK symbol<void(int clientNum, const char* reason)> SV_KickClientNum{0x0, 0x54C060};
