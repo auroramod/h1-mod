@@ -6,6 +6,7 @@
 
 #include "scheduler.hpp"
 #include "gui.hpp"
+#include "renderer.hpp"
 
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
@@ -66,6 +67,68 @@ namespace gui
 			});
 		}
 
+		void gui_style()
+		{
+			auto* style = &ImGui::GetStyle();
+			auto colors = style->Colors;
+
+			style->WindowRounding = 5.3f;
+			style->FrameRounding = 2.3f;
+			style->ScrollbarRounding = 0;
+
+			//const auto color = ImColor(0, 0, 0, 240);
+			auto alpha = 0.92f;
+
+			colors[ImGuiCol_Text] = ImVec4(1.000f, 1.000f, 1.000f, alpha);
+			colors[ImGuiCol_TextDisabled] = ImVec4(0.500f, 0.500f, 0.500f, alpha);
+			colors[ImGuiCol_WindowBg] = ImVec4(0.180f, 0.180f, 0.180f, alpha);
+			colors[ImGuiCol_ChildBg] = ImVec4(0.280f, 0.280f, 0.280f, 0.000f);
+			colors[ImGuiCol_PopupBg] = ImVec4(0.313f, 0.313f, 0.313f, alpha);
+			colors[ImGuiCol_Border] = ImVec4(0.266f, 0.266f, 0.266f, alpha);
+			colors[ImGuiCol_BorderShadow] = ImVec4(0.000f, 0.000f, 0.000f, 0.000f);
+			colors[ImGuiCol_FrameBg] = ImVec4(0.160f, 0.160f, 0.160f, alpha);
+			colors[ImGuiCol_FrameBgHovered] = ImVec4(0.200f, 0.200f, 0.200f, alpha);
+			colors[ImGuiCol_FrameBgActive] = ImVec4(0.280f, 0.280f, 0.280f, alpha);
+			colors[ImGuiCol_TitleBg] = ImVec4(0.148f, 0.148f, 0.148f, alpha);
+			colors[ImGuiCol_TitleBgActive] = ImVec4(0.148f, 0.148f, 0.148f, alpha);
+			colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.148f, 0.148f, 0.148f, alpha);
+			colors[ImGuiCol_MenuBarBg] = ImVec4(0.195f, 0.195f, 0.195f, alpha);
+			colors[ImGuiCol_ScrollbarBg] = ImVec4(0.160f, 0.160f, 0.160f, alpha);
+			colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.277f, 0.277f, 0.277f, alpha);
+			colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.300f, 0.300f, 0.300f, alpha);
+			colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(1.000f, 0.391f, 0.000f, alpha);
+			colors[ImGuiCol_CheckMark] = ImVec4(1.000f, 1.000f, 1.000f, alpha);
+			colors[ImGuiCol_SliderGrab] = ImVec4(0.391f, 0.391f, 0.391f, alpha);
+			colors[ImGuiCol_SliderGrabActive] = ImVec4(1.000f, 0.391f, 0.000f, alpha);
+			colors[ImGuiCol_Button] = ImVec4(1.000f, 1.000f, 1.000f, 0.000f);
+			colors[ImGuiCol_ButtonHovered] = ImVec4(1.000f, 1.000f, 1.000f, 0.156f);
+			colors[ImGuiCol_ButtonActive] = ImVec4(1.000f, 1.000f, 1.000f, 0.391f);
+			colors[ImGuiCol_Header] = ImVec4(0.313f, 0.313f, 0.313f, alpha);
+			colors[ImGuiCol_HeaderHovered] = ImVec4(0.469f, 0.469f, 0.469f, alpha);
+			colors[ImGuiCol_HeaderActive] = ImVec4(0.469f, 0.469f, 0.469f, alpha);
+			colors[ImGuiCol_Separator] = colors[ImGuiCol_Border];
+			colors[ImGuiCol_SeparatorHovered] = ImVec4(0.391f, 0.391f, 0.391f, alpha);
+			colors[ImGuiCol_SeparatorActive] = ImVec4(1.000f, 0.391f, 0.000f, alpha);
+			colors[ImGuiCol_ResizeGrip] = ImVec4(1.000f, 1.000f, 1.000f, 0.250f);
+			colors[ImGuiCol_ResizeGripHovered] = ImVec4(1.000f, 1.000f, 1.000f, 0.670f);
+			colors[ImGuiCol_ResizeGripActive] = ImVec4(1.000f, 0.391f, 0.000f, alpha);
+			colors[ImGuiCol_Tab] = ImVec4(0.098f, 0.098f, 0.098f, alpha);
+			colors[ImGuiCol_TabHovered] = ImVec4(0.352f, 0.352f, 0.352f, alpha);
+			colors[ImGuiCol_TabActive] = ImVec4(0.195f, 0.195f, 0.195f, alpha);
+			colors[ImGuiCol_TabUnfocused] = ImVec4(0.098f, 0.098f, 0.098f, alpha);
+			colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.195f, 0.195f, 0.195f, alpha);
+			colors[ImGuiCol_PlotLines] = ImVec4(0.469f, 0.469f, 0.469f, alpha);
+			colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.000f, 0.391f, 0.000f, alpha);
+			colors[ImGuiCol_PlotHistogram] = ImVec4(0.586f, 0.586f, 0.586f, alpha);
+			colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.000f, 0.391f, 0.000f, alpha);
+			colors[ImGuiCol_TextSelectedBg] = ImVec4(1.000f, 1.000f, 1.000f, 0.156f);
+			colors[ImGuiCol_DragDropTarget] = ImVec4(1.000f, 0.391f, 0.000f, alpha);
+			colors[ImGuiCol_NavHighlight] = ImVec4(1.000f, 0.391f, 0.000f, alpha);
+			colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.000f, 0.391f, 0.000f, alpha);
+			colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.000f, 0.000f, 0.000f, 0.586f);
+			colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.000f, 0.000f, 0.000f, 0.586f);
+		}
+
 		void new_gui_frame()
 		{
 			ImGui::GetIO().MouseDrawCursor = toggled;
@@ -83,6 +146,7 @@ namespace gui
 			run_event_queue();
 
 			ImGui::NewFrame();
+			gui_style();
 		}
 
 		void end_gui_frame()
@@ -95,44 +159,6 @@ namespace gui
 		void toggle_menu(const std::string& name)
 		{
 			enabled_menus[name] = !enabled_menus[name];
-		}
-
-		void show_notifications()
-		{
-			static const auto window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings |
-				ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav |
-				ImGuiWindowFlags_NoMove;
-
-			notifications.access([](std::deque<notification_t>& notifications_)
-			{
-				auto index = 0;
-				for (auto i = notifications_.begin(); i != notifications_.end();)
-				{
-					const auto now = std::chrono::high_resolution_clock::now();
-					if (now - i->creation_time >= i->duration)
-					{
-						i = notifications_.erase(i);
-						continue;
-					}
-
-					const auto title = utils::string::truncate(i->title, 34, "...");
-					const auto text = utils::string::truncate(i->text, 34, "...");
-
-					ImGui::SetNextWindowSizeConstraints(ImVec2(250, 50), ImVec2(250, 50));
-					ImGui::SetNextWindowBgAlpha(0.6f);
-					ImGui::Begin(utils::string::va("Notification #%i", index), nullptr, window_flags);
-
-					ImGui::SetWindowPos(ImVec2(10, 30.f + static_cast<float>(index) * 60.f));
-					ImGui::SetWindowSize(ImVec2(250, 0));
-					ImGui::Text(title.data());
-					ImGui::Text(text.data());
-
-					ImGui::End();
-
-					++i;
-					++index;
-				}
-			});
 		}
 
 		void menu_checkbox(const std::string& name, const std::string& menu)
@@ -154,21 +180,21 @@ namespace gui
 			});
 		}
 
-		void draw_main_menu_bar()
+		void draw_window()
 		{
-			if (ImGui::BeginMainMenuBar())
+			ImGui::Begin("hello world!", nullptr);
+
+			static int value = 0;
+			const auto technique = ImGui::SliderInt("lighting technique", &value, 0, 25);
+
+			const auto should_apply = ImGui::Button("apply", ImVec2(125, 125));
+			if (should_apply)
 			{
-				if (ImGui::BeginMenu("Windows"))
-				{
-					menu_checkbox("Console", "console");
-					menu_checkbox("Script console", "script_console");
-					menu_checkbox("Debug", "debug");
-
-					ImGui::EndMenu();
-				}
-
-				ImGui::EndMainMenuBar();
+				printf("new technique! value is %d\n", value);
+				renderer::update_tech(value);
 			}
+
+			ImGui::End();
 		}
 
 		void gui_on_frame()
@@ -311,12 +337,11 @@ namespace gui
 		{
 			utils::hook::jump(0x6CB176_b, utils::hook::assemble(dxgi_swap_chain_present_stub), true);
 
-			wnd_proc_hook.create(0x5162D0_b, wnd_proc_stub);
+			wnd_proc_hook.create(0x5BFF60_b, wnd_proc_stub);
 
 			on_frame([]()
 			{
-				show_notifications();
-				draw_main_menu_bar();
+				draw_window();
 			});
 		}
 
