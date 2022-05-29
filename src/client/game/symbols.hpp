@@ -55,7 +55,7 @@ namespace game
 	WEAK symbol<void(float, float, int)> Com_SetSlowMotion{0x0, 0x17E5F0};
 	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{0x384820, 0x159860};
 	WEAK symbol<void()> Com_Quit_f{0x0, 0x1F9280};
-	WEAK symbol<void(char const* finalMessage)> Com_Shutdown{0x0, 0x0};
+	WEAK symbol<void(char const* finalMessage)> Com_Shutdown{0x3A6A50, 0x0};
 
 	WEAK symbol<void()> Quit{0x3A5A20, 0x17CF50};
 
@@ -64,7 +64,7 @@ namespace game
 	WEAK symbol<void(int localClientNum, /*mp::cg_s**/void* cg, 
 		const char* dvar, const char* value)> CG_SetClientDvarFromServer{0x0, 0x0};
 	WEAK symbol<char*(const unsigned int weapon, 
-		bool isAlternate, char* outputBuffer, int bufferLen)> CG_GetWeaponDisplayName{0x0, 0x0};
+		bool isAlternate, char* outputBuffer, int bufferLen)> CG_GetWeaponDisplayName{0x192B80, 0x104B70};
 
 	WEAK symbol<bool()> CL_IsCgameInitialized{0x1A3210, 0x33C640};
 	WEAK symbol<void(int a1)> CL_VirtualLobbyShutdown{0x0, 0x0};
@@ -109,7 +109,7 @@ namespace game
 
 	WEAK symbol<void()> G_Glass_Update{0x2992E0, 0x417940};
 	WEAK symbol<int(int clientNum)> G_GetClientScore{0x0, 0x0};
-	WEAK symbol<unsigned int(const char* name)> G_GetWeaponForName{0x4B18D0, 0x461180};
+	WEAK symbol<unsigned int(const char* name)> G_GetWeaponForName{0x2F20F0, 0x461180};
 	WEAK symbol<int(playerState_s* ps, unsigned int weapon, int dualWield, 
 		int startInAltMode, int, int, int, char, ...)> G_GivePlayerWeapon{0x2F24F0, 0x461600};
 	WEAK symbol<void(playerState_s* ps, unsigned int weapon, int hadWeapon)> G_InitializeAmmo{0x0, 0x41C170};
@@ -198,7 +198,7 @@ namespace game
 	WEAK symbol<int(int clientNum)> SV_GetClientPing{0x0, 0x551D70};
 	WEAK symbol<playerState_s* (int num)> SV_GetPlayerstateForClientNum{0x0, 0x551E10};
 	WEAK symbol<void(int index, const char* string)> SV_SetConfigstring{0x0, 0x553E60};
-	WEAK symbol<bool()> SV_Loaded{0x0, 0x553970};
+	WEAK symbol<bool()> SV_Loaded{0x4C4810, 0x553970};
 	WEAK symbol<void(int clientNum, const char* reason)> SV_KickClientNum{0x0, 0x54C060};
 	WEAK symbol<bool(const char* map)> SV_MapExists{0x0, 0x54C0C0};
 	WEAK symbol<void(mp::client_t*, const char*, int)> SV_ExecuteClientCommand{0x0, 0x0};

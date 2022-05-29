@@ -117,15 +117,10 @@ namespace logger
 	public:
 		void post_unpack() override
 		{
-			if (game::environment::is_mp())
-			{
-				// utils::hook::jump(0x27E210_b, print_warning, true);
-				utils::hook::jump(0x27CBB0_b, print_dev, true);
-
-			}
-
-			// lua print
-			utils::hook::jump(SELECT_VALUE(0x0E6E30_b, 0x1F6140_b), printf);
+			// lua stuff
+			utils::hook::jump(SELECT_VALUE(0x106010_b, 0x27CBB0_b), print_dev);   // debug
+			utils::hook::jump(SELECT_VALUE(0x107680_b, 0x27E210_b), print_error); // error
+			utils::hook::jump(SELECT_VALUE(0x0E6E30_b, 0x1F6140_b), printf);      // print
 
 			com_error_hook.create(game::Com_Error, com_error_stub);
 		}

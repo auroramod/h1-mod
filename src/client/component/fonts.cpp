@@ -114,7 +114,7 @@ namespace fonts
 			}
 
 			data_.fonts.clear();
-			utils::hook::set<int>(SELECT_VALUE(0x14F09DBB8, 0x14FD61EE8), 0); // reset registered font count
+			utils::hook::set<int>(SELECT_VALUE(0xF793E38_b, 0xE962188_b), 0); // reset registered font count
 		});
 	}
 
@@ -128,9 +128,9 @@ namespace fonts
 				return;
 			}
 
-			utils::hook::call(SELECT_VALUE(0x1404D41B6, 0x1405D9296), db_find_xasset_header_stub);
+			utils::hook::call(SELECT_VALUE(0x55C596_b, 0x67F6E6_b), db_find_xasset_header_stub);
 		}
 	};
 }
 
-//REGISTER_COMPONENT(fonts::component)
+REGISTER_COMPONENT(fonts::component)

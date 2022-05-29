@@ -13,6 +13,9 @@
 #include "fps.hpp"
 #include "server_list.hpp"
 #include "filesystem.hpp"
+#include "mods.hpp"
+#include "fastfiles.hpp"
+#include "scripting.hpp"
 
 #include "game/ui_scripting/execution.hpp"
 #include "game/scripting/execution.hpp"
@@ -37,6 +40,7 @@ namespace ui_scripting
 		utils::hook::detour hks_load_hook;
 
 		const auto lui_common = utils::nt::load_resource(LUI_COMMON);
+		const auto lua_json = utils::nt::load_resource(LUA_JSON);
 
 		struct script
 		{
@@ -211,6 +215,122 @@ namespace ui_scripting
 			{
 				localized_strings::override(string, value);
 			};
+
+			game_type["sharedset"] = [](const game&, const std::string& key, const std::string& value)
+			{
+				scripting::shared_table.access([key, value](scripting::shared_table_t& table)
+				{
+					table[key] = value;
+				});
+			};
+
+			game_type["sharedget"] = [](const game&, const std::string& key)
+			{
+				std::string result;
+				scripting::shared_table.access([key, &result](scripting::shared_table_t& table)
+				{
+					result = table[key];
+				});
+				return result;
+			};
+
+			game_type["sharedclear"] = [](const game&)
+			{
+				scripting::shared_table.access([](scripting::shared_table_t& table)
+				{
+					table.clear();
+				});
+			};
+
+			game_type["assetlist"] = [](const game&, const std::string& type_string)
+			{
+				auto table_ = table();
+				auto index = 1;
+				auto type_index = -1;
+
+				for (auto i = 0; i < ::game::XAssetType::ASSET_TYPE_COUNT; i++)
+				{
+					if (type_string == ::game::g_assetNames[i])
+					{
+						type_index = i;
+					}
+				}
+
+				if (type_index == -1)
+				{
+					throw std::runtime_error("Asset type does not exist");
+				}
+
+				const auto type = static_cast<::game::XAssetType>(type_index);
+				fastfiles::enum_assets(type, [type, &table_, &index](const ::game::XAssetHeader header)
+				{
+					const auto asset = ::game::XAsset{type, header};
+					const std::string asset_name = ::game::DB_GetXAssetName(&asset);
+					table_[index++] = asset_name;
+				}, true);
+
+				return table_;
+			};
+
+			game_type["getweapondisplayname"] = [](const game&, const std::string& name)
+			{
+				const auto alternate = name.starts_with("alt_");
+				const auto weapon = ::game::G_GetWeaponForName(name.data());
+
+				char buffer[0x400] = {0};
+				::game::CG_GetWeaponDisplayName(weapon, alternate, buffer, 0x400);
+
+				return std::string(buffer);
+			};
+
+			game_type["getloadedmod"] = [](const game&)
+			{
+				return mods::mod_path;
+			};
+
+			if (::game::environment::is_sp())
+			{
+				using player = table;
+				auto player_type = player();
+				lua["player"] = player_type;
+
+				player_type["notify"] = [](const player&, const std::string& name, const variadic_args& va)
+				{
+					if (!::game::CL_IsCgameInitialized() || !::game::SV_Loaded())
+					{
+						throw std::runtime_error("Not in game");
+					}
+
+					const auto to_string = get_globals()["tostring"];
+					const auto arguments = get_return_values();
+					std::vector<std::string> args{};
+					for (const auto& value : va)
+					{
+						const auto value_str = to_string(value);
+
+						args.push_back(value_str[0].as<std::string>());
+					}
+
+					::scheduler::once([name, args]()
+					{
+						try
+						{
+							std::vector<scripting::script_value> arguments{};
+
+							for (const auto& arg : args)
+							{
+								arguments.push_back(arg);
+							}
+
+							const auto player = scripting::call("getentbynum", {0}).as<scripting::entity>();
+							scripting::notify(player, name, arguments);
+						}
+						catch (...)
+						{
+						}
+					}, ::scheduler::pipeline::server);
+				};
+			}
 		}
 
 		void start()
@@ -227,6 +347,7 @@ namespace ui_scripting
 			lua["luiglobals"] = lua;
 
 			load_script("lui_common", lui_common);
+			load_script("lua_json", lua_json);
 
 			for (const auto& path : filesystem::get_search_paths())
 			{
@@ -379,46 +500,8 @@ namespace ui_scripting
 				return;
 			}
 
-			utils::hook::jump(SELECT_VALUE(0xE7419_b, 0x25E809_b), utils::hook::assemble([](utils::hook::assembler& a)
-			{
-				const auto loc = a.newLabel();
-
-				a.push(rax);
-				a.pushad64();
-				a.call_aligned(db_find_xasset_header_stub);
-				a.mov(qword_ptr(rsp, 0x80), rax);
-				a.popad64();
-				a.pop(rax);
-
-				a.mov(rcx, r13);
-				a.test(rax, rax);
-				a.jnz(loc);
-
-				a.jmp(SELECT_VALUE(0xE7426_b, 0x25E816_b));
-
-				a.bind(loc);
-				a.jmp(SELECT_VALUE(0xE748A_b, 0x25E87A_b));
-			}), true);
-
-			utils::hook::jump(SELECT_VALUE(0xE72CB_b, 0x25E6BB_b), utils::hook::assemble([](utils::hook::assembler& a)
-			{
-				const auto loc = a.newLabel();
-
-				a.push(rax);
-				a.pushad64();
-				a.call_aligned(db_find_xasset_header_stub);
-				a.mov(qword_ptr(rsp, 0x80), rax);
-				a.popad64();
-				a.pop(rax);
-
-				a.test(rax, rax);
-				a.jnz(loc);
-
-				a.jmp(SELECT_VALUE(0xE72D9_b, 0x25E6C9_b));
-
-				a.bind(loc);
-				a.jmp(SELECT_VALUE(0xE73EC_b, 0x25E7DC_b));
-			}), true);
+			utils::hook::call(SELECT_VALUE(0xE7419_b, 0x25E809_b), db_find_xasset_header_stub);
+			utils::hook::call(SELECT_VALUE(0xE72CB_b, 0x25E6BB_b), db_find_xasset_header_stub);
 
 			hks_load_hook.create(SELECT_VALUE(0xB46F0_b, 0x22C180_b), hks_load_stub);
 

@@ -2,15 +2,13 @@ game:addlocalizedstring("MENU_MODS", "MODS")
 game:addlocalizedstring("MENU_MODS_DESC", "Load installed mods.")
 game:addlocalizedstring("LUA_MENU_MOD_DESC_DEFAULT", "Load &&1.")
 game:addlocalizedstring("LUA_MENU_MOD_DESC", "&&1\nAuthor: &&2\nVersion: &&3")
-game:addlocalizedstring("LUA_MENU_OPEN_STORE", "Open store")
-game:addlocalizedstring("LUA_MENU_OPEN_STORE_DESC", "Download and install mods.")
 game:addlocalizedstring("LUA_MENU_LOADED_MOD", "Loaded mod: ^2&&1")
 game:addlocalizedstring("LUA_MENU_AVAILABLE_MODS", "Available mods")
 game:addlocalizedstring("LUA_MENU_UNLOAD", "Unload")
 game:addlocalizedstring("LUA_MENU_UNLOAD_DESC", "Unload the currently loaded mod.")
 
 function createdivider(menu, text)
-	local element = LUI.UIElement.new( {
+	local element = LUI.UIElement.new({
 		leftAnchor = true,
 		rightAnchor = true,
 		left = 0,
@@ -26,7 +24,10 @@ function createdivider(menu, text)
 		title_bar_text = Engine.ToUpperCase(text)
 	}))
 
+	element.text = element:getFirstChild():getFirstChild():getNextSibling()
+
 	menu.list:addElement(element)
+	return element
 end
 
 function string:truncate(length)
@@ -48,12 +49,17 @@ LUI.addmenubutton("main_campaign", {
 
 function getmodname(path)
 	local name = path
-	local desc = Engine.Localize("@LUA_MENU_MOD_DESC_DEFAULT", name)
+	game:addlocalizedstring(name, name)
+	game:addlocalizedstring("LUA_MENU_MOD_DESC_DEFAULT", "Load &&1.")
+	local desc = Engine.Localize("LUA_MENU_MOD_DESC_DEFAULT", name)
 	local infofile = path .. "/info.json"
 
 	if (io.fileexists(infofile)) then
 		pcall(function()
 			local data = json.decode(io.readfile(infofile))
+			game:addlocalizedstring(data.description, data.description)
+			game:addlocalizedstring(data.author, data.author)
+			game:addlocalizedstring(data.version, data.version)
 			desc = Engine.Localize("@LUA_MENU_MOD_DESC", 
 				data.description, data.author, data.version)
 			name = data.name
@@ -63,7 +69,7 @@ function getmodname(path)
 	return name, desc
 end
 
-LUI.MenuBuilder.m_types_build["mods_menu"] = function(a1)
+LUI.MenuBuilder.registerType("mods_menu", function(a1)
 	local menu = LUI.MenuTemplate.new(a1, {
 		menu_title = "@MENU_MODS",
 		exclusiveController = 0,
@@ -74,7 +80,8 @@ LUI.MenuBuilder.m_types_build["mods_menu"] = function(a1)
 
 	local modfolder = game:getloadedmod()
 	if (modfolder ~= "") then
-		createdivider(menu, Engine.Localize("@LUA_MENU_LOADED_MOD", getmodname(modfolder):truncate(24)))
+		local name = getmodname(modfolder)
+		createdivider(menu, Engine.Localize("@LUA_MENU_LOADED_MOD", name:truncate(24)))
 
 		menu:AddButton("@LUA_MENU_UNLOAD", function()
 			Engine.Exec("unloadmod")
@@ -113,4 +120,4 @@ LUI.MenuBuilder.m_types_build["mods_menu"] = function(a1)
 	menu.optionTextInfo = LUI.Options.AddOptionTextInfo(menu)
 
 	return menu
-end
+end)
