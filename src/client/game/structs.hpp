@@ -1501,10 +1501,10 @@ namespace game
 
 		struct gclient_s
 		{
-			char __pad0[18720];
+			char __pad0[18834];
 			char name[32]; // 18720
-			char __pad1[752];
-			int flags; // 19504 
+			char __pad1[622];
+			int flags; // 19488 
 		}; // size = ?
 
 		struct EntityState
