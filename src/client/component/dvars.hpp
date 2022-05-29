@@ -18,6 +18,7 @@ namespace dvars
 		void register_string(const std::string& name, const std::string& value, const unsigned int flags);
 		void register_vec2(const std::string& name, float x, float y, float min, float max, const unsigned int flags);
 		void register_vec3(const std::string& name, float x, float y, float z, float min, float max, const unsigned int flags);
+		void register_enum(const std::string& name, /*const char* const* value_list, int default_index,*/ const unsigned int flags);
 
 		void set_bool(const std::string& name, bool boolean);
 		void set_float(const std::string& name, float fl);
