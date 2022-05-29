@@ -625,7 +625,7 @@ namespace command
 				if (dvar->type != game::dvar_type::string
 					&& dvar->type != game::dvar_type::enumeration)
 				{
-					console::info("%s is not a string-based dvar\n", dvar->hash);
+					console::info("%s is not a string-based dvar\n", name);
 					return;
 				}
 

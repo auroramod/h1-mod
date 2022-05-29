@@ -167,7 +167,7 @@ namespace game
 
 	WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)>
 	DB_EnumXAssets_Internal{0x1F0BF0, 0x394C60};
-	WEAK symbol<const char*(const XAsset* asset)> DB_GetXAssetName{0x0, 0x366140};
+	WEAK symbol<const char*(const XAsset* asset)> DB_GetXAssetName{0x1BF890, 0x366140};
 	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x0, 0x0};
 	WEAK symbol<XAssetHeader(XAssetType type, const char* name, 
 		int createDefault)> DB_FindXAssetHeader{0x1F1120, 0x3950C0};

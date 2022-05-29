@@ -124,6 +124,9 @@ namespace logger
 
 			}
 
+			// lua print
+			utils::hook::jump(SELECT_VALUE(0x0E6E30_b, 0x1F6140_b), printf);
+
 			com_error_hook.create(game::Com_Error, com_error_stub);
 		}
 	};

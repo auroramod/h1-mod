@@ -8,6 +8,8 @@
 #include <utils/thread.hpp>
 #include <utils/hook.hpp>
 
+#define OUTPUT_HANDLE GetStdHandle(STD_OUTPUT_HANDLE)
+
 namespace game_console
 {
 	void print(int type, const std::string& data);
@@ -17,6 +19,9 @@ namespace console
 {
 	namespace
 	{
+		utils::hook::detour printf_hook;
+		std::recursive_mutex print_mutex;
+
 		struct
 		{
 			bool kill;
@@ -30,61 +35,144 @@ namespace console
 
 		void set_cursor_pos(int x)
 		{
-			const auto handle = GetStdHandle(STD_OUTPUT_HANDLE);
 			CONSOLE_SCREEN_BUFFER_INFO info{};
-			GetConsoleScreenBufferInfo(handle, &info);
+			GetConsoleScreenBufferInfo(OUTPUT_HANDLE, &info);
 			info.dwCursorPosition.X = static_cast<short>(x);
-			SetConsoleCursorPosition(handle, info.dwCursorPosition);
+			SetConsoleCursorPosition(OUTPUT_HANDLE, info.dwCursorPosition);
 		}
 
 		void show_cursor(const bool show)
 		{
-			const auto handle = GetStdHandle(STD_OUTPUT_HANDLE);
 			CONSOLE_CURSOR_INFO info{};
-			GetConsoleCursorInfo(handle, &info);
+			GetConsoleCursorInfo(OUTPUT_HANDLE, &info);
 			info.bVisible = show;
-			SetConsoleCursorInfo(handle, &info);
+			SetConsoleCursorInfo(OUTPUT_HANDLE, &info);
+		}
+
+		template <typename... Args>
+		int invoke_printf(const char* fmt, Args&&... args)
+		{
+			return printf_hook.invoke<int>(fmt, std::forward<Args>(args)...);
+		}
+
+		std::string format(va_list* ap, const char* message)
+		{
+			static thread_local char buffer[0x1000];
+
+			const auto count = _vsnprintf_s(buffer, sizeof(buffer), sizeof(buffer), message, *ap);
+			if (count < 0)
+			{
+				return {};
+			}
+
+			return {buffer, static_cast<size_t>(count)};
+		}
+
+		uint8_t get_attribute(const int type)
+		{
+			switch (type)
+			{
+			case con_type_info:
+				return 7; // white
+			case con_type_warning:
+				return 6; // yellow
+			case con_type_error:
+				return 4; // red
+			case con_type_debug:
+				return 3; // cyan
+			}
+
+			return 7;
 		}
 
 		void update()
 		{
+			std::lock_guard _0(print_mutex);
+
 			show_cursor(false);
 			set_cursor_pos(0);
-
-			printf("%s", con.buffer);
-
+			invoke_printf("%s", con.buffer);
 			set_cursor_pos(con.cursor);
 			show_cursor(true);
 		}
 
 		void clear_output()
 		{
+			std::lock_guard _0(print_mutex);
+
 			show_cursor(false);
 			set_cursor_pos(0);
 
 			for (auto i = 0; i < std::strlen(con.buffer); i++)
 			{
-				printf(" ");
+				invoke_printf(" ");
 			}
 
 			set_cursor_pos(con.cursor);
 			show_cursor(true);
 		}
 
+		int dispatch_message(const int type, const std::string& message)
+		{
+			std::lock_guard _0(print_mutex);
+
+			clear_output();
+			set_cursor_pos(0);
+
+			SetConsoleTextAttribute(OUTPUT_HANDLE, get_attribute(type));
+			const auto res = invoke_printf("%s", message.data());
+			SetConsoleTextAttribute(OUTPUT_HANDLE, get_attribute(con_type_info));
+
+			game_console::print(type, message);
+
+			if (message.size() <= 0 || message[message.size() - 1] != '\n')
+			{
+				invoke_printf("\n");
+			}
+
+			update();
+			return res;
+		}
+
 		void clear()
 		{
+			std::lock_guard _0(print_mutex);
+
 			clear_output();
 			strncpy_s(con.buffer, "", sizeof(con.buffer));
+
 			con.cursor = 0;
 			set_cursor_pos(0);
 		}
 
+		size_t get_max_input_length()
+		{
+			CONSOLE_SCREEN_BUFFER_INFO info{};
+			GetConsoleScreenBufferInfo(OUTPUT_HANDLE, &info);
+			const auto columns = static_cast<size_t>(info.srWindow.Right - info.srWindow.Left - 1);
+			return std::max(size_t(0), std::min(columns, sizeof(con.buffer)));
+		}
+
+		void handle_resize()
+		{
+			clear();
+			update();
+		}
+
 		void handle_input(const INPUT_RECORD record)
 		{
+			if (record.EventType == WINDOW_BUFFER_SIZE_EVENT)
+			{
+				handle_resize();
+				return;
+			}
+
 			if (record.EventType != KEY_EVENT || !record.Event.KeyEvent.bKeyDown)
 			{
 				return;
 			}
+
+			std::lock_guard _0(print_mutex);
 
 			const auto key = record.Event.KeyEvent.wVirtualKeyCode;
 			switch (key)
@@ -102,9 +190,9 @@ namespace console
 				{
 					strncpy_s(con.buffer, con.history.at(con.history_index).data(), sizeof(con.buffer));
 					con.cursor = static_cast<int>(strlen(con.buffer));
-					update();
 				}
 
+				update();
 				break;
 			}
 			case VK_DOWN:
@@ -120,9 +208,9 @@ namespace console
 				{
 					strncpy_s(con.buffer, con.history.at(con.history_index).data(), sizeof(con.buffer));
 					con.cursor = static_cast<int>(strlen(con.buffer));
-					update();
 				}
 
+				update();
 				break;
 			}
 			case VK_LEFT:
@@ -157,7 +245,10 @@ namespace console
 					}
 				}
 
-				con.history.push_front(con.buffer);
+				if (con.buffer[0])
+				{
+					con.history.push_front(con.buffer);
+				}
 
 				if (con.history.size() > 10)
 				{
@@ -168,14 +259,20 @@ namespace console
 
 				game::Cbuf_AddText(0, 0, con.buffer);
 
-				strncpy_s(con.buffer, "", sizeof(con.buffer));
 				con.cursor = 0;
 
-				printf("\r\n");
+				clear_output();
+				invoke_printf("]%s\r\n", con.buffer);
+				strncpy_s(con.buffer, "", sizeof(con.buffer));
 				break;
 			}
 			case VK_BACK:
 			{
+				if (con.cursor <= 0)
+				{
+					break;
+				}
+
 				clear_output();
 
 				std::memmove(con.buffer + con.cursor - 1, con.buffer + con.cursor,
@@ -183,7 +280,6 @@ namespace console
 				con.cursor--;
 
 				update();
-
 				break;
 			}
 			default:
@@ -194,7 +290,7 @@ namespace console
 					break;
 				}
 
-				if (std::strlen(con.buffer) + 1 >= sizeof(con.buffer))
+				if (std::strlen(con.buffer) + 1 >= get_max_input_length())
 				{
 					break;
 				}
@@ -203,51 +299,22 @@ namespace console
 					con.buffer + con.cursor, std::strlen(con.buffer) + 1 - con.cursor);
 				con.buffer[con.cursor] = c;
 				con.cursor++;
-				
+
 				update();
 				break;
 			}
 			}
 		}
-	}
 
-	std::string format(va_list* ap, const char* message)
-	{
-		static thread_local char buffer[0x1000];
-
-		const auto count = _vsnprintf_s(buffer, sizeof(buffer), sizeof(buffer), message, *ap);
-		if (count < 0)
+		int __cdecl printf_stub(const char* fmt, ...)
 		{
-			return {};
+			va_list ap;
+			va_start(ap, fmt);
+			const auto result = format(&ap, fmt);
+			va_end(ap);
+
+			return dispatch_message(con_type_info, result);
 		}
-
-		return {buffer, static_cast<size_t>(count)};
-	}
-
-	uint8_t get_attribute(const int type)
-	{
-		switch (type)
-		{
-		case con_type_info:
-			return 7; // white
-		case con_type_warning:
-			return 6; // yellow
-		case con_type_error:
-			return 4; // red
-		case con_type_debug:
-			return 3; // cyan
-		}
-
-		return 7;
-	}
-
-	void dispatch_message(const int type, const std::string& message)
-	{
-		const auto handle = GetStdHandle(STD_OUTPUT_HANDLE);
-		SetConsoleTextAttribute(handle, get_attribute(type));
-		printf("%s", message.data());
-		SetConsoleTextAttribute(handle, get_attribute(con_type_info));
-		game_console::print(type, message);
 	}
 
 	void print(const int type, const char* fmt, ...)
@@ -270,6 +337,8 @@ namespace console
 
 		void post_unpack() override
 		{
+			printf_hook.create(printf, printf_stub);
+
 			ShowWindow(GetConsoleWindow(), SW_SHOW);
 			SetConsoleTitle("H1-Mod");
 
