@@ -952,8 +952,8 @@ namespace scripting
 		{"laseroff", 0x80B5}, // SP 0x2CD6A0 MP 0x44D240
 		{"thermalvisionon", 0x80B8}, // SP 0x2CD960 MP 0x44D4F0
 		{"thermalvisionoff", 0x80B9}, // SP 0x2CDE30 MP 0x44DA70
-		{"_meth_80ba", 0x80BA}, // SP 0x2CF070 MP 0x437230
-		{"_meth_80bb", 0x80BB}, // SP 0x2CF220 MP 0x4374E0
+		{"thermalvisionfofoverlayon", 0x80BA}, // SP 0x2CF070 MP 0x437230
+		{"thermalvisionfofoverlayoff", 0x80BB}, // SP 0x2CF220 MP 0x4374E0
 		{"autospotoverlayon", 0x80BC}, // SP 0x000000 MP 0x437700
 		{"autospotoverlayoff", 0x80BD}, // SP 0x000000 MP 0x4378D0
 		{"_meth_80be", 0x80BE}, // SP 0x000000 MP 0x437C30
