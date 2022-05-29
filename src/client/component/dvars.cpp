@@ -35,12 +35,17 @@ namespace dvars
 
 	struct dvar_vector3 : dvar_base
 	{
-
 		float x{};
 		float y{};
 		float z{};
 		float min{};
 		float max{};
+	};
+
+	struct dvar_enum : dvar_base
+	{
+		const char* const* value_list{};
+		int default_index{};
 	};
 
 	struct dvar_int : dvar_base
@@ -139,6 +144,7 @@ namespace dvars
 		static std::unordered_map<std::string, dvar_string> register_string_overrides;
 		static std::unordered_map<std::string, dvar_vector2> register_vector2_overrides;
 		static std::unordered_map<std::string, dvar_vector3> register_vector3_overrides;
+		static std::unordered_map<std::string, dvar_enum> register_enum_overrides;
 
 		static std::unordered_map<std::string, bool> set_bool_overrides;
 		static std::unordered_map<std::string, float> set_float_overrides;
@@ -210,6 +216,16 @@ namespace dvars
 			register_vector3_overrides[name] = std::move(values);
 		}
 
+		void register_enum(const std::string& name, /*const char* const* value_list, int default_index,*/
+			const unsigned int flags)
+		{
+			dvar_enum values;
+			//values.value_list = value_list;
+			//values.default_index = default_index;
+			values.flags = flags;
+			register_enum_overrides[name] = std::move(values);
+		}
+
 		void set_bool(const std::string& name, const bool value)
 		{
 			set_bool_overrides[name] = value;
@@ -245,6 +261,7 @@ namespace dvars
 	utils::hook::detour dvar_register_string_hook;
 	utils::hook::detour dvar_register_vector2_hook;
 	utils::hook::detour dvar_register_vector3_hook;
+	utils::hook::detour dvar_register_enum_hook;
 
 	utils::hook::detour dvar_set_bool_hook;
 	utils::hook::detour dvar_set_float_hook;
@@ -377,6 +394,19 @@ namespace dvars
 		return dvar_register_vector3_hook.invoke<game::dvar_t*>(hash, name, x, y, z, min, max, flags);
 	}
 
+	game::dvar_t* dvar_register_enum(const int hash, const char* name, const char* const value_list, int default_index, unsigned int flags)
+	{
+		auto* var = find_dvar(override::register_enum_overrides, hash);
+		if (var)
+		{
+			//value_list = var->value_list;
+			//default_index = var->default_index;
+			flags = var->flags;
+		}
+
+		return dvar_register_enum_hook.invoke<game::dvar_t*>(hash, name, value_list, default_index, flags);
+	}
+
 	void dvar_set_bool(game::dvar_t* dvar, bool boolean)
 	{
 		const auto disabled = find_dvar(disable::set_bool_disables, dvar->hash);
@@ -473,6 +503,7 @@ namespace dvars
 			dvar_register_string_hook.create(SELECT_VALUE(0x4197E0_b, 0x182BD0_b), &dvar_register_string);
 			dvar_register_vector2_hook.create(SELECT_VALUE(0x4198C0_b, 0x182CB0_b), &dvar_register_vector2);
 			dvar_register_vector3_hook.create(SELECT_VALUE(0x419A00_b, 0x182DB0_b), &dvar_register_vector3);
+			dvar_register_enum_hook.create(SELECT_VALUE(0x419500_b, 0x182700_b), &dvar_register_enum);
 
 			if (!game::environment::is_sp())
 			{
