@@ -108,7 +108,7 @@ namespace game
 	WEAK symbol<int(const char* fname)> generateHashValue{0x11FEA0, 0x183F80};
 
 	WEAK symbol<void()> G_Glass_Update{0x2992E0, 0x417940};
-	WEAK symbol<int(int clientNum)> G_GetClientScore{0x0, 0x0};
+	WEAK symbol<int(int clientNum)> G_GetClientScore{0x0, 0x420420};
 	WEAK symbol<unsigned int(const char* name)> G_GetWeaponForName{0x2F20F0, 0x461180};
 	WEAK symbol<int(playerState_s* ps, unsigned int weapon, int dualWield, 
 		int startInAltMode, int, int, int, char, ...)> G_GivePlayerWeapon{0x2F24F0, 0x461600};
@@ -241,6 +241,8 @@ namespace game
 	WEAK symbol<CmdArgs> cmd_args{0xB48FEE0, 0x2ED1E00};
 	WEAK symbol<CmdArgsPrivate> cmd_argsPrivate{0, 0x3513F20};
 
+	WEAK symbol<int> connectionState{0x0, 0x2EC82C8};
+
 	WEAK symbol<int> g_poolSize{0x0, 0x0};
 
 	WEAK symbol<scrVarGlob_t> scr_VarGlob{0xBD80E00, 0xB138180};
@@ -274,6 +276,7 @@ namespace game
 		WEAK symbol<bool> virtualLobby_loaded{0x0, 0x2E6EC9D};
 
 		WEAK symbol<client_state_t*> client_state{0x0, 0x2EC84F0};
+		WEAK symbol<connect_state_t*> connect_state{0x0, 0x2EC8510};
 	}
 
 	namespace sp

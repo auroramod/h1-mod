@@ -3,7 +3,9 @@
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
+
 #include "command.hpp"
+#include "rcon.hpp"
 
 #include <utils/thread.hpp>
 #include <utils/hook.hpp>
@@ -114,6 +116,11 @@ namespace console
 
 		int dispatch_message(const int type, const std::string& message)
 		{
+			if (rcon::message_redirect(message))
+			{
+				return 0;
+			}
+
 			std::lock_guard _0(print_mutex);
 
 			clear_output();

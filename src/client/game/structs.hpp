@@ -1466,6 +1466,13 @@ namespace game
 		int num_players;
 	};
 
+	// made up
+	struct connect_state_t
+	{
+		char __pad0[0xC];
+		netadr_s address;
+	};
+
 	static_assert(offsetof(client_state_t, ping) == 0x4A50);
 	static_assert(offsetof(client_state_t, num_players) == 0x4A5C);
 
