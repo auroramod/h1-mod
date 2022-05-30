@@ -594,6 +594,7 @@ namespace demonware
 
 			// utils::hook::set<uint8_t>(0x19F8C0_b, 0xC3); // SV_SendMatchData, not sure
 			utils::hook::nop(0x19BB67_b, 5); // LiveStorage_SendMatchDataComplete
+			utils::hook::nop(0x19BC3F_b, 5); // LiveStorage_GettingStoreConfigComplete probably
 			utils::hook::set<uint8_t>(0x1A3340_b, 0xC3); // Live_CheckForFullDisconnect
 
 			// Remove some while loop that freezes the rendering for a few secs while connecting
