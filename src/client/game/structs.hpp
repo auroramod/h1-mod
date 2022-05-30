@@ -1442,19 +1442,18 @@ namespace game
 
 	struct trace_t
 	{
-		char __pad0[41];
+		float fraction;
+		float normal[3];
+		char __pad0[25];
 		bool allsolid;
 		bool startsolid;
+		char __pad1[0x2C]; // not correct
 	};
 
 	struct Bounds
 	{
 		float midPoint[3];
 		float halfSize[3];
-	};
-
-	struct pmove_t
-	{
 	};
 
 	// made up
@@ -1519,6 +1518,14 @@ namespace game
 		static_assert(offsetof(gclient_s, name) == 18834);
 		static_assert(offsetof(gclient_s, flags) == 19488);
 
+		struct usercmd_s
+		{
+			char __pad0[28];
+			char forwardmove;
+			char rightmove;
+			char __pad1[34];
+		};
+
 		struct EntityState
 		{
 			uint16_t entityNum;
@@ -1540,6 +1547,33 @@ namespace game
 
 		struct playerState_s
 		{
+			int clientNum;
+			char __pad0[116];
+			vec3_t origin;
+			vec3_t velocity;
+			char __pad1[312];
+			int sprintButtonUpRequired;
+		};
+
+		struct pmove_t
+		{
+			playerState_s* ps;
+			usercmd_s cmd;
+			usercmd_s oldcmd;
+			int tracemask;
+			int numtouch;
+			int touchents[32];
+			Bounds bounds;
+		};
+
+		static_assert(offsetof(pmove_t, touchents) == 144);
+
+		struct pml_t
+		{
+			float forward[3];
+			float right[3];
+			float up[3];
+			float frametime;
 		};
 
 		struct clientHeader_t

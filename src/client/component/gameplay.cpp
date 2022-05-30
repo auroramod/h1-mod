@@ -133,7 +133,7 @@ namespace gameplay
 			});
 		}
 
-		void pm_player_trace_stub(game::pmove_t* pm, game::trace_t* trace, const float* f3,
+		void pm_player_trace_stub(game::mp::pmove_t* pm, game::trace_t* trace, const float* f3,
 			const float* f4, const game::Bounds* bounds, int a6, int a7)
 		{
 			pm_player_trace_hook.invoke<void>(pm, trace, f3, f4, bounds, a6, a7);
