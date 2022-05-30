@@ -67,7 +67,7 @@ function addrequest(request)
 		left = 1,
 		bottom = -1,
 		right = -1,
-		material = luiglobals.RegisterMaterial("white"),
+		material = RegisterMaterial("white"),
 		color = {
 			r = 0,
 			b = 0,
@@ -81,7 +81,7 @@ function addrequest(request)
 		leftAnchor = true,
 		rightAnchor = true,
 		bottomAnchor = true,
-		material = luiglobals.RegisterMaterial("btn_focused_rect_innerglow"),
+		material = RegisterMaterial("btn_focused_rect_innerglow"),
 	})
 
 	border:setup9SliceImage(10, 5, 0.25, 0.12)
@@ -105,7 +105,7 @@ function addrequest(request)
 		width = 32,
 		height = 32,
 		left = 1,
-		material = luiglobals.RegisterMaterial(avatarmaterial)
+		material = RegisterMaterial(avatarmaterial)
 	})
 
 	local username = LUI.UIText.new({
@@ -113,7 +113,7 @@ function addrequest(request)
 		topAnchor = true,
 		height = 12,
 		left = 32 + paddingvalue,
-		color = luiglobals.Colors.white,
+		color = Colors.white,
 		alignment = LUI.Alignment.Left,
 		rightAnchor = true,
 		font = CoD.TextSettings.BodyFontBold.Font
@@ -137,7 +137,7 @@ function addrequest(request)
 			topAnchor = true,
 			height = 18,
 			width = 85,
-			material = luiglobals.RegisterMaterial("btn_focused_rect_innerglow"),
+			material = RegisterMaterial("btn_focused_rect_innerglow"),
 		})
 
 		local center = LUI.UIText.new({
@@ -214,7 +214,7 @@ function addrequest(request)
 		bottom = -3,
 		left = 3,
 		width = 200 - 6,
-		material = luiglobals.RegisterMaterial("white"),
+		material = RegisterMaterial("white"),
 		height = 2,
 		color = {
 			r = 92 / 255,
@@ -236,7 +236,7 @@ function addrequest(request)
 
 	avatar:registerEventHandler("update", function()
 		local avatarmaterial = discord.getavatarmaterial(request.userid)
-		avatar:setImage(luiglobals.RegisterMaterial(avatarmaterial))
+		avatar:setImage(RegisterMaterial(avatarmaterial))
 	end)
 
 	avatar:addElement(LUI.UITimer.new(100, "update"))

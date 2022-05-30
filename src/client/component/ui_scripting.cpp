@@ -16,6 +16,7 @@
 #include "mods.hpp"
 #include "fastfiles.hpp"
 #include "scripting.hpp"
+#include "updater.hpp"
 
 #include "game/ui_scripting/execution.hpp"
 #include "game/scripting/execution.hpp"
@@ -40,6 +41,7 @@ namespace ui_scripting
 		utils::hook::detour hks_load_hook;
 
 		const auto lui_common = utils::nt::load_resource(LUI_COMMON);
+		const auto lui_updater = utils::nt::load_resource(LUI_UPDATER);
 		const auto lua_json = utils::nt::load_resource(LUA_JSON);
 
 		struct script
@@ -331,6 +333,29 @@ namespace ui_scripting
 					}, ::scheduler::pipeline::server);
 				};
 			}
+
+			auto updater_table = table();
+			lua["updater"] = updater_table;
+
+			updater_table["relaunch"] = updater::relaunch;
+
+			updater_table["sethastriedupdate"] = updater::set_has_tried_update;
+			updater_table["gethastriedupdate"] = updater::get_has_tried_update;
+			updater_table["autoupdatesenabled"] = updater::auto_updates_enabled;
+
+			updater_table["startupdatecheck"] = updater::start_update_check;
+			updater_table["isupdatecheckdone"] = updater::is_update_check_done;
+			updater_table["getupdatecheckstatus"] = updater::get_update_check_status;
+			updater_table["isupdateavailable"] = updater::is_update_available;
+
+			updater_table["startupdatedownload"] = updater::start_update_download;
+			updater_table["isupdatedownloaddone"] = updater::is_update_download_done;
+			updater_table["getupdatedownloadstatus"] = updater::get_update_download_status;
+			updater_table["cancelupdate"] = updater::cancel_update;
+			updater_table["isrestartrequired"] = updater::is_restart_required;
+
+			updater_table["getlasterror"] = updater::get_last_error;
+			updater_table["getcurrentfile"] = updater::get_current_file;
 		}
 
 		void start()
@@ -347,6 +372,7 @@ namespace ui_scripting
 			lua["luiglobals"] = lua;
 
 			load_script("lui_common", lui_common);
+			load_script("lui_updater", lui_updater);
 			load_script("lua_json", lua_json);
 
 			for (const auto& path : filesystem::get_search_paths())

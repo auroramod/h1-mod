@@ -38,7 +38,9 @@ LUI.MenuBuilder.m_types_build["generic_waiting_popup_"] = function (menu, event)
 		end
 	})
 
-	popup.text = popup:getLastChild():getPreviousSibling():getPreviousSibling()
+	local listchildren = getchildren(popup:getChildById("LUIHorizontalList"))
+	local children = getchildren(listchildren[2])
+	popup.text = children[2]
 
 	stack = {
 		ret = popup

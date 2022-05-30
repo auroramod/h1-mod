@@ -4,6 +4,7 @@
 #include "scheduler.hpp"
 #include "dvars.hpp"
 #include "updater.hpp"
+#include "game/ui_scripting/execution.hpp"
 
 #include "version.h"
 
@@ -63,14 +64,9 @@ namespace updater
 
 		utils::concurrency::container<update_data_t> update_data;
 
-		std::string get_branch()
-		{
-			return GIT_BRANCH;
-		}
-
 		std::string select(const std::string& main, const std::string& develop)
 		{
-			if (get_branch() == "develop")
+			if (GIT_BRANCH == "develop"s)
 			{
 				return develop;
 			}
@@ -78,14 +74,12 @@ namespace updater
 			return main;
 		}
 
-		std::string get_data_path()
+		void notify(const std::string& name)
 		{
-			if (get_branch() == "develop")
+			scheduler::once([=]()
 			{
-				return DATA_PATH_DEV;
-			}
-
-			return DATA_PATH;
+				ui_scripting::notify(name, {});
+			}, scheduler::pipeline::lui);
 		}
 
 		void set_update_check_status(bool done, bool success, const std::string& error = {})
@@ -95,6 +89,8 @@ namespace updater
 				data_.check.done = done;
 				data_.check.success = success;
 				data_.error = error;
+
+				notify("update_check_done");
 			});
 		}
 
@@ -105,6 +101,7 @@ namespace updater
 				data_.download.done = done;
 				data_.download.success = success;
 				data_.error = error;
+				notify("update_done");
 			});
 		}
 
@@ -126,11 +123,8 @@ namespace updater
 
 		std::string load_binary_name()
 		{
-			// utils::nt::library self;
-			// return self.get_name(); 
-			// returns the game's name and not the client's
-
-			return BINARY_NAME;
+			utils::nt::library self;
+			return self.get_name();
 		}
 
 		std::string get_binary_name()
@@ -217,7 +211,7 @@ namespace updater
 		char current_dir[MAX_PATH];
 		GetCurrentDirectoryA(sizeof(current_dir), current_dir);
 
-		char buf[1024] = {0}; 
+		char buf[1024] = {0};
 		const auto command_line = utils::string::va("%s %s", GetCommandLineA(), get_mode_flag().data());
 		strcpy_s(buf, 1024, command_line);
 
@@ -392,6 +386,8 @@ namespace updater
 				data_.check.success = true;
 				data_.required_files = required_files;
 			});
+
+			notify("update_check_done");
 		}, scheduler::pipeline::async);
 	}
 
@@ -468,4 +464,4 @@ namespace updater
 	};
 }
 
-//REGISTER_COMPONENT(updater::component)
+REGISTER_COMPONENT(updater::component)

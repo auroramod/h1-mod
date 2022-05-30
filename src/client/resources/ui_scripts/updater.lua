@@ -1,164 +1,158 @@
-updatecancelled = false
-taskinterval = 100
+if (not Engine.InFrontend()) then
+	return
+end
 
+updatecancelled = false
 updater.cancelupdate()
 
 function startupdatecheck(popup, autoclose)
-    updatecancelled = false
+	Engine.GetLuiRoot():registerEventHandler("update_check_done", function(element, event)
+		if (updatecancelled) then
+			return
+		end
 
-    local callback = function()
-        if (not updater.getupdatecheckstatus()) then
-            if (autoclose) then
-                LUI.FlowManager.RequestLeaveMenu(popup)
-                return
-            end
+		if (not updater.getupdatecheckstatus()) then
+			if (autoclose) then
+				LUI.FlowManager.RequestLeaveMenu(popup)
+				return
+			end
 
-            popup.text:setText("Error: " .. updater.getlasterror())
-            return
-        end
+			popup.text:setText("Error: " .. updater.getlasterror())
+			return
+		end
 
-        if (not updater.isupdateavailable()) then
-            if (autoclose) then
-                LUI.FlowManager.RequestLeaveMenu(popup)
-                return
-            end
+		if (not updater.isupdateavailable()) then
+			if (autoclose) then
+				LUI.FlowManager.RequestLeaveMenu(popup)
+				return
+			end
 
-            popup.text:setText("No updates available")
-            return
-        end
+			popup.text:setText("No updates available")
+			return
+		end
 
-        LUI.yesnopopup({
-            title = "NOTICE",
-            text = "An update is available, proceed with installation?",
-            callback = function(result)
-                if (result) then
-                    startupdatedownload(popup, autoclose)
-                else
-                    LUI.FlowManager.RequestLeaveMenu(popup)
-                end
-            end
-        })
-    end
+		LUI.yesnopopup({
+			title = "NOTICE",
+			text = "An update is available, proceed with installation?",
+			callback = function(result)
+				if (result) then
+					startupdatedownload(popup, autoclose)
+				else
+					LUI.FlowManager.RequestLeaveMenu(popup)
+				end
+			end
+		})
+	end)
 
-    updater.startupdatecheck()
-    createtask({
-        done = updater.isupdatecheckdone, 
-        cancelled = isupdatecancelled, 
-        callback = callback, 
-        interval = taskinterval
-    })
+	updater.startupdatecheck()
 end
 
 function startupdatedownload(popup, autoclose)
-    updater.startupdatedownload()
+	local textupdate = nil
+	local previousfile = nil
+	local timer = LUI.UITimer.new(10, "update_file")
 
-    local textupdate = nil
-    local previousfile = nil
-    textupdate = game:oninterval(function()
-        local file = updater.getcurrentfile()
-        if (file == previousfile) then
-            return
-        end
+	popup:addElement(timer)
+	popup:registerEventHandler("update_file", function()
+		local file = updater.getcurrentfile()
+		if (file == previousfile) then
+			return
+		end
 
-        file = previousfile
-        popup.text:setText("Downloading file " .. updater.getcurrentfile() .. "...")
-    end, 10)
+		file = previousfile
+		popup.text:setText("Downloading file " .. updater.getcurrentfile() .. "...")
+	end)
 
-    local callback = function()
-        textupdate:clear()
+	Engine.GetLuiRoot():registerEventHandler("update_done", function(element, event)
+		timer:close()
 
-        if (not updater.getupdatedownloadstatus()) then
-            if (autoclose) then
-                LUI.FlowManager.RequestLeaveMenu(popup)
-                return
-            end
+		if (updatecancelled) then
+			return
+		end
 
-            popup.text:setText("Error: " .. updater.getlasterror())
-            return
-        end
+		if (not updater.getupdatedownloadstatus()) then
+			if (autoclose) then
+				LUI.FlowManager.RequestLeaveMenu(popup)
+				return
+			end
 
-        popup.text:setText("Update successful")
+			popup.text:setText("Error: " .. updater.getlasterror())
+			return
+		end
 
-        if (updater.isrestartrequired()) then
-            LUI.confirmationpopup({
-                title = "RESTART REQUIRED",
-                text = "Update requires restart",
-                buttontext = "RESTART",
-                callback = function()
-                    updater.relaunch()
-                end
-            })
-        else
-            if (LUI.mp_menus) then
-                Engine.Exec("lui_restart; lui_open mp_main_menu")
-            else
-                Engine.Exec("lui_restart")
-            end
-        end
+		popup.text:setText("Update successful")
 
-        if (autoclose) then
-            LUI.FlowManager.RequestLeaveMenu(popup)
-        end
-    end
+		if (updater.isrestartrequired()) then
+			LUI.confirmationpopup({
+				title = "RESTART REQUIRED",
+				text = "Update requires restart",
+				buttontext = "RESTART",
+				callback = function()
+					updater.relaunch()
+				end
+			})
+		else
+			Engine.Exec("lui_restart")
+		end
 
-    createtask({
-        done = updater.isupdatedownloaddone,
-        cancelled = isupdatecancelled,
-        callback = callback,
-        interval = taskinterval
-    })
+		if (autoclose) then
+			LUI.FlowManager.RequestLeaveMenu(popup)
+		end
+	end)
+
+	updater.startupdatedownload()
 end
 
 function updaterpopup(oncancel)
-    return LUI.openpopupmenu("generic_waiting_popup_", {
-        oncancel = oncancel,
-        withcancel = true,
-        text = "Checking for updates..."
-    })
+	return LUI.openpopupmenu("generic_waiting_popup_", {
+		oncancel = oncancel,
+		withcancel = true,
+		text = "Checking for updates..."
+	})
 end
 
 function createtask(data)
-    local interval = nil
-    interval = game:oninterval(function()
-        if (data.cancelled()) then
-            interval:clear()
-            return
-        end
+	local interval = nil
+	interval = game:oninterval(function()
+		if (data.cancelled()) then
+			interval:clear()
+			return
+		end
 
-        if (data.done()) then
-            interval:clear()
-            data.callback()
-        end
-    end, data.interval)
-    return interval
-end
-
-function isupdatecancelled()
-    return updatecancelled
+		if (data.done()) then
+			interval:clear()
+			data.callback()
+		end
+	end, data.interval)
+	return interval
 end
 
 function tryupdate(autoclose)
-    updatecancelled = false
-    local popup = updaterpopup(function()
-        updater.cancelupdate()
-        updatecancelled = true
-    end)
+	updatecancelled = false
+	local popup = updaterpopup(function()
+		updater.cancelupdate()
+		updatecancelled = true
+	end)
 
-    startupdatecheck(popup, autoclose)
+	startupdatecheck(popup, autoclose)
 end
 
 function tryautoupdate()
-    if (not updater.autoupdatesenabled()) then
-        return
-    end
+	if (not updater.autoupdatesenabled()) then
+		return
+	end
 
-    if (not updater.gethastriedupdate()) then
-        game:ontimeout(function()
-            updater.sethastriedupdate(true)
-            tryupdate(true)
-        end, 100)
-    end
+	if (not updater.gethastriedupdate()) then
+		local timer = LUI.UITimer.new(100, "tryupdate")
+		Engine.GetLuiRoot():addElement(timer)
+		Engine.GetLuiRoot():registerEventHandler("tryupdate", function()
+			timer:close()
+			updater.sethastriedupdate(true)
+			tryupdate(true)
+		end)
+	end
 end
 
-LUI.onmenuopen("mp_main_menu", tryautoupdate)
+LUI.tryupdating = tryupdate
 LUI.onmenuopen("main_lockout", tryautoupdate)
+LUI.onmenuopen("mp_main_menu", tryautoupdate)
