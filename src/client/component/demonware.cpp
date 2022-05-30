@@ -577,8 +577,8 @@ namespace demonware
 		{
 			if (game::environment::is_sp())
 			{
-				//	utils::hook::set<uint8_t>(0x1405FCA00, 0xC3); // bdAuthSteam H1(1.4)
-				//	utils::hook::set<uint8_t>(0x140333A00, 0xC3); // dwNet H1(1.4)
+				utils::hook::set<uint8_t>(0x68DDA0_b, 0xC3); // bdAuthSteam
+				utils::hook::set<uint8_t>(0x366600_b, 0xC3); // dwNet
 				return;
 			}
 
