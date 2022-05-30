@@ -18,7 +18,7 @@ namespace demonware
 		this->register_task(12, &bdStorage::unk12);
 
 		this->map_publisher_resource("motd-.*\\.txt", DW_MOTD);
-		this->map_publisher_resource("ffotd-.*\\.ff", DW_FASTFILE);
+		// this->map_publisher_resource("ffotd-.*\\.ff", DW_FASTFILE);
 		this->map_publisher_resource("playlists(_.+)?\\.aggr", DW_PLAYLISTS);
 	}
 
@@ -172,15 +172,16 @@ namespace demonware
 			const auto path = get_user_file_path(filename);
 			utils::io::write_file(path, data);
 
-			auto* info = new bdFileInfo;
+			auto* info = new bdFile2;
 
-			info->file_id = *reinterpret_cast<const uint64_t*>(utils::cryptography::sha1::compute(filename).data());
+			info->unk1 = 0;
+			info->unk2 = 0;
+			info->unk3 = 0;
+			info->priv = false;
+			info->owner_id = owner;
+			info->platform = platform;
 			info->filename = filename;
-			info->create_time = uint32_t(time(nullptr));
-			info->modified_time = info->create_time;
-			info->file_size = uint32_t(data.size());
-			info->owner_id = uint64_t(owner);
-			info->priv = priv;
+			info->data = data;
 
 #ifdef DEBUG
 			printf("[DW]: [bdStorage]: set user file: %s\n", filename.data());
@@ -221,6 +222,9 @@ namespace demonware
 			const auto path = get_user_file_path(filename);
 			if (!utils::io::read_file(path, &data))
 			{
+#ifdef DEBUG
+				printf("[DW]: [bdStorage]: get user file: missing file: %s, %s, %s\n", game.data(), filename.data(), platform.data());
+#endif
 				continue;
 			}
 

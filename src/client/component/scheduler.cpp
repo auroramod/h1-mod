@@ -75,7 +75,8 @@ namespace scheduler
 				{
 					new_callbacks_.access([&](task_list& new_tasks)
 					{
-						tasks.insert(tasks.end(), std::move_iterator<task_list::iterator>(new_tasks.begin()), std::move_iterator<task_list::iterator>(new_tasks.end()));
+							tasks.insert(tasks.end(), std::move_iterator<task_list::iterator>(new_tasks.begin()),
+								std::move_iterator<task_list::iterator>(new_tasks.end()));
 						new_tasks = {};
 					});
 				});
@@ -99,7 +100,6 @@ namespace scheduler
 		void r_end_frame_stub()
 		{
 			execute(pipeline::renderer);
-			r_end_frame_hook.invoke<void>();
 		}
 
 		void server_frame_stub()
@@ -108,10 +108,14 @@ namespace scheduler
 			execute(pipeline::server);
 		}
 
-		void main_frame_stub()
+		void* main_frame_stub()
 		{
-			main_frame_hook.invoke<void>();
-			execute(pipeline::main);
+			const auto _0 = gsl::finally([]()
+			{
+				execute(pipeline::main);
+			});
+
+			return main_frame_hook.invoke<void*>();
 		}
 
 		void hks_frame_stub()
@@ -121,11 +125,12 @@ namespace scheduler
 			{
 				execute(pipeline::lui);
 			}
+			hks_frame_hook.invoke<bool>();
 		}
 	}
 
 	void schedule(const std::function<bool()>& callback, const pipeline type,
-		const std::chrono::milliseconds delay)
+	              const std::chrono::milliseconds delay)
 	{
 		assert(type >= 0 && type < pipeline::count);
 
@@ -138,7 +143,7 @@ namespace scheduler
 	}
 
 	void loop(const std::function<void()>& callback, const pipeline type,
-		const std::chrono::milliseconds delay)
+	          const std::chrono::milliseconds delay)
 	{
 		schedule([callback]()
 		{
@@ -148,7 +153,7 @@ namespace scheduler
 	}
 
 	void once(const std::function<void()>& callback, const pipeline type,
-		const std::chrono::milliseconds delay)
+	          const std::chrono::milliseconds delay)
 	{
 		schedule([callback]()
 		{
@@ -158,7 +163,7 @@ namespace scheduler
 	}
 
 	void on_game_initialized(const std::function<void()>& callback, const pipeline type,
-		const std::chrono::milliseconds delay)
+	                         const std::chrono::milliseconds delay)
 	{
 		schedule([=]()
 		{
@@ -190,10 +195,22 @@ namespace scheduler
 
 		void post_unpack() override
 		{
-			r_end_frame_hook.create(SELECT_VALUE(0x1404F7310, 0x1405FE470), scheduler::r_end_frame_stub);
-			g_run_frame_hook.create(SELECT_VALUE(0x1402772D0, 0x14033A640), scheduler::server_frame_stub);
-			main_frame_hook.create(SELECT_VALUE(0x1401CE8D0, 0x1400D8310), scheduler::main_frame_stub);
-			hks_frame_hook.create(SELECT_VALUE(0x1400E37F0, 0x1401755B0), scheduler::hks_frame_stub);
+			utils::hook::jump(SELECT_VALUE(0x581FB0_b, 0x6A6300_b), utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.pushad64();
+				a.call_aligned(r_end_frame_stub);
+				a.popad64();
+
+				a.sub(rsp, 0x28);
+				a.call(SELECT_VALUE(0x581840_b, 0x6A5C20_b));
+				a.mov(rax, SELECT_VALUE(0x1182A680_b, 0xEAB4308_b));
+				a.mov(rax, qword_ptr(rax));
+				a.jmp(SELECT_VALUE(0x581FC0_b, 0x6A6310_b));
+			}), true);
+
+			g_run_frame_hook.create(SELECT_VALUE(0x2992E0_b, 0x417940_b), scheduler::server_frame_stub);
+			main_frame_hook.create(SELECT_VALUE(0x1B1DF0_b, 0x3438B0_b), scheduler::main_frame_stub);
+			hks_frame_hook.create(SELECT_VALUE(0x1028D0_b, 0x2792E0_b), scheduler::hks_frame_stub);
 		}
 
 		void pre_destroy() override

@@ -1,5 +1,8 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+
+#include "dvars.hpp"
+
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
@@ -30,7 +33,6 @@ namespace renderer
 		void gfxdrawmethod()
 		{
 			game::gfxDrawMethod->drawScene = game::GFX_DRAW_SCENE_STANDARD;
-
 			game::gfxDrawMethod->baseTechType = dvars::r_fullbright->current.enabled ? get_fullbright_technique() : game::TECHNIQUE_LIT;
 			game::gfxDrawMethod->emissiveTechType = dvars::r_fullbright->current.enabled ? get_fullbright_technique() : game::TECHNIQUE_EMISSIVE;
 			game::gfxDrawMethod->forceTechType = dvars::r_fullbright->current.enabled ? get_fullbright_technique() : 242;
@@ -67,17 +69,13 @@ namespace renderer
 
 			dvars::r_fullbright = dvars::register_int("r_fullbright", 0, 0, 4, game::DVAR_FLAG_SAVED, "Toggles rendering without lighting");
 
-			r_init_draw_method_hook.create(SELECT_VALUE(0x1404BD140, 0x1405C46E0), &r_init_draw_method_stub);
-			r_update_front_end_dvar_options_hook.create(SELECT_VALUE(0x1404F8870, 0x1405FF9E0), &r_update_front_end_dvar_options_stub);
+			r_init_draw_method_hook.create(SELECT_VALUE(0x5467E0_b, 0x669580_b), &r_init_draw_method_stub);
+			r_update_front_end_dvar_options_hook.create(SELECT_VALUE(0x583560_b, 0x6A78C0_b), &r_update_front_end_dvar_options_stub);
 
-			// use "saved" flags for "r_normalMap"
-			utils::hook::set<uint8_t>(SELECT_VALUE(0x1404CF5CA, 0x1405D460E), game::DVAR_FLAG_SAVED);
-
-			// use "saved" flags for "r_specularMap"
-			utils::hook::set<uint8_t>(SELECT_VALUE(0x1404CF5F5, 0x1405D4639), game::DVAR_FLAG_SAVED);
-
-			// use "saved" flags for "r_specOccMap"
-			utils::hook::set<uint8_t>(SELECT_VALUE(0x1404CF620, 0x1405D4664), game::DVAR_FLAG_SAVED);
+			// use "saved" flags
+			dvars::override::register_enum("r_normalMap", game::DVAR_FLAG_SAVED);
+			dvars::override::register_enum("r_specularMap", game::DVAR_FLAG_SAVED);
+			dvars::override::register_enum("r_specOccMap", game::DVAR_FLAG_SAVED);
 		}
 	};
 }

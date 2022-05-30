@@ -286,10 +286,10 @@ namespace game_console
 				{
 					const auto offset = (con.screen_max[0] - con.globals.x) / 4.f;
 
-					draw_hint_text(0, game::Dvar_ValueToString(dvar, dvar->current),
+					draw_hint_text(0, game::Dvar_ValueToString(dvar, true, dvar->current),
 						dvars::con_inputDvarValueColor->current.vector, offset);
 					draw_hint_text(1, "  default", dvars::con_inputDvarInactiveValueColor->current.vector);
-					draw_hint_text(1, game::Dvar_ValueToString(dvar, dvar->reset),
+					draw_hint_text(1, game::Dvar_ValueToString(dvar, true, dvar->reset),
 						dvars::con_inputDvarInactiveValueColor->current.vector, offset);
 					draw_hint_text(2, matches[0].description.data(),
 						color_white, 0);
@@ -324,7 +324,7 @@ namespace game_console
 
 					if (dvar)
 					{
-						draw_hint_text(static_cast<int>(i), game::Dvar_ValueToString(dvar, dvar->current),
+						draw_hint_text(static_cast<int>(i), game::Dvar_ValueToString(dvar, true, dvar->current),
 							dvars::con_inputDvarValueColor->current.vector, offset);
 
 						draw_hint_text(static_cast<int>(i), matches[i].description.data(),
@@ -391,7 +391,7 @@ namespace game_console
 				const auto width = (con.screen_max[0] - con.screen_min[0]) - 12.0f;
 				const auto height = ((con.screen_max[1] - con.screen_min[1]) - 32.0f) - 12.0f;
 
-				game::R_AddCmdDrawText("H1-Mod 1.4", 0x7FFFFFFF, console_font, x,
+				game::R_AddCmdDrawText("H1-Mod 1.15", 0x7FFFFFFF, console_font, x,
 					((height - 16.0f) + y) + console_font->pixelHeight, 1.0f, 1.0f, 0.0f, color_title, 0);
 
 				draw_output_scrollbar(x, y, width, height, output);
@@ -586,10 +586,13 @@ namespace game_console
 				return false;
 			}
 
-			if (game::playerKeys[local_client_num].keys[game::keyNum_t::K_SHIFT].down)
+			const auto shift_down = game::playerKeys[local_client_num].keys[game::keyNum_t::K_SHIFT].down;
+			if (shift_down)
 			{
 				if (!(*game::keyCatchers & 1))
+				{
 					toggle_console();
+				}
 
 				toggle_console_output();
 				return false;
@@ -680,7 +683,7 @@ namespace game_console
 
 				if (key == game::keyNum_t::K_ENTER)
 				{
-					game::Cbuf_AddText(0, utils::string::va("%s \n", fixed_input.data()));
+					game::Cbuf_AddText(0, 0, utils::string::va("%s \n", fixed_input.data()));
 
 					if (history_index != -1)
 					{
@@ -720,19 +723,16 @@ namespace game_console
 			{
 				return;
 			}
-
-			//scheduler::loop(draw_console, scheduler::pipeline::renderer);
 		}
 
 		void post_unpack() override
 		{
-			scheduler::loop(draw_console, scheduler::pipeline::renderer);
-
-
 			if (game::environment::is_dedi())
 			{
 				return;
 			}
+
+			scheduler::loop(draw_console, scheduler::pipeline::renderer);
 
 			// initialize our structs
 			con.cursor = 0;

@@ -10,7 +10,6 @@
 #include "materials.hpp"
 #include "discord.hpp"
 
-#include "ui_scripting.hpp"
 #include "game/ui_scripting/execution.hpp"
 
 #include <utils/string.hpp>
@@ -53,7 +52,6 @@ namespace discord
 				discord_presence.matchSecret = "";
 				discord_presence.joinSecret = "";
 				discord_presence.partyId = "";
-				discord_presence.state = "";
 			}
 			else
 			{
@@ -103,7 +101,16 @@ namespace discord
 						discord_presence.partyPrivacy = DISCORD_PARTY_PUBLIC;
 					}
 
-					discord_presence.partySize = *reinterpret_cast<int*>(0x1429864C4);
+					const auto client_state = *game::mp::client_state;
+					if (client_state != nullptr)
+					{
+						discord_presence.partySize = client_state->num_players;
+					}
+					else
+					{
+						discord_presence.partySize = 0;
+					}
+
 					discord_presence.partyMax = max_clients;
 					discord_presence.state = clean_hostname;
 					discord_presence.largeImageKey = map;
@@ -188,9 +195,13 @@ namespace discord
 			handlers.ready = ready;
 			handlers.errored = errored;
 			handlers.disconnected = errored;
-			handlers.joinGame = join_game;
 			handlers.spectateGame = nullptr;
-			handlers.joinRequest = join_request;
+
+			if (game::environment::is_mp())
+			{
+				handlers.joinGame = join_game;
+				handlers.joinRequest = join_request;
+			}
 
 			Discord_Initialize("947125042930667530", &handlers, 1, nullptr);
 

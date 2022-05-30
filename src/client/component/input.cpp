@@ -4,7 +4,6 @@
 #include "game/game.hpp"
 
 #include "game_console.hpp"
-#include "ui_scripting.hpp"
 #include "game/ui_scripting/execution.hpp"
 
 #include <utils/hook.hpp>
@@ -15,7 +14,6 @@ namespace input
 	{
 		utils::hook::detour cl_char_event_hook;
 		utils::hook::detour cl_key_event_hook;
-
 
 		void cl_char_event_stub(const int local_client_num, const int key)
 		{
@@ -66,8 +64,8 @@ namespace input
 				return;
 			}
 
-			cl_char_event_hook.create(SELECT_VALUE(0x1401871A0, 0x14024E810), cl_char_event_stub);
-			cl_key_event_hook.create(SELECT_VALUE(0x1401874D0, 0x14024EA60), cl_key_event_stub);
+			cl_char_event_hook.create(SELECT_VALUE(0x1AB8F0_b, 0x12C8F0_b), cl_char_event_stub);
+			cl_key_event_hook.create(SELECT_VALUE(0x1ABC20_b, 0x135A70_b), cl_key_event_stub);
 		}
 	};
 }

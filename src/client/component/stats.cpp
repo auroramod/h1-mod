@@ -16,44 +16,34 @@ namespace stats
 	namespace
 	{
 		game::dvar_t* cg_unlock_all_items;
+		game::dvar_t* cg_unlock_all_loot;
 
 		utils::hook::detour is_item_unlocked_hook;
 		utils::hook::detour is_item_unlocked_hook2;
-		utils::hook::detour is_item_unlocked_hook3;
 
-		int is_item_unlocked_stub(int a1, void* a2, int a3)
+		int is_item_unlocked_stub(int a1, void* a2, void* a3, void* a4, int a5, void* a6)
 		{
 			if (cg_unlock_all_items->current.enabled)
 			{
 				return 0;
 			}
 
-			return is_item_unlocked_hook.invoke<int>(a1, a2, a3);
-		}
-
-		int is_item_unlocked_stub2(int a1, void* a2, void* a3, void* a4, int a5, void* a6)
-		{
-			if (cg_unlock_all_items->current.enabled)
-			{
-				return 0;
-			}
-
-			return is_item_unlocked_hook2.invoke<int>(a1, a2, a3, a4, a5, a6);
-		}
-
-		int is_item_unlocked_stub3(int a1)
-		{
-			if (cg_unlock_all_items->current.enabled)
-			{
-				return 0;
-			}
-
-			return is_item_unlocked_hook3.invoke<int>(a1);
+			return is_item_unlocked_hook.invoke<int>(a1, a2, a3, a4, a5, a6);
 		}
 
 		int is_item_unlocked()
 		{
 			return 0;
+		}
+
+		int is_item_unlocked_stub2(void* a1, void* a2)
+		{
+			const auto state = is_item_unlocked_hook2.invoke<int>(a1, a2);
+			if (state == 15 /*Not In Inventory*/ && cg_unlock_all_loot->current.enabled)
+			{
+				return 0;
+			}
+			return state;
 		}
 	}
 
@@ -67,22 +57,25 @@ namespace stats
 				return;
 			}
 
+			utils::hook::jump(0x19E6E0_b, is_item_unlocked, true);
+
 			if (game::environment::is_dedi())
 			{
-				utils::hook::jump(0x140413E60, is_item_unlocked);
-				utils::hook::jump(0x140413860, is_item_unlocked);
-				utils::hook::jump(0x140412B70, is_item_unlocked);
+				utils::hook::jump(0x19E070_b, is_item_unlocked, true);
+				utils::hook::jump(0x19D390_b, is_item_unlocked, true);
+				utils::hook::jump(0x19D140_b, is_item_unlocked, true);
 			}
 			else
 			{
+				is_item_unlocked_hook.create(0x19E070_b, is_item_unlocked_stub);
+				is_item_unlocked_hook2.create(0x19D140_b, is_item_unlocked_stub2);
+
 				cg_unlock_all_items = dvars::register_bool("cg_unlockall_items", false, game::DVAR_FLAG_SAVED,
 					"Whether items should be locked based on the player's stats or always unlocked.");
 				dvars::register_bool("cg_unlockall_classes", false, game::DVAR_FLAG_SAVED,
 					"Whether classes should be locked based on the player's stats or always unlocked.");
-
-				is_item_unlocked_hook.create(0x140413E60, is_item_unlocked_stub);
-				is_item_unlocked_hook2.create(0x140413860, is_item_unlocked_stub2);
-				is_item_unlocked_hook3.create(0x140412B70, is_item_unlocked_stub3);
+				cg_unlock_all_loot = dvars::register_bool("cg_unlockall_loot", false, game::DVAR_FLAG_SAVED,
+					"Whether loot should be locked based on the player's stats or always unlocked.");
 			}
 		}
 	};

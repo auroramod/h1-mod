@@ -72,9 +72,11 @@ namespace dvars
 		switch (type)
 		{
 		case game::dvar_type::boolean:
+		case game::dvar_type::boolean_hashed:
 			return "Domain is 0 or 1"s;
 
 		case game::dvar_type::value:
+		case game::dvar_type::value_hashed:
 			if (domain.value.min == -FLT_MAX)
 			{
 				if (domain.value.max == FLT_MAX)
@@ -106,6 +108,7 @@ namespace dvars
 			return dvar_get_vector_domain(4, domain);
 
 		case game::dvar_type::integer:
+		case game::dvar_type::integer_hashed:
 			if (domain.enumeration.stringCount == INT_MIN)
 			{
 				if (domain.integer.max == INT_MAX)
@@ -11836,7 +11839,7 @@ namespace dvars
 	}
 
 	game::dvar_t* register_int(const std::string& name, int value, int min, int max,
-		game::DvarFlags flags, const std::string& description)
+		unsigned int flags, const std::string& description)
 	{
 		const auto hash = game::generateHashValue(name.data());
 
@@ -11849,7 +11852,7 @@ namespace dvars
 	}
 
 	game::dvar_t* register_bool(const std::string& name, bool value,
-		game::DvarFlags flags, const std::string& description)
+		unsigned int flags, const std::string& description)
 	{
 		const auto hash = game::generateHashValue(name.data());
 
@@ -11862,7 +11865,7 @@ namespace dvars
 	}
 
 	game::dvar_t* register_string(const std::string& name, const char* value,
-		game::DvarFlags flags, const std::string& description)
+		unsigned int flags, const std::string& description)
 	{
 		const auto hash = game::generateHashValue(name.data());
 
@@ -11875,7 +11878,7 @@ namespace dvars
 	}
 
 	game::dvar_t* register_float(const std::string& name, float value, float min,
-		float max, game::DvarFlags flags, const std::string& description)
+		float max, unsigned int flags, const std::string& description)
 	{
 		const auto hash = game::generateHashValue(name.data());
 
@@ -11887,8 +11890,21 @@ namespace dvars
 		return game::Dvar_RegisterFloat(hash, "", value, min, max, flags);
 	}
 
+	game::dvar_t* register_float_hashed(const std::string& name, float value, float min,
+		float max, unsigned int flags, const std::string& description)
+	{
+		const auto hash = game::generateHashValue(name.data());
+
+		if (can_add_dvar_to_list(name))
+		{
+			dvar_list.push_back({ name, description });
+		}
+
+		return game::Dvar_RegisterFloatHashed(hash, "", value, min, max, flags);
+	}
+
 	game::dvar_t* register_vec4(const std::string& name, float x, float y, float z,
-		float w, float min, float max, game::DvarFlags flags, const std::string& description)
+		float w, float min, float max, unsigned int flags, const std::string& description)
 	{
 		const auto hash = game::generateHashValue(name.data());
 

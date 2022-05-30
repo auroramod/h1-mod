@@ -6,6 +6,7 @@
 #include "game_console.hpp"
 #include "fastfiles.hpp"
 #include "scheduler.hpp"
+#include "logfile.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -22,6 +23,7 @@ namespace command
 	namespace
 	{
 		utils::hook::detour client_command_hook;
+		utils::hook::detour parse_commandline_hook;
 
 		std::unordered_map<std::string, std::function<void(params&)>> handlers;
 		std::unordered_map<std::string, std::function<void(int, params_sv&)>> handlers_sv;
@@ -39,6 +41,11 @@ namespace command
 
 		void client_command(const int client_num)
 		{
+			if (!logfile::client_command_stub(client_num))
+			{
+				return;
+			}
+
 			params_sv params = {};
 
 			const auto command = utils::string::to_lower(params[0]);
@@ -63,8 +70,8 @@ namespace command
 			static std::string comand_line_buffer = GetCommandLineA();
 			auto* command_line = comand_line_buffer.data();
 
-			auto& com_num_console_lines = *reinterpret_cast<int*>(0x142623FB4);
-			auto* com_console_lines = reinterpret_cast<char**>(0x142623FC0);
+			auto& com_num_console_lines = *reinterpret_cast<int*>(0x35634B8_b);
+			auto* com_console_lines = reinterpret_cast<char**>(0x35634C0_b);
 
 			auto inq = false;
 			com_console_lines[0] = command_line;
@@ -96,7 +103,7 @@ namespace command
 		void parse_commandline_stub()
 		{
 			parse_command_line();
-			utils::hook::invoke<void>(0x1400D8210);
+			parse_commandline_hook.invoke<void>();
 		}
 
 		game::dvar_t* dvar_command_stub()
@@ -114,11 +121,11 @@ namespace command
 			{
 				if (args.size() == 1)
 				{
-					const auto current = game::Dvar_ValueToString(dvar, dvar->current);
-					const auto reset = game::Dvar_ValueToString(dvar, dvar->reset);
+					const auto current = game::Dvar_ValueToString(dvar, true, dvar->current);
+					const auto reset = game::Dvar_ValueToString(dvar, true, dvar->reset);
 
-					console::info("\"%s\" is: \"%s\" default: \"%s\" hash: 0x%08lX\n",
-						args[0], current, reset, dvar->hash);
+					console::info("\"%s\" is: \"%s\" default: \"%s\" hash: 0x%08lX type: %i\n",
+						args[0], current, reset, dvar->hash, dvar->type);
 
 					const auto dvar_info = dvars::dvar_get_description(args[0]);
 
@@ -127,7 +134,7 @@ namespace command
 				}
 				else
 				{
-					char command[0x1000] = { 0 };
+					char command[0x1000] = {0};
 					game::Dvar_GetCombinedString(command, 1);
 					game::Dvar_SetCommand(dvar->hash, "", command);
 				}
@@ -340,8 +347,8 @@ namespace command
 		// parse the commandline if it's not parsed
 		parse_command_line();
 
-		auto& com_num_console_lines = *reinterpret_cast<int*>(0x142623FB4);
-		auto* com_console_lines = reinterpret_cast<char**>(0x142623FC0);
+		auto& com_num_console_lines = *reinterpret_cast<int*>(0x35634B8_b);
+		auto* com_console_lines = reinterpret_cast<char**>(0x35634C0_b);
 
 		for (int i = 0; i < com_num_console_lines; i++)
 		{
@@ -454,8 +461,6 @@ namespace command
 
 	void add(const char* name, const std::function<void(const params&)>& callback)
 	{
-		static game::cmd_function_s cmd_test;
-
 		const auto command = utils::string::to_lower(name);
 
 		if (handlers.find(command) == handlers.end())
@@ -493,7 +498,7 @@ namespace command
 		}
 		else
 		{
-			game::Cbuf_AddText(0, command.data());
+			game::Cbuf_AddText(0, 0, command.data());
 		}
 	}
 
@@ -508,11 +513,11 @@ namespace command
 			}
 			else
 			{
-				utils::hook::call(0x1400D728F, parse_commandline_stub);
-				utils::hook::jump(0x14041D750, dvar_command_stub);
-
+				parse_commandline_hook.create(0x157D50_b, parse_commandline_stub);
 				add_commands_mp();
 			}
+
+			utils::hook::jump(SELECT_VALUE(0x3A7C80_b, 0x4E9F40_b), dvar_command_stub, true);
 
 			add_commands_generic();
 		}
@@ -620,7 +625,7 @@ namespace command
 				if (dvar->type != game::dvar_type::string
 					&& dvar->type != game::dvar_type::enumeration)
 				{
-					console::info("%s is not a string-based dvar\n", dvar->hash);
+					console::info("%s is not a string-based dvar\n", name);
 					return;
 				}
 
@@ -680,16 +685,6 @@ namespace command
 				toggle_client_flag(2, "ufo");
 			});
 
-			add("give", [](const params& params)
-			{
-				if (!game::SV_Loaded())
-				{
-					return;
-				}
-
-				cmd_give_weapon(0, params.get_all());
-			});
-
 			add("dropweapon", [](const params& params)
 			{
 				if (!game::SV_Loaded())
@@ -719,11 +714,21 @@ namespace command
 
 				cmd_kill(0);
 			});
+			
+			add("give", [](const params& params)
+			{
+				if (!game::SV_Loaded())
+				{
+					return;
+				}
+
+				cmd_give_weapon(0, params.get_all());
+			});
 		}
 
 		static void add_commands_mp()
 		{
-			client_command_hook.create(0x140336000, &client_command);
+			client_command_hook.create(0x4132E0_b, &client_command);
 
 			add_sv("god", [](const int client_num, const params_sv&)
 			{
@@ -772,7 +777,7 @@ namespace command
 					return;
 				}
 
-				toggle_client_flag(client_num, 2, "noclip");
+				toggle_client_flag(client_num, 2, "ufo");
 			});
 
 			add_sv("give", [](const int client_num, const params_sv& params)

@@ -1,6 +1,30 @@
-menucallbacks = {}
-originalmenus = {}
-stack = {}
+local menucallbacks = {}
+local originalmenus = {}
+local stack = {}
+
+function getchildren(element)
+	local children = {}
+	local first = element:getFirstChild()
+
+	while (first) do
+		table.insert(children, first)
+		first = first:getNextSibling()
+	end
+
+	return children
+end
+
+function printchildtree(element, indent, last)
+	indent = indent or ""
+
+	print(indent .. "+- " .. element.id .. " " .. (element:getText() or ""))
+	indent =  indent .. (last and "   " or "|  ")
+
+	local children = getchildren(element)
+	for i = 1, #children do
+		printchildtree(children[i], indent, i == #children)
+	end
+end
 
 LUI.MenuBuilder.m_types_build["generic_waiting_popup_"] = function (menu, event)
 	local oncancel = stack.oncancel
@@ -14,9 +38,7 @@ LUI.MenuBuilder.m_types_build["generic_waiting_popup_"] = function (menu, event)
 		end
 	})
 
-	local listchildren = popup:getChildById("LUIHorizontalList"):getchildren()
-	local children = listchildren[2]:getchildren()
-	popup.text = children[2]
+	popup.text = popup:getLastChild():getPreviousSibling():getPreviousSibling()
 
 	stack = {
 		ret = popup
@@ -76,10 +98,10 @@ LUI.onmenuopen = function(name, callback)
 		originalmenus[name] = LUI.MenuBuilder.m_types_build[name]
 		LUI.MenuBuilder.m_types_build[name] = function(...)
 			local args = {...}
-			local menu = originalmenus[name](table.unpack(args))
+			local menu = originalmenus[name](unpack(args))
 
-			for k, v in luiglobals.next, menucallbacks[name] do
-				v(menu, table.unpack(args))
+			for k, v in next, menucallbacks[name] do
+				v(menu, unpack(args))
 			end
 
 			return menu
@@ -136,7 +158,7 @@ LUI.openpopupmenu = function(menu, args)
 end
 
 LUI.yesnopopup = function(data)
-	for k, v in luiglobals.next, data do
+	for k, v in next, data do
 		stack[k] = v
 	end
 	LUI.FlowManager.RequestPopupMenu(nil, "generic_yes_no_popup_")
@@ -144,21 +166,9 @@ LUI.yesnopopup = function(data)
 end
 
 LUI.confirmationpopup = function(data)
-	for k, v in luiglobals.next, data do
+	for k, v in next, data do
 		stack[k] = v
 	end
 	LUI.FlowManager.RequestPopupMenu(nil, "generic_confirmation_popup_")
 	return stack.ret
-end
-
-function userdata_:getchildren()
-	local children = {}
-	local first = self:getFirstChild()
-
-	while (first) do
-		table.insert(children, first)
-		first = first:getNextSibling()
-	end
-
-	return children
 end

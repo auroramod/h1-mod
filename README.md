@@ -4,8 +4,7 @@
   <img alig src="https://cdn.discordapp.com/attachments/895680402142941194/938488726391242842/splash.png"/>
 </p>
 
-An experimental client for Call of Duty Modern Warfare Remastered (version `1.4.814118.0-0.32767`).  
-Research for the latest Steam version of the game is on the [1.15](https://github.com/h1-mod/h1-mod/tree/1.15) branch.
+An client for Call of Duty: Modern Warfare Remastered (version `1.15.1251288.0-0.32767`).
 
 [This project is based on S1x.](https://github.com/XLabsProject/s1x-client)
 

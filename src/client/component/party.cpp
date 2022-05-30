@@ -71,11 +71,11 @@ namespace party
 			perform_game_initialization();
 
 			// exit from virtuallobby
-			utils::hook::invoke<void>(0x140256D40, 1);
+			utils::hook::invoke<void>(0x13C9C0_b, 1);
 
 			// CL_ConnectFromParty
 			char session_info[0x100] = {};
-			utils::hook::invoke<void>(0x140251560, 0, session_info, &target, mapname.data(), gametype.data());
+			utils::hook::invoke<void>(0x12DFF0_b, 0, session_info, &target, mapname.data(), gametype.data());
 		}
 
 		std::string get_dvar_string(const std::string& dvar)
@@ -111,52 +111,43 @@ namespace party
 			return false;
 		}
 
-		void didyouknow_stub(const char* dvar_name, const char* string)
+		const char* get_didyouknow_stub(void* table, int row, int column)
 		{
-			if (!party::sv_motd.empty())
+			if (party::sv_motd.empty())
 			{
-				string = party::sv_motd.data();
+				return utils::hook::invoke<const char*>(0x5A0AC0_b, table, row, column);
 			}
-
-			// This function either does Dvar_SetString or Dvar_RegisterString for the given dvar
-			utils::hook::invoke<void>(0x1404FB210, dvar_name, string);
+			return utils::string::va("%s", party::sv_motd.data());
 		}
 
-		void disconnect_stub()
+		void disconnect()
 		{
 			if (!game::VirtualLobby_Loaded())
 			{
 				if (game::CL_IsCgameInitialized())
 				{
-					// CL_ForwardCommandToServer
-					utils::hook::invoke<void>(0x140253480, 0, "disconnect");
+					// CL_AddReliableCommand
+					utils::hook::invoke<void>(0x12B810_b, 0, "disconnect");
 					// CL_WritePacket
-					utils::hook::invoke<void>(0x14024DB10, 0);
+					utils::hook::invoke<void>(0x13D490_b, 0);
 				}
 				// CL_Disconnect
-				utils::hook::invoke<void>(0x140252060, 0);
+				utils::hook::invoke<void>(0x12F080_b, 0);
 			}
 		}
 
-		utils::hook::detour cldisconnect_hook;
+		utils::hook::detour cl_disconnect_hook;
 
-		void cl_disconnect_stub(int a1)
+		void cl_disconnect_stub(int showMainMenu) // possibly bool
 		{
 			party::clear_sv_motd();
-			cldisconnect_hook.invoke<void>(a1);
+			cl_disconnect_hook.invoke<void>(showMainMenu);
 		}
-
-		const auto drop_reason_stub = utils::hook::assemble([](utils::hook::assembler& a)
-		{
-			a.mov(rdx, rdi);
-			a.mov(ecx, 2);
-			a.jmp(0x140251F78);
-		});
 
 		void menu_error(const std::string& error)
 		{
-			utils::hook::invoke<void>(0x1400DACC0, error.data(), "MENU_NOTICE");
-			utils::hook::set(0x142C1DA98, 1);
+			utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE");
+			utils::hook::set(0x2ED2F78_b, 1);
 		}
 	}
 
@@ -192,9 +183,15 @@ namespace party
 	int get_client_count()
 	{
 		auto count = 0;
+		const auto* svs_clients = *game::mp::svs_clients;
+		if (svs_clients == nullptr)
+		{
+			return count;
+		}
+
 		for (auto i = 0; i < *game::mp::svs_numclients; ++i)
 		{
-			if (game::mp::svs_clients[i].header.state >= 1)
+			if (svs_clients[i].header.state >= 1)
 			{
 				++count;
 			}
@@ -206,9 +203,15 @@ namespace party
 	int get_bot_count()
 	{
 		auto count = 0;
+		const auto* svs_clients = *game::mp::svs_clients;
+		if (svs_clients == nullptr)
+		{
+			return count;
+		}
+
 		for (auto i = 0; i < *game::mp::svs_numclients; ++i)
 		{
-			if (game::mp::svs_clients[i].header.state >= 1 &&
+			if (svs_clients[i].header.state >= 1 &&
 				game::SV_BotIsBot(i))
 			{
 				++count;
@@ -282,7 +285,6 @@ namespace party
 			}
 
 			console::info("Starting map: %s\n", mapname.data());
-
 			auto* gametype = game::Dvar_FindVar("g_gametype");
 			if (gametype && gametype->current.string)
 			{
@@ -317,21 +319,28 @@ namespace party
 				return;
 			}
 
-			// hook disconnect command function
-			utils::hook::jump(0x1402521C7, disconnect_stub);
-
 			// detour CL_Disconnect to clear motd
-			cldisconnect_hook.create(0x140252060, cl_disconnect_stub);
+			cl_disconnect_hook.create(0x12F080_b, cl_disconnect_stub);
 
 			if (game::environment::is_mp())
 			{
 				// show custom drop reason
-				utils::hook::nop(0x140251EFB, 13);
-				utils::hook::jump(0x140251EFB, drop_reason_stub, true);
+				utils::hook::nop(0x12EF4E_b, 13);
+				utils::hook::jump(0x12EF4E_b, utils::hook::assemble([](utils::hook::assembler& a)
+				{
+					a.mov(rdx, rsi);
+					a.mov(ecx, 2);
+					a.jmp(0x12EF27_b);
+				}), true);
+
+				command::add("disconnect", disconnect);
 			}
 
 			// enable custom kick reason in GScr_KickPlayer
-			utils::hook::set<uint8_t>(0x140376A1D, 0xEB);
+			utils::hook::set<uint8_t>(0xE423D_b, 0xEB);
+
+			// allow custom didyouknow based on sv_motd
+			utils::hook::call(0x1A8A3A_b, get_didyouknow_stub);
 
 			command::add("map", [](const command::params& argument)
 			{
@@ -349,11 +358,12 @@ namespace party
 				{
 					return;
 				}
-				*reinterpret_cast<int*>(0x14A3A91D0) = 1; // sv_map_restart
-				*reinterpret_cast<int*>(0x14A3A91D4) = 1; // sv_loadScripts
-				*reinterpret_cast<int*>(0x14A3A91D8) = 0; // sv_migrate
 
-				utils::hook::invoke<void>(0x14047E7F0); // SV_CheckLoadGame
+				*reinterpret_cast<int*>(0xB7B8E60_b) = 1; // sv_map_restart
+				*reinterpret_cast<int*>(0xB7B8E64_b) = 1; // sv_loadScripts
+				*reinterpret_cast<int*>(0xB7B8E68_b) = 0; // sv_migrate
+
+				utils::hook::invoke<void>(0x54BD50_b); // SV_CheckLoadGame
 			});
 
 			command::add("fast_restart", []()
@@ -545,8 +555,6 @@ namespace party
 				                               utils::string::va("%c \"%s\"", 84, message.data()));
 				printf("%s\n", message.data());
 			});
-
-			utils::hook::call(0x1404C6E8D, didyouknow_stub); // allow custom didyouknow based on sv_motd
 
 			network::on("getInfo", [](const game::netadr_s& target, const std::string_view& data)
 			{

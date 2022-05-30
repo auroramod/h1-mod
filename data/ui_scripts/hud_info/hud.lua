@@ -93,6 +93,7 @@ function infoelement(data)
     local value = LUI.UIText.new({
         left = left + 5,
         top = textoffsety,
+        font = labelfont.Font,
         height = textheight,
         leftAnchor = true,
         topAnchor = true,
@@ -156,3 +157,4 @@ LUI.onmenuopen("mp_hud", function(hud)
 
     hud.static:addElement(infobar)
 end)
+

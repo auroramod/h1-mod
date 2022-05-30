@@ -1,13 +1,16 @@
 #include <std_include.hpp>
 #include "console.hpp"
 #include "loader/component_loader.hpp"
+
 #include "game/game.hpp"
+
 #include "command.hpp"
+#include "rcon.hpp"
 
 #include <utils/thread.hpp>
-#include <utils/flags.hpp>
-#include <utils/concurrency.hpp>
 #include <utils/hook.hpp>
+
+#define OUTPUT_HANDLE GetStdHandle(STD_OUTPUT_HANDLE)
 
 namespace game_console
 {
@@ -18,26 +21,40 @@ namespace console
 {
 	namespace
 	{
-		using message_queue = std::queue<std::string>;
-		utils::concurrency::container<message_queue> messages;
+		utils::hook::detour printf_hook;
+		std::recursive_mutex print_mutex;
 
-		bool native_console()
+		struct
 		{
-			static const auto flag = utils::flags::has_flag("nativeconsole");
-			return flag;
+			bool kill;
+			std::thread thread;
+			HANDLE kill_event;
+			char buffer[512]{};
+			int cursor;
+			std::int32_t history_index = -1;
+			std::deque<std::string> history{};
+		} con{};
+
+		void set_cursor_pos(int x)
+		{
+			CONSOLE_SCREEN_BUFFER_INFO info{};
+			GetConsoleScreenBufferInfo(OUTPUT_HANDLE, &info);
+			info.dwCursorPosition.X = static_cast<short>(x);
+			SetConsoleCursorPosition(OUTPUT_HANDLE, info.dwCursorPosition);
 		}
 
-		void hide_console()
+		void show_cursor(const bool show)
 		{
-			auto* const con_window = GetConsoleWindow();
+			CONSOLE_CURSOR_INFO info{};
+			GetConsoleCursorInfo(OUTPUT_HANDLE, &info);
+			info.bVisible = show;
+			SetConsoleCursorInfo(OUTPUT_HANDLE, &info);
+		}
 
-			DWORD process;
-			GetWindowThreadProcessId(con_window, &process);
-
-			if (!native_console() && (process == GetCurrentProcessId() || IsDebuggerPresent()))
-			{
-				ShowWindow(con_window, SW_HIDE);
-			}
+		template <typename... Args>
+		int invoke_printf(const char* fmt, Args&&... args)
+		{
+			return printf_hook.invoke<int>(fmt, std::forward<Args>(args)...);
 		}
 
 		std::string format(va_list* ap, const char* message)
@@ -45,244 +62,266 @@ namespace console
 			static thread_local char buffer[0x1000];
 
 			const auto count = _vsnprintf_s(buffer, sizeof(buffer), sizeof(buffer), message, *ap);
+			if (count < 0)
+			{
+				return {};
+			}
 
-			if (count < 0) return {};
 			return {buffer, static_cast<size_t>(count)};
 		}
 
-		void dispatch_message(const int type, const std::string& message)
+		uint8_t get_attribute(const int type)
 		{
-			if (native_console())
+			switch (type)
 			{
-				printf("%s\n", message.data());
+			case con_type_info:
+				return 7; // white
+			case con_type_warning:
+				return 6; // yellow
+			case con_type_error:
+				return 4; // red
+			case con_type_debug:
+				return 3; // cyan
+			}
+
+			return 7;
+		}
+
+		void update()
+		{
+			std::lock_guard _0(print_mutex);
+
+			show_cursor(false);
+			set_cursor_pos(0);
+			invoke_printf("%s", con.buffer);
+			set_cursor_pos(con.cursor);
+			show_cursor(true);
+		}
+
+		void clear_output()
+		{
+			std::lock_guard _0(print_mutex);
+
+			show_cursor(false);
+			set_cursor_pos(0);
+
+			for (auto i = 0; i < std::strlen(con.buffer); i++)
+			{
+				invoke_printf(" ");
+			}
+
+			set_cursor_pos(con.cursor);
+			show_cursor(true);
+		}
+
+		int dispatch_message(const int type, const std::string& message)
+		{
+			if (rcon::message_redirect(message))
+			{
+				return 0;
+			}
+
+			std::lock_guard _0(print_mutex);
+
+			clear_output();
+			set_cursor_pos(0);
+
+			SetConsoleTextAttribute(OUTPUT_HANDLE, get_attribute(type));
+			const auto res = invoke_printf("%s", message.data());
+			SetConsoleTextAttribute(OUTPUT_HANDLE, get_attribute(con_type_info));
+
+			game_console::print(type, message);
+
+			if (message.size() <= 0 || message[message.size() - 1] != '\n')
+			{
+				invoke_printf("\n");
+			}
+
+			update();
+			return res;
+		}
+
+		void clear()
+		{
+			std::lock_guard _0(print_mutex);
+
+			clear_output();
+			strncpy_s(con.buffer, "", sizeof(con.buffer));
+
+			con.cursor = 0;
+			set_cursor_pos(0);
+		}
+
+		size_t get_max_input_length()
+		{
+			CONSOLE_SCREEN_BUFFER_INFO info{};
+			GetConsoleScreenBufferInfo(OUTPUT_HANDLE, &info);
+			const auto columns = static_cast<size_t>(info.srWindow.Right - info.srWindow.Left - 1);
+			return std::max(size_t(0), std::min(columns, sizeof(con.buffer)));
+		}
+
+		void handle_resize()
+		{
+			clear();
+			update();
+		}
+
+		void handle_input(const INPUT_RECORD record)
+		{
+			if (record.EventType == WINDOW_BUFFER_SIZE_EVENT)
+			{
+				handle_resize();
 				return;
 			}
 
-			game_console::print(type, message);
-			messages.access([&message](message_queue& msgs)
+			if (record.EventType != KEY_EVENT || !record.Event.KeyEvent.bKeyDown)
 			{
-				msgs.emplace(message);
-			});
-		}
-
-		void append_text(const char* text)
-		{
-			dispatch_message(con_type_info, text);
-		}
-	}
-
-	class component final : public component_interface
-	{
-	public:
-		component()
-		{
-			hide_console();
-
-			if (native_console())
-			{
-				setvbuf(stdout, nullptr, _IONBF, 0);
-				setvbuf(stderr, nullptr, _IONBF, 0);
-			}
-			else
-			{
-				(void)_pipe(this->handles_, 1024, _O_TEXT);
-				(void)_dup2(this->handles_[1], 1);
-				(void)_dup2(this->handles_[1], 2);
-			}
-		}
-
-		void post_start() override
-		{
-			this->terminate_runner_ = false;
-
-			this->console_runner_ = utils::thread::create_named_thread("Console IO", [this]
-			{
-				if (native_console())
-				{
-					this->native_input();
-				}
-				else
-				{
-					this->runner();
-				}
-			});
-		}
-
-		void pre_destroy() override
-		{
-			this->terminate_runner_ = true;
-
-			printf("\r\n");
-			_flushall();
-
-			if (this->console_runner_.joinable())
-			{
-				this->console_runner_.join();
+				return;
 			}
 
-			if (this->console_thread_.joinable())
+			std::lock_guard _0(print_mutex);
+
+			const auto key = record.Event.KeyEvent.wVirtualKeyCode;
+			switch (key)
 			{
-				this->console_thread_.join();
+			case VK_UP:
+			{
+				if (++con.history_index >= con.history.size())
+				{
+					con.history_index = static_cast<int>(con.history.size()) - 1;
+				}
+
+				clear();
+
+				if (con.history_index != -1)
+				{
+					strncpy_s(con.buffer, con.history.at(con.history_index).data(), sizeof(con.buffer));
+					con.cursor = static_cast<int>(strlen(con.buffer));
+				}
+
+				update();
+				break;
 			}
-
-#ifndef NATIVE_CONSOLE
-			_close(this->handles_[0]);
-			_close(this->handles_[1]);
-#endif
-
-			messages.access([&](message_queue& msgs)
+			case VK_DOWN:
 			{
-				msgs = {};
-			});
-		}
-
-		void post_unpack() override
-		{
-			// Redirect input (]command)
-			utils::hook::jump(SELECT_VALUE(0x1403E34C0, 0x1405141E0), append_text); // H1(1.4)
-
-			this->initialize();
-		}
-
-	private:
-		volatile bool console_initialized_ = false;
-		volatile bool terminate_runner_ = false;
-
-		std::thread console_runner_;
-		std::thread console_thread_;
-
-		int handles_[2]{};
-
-		void initialize()
-		{
-			this->console_thread_ = utils::thread::create_named_thread("Console", [this]()
-			{
-				if (!native_console() && (game::environment::is_dedi() || !utils::flags::has_flag("noconsole")))
+				if (--con.history_index < -1)
 				{
-					game::Sys_ShowConsole();
+					con.history_index = -1;
 				}
 
-				if (!game::environment::is_dedi())
+				clear();
+
+				if (con.history_index != -1)
 				{
-					// Hide that shit
-					ShowWindow(console::get_window(), SW_MINIMIZE);
+					strncpy_s(con.buffer, con.history.at(con.history_index).data(), sizeof(con.buffer));
+					con.cursor = static_cast<int>(strlen(con.buffer));
 				}
 
+				update();
+				break;
+			}
+			case VK_LEFT:
+			{
+				if (con.cursor > 0)
 				{
-					messages.access([&](message_queue&)
+					con.cursor--;
+					set_cursor_pos(con.cursor);
+				}
+
+				break;
+			}
+			case VK_RIGHT:
+			{
+				if (con.cursor < std::strlen(con.buffer))
+				{
+					con.cursor++;
+					set_cursor_pos(con.cursor);
+				}
+
+				break;
+			}
+			case VK_RETURN:
+			{
+				if (con.history_index != -1)
+				{
+					const auto itr = con.history.begin() + con.history_index;
+
+					if (*itr == con.buffer)
 					{
-						this->console_initialized_ = true;
-					});
-				}
-
-				MSG msg;
-				while (!this->terminate_runner_)
-				{
-					if (PeekMessageA(&msg, nullptr, NULL, NULL, PM_REMOVE))
-					{
-						if (msg.message == WM_QUIT)
-						{
-							command::execute("quit", false);
-							break;
-						}
-
-						TranslateMessage(&msg);
-						DispatchMessage(&msg);
-					}
-					else
-					{
-						this->log_messages();
-						std::this_thread::sleep_for(1ms);
+						con.history.erase(con.history.begin() + con.history_index);
 					}
 				}
-			});
-		}
 
-		void log_messages()
-		{
-			/*while*/
-			if (this->console_initialized_ && !messages.get_raw().empty())
-			{
-				std::queue<std::string> message_queue_copy;
-
+				if (con.buffer[0])
 				{
-					messages.access([&](message_queue& msgs)
-					{
-						message_queue_copy = std::move(msgs);
-						msgs = {};
-					});
+					con.history.push_front(con.buffer);
 				}
 
-				while (!message_queue_copy.empty())
+				if (con.history.size() > 10)
 				{
-					log_message(message_queue_copy.front());
-					message_queue_copy.pop();
+					con.history.erase(con.history.begin() + 10);
 				}
+
+				con.history_index = -1;
+
+				game::Cbuf_AddText(0, 0, con.buffer);
+
+				con.cursor = 0;
+
+				clear_output();
+				invoke_printf("]%s\r\n", con.buffer);
+				strncpy_s(con.buffer, "", sizeof(con.buffer));
+				break;
 			}
-
-			fflush(stdout);
-			fflush(stderr);
-		}
-
-		static void log_message(const std::string& message)
-		{
-			OutputDebugStringA(message.data());
-			game::Conbuf_AppendText(message.data());
-		}
-
-		void runner()
-		{
-			char buffer[1024];
-
-			while (!this->terminate_runner_ && this->handles_[0])
+			case VK_BACK:
 			{
-				const auto len = _read(this->handles_[0], buffer, sizeof(buffer));
-				if (len > 0)
+				if (con.cursor <= 0)
 				{
-					dispatch_message(con_type_info, std::string(buffer, len));
+					break;
 				}
-				else
-				{
-					std::this_thread::sleep_for(1ms);
-				}
+
+				clear_output();
+
+				std::memmove(con.buffer + con.cursor - 1, con.buffer + con.cursor,
+					strlen(con.buffer) + 1 - con.cursor);
+				con.cursor--;
+
+				update();
+				break;
 			}
-
-			std::this_thread::yield();
-		}
-
-		void native_input()
-		{
-			std::string cmd;
-
-			while (!this->terminate_runner_)
+			default:
 			{
-				std::getline(std::cin, cmd);
-				command::execute(cmd);
+				const auto c = record.Event.KeyEvent.uChar.AsciiChar;
+				if (!c)
+				{
+					break;
+				}
+
+				if (std::strlen(con.buffer) + 1 >= get_max_input_length())
+				{
+					break;
+				}
+
+				std::memmove(con.buffer + con.cursor + 1, 
+					con.buffer + con.cursor, std::strlen(con.buffer) + 1 - con.cursor);
+				con.buffer[con.cursor] = c;
+				con.cursor++;
+
+				update();
+				break;
 			}
-
-			std::this_thread::yield();
+			}
 		}
-	};
 
-	HWND get_window()
-	{
-		return *reinterpret_cast<HWND*>((SELECT_VALUE(0x14CF56C00, 0x14DDFC2D0))); // H1(1.4)
-	}
+		int __cdecl printf_stub(const char* fmt, ...)
+		{
+			va_list ap;
+			va_start(ap, fmt);
+			const auto result = format(&ap, fmt);
+			va_end(ap);
 
-	void set_title(std::string title)
-	{
-		SetWindowText(get_window(), title.data());
-	}
-
-	void set_size(const int width, const int height)
-	{
-		RECT rect;
-		GetWindowRect(get_window(), &rect);
-
-		SetWindowPos(get_window(), nullptr, rect.left, rect.top, width, height, 0);
-
-		auto* const logo_window = *reinterpret_cast<HWND*>(SELECT_VALUE(0x14CF56C10, 0x14DDFC2E0)); // H1(1.4)
-		SetWindowPos(logo_window, nullptr, 5, 5, width - 25, 60, 0);
+			return dispatch_message(con_type_info, result);
+		}
 	}
 
 	void print(const int type, const char* fmt, ...)
@@ -294,6 +333,86 @@ namespace console
 
 		dispatch_message(type, result);
 	}
+
+	class component final : public component_interface
+	{
+	public:
+		component()
+		{
+			ShowWindow(GetConsoleWindow(), SW_HIDE);
+		}
+
+		void post_unpack() override
+		{
+			printf_hook.create(printf, printf_stub);
+
+			ShowWindow(GetConsoleWindow(), SW_SHOW);
+			SetConsoleTitle("H1-Mod");
+
+			con.kill_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+			con.thread = utils::thread::create_named_thread("Console", []()
+			{
+				const auto handle = GetStdHandle(STD_INPUT_HANDLE);
+				HANDLE handles[2] = {handle, con.kill_event};
+				MSG msg{};
+
+				INPUT_RECORD record{};
+				DWORD num_events{};
+
+				while (!con.kill)
+				{
+					const auto result = MsgWaitForMultipleObjects(2, handles, FALSE, INFINITE, QS_ALLINPUT);
+					if (con.kill)
+					{
+						return;
+					}
+
+					switch (result)
+					{
+					case WAIT_OBJECT_0:
+					{
+						if (!ReadConsoleInput(handle, &record, 1, &num_events) || num_events == 0)
+						{
+							break;
+						}
+
+						handle_input(record);
+						break;
+					}
+					case WAIT_OBJECT_0 + 1:
+					{
+						if (!PeekMessageA(&msg, GetConsoleWindow(), NULL, NULL, PM_REMOVE))
+						{
+							break;
+						}
+
+						if (msg.message == WM_QUIT)
+						{
+							command::execute("quit", false);
+							break;
+						}
+
+						TranslateMessage(&msg);
+						DispatchMessage(&msg);
+						break;
+					}
+					}
+				}
+			});
+		}
+
+		void pre_destroy() override
+		{
+			con.kill = true;
+			SetEvent(con.kill_event);
+
+			if (con.thread.joinable())
+			{
+				con.thread.join();
+			}
+		}
+	};
 }
 
 REGISTER_COMPONENT(console::component)

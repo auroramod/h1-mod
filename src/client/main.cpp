@@ -20,16 +20,6 @@ BOOL WINAPI system_parameters_info_a(const UINT uiAction, const UINT uiParam, co
 	return SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
 }
 
-FARPROC WINAPI get_proc_address(const HMODULE hModule, const LPCSTR lpProcName)
-{
-	if (lpProcName == "GlobalMemoryStatusEx"s)
-	{
-		component_loader::post_unpack();
-	}
-
-	return GetProcAddress(hModule, lpProcName);
-}
-
 launcher::mode detect_mode_from_arguments()
 {
 	if (utils::flags::has_flag("dedicated"))
@@ -50,14 +40,52 @@ launcher::mode detect_mode_from_arguments()
 	return launcher::mode::none;
 }
 
-FARPROC load_binary(const launcher::mode mode)
+bool apply_aslr_patch(std::string* data)
+{
+	// mp binary, sp binary
+	if (data->size() != 0x1B97788 && data->size() != 0x1346D88)
+	{
+		return false;
+	}
+
+	auto* dos_header = reinterpret_cast<PIMAGE_DOS_HEADER>(&data->at(0));
+	auto* nt_headers = reinterpret_cast<PIMAGE_NT_HEADERS>(&data->at(dos_header->e_lfanew));
+	auto* optional_header = &nt_headers->OptionalHeader;
+
+	if (optional_header->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE)
+	{
+		optional_header->DllCharacteristics &= ~(IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE);
+	}
+
+	return true;
+}
+
+void get_aslr_patched_binary(std::string* binary, std::string* data)
+{
+	std::string patched_binary = "h1-mod\\" + *binary;
+
+	if (!apply_aslr_patch(data) ||
+		(!utils::io::file_exists(patched_binary) &&
+			!utils::io::write_file(patched_binary, *data, false)))
+	{
+		throw std::runtime_error(utils::string::va(
+			"Could not create aslr patched binary!\n(%s)",
+			binary->data()
+		));
+	}
+
+	*binary = patched_binary;
+}
+
+FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 {
 	loader loader;
 	utils::nt::library self;
 
 	loader.set_import_resolver([self](const std::string& library, const std::string& function) -> void*
 	{
-		if (library == "steam_api64.dll")
+		if (library == "steam_api64.dll"
+			&& function != "SteamAPI_GetSteamInstallPath") // Arxan requires one valid steam api import - maybe SteamAPI_Shutdown is better?
 		{
 			return self.get_proc<FARPROC>(function);
 		}
@@ -68,10 +96,6 @@ FARPROC load_binary(const launcher::mode mode)
 		else if (function == "SystemParametersInfoA")
 		{
 			return system_parameters_info_a;
-		}
-		else if (function == "GetProcAddress")
-		{
-			return get_proc_address;
 		}
 
 		return component_loader::load_import(library, function);
@@ -100,7 +124,14 @@ FARPROC load_binary(const launcher::mode mode)
 			binary.data()));
 	}
 
-	return loader.load_library(binary);
+	get_aslr_patched_binary(&binary, &data);
+ 
+#ifdef INJECT_HOST_AS_LIB
+	return loader.load_library(binary, base_address);
+#else
+	*base_address = 0x140000000;
+	return loader.load(self, data);
+#endif
 }
 
 void remove_crash_file()
@@ -158,6 +189,8 @@ void apply_proper_directory()
 
 int main()
 {
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
+
 	FARPROC entry_point;
 	enable_dpi_awareness();
 
@@ -166,6 +199,7 @@ int main()
 	limit_parallel_dll_loading();
 
 	srand(uint32_t(time(nullptr)));
+	remove_crash_file();
 
 	{
 		auto premature_shutdown = true;
@@ -179,8 +213,7 @@ int main()
 
 		try
 		{
-			apply_proper_directory();
-			remove_crash_file();
+			//apply_proper_directory();
 
 			if (!component_loader::post_start()) return 0;
 
@@ -194,11 +227,14 @@ int main()
 
 			game::environment::set_mode(mode);
 
-			entry_point = load_binary(mode);
+			uint64_t base_address{};
+			entry_point = load_binary(mode, &base_address);
 			if (!entry_point)
 			{
 				throw std::runtime_error("Unable to load binary into memory");
 			}
+
+			game::base_address = base_address;
 
 			if (!component_loader::post_load()) return 0;
 

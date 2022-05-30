@@ -60,25 +60,25 @@ namespace network
 			// Command handled
 			a.popad64();
 			a.mov(al, 1);
-			a.jmp(0x140252AF8);
+			a.jmp(0x12FCAA_b);
 
 			a.bind(return_unhandled);
 			a.popad64();
-			a.jmp(0x14025234C);
+			a.jmp(0x12F3AC_b);
 		}
 
-		int net_compare_base_address(const game::netadr_s* a1, const game::netadr_s* a2)
+		int net_compare_base_address(const game::netadr_s* a, const game::netadr_s* b)
 		{
-			if (a1->type == a2->type)
+			if (a->type == b->type)
 			{
-				switch (a1->type)
+				switch (a->type)
 				{
 				case game::netadrtype_t::NA_BOT:
 				case game::netadrtype_t::NA_LOOPBACK:
-					return a1->port == a2->port;
+					return a->port == b->port;
 
 				case game::netadrtype_t::NA_IP:
-					return !memcmp(a1->ip, a2->ip, 4);
+					return !memcmp(a->ip, b->ip, 4);
 				case game::netadrtype_t::NA_BROADCAST:
 					return true;
 				default:
@@ -89,9 +89,9 @@ namespace network
 			return false;
 		}
 
-		int net_compare_address(const game::netadr_s* a1, const game::netadr_s* a2)
+		int net_compare_address(const game::netadr_s* a, const game::netadr_s* b)
 		{
-			return net_compare_base_address(a1, a2) && a1->port == a2->port;
+			return net_compare_base_address(a, b) && a->port == b->port;
 		}
 
 		void reconnect_migratated_client(void*, game::netadr_s* from, const int, const int, const char*,
@@ -110,17 +110,17 @@ namespace network
 			if (net_interface && net_interface != "localhost"s)
 			{
 				// Sys_StringToSockaddr
-				utils::hook::invoke<void>(0x1404F6580, net_interface, &address);
+				utils::hook::invoke<void>(0x59E810_b, net_interface, &address);
 			}
 
 			address.sin_family = AF_INET;
 			address.sin_port = ntohs(static_cast<short>(port));
 
-			const auto sock = ::socket(AF_INET, SOCK_DGRAM, protocol);
+			const auto sock = socket(AF_INET, SOCK_DGRAM, protocol);
 
 			u_long arg = 1;
 			ioctlsocket(sock, FIONBIO, &arg);
-			char optval[4] = { 1 };
+			char optval[4] = {1};
 			setsockopt(sock, 0xFFFF, 32, optval, 4);
 
 			if (bind(sock, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != -1)
@@ -138,10 +138,10 @@ namespace network
 		get_callbacks()[utils::string::to_lower(command)] = callback;
 	}
 
-	int dw_send_to_stub(const int size, const char* src, game::netadr_s* a3)
+	int dw_send_to_stub(const int size, const char* src, game::netadr_s* to)
 	{
 		sockaddr s = {};
-		game::NetadrToSockadr(a3, &s);
+		game::NetadrToSockadr(to, &s);
 		return sendto(*game::query_socket, src, size, 0, &s, 16) >= 0;
 	}
 
@@ -229,53 +229,47 @@ namespace network
 				}
 
 				// redirect dw_sendto to raw socket
-				//utils::hook::jump(0x1404D850A, reinterpret_cast<void*>(0x1404D849A));
-				utils::hook::call(0x140513467, dw_send_to_stub);
+				utils::hook::jump(0x5EEC90_b, dw_send_to_stub);
 				utils::hook::jump(game::Sys_SendPacket, dw_send_to_stub);
 
 				// intercept command handling
-				utils::hook::jump(0x140252327, utils::hook::assemble(handle_command_stub), true);
+				utils::hook::jump(0x12F387_b, utils::hook::assemble(handle_command_stub), true);
 
 				// handle xuid without secure connection
-				utils::hook::nop(0x140486AAF, 6);
+				utils::hook::nop(0x554222_b, 6);
 
-				utils::hook::jump(0x140424F20, net_compare_address);
-				utils::hook::jump(0x140424F70, net_compare_base_address);
+				utils::hook::jump(0x4F1800_b, net_compare_address);
+				utils::hook::jump(0x4F1850_b, net_compare_base_address);
 
 				// don't establish secure conenction
-				utils::hook::set<uint8_t>(0x14027EA4D, 0xEB);
-				utils::hook::set<uint8_t>(0x14027EB1E, 0xEB);
-				utils::hook::set<uint8_t>(0x14027EF8D, 0xEB);
-				utils::hook::set<uint8_t>(0x14025081F, 0xEB);
+				utils::hook::set<uint8_t>(0x358C8D_b, 0xEB);
+				utils::hook::set<uint8_t>(0x358D5E_b, 0xEB);
+				utils::hook::set<uint8_t>(0x3591CD_b, 0xEB);
+				utils::hook::set<uint8_t>(0x12CD0F_b, 0xEB);
 
 				// ignore unregistered connection
-				utils::hook::jump(0x140480F46, 0x140480EE5);
-				utils::hook::set<uint8_t>(0x140480F3B, 0xEB);
+				utils::hook::jump(0x54E2D1_b, 0x54E270_b, true);
+				utils::hook::set<uint8_t>(0x54E2C6_b, 0xEB);
 
 				// disable xuid verification
-				utils::hook::set<uint8_t>(0x14005B62D, 0xEB);
-				utils::hook::set<uint8_t>(0x14005B649, 0xEB);
+				utils::hook::set<uint8_t>(0x728BF_b, 0xEB);
 
 				// disable xuid verification
-				utils::hook::nop(0x14048382C, 2);
-				utils::hook::set<uint8_t>(0x140483889, 0xEB);
+				utils::hook::nop(0x5509D9_b, 2);
+				utils::hook::set<uint8_t>(0x550A36_b, 0xEB);
 
 				// ignore configstring mismatch
-				utils::hook::set<uint8_t>(0x1402591C9, 0xEB);
+				utils::hook::set<uint8_t>(0x341261_b, 0xEB);
 
 				// ignore dw handle in SV_PacketEvent
-				utils::hook::set<uint8_t>(0x1404898E2, 0xEB);
-				utils::hook::call(0x1404898D6, &net_compare_address);
+				utils::hook::set<uint8_t>(0x1CBC22_b, 0xEB);
 
 				// ignore dw handle in SV_FindClientByAddress
-				utils::hook::set<uint8_t>(0x140488EFD, 0xEB);
-				utils::hook::call(0x140488EF1, &net_compare_address);
+				utils::hook::set<uint8_t>(0x1CB24D_b, 0xEB);
 
 				// ignore dw handle in SV_DirectConnect
-				utils::hook::set<uint8_t>(0x140480C58, 0xEB);
-				utils::hook::set<uint8_t>(0x140480E6F, 0xEB);
-				utils::hook::call(0x140480C4B, &net_compare_address);
-				utils::hook::call(0x140480E62, &net_compare_address);
+				utils::hook::set<uint8_t>(0x54DFE8_b, 0xEB);
+				utils::hook::set<uint8_t>(0x54E1FD_b, 0xEB);
 
 				// increase cl_maxpackets
 				dvars::override::register_int("cl_maxpackets", 1000, 1, 1000, game::DVAR_FLAG_SAVED);
@@ -284,31 +278,31 @@ namespace network
 				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_FLAG_NONE);
 
 				// ignore impure client
-				utils::hook::jump(0x140481B58, 0x140481BEE);
+				utils::hook::jump(0x54EDD3_b, 0x54EE69_b);
 
 				// don't send checksum
-				utils::hook::set<uint8_t>(0x1404F6398, 0);
+				utils::hook::set<uint8_t>(0x59E628_b, 0);
 
 				// don't read checksum
-				utils::hook::set(0x1404F6620, 0xC301B0);
+				utils::hook::set(0x59E8B0_b, 0xC301B0);
 
 				// don't try to reconnect client
-				utils::hook::call(0x140480DFF, reconnect_migratated_client);
-				utils::hook::nop(0x140480DDB, 4); // this crashes when reconnecting for some reason
+				utils::hook::jump(0x54D220_b, reconnect_migratated_client);
+				utils::hook::nop(0x54E168_b, 4); // this crashes when reconnecting for some reason
 
 				// allow server owner to modify net_port before the socket bind
-				utils::hook::call(0x140512BE5, register_netport_stub);
-				utils::hook::call(0x140512D20, register_netport_stub);
+				utils::hook::call(0x5BD032_b, register_netport_stub);
+				utils::hook::call(0x5BD3F0_b, register_netport_stub);
 
 				// increase allowed packet size
 				const auto max_packet_size = 0x20000;
-				utils::hook::set<int>(0x1404255F1, max_packet_size);
-				utils::hook::set<int>(0x140425630, max_packet_size);
-				utils::hook::set<int>(0x140425522, max_packet_size);
-				utils::hook::set<int>(0x140425545, max_packet_size);
+				utils::hook::set<int>(0x4F1ED1_b, max_packet_size);
+				utils::hook::set<int>(0x4F1F10_b, max_packet_size);
+				utils::hook::set<int>(0x4F1E02_b, max_packet_size);
+				utils::hook::set<int>(0x4F1E25_b, max_packet_size);
 
 				// ignore built in "print" oob command and add in our own
-				utils::hook::set<uint8_t>(0x14025280E, 0xEB);
+				utils::hook::set<uint8_t>(0x12F817_b, 0xEB);
 				on("print", [](const game::netadr_s&, const std::string_view& data)
 				{
 					const std::string message{data};
@@ -317,7 +311,7 @@ namespace network
 
 				// Use our own socket since the game's socket doesn't work with non localhost addresses
 				// why? no idea
-				utils::hook::jump(0x140512B40, create_socket);
+				utils::hook::jump(0x5BD210_b, create_socket);
 			}
 		}
 	};

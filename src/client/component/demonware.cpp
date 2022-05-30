@@ -297,7 +297,7 @@ namespace demonware
 
 				if (server)
 				{
-					server->handle_input(buf, len, {s, to, tolen});
+					server->handle_input(buf, len, { s, to, tolen });
 					return len;
 				}
 
@@ -425,9 +425,9 @@ namespace demonware
 			}
 		}
 
-		void bd_logger_stub(char* a1, void* a2, void* a3, void* a4, const char* function, ...)
+		void bd_logger_stub()
 		{
-
+			//printf("logged\n");
 		}
 
 #ifdef DEBUG
@@ -481,6 +481,39 @@ namespace demonware
 			printf("bdAuth: Unknown error\n");
 		}
 #endif
+
+		utils::hook::detour handle_auth_reply_hook;
+		bool handle_auth_reply_stub(void* a1, void* a2, void* a3)
+		{
+			// Skip bdAuth::validateResponseSignature
+			utils::hook::set(0x7D4AB0_b, 0xC301B0);
+			// Skip bdAuth::processPlatformData
+			utils::hook::set(0x7D55C0_b, 0xC301B0);
+
+			return handle_auth_reply_hook.invoke<bool>(a1, a2, a3);
+		}
+
+		void* allocate_somewhere_near(uint8_t* base_address)
+		{
+			const size_t PAGE_SIZE = 0x1000;
+			size_t offset = 0;
+			while (true)
+			{
+				offset += PAGE_SIZE;
+				auto res = VirtualAlloc(base_address - offset, PAGE_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+				if (res)
+				{
+					std::memset(res, 0, PAGE_SIZE);
+					return res;
+				}
+			}
+		}
+
+		void request_start_match_stub()
+		{
+			const auto* args = "StartServer";
+			game::UI_RunMenuScript(0, &args);
+		}
 	}
 
 	class component final : public component_interface
@@ -505,6 +538,11 @@ namespace demonware
 
 		void post_load() override
 		{
+			if (game::environment::is_sp())
+			{
+				return;
+			}
+
 			server_thread = utils::thread::create_named_thread("Demonware", server_main);
 		}
 
@@ -537,52 +575,44 @@ namespace demonware
 
 		void post_unpack() override
 		{
-			utils::hook::jump(SELECT_VALUE(0x140610320, 0x1407400B0), bd_logger_stub);
-
 			if (game::environment::is_sp())
 			{
-				utils::hook::set<uint8_t>(0x1405FCA00, 0xC3); // bdAuthSteam
-				utils::hook::set<uint8_t>(0x140333A00, 0xC3); // dwNet
+				utils::hook::set<uint8_t>(0x68DDA0_b, 0xC3); // bdAuthSteam
+				utils::hook::set<uint8_t>(0x366600_b, 0xC3); // dwNet
 				return;
 			}
 
-			utils::hook::set<uint8_t>(0x140715039, 0x0);  // CURLOPT_SSL_VERIFYPEER
-			utils::hook::set<uint8_t>(0x140715025, 0xAF); // CURLOPT_SSL_VERIFYHOST
-			utils::hook::set<uint8_t>(0x14095433C, 0x0);  // HTTPS -> HTTP
+			utils::hook::set<uint8_t>(0x7C0AD9_b, 0x0);  // CURLOPT_SSL_VERIFYPEER
+			utils::hook::set<uint8_t>(0x7C0AC5_b, 0xAF); // CURLOPT_SSL_VERIFYHOST
+			utils::hook::set<uint8_t>(0xA1327C_b, 0x0);  // HTTPS -> HTTP
 
-			//HTTPS -> HTTP
-			utils::hook::inject(0x14006DDA9, "http://prod.umbrella.demonware.net/v1.0/");
-			utils::hook::inject(0x14006E11C, "http://prod.umbrella.demonware.net/v1.0/");
-			utils::hook::inject(0x14006E2FB, "http://prod.umbrella.demonware.net/v1.0/");
-			utils::hook::inject(0x14006E9A9, "http://prod.uno.demonware.net/v1.0/");
-			utils::hook::inject(0x14006ED49, "http://prod.uno.demonware.net/v1.0/");
-			utils::hook::inject(0x140728170, "http://%s:%d/auth/");
+			std::memcpy(reinterpret_cast<void*>(0x8D0298_b), 
+				"http://prod.umbrella.demonware.net/v1.0/", sizeof("http://prod.umbrella.demonware.net/v1.0/"));
+			std::memcpy(reinterpret_cast<void*>(0x8D05A8_b),
+				"http://prod.uno.demonware.net/v1.0/", sizeof("http://prod.uno.demonware.net/v1.0/"));
+			std::memcpy(reinterpret_cast<void*>(0x9EDB08_b), "http://%s:%d/auth/", sizeof("http://%s:%d/auth/"));
 
-			utils::hook::set<uint8_t>(0x14047F290, 0xC3); // SV_SendMatchData
-			utils::hook::set<uint8_t>(0x140598990, 0xC3); // Live_CheckForFullDisconnect
+			// utils::hook::set<uint8_t>(0x19F8C0_b, 0xC3); // SV_SendMatchData, not sure
+			utils::hook::nop(0x19BB67_b, 5); // LiveStorage_SendMatchDataComplete
+			utils::hook::nop(0x19BC3F_b, 5); // LiveStorage_GettingStoreConfigComplete probably
+			utils::hook::set<uint8_t>(0x1A3340_b, 0xC3); // Live_CheckForFullDisconnect
 
-#ifdef DEBUG
-			// yes
-			utils::hook::call(0x140727BEB, l);
-			utils::hook::call(0x140727AFC, i);
-			utils::hook::call(0x140727E49, h);
-			utils::hook::call(0x140727E30, g);
-			utils::hook::call(0x140727E37, f);
-			utils::hook::call(0x140727DF2, e);
-			utils::hook::call(0x140727DF9, d);
-			utils::hook::call(0x140727CFC, c);
-			utils::hook::call(0x140727C82, b);
-			utils::hook::call(0x140727E6A, a);
-#endif
-			// Checks X-Signature header or something
-			utils::hook::set(0x140728380, 0xC301B0);
-			// Checks extended_data and extra_data in json object
-			utils::hook::set(0x140728E90, 0xC301B0);
-			// Update check
-			utils::hook::set(0x1403A5390, 0xC301B0);
-			
-			// Remove some while loop in demonware that freezes the rendering for a few secs at launch
-			utils::hook::nop(0x14057DBC5, 5);
+			// Remove some while loop that freezes the rendering for a few secs while connecting
+			utils::hook::nop(0x625555_b, 5);
+
+			handle_auth_reply_hook.create(0x7AC600_b, handle_auth_reply_stub);
+
+			// Skip update check in Live_SyncOnlineDataFlags
+			utils::hook::set(0x47A6D0_b, 0xC301B0);
+			// Remove update failed popup
+			utils::hook::set(0x47B2B0_b, 0xC301B0);
+
+			// xpartygo -> just start the match
+			utils::hook::jump(0x355B80_b, request_start_match_stub, true);
+
+			utils::hook::set(0x396AD0_b, 0xC301B0); // DB_IsZoneLoaded("ffotd")
+			utils::hook::set(0x4DD600_b, 0xC300B0); // dont use ffotd
+			utils::hook::set(0x4DD5B0_b, 0xC300B0); // dont dl ffotd
 		}
 
 		void pre_destroy() override

@@ -15,7 +15,7 @@ namespace binding
 
 		int get_num_keys()
 		{
-			return SELECT_VALUE(102, 103);
+			return 110;
 		}
 
 		int key_write_bindings_to_buffer_stub(int /*localClientNum*/, char* buffer, const int buffer_size)
@@ -83,7 +83,7 @@ namespace binding
 		int key_get_binding_for_cmd_stub(const char* command)
 		{
 			// original binds
-			for (auto i = 0; i <= get_num_keys(); i++)
+			for (auto i = 0; i < get_num_keys(); i++)
 			{
 				if (game::command_whitelist[i] && !strcmp(command, game::command_whitelist[i]))
 				{
@@ -103,7 +103,7 @@ namespace binding
 
 				if (static_cast<size_t>(key) < custom_binds.size() && !custom_binds[key].empty())
 				{
-					game::Cbuf_AddText(local_client_num, utils::string::va("%s\n", custom_binds[key].data()));
+					game::Cbuf_AddText(local_client_num, 0, utils::string::va("%s\n", custom_binds[key].data()));
 				}
 
 				return;
@@ -124,13 +124,13 @@ namespace binding
 			}
 
 			// write all bindings to config file
-			utils::hook::call(SELECT_VALUE(0x1401881DB, 0x14025032F), key_write_bindings_to_buffer_stub); // H1(1.4)
+			utils::hook::jump(SELECT_VALUE(0x1AC980_b, 0x199ED0_b), key_write_bindings_to_buffer_stub);
 
 			// links a custom command to an index
-			utils::hook::jump(SELECT_VALUE(0x140343C00, 0x1404041E0), key_get_binding_for_cmd_stub); // H1(1.4)
+			utils::hook::jump(SELECT_VALUE(0x377280_b, 0x1572B0_b), key_get_binding_for_cmd_stub);
 
 			// execute custom binds
-			cl_execute_key_hook.create(SELECT_VALUE(0x140183C70, 0x14024ACF0), &cl_execute_key_stub); // H1(1.4)
+			cl_execute_key_hook.create(SELECT_VALUE(0x1A8350_b, 0x130610_b), &cl_execute_key_stub);
 		}
 	};
 }

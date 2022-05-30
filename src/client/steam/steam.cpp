@@ -1,6 +1,8 @@
 #include <std_include.hpp>
 #include "steam.hpp"
 
+#include <utils/nt.hpp>
+
 namespace steam
 {
 	uint64_t callbacks::call_id_ = 0;
@@ -82,13 +84,13 @@ namespace steam
 				result_handlers_[result.call]->run(result.data, false, result.call);
 			}
 
-			for (const auto& callback : callback_list_)
+			/*for (const auto& callback : callback_list_)
 			{
 				if (callback && callback->get_i_callback() == result.type)
 				{
 					callback->run(result.data, false, 0);
 				}
-			}
+			}*/
 
 			if (result.data)
 			{
@@ -108,6 +110,13 @@ namespace steam
 
 	bool SteamAPI_Init()
 	{
+		const std::filesystem::path steam_path = steam::SteamAPI_GetSteamInstallPath();
+		if (steam_path.empty()) return true;
+
+		::utils::nt::library::load(steam_path / "tier0_s64.dll");
+		::utils::nt::library::load(steam_path / "vstdlib_s64.dll");
+		::utils::nt::library::load(steam_path / "gameoverlayrenderer64.dll");
+		::utils::nt::library::load(steam_path / "steamclient64.dll");
 		return true;
 	}
 

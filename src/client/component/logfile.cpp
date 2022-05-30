@@ -2,14 +2,9 @@
 #include "loader/component_loader.hpp"
 #include "scheduler.hpp"
 
-#include "game/scripting/entity.hpp"
-#include "game/scripting/execution.hpp"
-#include "game/scripting/lua/value_conversion.hpp"
-#include "game/scripting/lua/error.hpp"
+#include "logfile.hpp"
 
 #include <utils/hook.hpp>
-
-#include "logfile.hpp"
 
 namespace logfile
 {
@@ -19,6 +14,9 @@ namespace logfile
 	{
 		utils::hook::detour scr_player_killed_hook;
 		utils::hook::detour scr_player_damage_hook;
+
+		utils::hook::detour client_command_hook;
+		utils::hook::detour g_shutdown_game_hook;
 
 		std::vector<sol::protected_function> player_killed_callbacks;
 		std::vector<sol::protected_function> player_damage_callbacks;
@@ -58,7 +56,7 @@ namespace logfile
 
 		std::string convert_mod(const int meansOfDeath)
 		{
-			const auto value = reinterpret_cast<game::scr_string_t**>(0x140FEC3F0)[meansOfDeath];
+			const auto value = reinterpret_cast<game::scr_string_t**>(0x10B5290_b)[meansOfDeath];
 			const auto string = game::SL_ConvertToString(*value);
 			return string;
 		}
@@ -68,7 +66,7 @@ namespace logfile
 			const bool isAlternate, const float* vDir, const unsigned int hitLoc, int psTimeOffset, int deathAnimDuration)
 		{
 			{
-				const std::string hitloc = reinterpret_cast<const char**>(0x140FEC4D0)[hitLoc];
+				const std::string hitloc = reinterpret_cast<const char**>(0x10B5370_b)[hitLoc];
 				const auto mod_ = convert_mod(meansOfDeath);
 
 				const auto weapon_ = get_weapon_name(weapon, isAlternate);
@@ -110,7 +108,7 @@ namespace logfile
 			const float* vDir, const unsigned int hitLoc, const int timeOffset)
 		{
 			{
-				const std::string hitloc = reinterpret_cast<const char**>(0x140FEC4D0)[hitLoc];
+				const std::string hitloc = reinterpret_cast<const char**>(0x10B5370_b)[hitLoc];
 				const auto mod_ = convert_mod(meansOfDeath);
 
 				const auto weapon_ = get_weapon_name(weapon, isAlternate);
@@ -145,51 +143,6 @@ namespace logfile
 
 			scr_player_damage_hook.invoke<void>(self, inflictor, attacker, damage, dflags, 
 				meansOfDeath, weapon, isAlternate, vPoint, vDir, hitLoc, timeOffset);
-		}
-
-		void client_command_stub(const int clientNum)
-		{
-			auto self = &game::mp::g_entities[clientNum];
-			char cmd[1024] = {0};
-
-			game::SV_Cmd_ArgvBuffer(0, cmd, 1024);
-
-			if (cmd == "say"s || cmd == "say_team"s)
-			{
-				auto hidden = false;
-				std::string message(game::ConcatArgs(1));
-
-				hidden = message[1] == '/';
-				message.erase(0, hidden ? 2 : 1);
-
-				scheduler::once([cmd, message, self]()
-				{
-					const scripting::entity level{*game::levelEntityId};
-					const scripting::entity player{game::Scr_GetEntityId(self->s.entityNum, 0)};
-
-					scripting::notify(level, cmd, {player, message});
-					scripting::notify(player, cmd, {message});
-				}, scheduler::pipeline::server);
-
-				if (hidden)
-				{
-					return;
-				}
-			}
-
-			// ClientCommand
-			return utils::hook::invoke<void>(0x140336000, clientNum);
-		}
-
-		void g_shutdown_game_stub(const int freeScripts)
-		{
-			{
-				const scripting::entity level{*game::levelEntityId};
-				scripting::notify(level, "shutdownGame_called", {1});
-			}
-
-			// G_ShutdownGame
-			return utils::hook::invoke<void>(0x140345A60, freeScripts);
 		}
 
 		unsigned int local_id_to_entity(unsigned int local_id)
@@ -254,7 +207,7 @@ namespace logfile
 			a.inc(r14);
 			a.mov(dword_ptr(rbp, 0xA4), r15d);
 
-			a.jmp(SELECT_VALUE(0x140376663, 0x140444653));
+			a.jmp(SELECT_VALUE(0x3CA153_b, 0x5111B3_b));
 
 			a.bind(replace);
 
@@ -291,25 +244,53 @@ namespace logfile
 		hook_enabled = false;
 	}
 
+	bool client_command_stub(const int client_num)
+	{
+		auto self = &game::mp::g_entities[client_num];
+		char cmd[1024] = {0};
+
+		game::SV_Cmd_ArgvBuffer(0, cmd, 1024);
+
+		if (cmd == "say"s || cmd == "say_team"s)
+		{
+			auto hidden = false;
+			std::string message(game::ConcatArgs(1));
+
+			hidden = message[1] == '/';
+			message.erase(0, hidden ? 2 : 1);
+
+			scheduler::once([cmd, message, self, hidden]()
+			{
+				const scripting::entity level{*game::levelEntityId};
+				const scripting::entity player{game::Scr_GetEntityId(self->s.entityNum, 0)};
+
+				scripting::notify(level, cmd, {player, message, hidden});
+				scripting::notify(player, cmd, {message, hidden});
+			}, scheduler::pipeline::server);
+
+			if (hidden)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	class component final : public component_interface
 	{
 	public:
 		void post_unpack() override
 		{
-			utils::hook::jump(SELECT_VALUE(0x140376655, 0x140444645), utils::hook::assemble(vm_execute_stub), true);
+			utils::hook::jump(SELECT_VALUE(0x3CA145_b, 0x5111A5_b), utils::hook::assemble(vm_execute_stub), true);
 
 			if (game::environment::is_sp())
 			{
 				return;
 			}
 
-			utils::hook::call(0x14048191D, client_command_stub);
-
-			scr_player_damage_hook.create(0x14037DC50, scr_player_damage_stub);
-			scr_player_killed_hook.create(0x14037DF30, scr_player_killed_stub);
-
-			utils::hook::call(0x140484EC0, g_shutdown_game_stub);
-			utils::hook::call(0x1404853C1, g_shutdown_game_stub);
+			scr_player_damage_hook.create(0x1CE780_b, scr_player_damage_stub);
+			scr_player_killed_hook.create(0x1CEA60_b, scr_player_killed_stub);
 		}
 	};
 }

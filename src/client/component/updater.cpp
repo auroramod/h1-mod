@@ -468,4 +468,4 @@ namespace updater
 	};
 }
 
-REGISTER_COMPONENT(updater::component)
+//REGISTER_COMPONENT(updater::component)
