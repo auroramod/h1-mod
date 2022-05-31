@@ -164,6 +164,11 @@ namespace patches
 				init_network_dvars_hook.invoke<void>(dvar);
 			}
 		}
+
+		int ui_draw_crosshair()
+		{
+			return 1;
+		}
 	}
 
 	class component final : public component_interface
@@ -272,6 +277,7 @@ namespace patches
 			dvars::register_int("scr_game_spectatetype", 1, 0, 99, game::DVAR_FLAG_REPLICATED, "");
 
 			dvars::override::register_bool("ui_drawCrosshair", true, game::DVAR_FLAG_WRITE);
+			utils::hook::jump(0x1E6010_b, ui_draw_crosshair);
 
 			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
 
