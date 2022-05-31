@@ -115,7 +115,12 @@ namespace command
 				return 0;
 			}
 
-			const auto dvar = game::Dvar_FindVar(args[0]);
+			auto dvar = game::Dvar_FindVar(args[0]);
+			if (dvar == nullptr)
+			{
+				const auto hash = static_cast<int>(std::strtoull(args[0], nullptr, 16));
+				dvar = game::Dvar_FindMalleableVar(hash);
+			}
 
 			if (dvar)
 			{
@@ -124,12 +129,20 @@ namespace command
 					const auto current = game::Dvar_ValueToString(dvar, true, dvar->current);
 					const auto reset = game::Dvar_ValueToString(dvar, true, dvar->reset);
 
+					const auto info = dvars::get_dvar_info_from_hash(dvar->hash);
+					std::string desc{};
+					std::string name = args[0];
+
+					if (info.has_value())
+					{
+						name = info.value().name;
+						desc = info.value().description;
+					}
+
 					console::info("\"%s\" is: \"%s\" default: \"%s\" hash: 0x%08lX type: %i\n",
-						args[0], current, reset, dvar->hash, dvar->type);
+						name.data(), current, reset, dvar->hash, dvar->type);
 
-					const auto dvar_info = dvars::dvar_get_description(args[0]);
-
-					console::info("%s\n", dvar_info.data());
+					console::info("%s\n", desc.data());
 					console::info("   %s\n", dvars::dvar_get_domain(dvar->type, dvar->domain).data());
 				}
 				else
