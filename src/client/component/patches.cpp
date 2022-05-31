@@ -227,9 +227,6 @@ namespace patches
 			// disable codPointStore
 			dvars::override::register_int("codPointStore_enabled", 0, 0, 0, game::DVAR_FLAG_NONE);
 
-			// don't register every replicated dvar as a network dvar
-			utils::hook::nop(0x47408E_b, 5); // dvar_foreach
-
 			// patch "Server is different version" to show the server client version
 			utils::hook::inject(0x54DCE5_b, VERSION);
 

@@ -24,12 +24,12 @@ namespace ranked
 
 			if (game::environment::is_mp())
 			{
-				dvars::override::register_bool("xblive_privatematch", false, game::DVAR_FLAG_REPLICATED);
+				dvars::override::register_bool("xblive_privatematch", false, 0);
 			}
 
 			if (game::environment::is_dedi())
 			{
-				dvars::override::register_bool("xblive_privatematch", false, game::DVAR_FLAG_REPLICATED | game::DVAR_FLAG_WRITE);
+				dvars::override::register_bool("xblive_privatematch", false, game::DVAR_FLAG_WRITE);
 				dvars::register_bool("force_ranking", true, game::DVAR_FLAG_WRITE, ""); // Skip some check in _menus.gsc
 			}
 
