@@ -154,6 +154,16 @@ namespace patches
 
 			game::AimAssist_AddToTargetList(aaGlob, screenTarget);
 		}
+
+		utils::hook::detour init_network_dvars_hook;
+		void init_network_dvars_stub(game::dvar_t* dvar)
+		{
+			static const auto hash = game::generateHashValue("r_tonemapHighlightRange");
+			if (dvar->hash == hash)
+			{
+				init_network_dvars_hook.invoke<void>(dvar);
+			}
+		}
 	}
 
 	class component final : public component_interface
@@ -226,6 +236,9 @@ namespace patches
 
 			// disable codPointStore
 			dvars::override::register_int("codPointStore_enabled", 0, 0, 0, game::DVAR_FLAG_NONE);
+
+			// don't register every replicated dvar as a network dvar (only r_tonemapHighlightRange, fixes red dots)
+			init_network_dvars_hook.create(0x4740C0_b, init_network_dvars_stub);
 
 			// patch "Server is different version" to show the server client version
 			utils::hook::inject(0x54DCE5_b, VERSION);
