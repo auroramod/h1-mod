@@ -203,7 +203,7 @@ namespace gameplay
 		void g_damage_stub(game::mp::gentity_s* targ, const game::mp::gentity_s* inflictor, game::mp::gentity_s* attacker,
 			const float* dir, const float* point, int damage, int dflags, int mod,
 			const unsigned int weapon, bool is_alternate, unsigned int hit_loc,
-			unsigned int model_index, unsigned int part_name, int time_offset)
+			unsigned int model_index, unsigned int part_name, int time_offset, int a15)
 		{
 			if (targ->flags & 1) // godmode
 			{
@@ -215,8 +215,8 @@ namespace gameplay
 				damage = 1;
 			}
 
-			g_damage_hook.invoke<void>(targ, inflictor, attacker, dir, point, damage, dflags, mod, weapon, 
-				is_alternate, hit_loc, model_index, part_name, time_offset);
+			g_damage_hook.invoke<void>(targ, inflictor, attacker, dir, point, damage, dflags, mod, weapon,
+				is_alternate, hit_loc, model_index, part_name, time_offset, a15);
 		}
 	}
 
