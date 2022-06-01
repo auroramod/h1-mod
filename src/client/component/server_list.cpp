@@ -1,24 +1,26 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+
 #include "server_list.hpp"
 #include "localized_strings.hpp"
 #include "network.hpp"
 #include "scheduler.hpp"
 #include "party.hpp"
+#include "console.hpp"
+#include "command.hpp"
+
 #include "game/game.hpp"
+#include "game/ui_scripting/execution.hpp"
 
 #include <utils/cryptography.hpp>
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 
-#include "console.hpp"
-#include "command.hpp"
-
 namespace server_list
 {
 	namespace
 	{
-		const int server_limit = 18;
+		const int server_limit = 100;
 
 		struct server_info
 		{
@@ -107,11 +109,6 @@ namespace server_list
 		int ui_feeder_count()
 		{
 			std::lock_guard<std::mutex> _(mutex);
-			if (update_server_list)
-			{
-				update_server_list = false;
-				return 0;
-			}
 			const auto count = static_cast<int>(servers.size());
 			const auto index = get_page_base_index();
 			const auto diff = count - index;
@@ -272,6 +269,15 @@ namespace server_list
 
 			lui_open_menu_hook.invoke<void>(controllerIndex, menuName, isPopup, isModal, isExclusive);
 		}
+
+		void check_refresh()
+		{
+			if (update_server_list)
+			{
+				update_server_list = false;
+				ui_scripting::notify("updateGameList", {});
+			}
+		}
 	}
 
 	bool sl_key_event(const int key, const int down)
@@ -430,6 +436,7 @@ namespace server_list
 			}), true);
 
 			scheduler::loop(do_frame_work, scheduler::pipeline::main);
+			scheduler::loop(check_refresh, scheduler::pipeline::lui, 10ms);
 
 			network::on("getServersResponse", [](const game::netadr_s& target, const std::string_view& data)
 			{
