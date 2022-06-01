@@ -13,7 +13,7 @@ namespace security
 		{
 			if (index1 >= 0 && index1 < 18 && index2 >= 0 && index2 < 42)
 			{
-				utils::hook::invoke<void>(0x61A9D_b, localclient, index1, index2);
+				utils::hook::invoke<void>(0x61A9D0_b, localclient, index1, index2);
 			}
 		}
 	}
