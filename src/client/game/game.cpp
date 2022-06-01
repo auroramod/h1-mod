@@ -38,7 +38,8 @@ namespace game
 
 	void SV_GameSendServerCommand(int client_num, svscmd_type type, const char* text)
 	{
-		if (*mp::svs_clients == nullptr)
+		const auto svs_clients = *mp::svs_clients;
+		if (svs_clients == nullptr)
 		{
 			return;
 		}
@@ -49,7 +50,7 @@ namespace game
 		}
 		else
 		{
-			SV_SendServerCommand(mp::svs_clients[client_num], type, "%s", text);
+			SV_SendServerCommand(&svs_clients[client_num], type, "%s", text);
 		}
 	}
 
