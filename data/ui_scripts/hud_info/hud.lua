@@ -5,8 +5,8 @@ local textoffsety = barheight / 2 - textheight / 2
 
 function createinfobar()
     local infobar = LUI.UIElement.new({
-        left = luiglobals.GameX.IsHardcoreMode() and 160 or 228,
-        top = luiglobals.GameX.IsHardcoreMode() and 5 or 9,
+        left = GameX.IsHardcoreMode() and 0 or 213,
+        top = GameX.IsHardcoreMode() and 0 or -6,
         height = barheight,
         width = 70,
         leftAnchor = true,
@@ -155,6 +155,6 @@ LUI.onmenuopen("mp_hud", function(hud)
         name = "update_hud_infobar_settings"
     })
 
-    hud.static:addElement(infobar)
+    hud.static.scalable:addElement(infobar)
 end)
 
