@@ -1,3 +1,9 @@
+![license](https://img.shields.io/github/license/h1-mod/h1-mod.svg)
+[![open bugs](https://img.shields.io/github/issues/h1-mod/h1-mod/bug?label=bugs)](https://github.com/h1-mod/h1-mod/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+[![Build](https://github.com/h1-mod/h1-mod/workflows/Build/badge.svg)](https://github.com/h1-mod/h1-mod/actions)
+[![Build status](https://ci.appveyor.com/api/projects/status/0sh80kdnsvm53rno?svg=true)](https://ci.appveyor.com/project/h1-mod/h1-mod)
+[![Discord](https://img.shields.io/discord/945420505157083208?color=%237289DA&label=members&logo=discord&logoColor=%23FFFFFF)](https://discord.gg/RzzXu5EVnh)
+
 # H1-Mod
 
 <p align="center">
