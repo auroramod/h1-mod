@@ -122,14 +122,16 @@ namespace renderer
 		{
 			return utils::hook::assemble([](utils::hook::assembler& a)
 			{
+				a.push(r9);
 				a.push(rax);
 				a.pushad64();
 				a.call_aligned(get_red_dot_brightness);
 				a.mov(qword_ptr(rsp, 0x80), rax);
 				a.popad64();
 				a.pop(rax);
+				a.pop(r9);
 
-				a.mov(dword_ptr(r8, 0x1E84), eax);
+				a.mov(dword_ptr(r9, 0x1E84), eax);
 
 				a.jmp(0x1C4136_b);
 			});
