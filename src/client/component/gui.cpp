@@ -185,7 +185,7 @@ namespace gui
 			ImGui::Begin("hello world!", nullptr);
 
 			static int value = 0;
-			const auto technique = ImGui::SliderInt("lighting technique", &value, 0, 25);
+			ImGui::SliderInt("lighting technique", &value, 0, 25);
 
 			const auto should_apply = ImGui::Button("apply", ImVec2(125, 125));
 			if (should_apply)
