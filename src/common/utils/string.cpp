@@ -105,6 +105,22 @@ namespace utils::string
 		return {};
 	}
 
+	void set_clipboard_data(const std::string& text)
+	{
+		const auto len = text.size() + 1;
+		const auto mem = GlobalAlloc(GMEM_MOVEABLE, len);
+
+		memcpy(GlobalLock(mem), text.data(), len);
+		GlobalUnlock(mem);
+
+		if (OpenClipboard(nullptr))
+		{
+			EmptyClipboard();
+			SetClipboardData(CF_TEXT, mem);
+			CloseClipboard();
+		}
+	}
+
 	void strip(const char* in, char* out, int max)
 	{
 		if (!in || !out) return;
@@ -175,6 +191,13 @@ namespace utils::string
 		}
 
 		return str;
+	}
+
+	std::string truncate(const std::string& text, const size_t length, const std::string& end)
+	{
+		return text.size() <= length
+			? text
+			: text.substr(0, length - end.size()) + end;
 	}
 
 	bool match_compare(const std::string& input, const std::string& text, const bool exact)

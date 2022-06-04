@@ -90,6 +90,7 @@ namespace utils::string
 	std::string dump_hex(const std::string& data, const std::string& separator = " ");
 
 	std::string get_clipboard_data();
+	void set_clipboard_data(const std::string& text);
 
 	void strip(const char* in, char* out, int max);
 
@@ -97,6 +98,8 @@ namespace utils::string
 	std::wstring convert(const std::string& str);
 
 	std::string replace(std::string str, const std::string& from, const std::string& to);
+
+	std::string truncate(const std::string& text, const size_t length, const std::string& end);
 
 	bool match_compare(const std::string& input, const std::string& text, const bool exact);
 }
