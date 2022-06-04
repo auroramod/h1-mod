@@ -593,8 +593,9 @@ namespace demonware
 			std::memcpy(reinterpret_cast<void*>(0x9EDB08_b), "http://%s:%d/auth/", sizeof("http://%s:%d/auth/"));
 
 			// utils::hook::set<uint8_t>(0x19F8C0_b, 0xC3); // SV_SendMatchData, not sure
-			utils::hook::nop(0x19BB67_b, 5); // LiveStorage_SendMatchDataComplete
-			utils::hook::nop(0x19BC3F_b, 5); // LiveStorage_GettingStoreConfigComplete probably
+			utils::hook::nop(0x19BB67_b, 5); // LiveStorage_SendMatchDataComplete (crashes at the end of match)
+			utils::hook::nop(0x19BC3F_b, 5); // LiveStorage_GettingStoreConfigComplete probably (crashes randomly)
+			utils::hook::nop(0x19BC48_b, 5); // similar to above (crashes in killcam)
 			utils::hook::set<uint8_t>(0x1A3340_b, 0xC3); // Live_CheckForFullDisconnect
 
 			// Remove some while loop that freezes the rendering for a few secs while connecting
@@ -608,7 +609,7 @@ namespace demonware
 			utils::hook::set(0x47B2B0_b, 0xC301B0);
 
 			// xpartygo -> just start the match
-			utils::hook::jump(0x355B80_b, request_start_match_stub, true);
+			utils::hook::jump(0x355B80_b, request_start_match_stub);
 
 			utils::hook::set(0x396AD0_b, 0xC301B0); // DB_IsZoneLoaded("ffotd")
 			utils::hook::set(0x4DD600_b, 0xC300B0); // dont use ffotd
