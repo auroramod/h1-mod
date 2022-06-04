@@ -248,11 +248,11 @@ namespace gameplay
 			utils::hook::jump(0x3FF812_b, client_end_frame_stub(), true);
 			utils::hook::nop(0x3FF808_b, 1);
 
-			/*// Influence PM_JitterPoint code flow so the trace->startsolid checks are 'ignored'
+			// Influence PM_JitterPoint code flow so the trace->startsolid checks are 'ignored'
 			pm_player_trace_hook.create(0x2D14C0_b, &pm_player_trace_stub);
 			// If g_enableElevators is 1 the 'ducked' flag will always be removed from the player state
 			utils::hook::jump(0x2C9F90_b, utils::hook::assemble(pm_trace_stub), true);
-			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DvarFlags::DVAR_FLAG_NONE, "Enables Elevators");*/		
+			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DvarFlags::DVAR_FLAG_NONE, "Enables Elevators");	
 
 			auto* timescale = dvars::register_float("timescale", 1.0f, 0.1f, 50.0f, game::DVAR_FLAG_REPLICATED, "Changes Timescale of the game");
 			utils::hook::inject(0x15B204_b, &timescale->current.value); // Com_GetTimeScale
