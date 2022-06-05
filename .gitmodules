@@ -45,6 +45,3 @@
 	path = deps/zlib
 	url = https://github.com/madler/zlib.git
 	branch = develop
-[submodule "deps/imgui"]
-	path = deps/imgui
-	url = https://github.com/fedddddd/imgui.git

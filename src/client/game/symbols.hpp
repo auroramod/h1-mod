@@ -229,8 +229,6 @@ namespace game
 	 * Variables
 	 **************************************************************/
 
-	WEAK symbol<HWND> hWnd{0x0, 0xC9DD2E0};
-
 	WEAK symbol<CmdArgs> sv_cmd_args{0xB48FF90, 0x2ED1EB0};
 
 	WEAK symbol<int> g_script_error_level{0xC3FD358, 0xB7AC1A4};

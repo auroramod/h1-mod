@@ -4,7 +4,6 @@
 #include "game/game.hpp"
 
 #include "game_console.hpp"
-#include "gui.hpp"
 #include "game/ui_scripting/execution.hpp"
 
 #include <utils/hook.hpp>
@@ -37,24 +36,16 @@ namespace input
 
 		void cl_key_event_stub(const int local_client_num, const int key, const int down)
 		{
-			const auto key_to_string = game::Key_KeynumToString(key, 0, 1);
-			printf("key to string: %s\n", key_to_string);
-
 			if (ui_scripting::lui_running())
 			{
 				ui_scripting::notify(down ? "keydown" : "keyup",
 				{
 					{"keynum", key},
-					{"key", key_to_string},
+					{"key", game::Key_KeynumToString(key, 0, 1)},
 				});
 			}
 
 			if (!game_console::console_key_event(local_client_num, key, down))
-			{
-				return;
-			}
-
-			if (!gui::gui_key_event(local_client_num, key, down))
 			{
 				return;
 			}
