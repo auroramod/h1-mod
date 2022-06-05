@@ -252,7 +252,7 @@ namespace gameplay
 			pm_player_trace_hook.create(0x2D14C0_b, &pm_player_trace_stub);
 			// If g_enableElevators is 1 the 'ducked' flag will always be removed from the player state
 			utils::hook::jump(0x2C9F90_b, utils::hook::assemble(pm_trace_stub), true);
-			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DvarFlags::DVAR_FLAG_NONE, "Enables Elevators");	
+			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DVAR_FLAG_REPLICATED, "Enables Elevators");
 
 			auto* timescale = dvars::register_float("timescale", 1.0f, 0.1f, 50.0f, game::DVAR_FLAG_REPLICATED, "Changes Timescale of the game");
 			utils::hook::inject(0x15B204_b, &timescale->current.value); // Com_GetTimeScale
@@ -264,7 +264,6 @@ namespace gameplay
 			utils::hook::inject(0x17EAD0_b, &timescale->current.value); // Com_TimeScaleMsec
 			utils::hook::inject(0x17EFE2_b, &timescale->current.value); // Com_UpdateSlowMotion
 			utils::hook::inject(0x17F00C_b, &timescale->current.value); //Com_UpdateSlowMotion
-			
 
 			jump_apply_slowdown_hook.create(0x2BD0B0_b, jump_apply_slowdown_stub);
 			jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_FLAG_REPLICATED, "Slow player movement after jumping");
