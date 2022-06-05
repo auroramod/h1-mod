@@ -33,8 +33,13 @@ namespace branding
 			const auto font = game::R_RegisterFont("fonts/fira_mono_bold.ttf", 20);
 			if (font)
 			{
+#ifdef DEBUG
 				game::R_AddCmdDrawText("H1-Mod: " VERSION " (" __DATE__ " " __TIME__ ")", 0x7FFFFFFF, font, 10.f,
 					5.f + static_cast<float>(font->pixelHeight), 1.f, 1.f, 0.0f, color, 0);
+#else
+				game::R_AddCmdDrawText("H1-Mod: " VERSION, 0x7FFFFFFF, font, 10.f,
+					5.f + static_cast<float>(font->pixelHeight), 1.f, 1.f, 0.0f, color, 0);
+#endif
 			}
 		}
 	}
