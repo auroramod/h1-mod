@@ -270,7 +270,7 @@ namespace dedicated
 			utils::hook::nop(0x70465D_b, 8); // sound thing
 
 			// (COULD NOT FIND IN H1)
-			// utils::hook::set<uint8_t>(0x1404D6960, 0xC3); // cpu detection stuff?
+			utils::hook::set<uint8_t>(0x1D8A20_b, 0xC3); // cpu detection stuff?
 			utils::hook::set<uint8_t>(0x690F30_b, 0xC3); // gfx stuff during fastfile loading
 			utils::hook::set<uint8_t>(0x690E00_b, 0xC3); // ^
 			utils::hook::set<uint8_t>(0x690ED0_b, 0xC3); // ^
