@@ -7,10 +7,10 @@
 # H1-Mod
 
 <p align="center">
-  <img alig src="https://cdn.discordapp.com/attachments/895680402142941194/938488726391242842/splash.png"/>
+  <img alig src="https://cdn.discordapp.com/attachments/866389597948739594/983104537990692924/splash.png" width="800px"/>
 </p>
 
-An client for Call of Duty: Modern Warfare Remastered (version `1.15.1251288.0-0.32767`).
+An client for Latest Call of Duty: Modern Warfare Remastered version `1.15`.
 
 [This project is based on S1x.](https://github.com/XLabsProject/s1x-client)
 
