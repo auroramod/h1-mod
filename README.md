@@ -33,7 +33,7 @@ An client for Call of Duty: Modern Warfare Remastered (version `1.15.1251288.0-0
 - [quaK](https://github.com/Joelrau) - lots of insight and help
 - [fed](https://github.com/fedddddd) - fixed DW/networking, work from [h2-mod](https://github.com/fedddddd/h2-mod)
 - [Skull](https://github.com/skkuull) + [mjkzy](https://github.com/mjkzy) - porting code from s1x
-- [momo5502](https://github.com/momo5502) - Arxan/Steam research, developer of x labs clients :D
+- [momo5502](https://github.com/momo5502) - Arxan/Steam research, developer of XLabsProject :D
 
 ## Disclaimer
 
