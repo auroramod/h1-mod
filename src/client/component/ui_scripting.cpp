@@ -192,15 +192,18 @@ namespace ui_scripting
 				return fps::get_fps();
 			};
 
-			game_type["getping"] = [](const game&)
+			if (::game::environment::is_mp())
 			{
-				if ((*::game::mp::client_state) == nullptr)
+				game_type["getping"] = [](const game&)
 				{
-					return 0;
-				}
+					if ((*::game::mp::client_state) == nullptr)
+					{
+						return 0;
+					}
 
-				return (*::game::mp::client_state)->ping;
-			};
+					return (*::game::mp::client_state)->ping;
+				};
+			}
 
 			game_type["issingleplayer"] = [](const game&)
 			{
@@ -537,7 +540,6 @@ namespace ui_scripting
 
 			command::add("lui_restart", []()
 			{
-				utils::hook::invoke<void>(SELECT_VALUE(0xFB370_b, 0x2707C0_b));
 				utils::hook::invoke<void>(SELECT_VALUE(0x1052C0_b, 0x27BEC0_b));
 			});
 		}
