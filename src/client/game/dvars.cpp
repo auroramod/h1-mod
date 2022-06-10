@@ -26,16 +26,18 @@ namespace dvars
 	game::dvar_t* player_sustainAmmo = nullptr;
 	game::dvar_t* g_enableElevators = nullptr;
 
-	game::dvar_t* jump_enableFallDamage;
-
-	game::dvar_t* r_fullbright;
-	game::dvar_t* r_chams;
-
 	game::dvar_t* g_speed = nullptr;
 
 	game::dvar_t* g_gravity = nullptr;
 
 	game::dvar_t* pm_bouncing = nullptr;
+
+	game::dvar_t* jump_ladderPushVel = nullptr;
+
+	game::dvar_t* jump_enableFallDamage;
+
+	game::dvar_t* r_fullbright;
+	game::dvar_t* r_chams;
 
 	game::dvar_t* cg_legacyCrashHandling;
 
@@ -215,6 +217,11 @@ namespace dvars
 
 	std::vector<dvar_info> dvar_list =
 	{
+		{
+			"ai_count",
+			"Sets AI count.",
+			generate_hash("ai_count")
+		},
 		{
 			"accessToSubscriberContent",
 			"Whether to display the subscriber maps.",

@@ -218,6 +218,22 @@ namespace gameplay
 			g_damage_hook.invoke<void>(targ, inflictor, attacker, dir, point, damage, dflags, mod, weapon,
 				is_alternate, hit_loc, model_index, part_name, time_offset, a15);
 		}
+
+		void* jump_push_off_ladder()
+		{
+			return utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.push(rax);
+
+				a.mov(rax, qword_ptr(reinterpret_cast<int64_t>(&dvars::jump_ladderPushVel)));
+				a.mulss(xmm7, dword_ptr(rax, 0x10));
+				a.mulss(xmm6, dword_ptr(rax, 0x10));
+
+				a.pop(rax);
+
+				a.jmp(0x2BD71C_b);
+			});
+		}
 	}
 
 	class component final : public component_interface
@@ -264,6 +280,11 @@ namespace gameplay
 			utils::hook::inject(0x17EAD0_b, &timescale->current.value); // Com_TimeScaleMsec
 			utils::hook::inject(0x17EFE2_b, &timescale->current.value); // Com_UpdateSlowMotion
 			utils::hook::inject(0x17F00C_b, &timescale->current.value); //Com_UpdateSlowMotion
+
+			dvars::jump_ladderPushVel = dvars::register_float("jump_ladderPushVel", 128.0f,
+				0.0f, 1024.0f, game::DVAR_FLAG_REPLICATED, "The velocity of a jump off of a ladder");
+			utils::hook::jump(0x2BD70C_b, jump_push_off_ladder(), true);
+			utils::hook::nop(0x2BD718_b, 4); // Nop skipped opcodes
 
 			jump_apply_slowdown_hook.create(0x2BD0B0_b, jump_apply_slowdown_stub);
 			jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_FLAG_REPLICATED, "Slow player movement after jumping");
