@@ -1475,6 +1475,20 @@ namespace game
 	static_assert(offsetof(client_state_t, ping) == 0x4A50);
 	static_assert(offsetof(client_state_t, num_players) == 0x4A5C);
 
+	struct pmove_t
+	{
+		unsigned char __pad0[0x190];
+	};
+
+	static_assert(sizeof(pmove_t) == 0x190);
+
+	struct pml_t
+	{
+		unsigned char __pad0[0x130];
+	};
+
+	static_assert(sizeof(pml_t) == 0x130);
+
 	enum PlayerHandIndex
 	{
 		WEAPON_HAND_DEFAULT = 0x0,

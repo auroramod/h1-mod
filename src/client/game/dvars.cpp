@@ -34,6 +34,8 @@ namespace dvars
 
 	game::dvar_t* jump_ladderPushVel = nullptr;
 
+	game::dvar_t* jump_height = nullptr;
+
 	game::dvar_t* jump_enableFallDamage;
 
 	game::dvar_t* r_fullbright;

@@ -234,6 +234,11 @@ namespace gameplay
 				a.jmp(0x2BD71C_b);
 			});
 		}
+
+		void jump_start_stub(game::pmove_t* pm, game::pml_t* pml, float /*height*/)
+		{
+			utils::hook::invoke<void>(0x2BD800_b, pm, pml, dvars::jump_height->current.value);
+		}
 	}
 
 	class component final : public component_interface
@@ -285,6 +290,10 @@ namespace gameplay
 				0.0f, 1024.0f, game::DVAR_FLAG_REPLICATED, "The velocity of a jump off of a ladder");
 			utils::hook::jump(0x2BD70C_b, jump_push_off_ladder(), true);
 			utils::hook::nop(0x2BD718_b, 4); // Nop skipped opcodes
+
+			dvars::jump_height = dvars::register_float("jump_height", 39.0f,
+				0.0f, 1000.0f, game::DVAR_FLAG_REPLICATED, "The maximum height of a player\'s jump");
+			utils::hook::call(0x2BD22D_b, jump_start_stub);
 
 			jump_apply_slowdown_hook.create(0x2BD0B0_b, jump_apply_slowdown_stub);
 			jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_FLAG_REPLICATED, "Slow player movement after jumping");
