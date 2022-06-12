@@ -95,21 +95,48 @@ namespace binding
 			return get_num_keys() + get_binding_for_custom_command(command);
 		}
 
-		void cl_execute_key_stub(const int local_client_num, int key, const int down, const int time)
+
+		std::optional<std::string> get_custom_binding_for_key(int key)
+		{
+			key -= get_num_keys();
+
+			if (static_cast<size_t>(key) < custom_binds.size() && !custom_binds[key].empty())
+			{
+				return {custom_binds[key]};
+			}
+
+			return {};
+		}
+
+		void cl_execute_key_stub(const int local_client_num, int key, const int down, const unsigned int time)
 		{
 			if (key >= get_num_keys())
 			{
-				key -= get_num_keys();
-
-				if (static_cast<size_t>(key) < custom_binds.size() && !custom_binds[key].empty())
+				const auto bind = get_custom_binding_for_key(key);
+				if (!bind.has_value())
 				{
-					game::Cbuf_AddText(local_client_num, 0, utils::string::va("%s\n", custom_binds[key].data()));
+					return;
 				}
 
-				return;
+				return game::Cbuf_AddText(local_client_num, 0, utils::string::va("%s\n", bind.value().data()));
 			}
 
 			cl_execute_key_hook.invoke<void>(local_client_num, key, down, time);
+		}
+
+		const char* cmd_get_binding_for_key_stub(unsigned int key)
+		{
+			if (key >= static_cast<unsigned int>(get_num_keys()))
+			{
+				const auto bind = get_custom_binding_for_key(key);
+				if (!bind.has_value())
+				{
+					return "";
+				}
+				return utils::string::va("%s", bind.value().data());
+			}
+
+			return game::command_whitelist[key];
 		}
 	}
 
@@ -131,6 +158,12 @@ namespace binding
 
 			// execute custom binds
 			cl_execute_key_hook.create(SELECT_VALUE(0x1A8350_b, 0x130610_b), &cl_execute_key_stub);
+
+			if (game::environment::is_sp())
+			{
+				// called from getcommandfromkey in gsc
+				utils::hook::jump(0x3772E0_b, cmd_get_binding_for_key_stub);
+			}
 		}
 	};
 }

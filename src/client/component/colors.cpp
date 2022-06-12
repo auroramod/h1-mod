@@ -109,11 +109,11 @@ namespace colors
 
 			if (index == '8')
 			{
-				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x0, 0xEA749B4_b)); // 1.15
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0xF79D288_b, 0xEA749B4_b));
 			}
 			else if (index == '9')
 			{
-				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x0, 0xEA749B8_b)); // 1.15
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0xF79D28C_b, 0xEA749B8_b));
 			}
 			else if (index == ':')
 			{
@@ -121,7 +121,7 @@ namespace colors
 			}
 			else if (index == ';')
 			{
-				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x0, 0xEA749C0_b)); // 1.15
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0xF79D294_b, 0xEA749C0_b));
 			}
 			else if (index == '<')
 			{
