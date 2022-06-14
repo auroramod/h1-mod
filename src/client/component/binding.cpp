@@ -133,6 +133,7 @@ namespace binding
 				{
 					return "";
 				}
+
 				return utils::string::va("%s", bind.value().data());
 			}
 
