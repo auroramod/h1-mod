@@ -239,6 +239,33 @@ namespace gameplay
 		{
 			utils::hook::invoke<void>(0x2BD800_b, pm, pml, dvars::jump_height->current.value);
 		}
+
+		void pm_project_velocity_stub(const float* vel_in, const float* normal, float* vel_out)
+		{
+			const auto length_squared_2d = vel_in[0] * vel_in[0] + vel_in[1] * vel_in[1];
+
+			if (std::fabsf(normal[2]) < 0.001f || length_squared_2d == 0.0)
+			{
+				vel_out[0] = vel_in[0];
+				vel_out[1] = vel_in[1];
+				vel_out[2] = vel_in[2];
+				return;
+			}
+
+			auto new_z = vel_in[0] * normal[0] + vel_in[1] * normal[1];
+			new_z = -new_z / normal[2];
+
+			const auto length_scale = std::sqrtf((vel_in[2] * vel_in[2] + length_squared_2d)
+				/ (new_z * new_z + length_squared_2d));
+
+			if (dvars::pm_bouncingAllAngles->current.enabled
+				|| (length_scale < 1.f || new_z < 0.f || vel_in[2] > 0.f))
+			{
+				vel_out[0] = vel_in[0] * length_scale;
+				vel_out[1] = vel_in[1] * length_scale;
+				vel_out[2] = new_z * length_scale;
+			}
+		}
 	}
 
 	class component final : public component_interface
@@ -264,6 +291,10 @@ namespace gameplay
 				game::DVAR_FLAG_REPLICATED, "Enable bouncing");
 			utils::hook::jump(0x2D39A4_b, pm_bouncing_stub_mp(), true);
 
+			dvars::pm_bouncingAllAngles = dvars::register_bool("pm_bouncingAllAngles", false,
+				game::DvarFlags::DVAR_FLAG_REPLICATED, "Enable bouncing from all angles");
+			utils::hook::call(0x2D3A74_b, pm_project_velocity_stub);
+
 			dvars::g_gravity = dvars::register_int("g_gravity", 800, 0, 1000, game::DVAR_FLAG_REPLICATED,
 				"Game gravity in inches per second squared");
 			utils::hook::jump(0x3FF812_b, client_end_frame_stub(), true);
@@ -281,7 +312,6 @@ namespace gameplay
 			utils::hook::inject(0x17E609_b, &timescale->current.value); // Com_SetSlowMotion
 			utils::hook::inject(0x17E626_b, &timescale->current.value); // Com_SetSlowMotion
 			utils::hook::inject(0x17E69C_b, &timescale->current.value);// Com_SetSlowMotion
-			//utils::hook::inject(0x17EAAB_b, &timescale->current.value); // Com_ErrorCleanup_Shutdown
 			utils::hook::inject(0x17EAD0_b, &timescale->current.value); // Com_TimeScaleMsec
 			utils::hook::inject(0x17EFE2_b, &timescale->current.value); // Com_UpdateSlowMotion
 			utils::hook::inject(0x17F00C_b, &timescale->current.value); //Com_UpdateSlowMotion

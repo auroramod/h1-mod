@@ -34,6 +34,7 @@ namespace dvars
 	extern game::dvar_t* g_gravity;
 
 	extern game::dvar_t* pm_bouncing;
+	extern game::dvar_t* pm_bouncingAllAngles;
 
 	extern game::dvar_t* jump_ladderPushVel;
 
