@@ -239,7 +239,23 @@ namespace command
 				}
 				else
 				{
-					const auto wp = game::G_GetWeaponForName(arg.data());
+					std::string weaponName = arg.data();
+					#if DEBUG
+					game::CG_GameMessage(0, utils::string::va("weapon name: %s", weaponName.data()));
+					#endif
+					if (game::environment::is_mp()) {
+						if (!weaponName.ends_with("_mp")) {
+							#if DEBUG
+							game::CG_GameMessage(0, utils::string::va("weapon name needs to end with mp!"));
+							#endif
+							weaponName = utils::string::va("%s_mp", weaponName.data());
+							#if DEBUG
+							game::CG_GameMessage(0, utils::string::va("new weapon name: %s", weaponName.data()));
+							#endif
+						}
+					}
+
+					const auto wp = game::G_GetWeaponForName(weaponName.data());
 					if (wp)
 					{
 						if (game::G_GivePlayerWeapon(ps, wp, 0, 0, 0, 0, 0, 0))
