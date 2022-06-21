@@ -27,7 +27,7 @@ namespace ranked
 				dvars::override::register_bool("xblive_privatematch", false, game::DVAR_FLAG_REPLICATED);
 			}
 
-			if (game::environment::is_dedi())
+			if (game::environment::is_dedi() && !utils::flags::has_flag("unranked"))
 			{
 				dvars::override::register_bool("xblive_privatematch", false, game::DVAR_FLAG_REPLICATED | game::DVAR_FLAG_WRITE);
 				dvars::register_bool("force_ranking", true, game::DVAR_FLAG_WRITE, ""); // Skip some check in _menus.gsc
