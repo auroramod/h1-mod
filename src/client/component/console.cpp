@@ -6,6 +6,7 @@
 
 #include "command.hpp"
 #include "rcon.hpp"
+#include "version.hpp"
 
 #include <utils/thread.hpp>
 #include <utils/hook.hpp>
@@ -269,7 +270,9 @@ namespace console
 				con.cursor = 0;
 
 				clear_output();
+				SetConsoleTextAttribute(OUTPUT_HANDLE, get_attribute(7)); // green
 				invoke_printf("]%s\r\n", con.buffer);
+				SetConsoleTextAttribute(OUTPUT_HANDLE, get_attribute(con_type_info));
 				strncpy_s(con.buffer, "", sizeof(con.buffer));
 				break;
 			}
@@ -347,7 +350,7 @@ namespace console
 			printf_hook.create(printf, printf_stub);
 
 			ShowWindow(GetConsoleWindow(), SW_SHOW);
-			SetConsoleTitle("H1-Mod");
+			SetConsoleTitle("H1-Mod: " VERSION);
 
 			con.kill_event = CreateEvent(NULL, TRUE, FALSE, NULL);
 

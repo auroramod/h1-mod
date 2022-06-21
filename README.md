@@ -7,7 +7,7 @@
 # H1-Mod
 
 <p align="center">
-  <img src="https://cdn.discordapp.com/attachments/866389597948739594/983104537990692924/splash.png" width="800px"/>
+  <img src="assets/github/banner?raw=true" />
 </p>
 
 A client for Call of Duty: Modern Warfare Remastered.
