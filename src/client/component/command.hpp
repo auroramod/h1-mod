@@ -10,6 +10,7 @@ namespace command
 		int size() const;
 		const char* get(int index) const;
 		std::string join(int index) const;
+		std::vector<std::string> get_all() const;
 
 		const char* operator[](const int index) const
 		{
@@ -28,6 +29,7 @@ namespace command
 		int size() const;
 		const char* get(int index) const;
 		std::string join(int index) const;
+		std::vector<std::string> get_all() const;
 
 		const char* operator[](const int index) const
 		{

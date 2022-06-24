@@ -3,6 +3,7 @@
 #include "game_module.hpp"
 
 #include <utils/hook.hpp>
+#include <game/game.hpp>
 
 namespace game_module
 {
@@ -59,9 +60,9 @@ namespace game_module
 
 		DWORD __stdcall get_module_file_name_a(HMODULE hmodule, const LPSTR filename, const DWORD size)
 		{
-			if (!hmodule)
+			if (!hmodule || utils::nt::library(hmodule) == get_game_module())
 			{
-				hmodule = get_game_module();
+				hmodule = get_host_module();
 			}
 
 			return file_name_a_hook.invoke<DWORD>(hmodule, filename, size);
@@ -69,9 +70,9 @@ namespace game_module
 
 		DWORD __stdcall get_module_file_name_w(HMODULE hmodule, const LPWSTR filename, const DWORD size)
 		{
-			if (!hmodule)
+			if (!hmodule || utils::nt::library(hmodule) == get_game_module())
 			{
-				hmodule = get_game_module();
+				hmodule = get_host_module();
 			}
 
 			return file_name_w_hook.invoke<DWORD>(hmodule, filename, size);
@@ -90,7 +91,7 @@ namespace game_module
 
 	utils::nt::library get_game_module()
 	{
-		static utils::nt::library game{HMODULE(0x140000000)};
+		static utils::nt::library game{HMODULE(game::base_address)};
 		return game;
 	}
 
@@ -110,7 +111,11 @@ namespace game_module
 
 		void post_load() override
 		{
+#ifdef INJECT_HOST_AS_LIB
 			hook_module_resolving();
+#else
+			assert(get_host_module() == get_game_module());
+#endif
 		}
 	};
 }

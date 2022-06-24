@@ -3,6 +3,14 @@
 
 namespace game
 {
+	uint64_t base_address;
+
+	void load_base_address()
+	{
+		const auto module = GetModuleHandle(NULL);
+		base_address = uint64_t(module);
+	}
+
 	int Cmd_Argc()
 	{
 		return cmd_args->argc[cmd_args->nesting];
@@ -26,6 +34,63 @@ namespace game
 	bool VirtualLobby_Loaded()
 	{
 		return !game::environment::is_sp() && *mp::virtualLobby_loaded == 1;
+	}
+
+	void SV_GameSendServerCommand(int client_num, svscmd_type type, const char* text)
+	{
+		const auto svs_clients = *mp::svs_clients;
+		if (svs_clients == nullptr)
+		{
+			return;
+		}
+
+		if (client_num == -1)
+		{
+			SV_SendServerCommand(0, type, "%s", text);
+		}
+		else
+		{
+			SV_SendServerCommand(&svs_clients[client_num], type, "%s", text);
+		}
+	}
+
+	void Cbuf_AddText(int local_client_num, int controller_index, const char* cmd)
+	{
+		if (game::environment::is_sp())
+		{
+			sp::Cbuf_AddText(local_client_num, cmd);
+		}
+		else
+		{
+			mp::Cbuf_AddText(local_client_num, controller_index, cmd);
+		}
+	}
+
+	void Cmd_TokenizeString(const char* text)
+	{
+		if (game::environment::is_sp())
+		{
+			sp::Cmd_TokenizeString(text);
+		}
+		else
+		{
+			const auto a2 = 512 - *reinterpret_cast<int*>(0x3516F40_b);
+			mp::Cmd_TokenizeStringWithLimit(text, a2);
+		}
+	}
+
+	void Cmd_EndTokenizeString()
+	{
+		if (game::environment::is_sp())
+		{
+			return sp::Cmd_EndTokenizeString();
+		}
+
+		const auto nesting = cmd_args->nesting;
+		const auto argc = cmd_args->argc[nesting];
+		--cmd_args->nesting;
+		cmd_argsPrivate->totalUsedArgvPool -= argc;
+		cmd_argsPrivate->totalUsedTextPool -= cmd_argsPrivate->usedTextPool[nesting];
 	}
 
 	namespace environment
@@ -101,4 +166,9 @@ namespace game
 			}
 		}
 	}
+}
+
+uintptr_t operator"" _b(const uintptr_t ptr)
+{
+	return game::base_address + ptr;
 }

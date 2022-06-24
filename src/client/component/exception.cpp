@@ -84,9 +84,10 @@ namespace exception
 
 		void display_error_dialog()
 		{
-			std::string error_str = utils::string::va("Fatal error (0x%08X) at 0x%p.\n"
+			std::string error_str = utils::string::va("Fatal error (0x%08X) at 0x%p (0x%p).\n"
 			                                          "A minidump has been written.\n\n",
-			                                          exception_data.code, exception_data.address);
+			                                          exception_data.code, exception_data.address, 
+			                                          reinterpret_cast<uint64_t>(exception_data.address) - game::base_address);
 
 			if (!system_check::is_valid())
 			{
@@ -176,6 +177,7 @@ namespace exception
 			line("Clean game: "s + (system_check::is_valid() ? "Yes" : "No"));
 			line(utils::string::va("Exception: 0x%08X", exceptioninfo->ExceptionRecord->ExceptionCode));
 			line(utils::string::va("Address: 0x%llX", exceptioninfo->ExceptionRecord->ExceptionAddress));
+			line(utils::string::va("Base: 0x%llX", game::base_address));
 
 #pragma warning(push)
 #pragma warning(disable: 4996)
@@ -253,7 +255,7 @@ namespace exception
 		void post_unpack() override
 		{
 			dvars::cg_legacyCrashHandling = dvars::register_bool("cg_legacyCrashHandling", 
-				false, game::DVAR_FLAG_SAVED, true);
+				false, game::DVAR_FLAG_SAVED, "Disable new crash handling");
 		}
 	};
 }

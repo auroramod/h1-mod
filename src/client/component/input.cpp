@@ -4,6 +4,7 @@
 #include "game/game.hpp"
 
 #include "game_console.hpp"
+#include "game/ui_scripting/execution.hpp"
 
 #include <utils/hook.hpp>
 
@@ -16,6 +17,15 @@ namespace input
 
 		void cl_char_event_stub(const int local_client_num, const int key)
 		{
+			if (game::environment::is_sp() && ui_scripting::lui_running())
+			{
+				ui_scripting::notify("keypress",
+				{
+					{"keynum", key},
+					{"key", game::Key_KeynumToString(key, 0, 1)},
+				});
+			}
+
 			if (!game_console::console_char_event(local_client_num, key))
 			{
 				return;
@@ -26,6 +36,15 @@ namespace input
 
 		void cl_key_event_stub(const int local_client_num, const int key, const int down)
 		{
+			if (game::environment::is_sp() && ui_scripting::lui_running())
+			{
+				ui_scripting::notify(down ? "keydown" : "keyup",
+				{
+					{"keynum", key},
+					{"key", game::Key_KeynumToString(key, 0, 1)},
+				});
+			}
+
 			if (!game_console::console_key_event(local_client_num, key, down))
 			{
 				return;
@@ -45,8 +64,8 @@ namespace input
 				return;
 			}
 
-			cl_char_event_hook.create(SELECT_VALUE(0x1401871A0, 0x14024E810), cl_char_event_stub); // H1(1.4)
-			cl_key_event_hook.create(SELECT_VALUE(0x1401874D0, 0x14024EA60), cl_key_event_stub); // H1(1.4)
+			cl_char_event_hook.create(SELECT_VALUE(0x1AB8F0_b, 0x12C8F0_b), cl_char_event_stub);
+			cl_key_event_hook.create(SELECT_VALUE(0x1ABC20_b, 0x135A70_b), cl_key_event_stub);
 		}
 	};
 }

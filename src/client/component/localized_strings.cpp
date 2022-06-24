@@ -44,7 +44,7 @@ namespace localized_strings
 		void post_unpack() override
 		{
 			// Change some localized strings
-			seh_string_ed_get_string_hook.create(SELECT_VALUE(0x1403924A0, 0x1404BB2A0), &seh_string_ed_get_string);
+			seh_string_ed_get_string_hook.create(SELECT_VALUE(0x3E6CE0_b, 0x585DA0_b), &seh_string_ed_get_string);
 		}
 	};
 }

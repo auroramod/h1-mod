@@ -89,7 +89,7 @@ namespace auth
 			return utils::string::va("0x%lX", value);
 		}
 
-		int send_connect_data_stub(game::netsrc_t sock, game::netadr_s* adr, const char* format, const int len)
+		bool send_connect_data(game::netsrc_t sock, game::netadr_s* adr, const char* format, const int len)
 		{
 			std::string connect_string(format, len);
 			game::SV_Cmd_TokenizeString(connect_string.data());
@@ -189,7 +189,29 @@ namespace auth
 				a.call_aligned(direct_connect);
 				a.popad64();
 
-				a.jmp(0x140488CE2); // H1MP64(1.4)
+				a.jmp(0x1CAF64_b);
+			});
+		}
+
+		void* get_send_connect_data_stub()
+		{
+			return utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				const auto false_ = a.newLabel();
+				const auto original = a.newLabel();
+
+				a.mov(ecx, eax);
+				a.lea(r8, qword_ptr(rbp, 0x4C0));
+				a.mov(r9d, ebx);
+				a.lea(rdx, qword_ptr(rsp, 0x30));
+
+				a.pushad64();
+				a.call_aligned(send_connect_data);
+				a.test(al, al);
+				a.popad64();
+
+				a.mov(rbx, qword_ptr(rsp, 0x9F0));
+				a.jmp(0x12D446_b);
 			});
 		}
 	}
@@ -212,25 +234,20 @@ namespace auth
 			// Patch steam id bit check
 			if (game::environment::is_sp())
 			{
-				utils::hook::jump(0x140475C17, 0x140475C6A); // H1(1.4)
-				utils::hook::jump(0x140476AFF, 0x140476B40); // H1(1.4)
-				utils::hook::jump(0x140476FA4, 0x140476FF2); // H1(1.4)
+				utils::hook::jump(0x4FA1B3_b, 0x4FA21A_b, true);
+				utils::hook::jump(0x4FB272_b, 0x4FB2B7_b, true);
+				utils::hook::jump(0x4FB781_b, 0x4FB7D3_b, true);
 			}
 			else
 			{
-				utils::hook::jump(0x140571E07, 0x140571E5A); // H1(1.4)
-				utils::hook::jump(0x14004B223, 0x14004B4F2); // H1(1.4)
-				utils::hook::jump(0x14004B4AD, 0x14004B4F2); // H1(1.4)
-				utils::hook::jump(0x140572F6F, 0x140572FB0); // H1(1.4)
-				utils::hook::jump(0x140573470, 0x1405734B6); // H1(1.4)
+				// kill "disconnected from steam" error
+				utils::hook::nop(0x1D61DF_b, 0x11);
 
-				utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true); // H1(1.4)
-				utils::hook::call(0x140250ED2, send_connect_data_stub); // H1(1.4)
+				utils::hook::jump(0x1CAE70_b, get_direct_connect_stub(), true);
+				utils::hook::jump(0x12D426_b, get_send_connect_data_stub(), true);
 
-				// Check for sending connect packet
-				utils::hook::set(0x14059A6E0, 0xC301B0);
 				// Don't instantly timeout the connecting client ? not sure about this
-				utils::hook::set(0x14025136B, 0xC3);
+				utils::hook::set(0x12D93C_b, 0xC3);
 			}
 
 			command::add("guid", []()

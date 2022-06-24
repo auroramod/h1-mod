@@ -1,5 +1,4 @@
 #include <std_include.hpp>
-#include "console.hpp"
 #include "loader/component_loader.hpp"
 #include "game/game.hpp"
 #include "scheduler.hpp"
@@ -20,9 +19,9 @@ namespace dedicated_info
 			scheduler::loop([]()
 			{
 				auto* sv_running = game::Dvar_FindVar("sv_running");
-				if (!sv_running || !sv_running->current.enabled)
+				if (!sv_running || !sv_running->current.enabled || (*game::mp::svs_clients) == nullptr)
 				{
-					console::set_title("H1-Mod Dedicated Server");
+					SetConsoleTitle("H1-Mod Dedicated Server");
 					return;
 				}
 
@@ -33,12 +32,14 @@ namespace dedicated_info
 				auto bot_count = 0;
 				auto client_count = 0;
 
-				for (auto i = 0; i < sv_maxclients->current.integer; i++)
+				const auto svs_clients = *game::mp::svs_clients;
+
+				for (auto i = 0; i < *game::mp::svs_numclients; i++)
 				{
-					auto* client = &game::mp::svs_clients[i];
+					const auto client = svs_clients[i];
 					auto* self = &game::mp::g_entities[i];
 
-					if (client->header.state >= 1 && self && self->client)
+					if (client.header.state >= 1 && self && self->client)
 					{
 						client_count++;
 						if (game::SV_BotIsBot(i))
@@ -54,9 +55,10 @@ namespace dedicated_info
 				utils::string::strip(sv_hostname->current.string, cleaned_hostname.data(),
 				static_cast<int>(strlen(sv_hostname->current.string)) + 1);
 
-				console::set_title(utils::string::va("%s on %s [%d/%d] (%d)", cleaned_hostname.data(),
-				mapname->current.string, client_count,
-				sv_maxclients->current.integer, bot_count));
+				SetConsoleTitle(utils::string::va("%s on %s [%d/%d] (%d)", cleaned_hostname.data(),
+					mapname->current.string, client_count,
+					sv_maxclients->current.integer, bot_count)
+				);
 			}, scheduler::pipeline::main, 1s);
 		}
 	};

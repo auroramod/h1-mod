@@ -5,7 +5,8 @@ namespace demonware
 {
 	bdUNK80::bdUNK80() : service(80, "bdUNK80")
 	{
-		this->register_task(42, &bdUNK80::unk42);
+		this->register_task(42, &bdUNK80::unk42); // COD POINTS purchase ?
+		// this->register_task(43, &bdUNK80::unk43); COD POINTS purchase ?
 		this->register_task(49, &bdUNK80::unk49);
 		this->register_task(60, &bdUNK80::unk60);
 		this->register_task(130, &bdUNK80::unk130);

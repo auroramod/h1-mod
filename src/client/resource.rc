@@ -118,6 +118,11 @@ RUNNER                RCDATA "../../build/bin/x64/Release/runner.exe"
 
 ICON_IMAGE            RCDATA "resources/icon.png"
 
+LUI_COMMON            RCDATA "resources/ui_scripts/common.lua"
+LUI_UPDATER           RCDATA "resources/ui_scripts/updater.lua"
+
+LUA_JSON              RCDATA "resources/json.lua"
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 

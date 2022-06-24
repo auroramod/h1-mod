@@ -1,13 +1,18 @@
-# H1-Mod 1.4
+![license](https://img.shields.io/github/license/h1-mod/h1-mod.svg)
+[![open bugs](https://img.shields.io/github/issues/h1-mod/h1-mod/bug?label=bugs)](https://github.com/h1-mod/h1-mod/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+[![Build](https://github.com/h1-mod/h1-mod/workflows/Build/badge.svg)](https://github.com/h1-mod/h1-mod/actions)
+[![Build status](https://ci.appveyor.com/api/projects/status/0sh80kdnsvm53rno?svg=true)](https://ci.appveyor.com/project/h1-mod/h1-mod)
+[![Discord](https://img.shields.io/discord/945420505157083208?color=%237289DA&label=members&logo=discord&logoColor=%23FFFFFF)](https://discord.gg/RzzXu5EVnh)
 
-- *Note: Multiplayer support is in progress!*
+# H1-Mod
 
 <p align="center">
-  <img alig src="https://cdn.discordapp.com/attachments/895680402142941194/938488726391242842/splash.png"/>
+  <img src="assets/github/banner.png?raw=true" />
 </p>
 
-Proof of concept for an Modern Warfare Remastered client. <br>
-[This project is based on S1x](https://github.com/XLabsProject/s1x-client)
+A client for Call of Duty: Modern Warfare Remastered.
+
+[This project is based on S1x.](https://github.com/XLabsProject/s1x-client)
 
 ## Compile from source
 
@@ -24,11 +29,12 @@ Proof of concept for an Modern Warfare Remastered client. <br>
 
 ## Credits:
 
-- [XLabsProject - S1x](https://github.com/XLabsProject/s1x-client), Project base.
-- [quaK](https://github.com/Joelrau), Helping in alot of stuff.
-- [fed - h2-mod](https://github.com/fedddddd/h2-mod), [Dvars](https://github.com/skkuull/h1-mod/blob/main/src/client/game/dvars.cpp) and [patches](https://github.com/skkuull/h1-mod/blob/main/src/client/component/patches.cpp).
-
+- [XLabsProject](https://github.com/XLabsProject) - codebase and iw6x/s1x research
+- [quaK](https://github.com/Joelrau) - lots of insight and help
+- [fed](https://github.com/fedddddd) - fixed DW/networking, work from [h2-mod](https://github.com/fedddddd/h2-mod)
+- [Skull](https://github.com/skkuull) + [mjkzy](https://github.com/mjkzy) - porting code from s1x
+- [momo5502](https://github.com/momo5502) - Arxan/Steam research, developer of XLabsProject :D
 
 ## Disclaimer
 
-This software has been made for learning purposes.
+This software has been created purely for the purposes of academic research. It is not intended to be used to attack other systems. Project maintainers are not responsible or liable for misuse of the software. Use responsibly.

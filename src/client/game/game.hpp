@@ -5,10 +5,13 @@
 
 #define SELECT_VALUE(sp, mp) (game::environment::is_sp() ? (sp) : (mp))
 
-#define SERVER_CD_KEY "S1X-CD-Key"
+#define SERVER_CD_KEY "H1MOD-CD-Key"
 
 namespace game
 {
+	extern uint64_t base_address;
+	void load_base_address();
+
 	namespace environment
 	{
 		launcher::mode get_mode();
@@ -37,10 +40,10 @@ namespace game
 		{
 			if (environment::is_sp())
 			{
-				return sp_object_;
+				return reinterpret_cast<T*>((uint64_t)sp_object_ + base_address);
 			}
 
-			return mp_object_;
+			return reinterpret_cast<T*>((uint64_t)mp_object_ + base_address);
 		}
 
 		operator T* () const
@@ -65,6 +68,15 @@ namespace game
 	const char* SV_Cmd_Argv(int index);
 
 	bool VirtualLobby_Loaded();
+
+	void SV_GameSendServerCommand(int clientNum, svscmd_type type, const char* text);
+
+	void Cbuf_AddText(int local_client_num, int controller_index, const char* cmd);
+
+	void Cmd_TokenizeString(const char* text);
+	void Cmd_EndTokenizeString();
 }
+
+uintptr_t operator"" _b(const uintptr_t ptr);
 
 #include "symbols.hpp"

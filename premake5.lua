@@ -264,6 +264,7 @@ filter {}
 
 filter "configurations:Debug"
 	optimize "Debug"
+	buildoptions {"/bigobj"}
 	defines {"DEBUG", "_DEBUG"}
 filter {}
 
@@ -302,7 +303,7 @@ targetname "h1-mod"
 pchheader "std_include.hpp"
 pchsource "src/client/std_include.cpp"
 
-linkoptions {"/IGNORE:4254", "/DYNAMICBASE:NO", "/SAFESEH:NO", "/LARGEADDRESSAWARE", "/LAST:.main", "/PDBCompress"}
+linkoptions {"/IGNORE:4254", "/DYNAMICBASE:NO", "/SAFESEH:NO", "/LARGEADDRESSAWARE", "/PDBCompress"}
 
 files {"./src/client/**.rc", "./src/client/**.hpp", "./src/client/**.cpp", "./src/client/resources/**.*"}
 
@@ -318,6 +319,10 @@ prebuildcommands {"pushd %{_MAIN_SCRIPT_DIR}", "tools\\premake5 generate-buildin
 
 if _OPTIONS["copy-to"] then
 	postbuildcommands {"copy /y \"$(TargetPath)\" \"" .. _OPTIONS["copy-to"] .. "\""}
+end
+
+if _OPTIONS["debug-dir"] then
+	debugdir ( _OPTIONS["debug-dir"] )
 end
 
 dependencies.imports()

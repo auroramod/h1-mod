@@ -191,7 +191,6 @@ namespace game
 		unsigned __int16 childVariableBucket[65536];
 		ChildVariableValue childVariableValue[384000];
 	};
-	// *
 
 	enum Sys_Folder
 	{
@@ -851,6 +850,15 @@ namespace game
 		const char** argv[8];
 	};
 
+	struct CmdArgsPrivate
+	{
+		char textPool[8192];
+		const char* argvPool[512];
+		int usedTextPool[8];
+		int totalUsedArgvPool;
+		int totalUsedTextPool;
+	};
+
 	struct cmd_function_s
 	{
 		cmd_function_s* next;
@@ -882,11 +890,14 @@ namespace game
 	enum dvar_type : std::int8_t
 	{
 		boolean = 0,
+		boolean_hashed = 10,
 		value = 1,
+		value_hashed = 11,
 		vec2 = 2,
 		vec3 = 3,
 		vec4 = 4,
 		integer = 5,
+		integer_hashed = 12,
 		enumeration = 6,
 		string = 7,
 		color = 8,
@@ -940,7 +951,10 @@ namespace game
 		dvar_value latched;
 		dvar_value reset;
 		dvar_limits domain;
+		char __pad0[0xC];
 	};
+
+	static_assert(sizeof(dvar_t) == 96);
 
 	enum connstate_t
 	{
@@ -1006,11 +1020,11 @@ namespace game
 	enum XAssetType
 	{
 		ASSET_TYPE_PHYSPRESET,
-		ASSET_TYPE_PHYSCOLLMAP,
+		ASSET_TYPE_PHYS_COLLMAP,
 		ASSET_TYPE_PHYSWATERPRESET,
-		ASSET_TYPE_PHYSWORLDMAP,
+		ASSET_TYPE_PHYS_WORLDMAP,
 		ASSET_TYPE_PHYSCONSTRAINT,
-		ASSET_TYPE_XANIMPARTS,
+		ASSET_TYPE_XANIM,
 		ASSET_TYPE_XMODELSURFS,
 		ASSET_TYPE_XMODEL,
 		ASSET_TYPE_MATERIAL,
@@ -1020,36 +1034,35 @@ namespace game
 		ASSET_TYPE_DOMAINSHADER,
 		ASSET_TYPE_PIXELSHADER,
 		ASSET_TYPE_VERTEXDECL,
-		ASSET_TYPE_TECHNIQUE_SET,
+		ASSET_TYPE_TECHSET,
 		ASSET_TYPE_IMAGE,
 		ASSET_TYPE_SOUND,
-		ASSET_TYPE_SOUND_SUBMIX,
-		ASSET_TYPE_SOUND_CURVE,
-		ASSET_TYPE_LPF_CURVE,
-		ASSET_TYPE_REVERB_CURVE,
-		ASSET_TYPE_SOUND_CONTEXT,
+		ASSET_TYPE_SOUNDSUBMIX,
+		ASSET_TYPE_SNDCURVE,
+		ASSET_TYPE_LPFCURVE,
+		ASSET_TYPE_REVERBSENDCURVE,
+		ASSET_TYPE_SNDCONTEXT,
 		ASSET_TYPE_LOADED_SOUND,
-		ASSET_TYPE_CLIPMAP,
-		ASSET_TYPE_COMWORLD,
-		ASSET_TYPE_GLASSWORLD,
-		ASSET_TYPE_PATHDATA,
+		ASSET_TYPE_COL_MAP_MP,
+		ASSET_TYPE_COM_MAP,
+		ASSET_TYPE_GLASS_MAP,
+		ASSET_TYPE_AIPATHS,
 		ASSET_TYPE_VEHICLE_TRACK,
 		ASSET_TYPE_MAP_ENTS,
-		ASSET_TYPE_FXWORLD,
-		ASSET_TYPE_GFXWORLD,
-		ASSET_TYPE_LIGHT_DEF,
+		ASSET_TYPE_FX_MAP,
+		ASSET_TYPE_GFX_MAP,
+		ASSET_TYPE_LIGHTDEF,
 		ASSET_TYPE_UI_MAP,
-		ASSET_TYPE_FONT,
-		ASSET_TYPE_MENULIST,
+		ASSET_TYPE_MENUFILE,
 		ASSET_TYPE_MENU,
 		ASSET_TYPE_ANIMCLASS,
-		ASSET_TYPE_LOCALIZE_ENTRY,
+		ASSET_TYPE_LOCALIZE,
 		ASSET_TYPE_ATTACHMENT,
 		ASSET_TYPE_WEAPON,
-		ASSET_TYPE_SNDDRIVER_GLOBALS,
+		ASSET_TYPE_SNDDRIVERGLOBALS,
 		ASSET_TYPE_FX,
-		ASSET_TYPE_IMPACT_FX,
-		ASSET_TYPE_SURFACE_FX,
+		ASSET_TYPE_IMPACTFX,
+		ASSET_TYPE_SURFACEFX,
 		ASSET_TYPE_AITYPE,
 		ASSET_TYPE_MPTYPE,
 		ASSET_TYPE_CHARACTER,
@@ -1057,23 +1070,27 @@ namespace game
 		ASSET_TYPE_RAWFILE,
 		ASSET_TYPE_SCRIPTFILE,
 		ASSET_TYPE_STRINGTABLE,
-		ASSET_TYPE_LEADERBOARD,
-		ASSET_TYPE_STRUCTURED_DATA_DEF,
+		ASSET_TYPE_LEADERBOARDDEF,
+		ASSET_TYPE_VIRTUALLEADERBOARDDEF,
+		ASSET_TYPE_STRUCTUREDDATADEF,
+		ASSET_TYPE_DDL,
+		ASSET_TYPE_PROTO,
 		ASSET_TYPE_TRACER,
 		ASSET_TYPE_VEHICLE,
 		ASSET_TYPE_ADDON_MAP_ENTS,
-		ASSET_TYPE_NET_CONST_STRINGS,
-		ASSET_TYPE_REVERB_PRESET,
-		ASSET_TYPE_LUA_FILE,
+		ASSET_TYPE_NETCONSTSTRINGS,
+		ASSET_TYPE_REVERBPRESET,
+		ASSET_TYPE_LUAFILE,
 		ASSET_TYPE_SCRIPTABLE,
-		ASSET_TYPE_EQUIPMENT_SND_TABLE,
+		ASSET_TYPE_EQUIPSNDTABLE,
 		ASSET_TYPE_VECTORFIELD,
-		ASSET_TYPE_DOPPLER_PRESET,
-		ASSET_TYPE_PARTICLE_SIM_ANIMATION,
+		ASSET_TYPE_DOPPLERPRESET,
+		ASSET_TYPE_PARTICLESIMANIMATION,
 		ASSET_TYPE_LASER,
-		ASSET_TYPE_SKELETON_SCRIPT,
+		ASSET_TYPE_SKELETONSCRIPT,
 		ASSET_TYPE_CLUT,
-		ASSET_TYPE_COUNT,
+		ASSET_TYPE_TTF,
+		ASSET_TYPE_COUNT
 	};
 
 	enum GfxDrawSceneMethod
@@ -1096,10 +1113,94 @@ namespace game
 		int forceTechType;
 	};
 
+	struct GfxImage;
+
+	union MaterialTextureDefInfo
+	{
+		GfxImage* image;
+		void* water;
+	};
+
+	struct MaterialTextureDef
+	{
+		unsigned int nameHash;
+		char nameStart;
+		char nameEnd;
+		char samplerState;
+		char semantic;
+		MaterialTextureDefInfo u;
+	};
+
+	struct MaterialPass
+	{
+		void* vertexShader;
+		void* vertexDecl;
+		void* hullShader;
+		void* domainShader;
+		void* pixelShader;
+		char pixelOutputMask;
+		char perPrimArgCount;
+		char perObjArgCount;
+		char stableArgCount;
+		unsigned __int16 perPrimArgSize;
+		unsigned __int16 perObjArgSize;
+		unsigned __int16 stableArgSize;
+		char zone;
+		char perPrimConstantBuffer;
+		char perObjConstantBuffer;
+		char stableConstantBuffer;
+		unsigned int customBufferFlags;
+		char customSamplerFlags;
+		char precompiledIndex;
+		char stageConfig;
+		void* args;
+	};
+
+	struct MaterialTechnique
+	{
+		const char* name;
+		unsigned __int16 flags;
+		unsigned __int16 passCount;
+		MaterialPass passArray[1];
+	};
+
+	struct MaterialTechniqueSet
+	{
+		const char* name;
+		unsigned __int16 flags;
+		char worldVertFormat;
+		char preDisplacementOnlyCount;
+		MaterialTechnique* techniques[309];
+	};
+
+	struct GfxStateBits
+	{
+		unsigned int loadBits[3];
+		char zone;
+		char depthStencilState[11];
+		char blendState;
+		char rasterizerState;
+	};
+
 	struct Material
 	{
 		const char* name;
+		char __pad0[0x118];
+		char textureCount;
+		char constantCount;
+		char stateBitsCount;
+		char stateFlags;
+		char cameraRegion;
+		char materialType;
+		char assetFlags;
+		MaterialTechniqueSet* techniqueSet;
+		MaterialTextureDef* textureTable;
+		void* constantTable;
+		GfxStateBits* stateBitsTable;
+		char __pad2[0x108];
 	};
+
+	static_assert(sizeof(Material) == 0x250);
 
 	struct Glyph
 	{
@@ -1227,6 +1328,14 @@ namespace game
 		const char* buffer;
 	};
 
+	struct TTF
+	{
+		const char* name;
+		int len;
+		const char* buffer;
+		int fontFace;
+	};
+
 	struct GfxImageLoadDef
 	{
 		char levelCount;
@@ -1246,7 +1355,6 @@ namespace game
 		ID3D11Texture2D* cubemap;
 		GfxImageLoadDef* loadDef;
 	};
-
 
 	struct GfxTexture
 	{
@@ -1299,6 +1407,7 @@ namespace game
 		StringTable* stringTable;
 		LuaFile* luaFile;
 		GfxImage* image;
+		TTF* ttf;
 	};
 
 	struct XAsset
@@ -1331,6 +1440,68 @@ namespace game
 		SV_LIVE_DROP_DISCONNECT = 0x1,
 	};
 
+	struct trace_t
+	{
+		float fraction;
+		float normal[3];
+		char __pad0[25];
+		bool allsolid;
+		bool startsolid;
+		char __pad1[0x2C]; // not correct
+	};
+
+	struct Bounds
+	{
+		float midPoint[3];
+		float halfSize[3];
+	};
+
+	// made up
+	struct client_state_t
+	{
+		char __pad0[0x4A50];
+		int ping;
+		char __pad1[0x8];
+		int num_players;
+	};
+
+	// made up
+	struct connect_state_t
+	{
+		char __pad0[0xC];
+		netadr_s address;
+	};
+
+	static_assert(offsetof(client_state_t, ping) == 0x4A50);
+	static_assert(offsetof(client_state_t, num_players) == 0x4A5C);
+
+	struct pmove_t
+	{
+		unsigned char __pad0[0x190];
+	};
+
+	static_assert(sizeof(pmove_t) == 0x190);
+
+	struct pml_t
+	{
+		unsigned char __pad0[0x130];
+	};
+
+	static_assert(sizeof(pml_t) == 0x130);
+
+	enum PlayerHandIndex
+	{
+		WEAPON_HAND_DEFAULT = 0x0,
+		WEAPON_HAND_RIGHT = 0x0,
+		WEAPON_HAND_LEFT = 0x1,
+		NUM_WEAPON_HANDS = 0x2,
+	};
+
+	union Weapon
+	{
+		unsigned int data;
+	};
+
 	namespace mp
 	{
 		struct cachedSnapshot_t
@@ -1350,55 +1521,95 @@ namespace game
 
 		struct gclient_s
 		{
-			char __pad0[20708];
-			char name[32]; // 20708
-			char __pad1[668];
-			int flags; // 21408
+			char __pad0[2];
+			char pm_type; // 2
+			char __pad1[18831];
+			char name[32]; // 18834
+			char __pad2[622];
+			int flags; // 19488 
 		}; // size = ?
+
+		static_assert(offsetof(gclient_s, name) == 18834);
+		static_assert(offsetof(gclient_s, flags) == 19488);
+
+		struct usercmd_s
+		{
+			char __pad0[28];
+			char forwardmove;
+			char rightmove;
+			char __pad1[34];
+		};
 
 		struct EntityState
 		{
-			char entityNum;
+			uint16_t entityNum;
 		}; // size = ?
 
+#pragma pack(push, 1)
 		struct gentity_s
 		{
 			EntityState s;
-			char __pad0[343];
+			char __pad0[342];
 			gclient_s* client;
 			char __pad1[80];
 			int flags;
 			char __pad2[300];
 		}; // size = 736
+#pragma pack(pop)
+
+		static_assert(sizeof(gentity_s) == 736);
 
 		struct playerState_s
 		{
+			int clientNum;
+			char __pad0[116];
+			vec3_t origin;
+			vec3_t velocity;
+			char __pad1[312];
+			int sprintButtonUpRequired;
+		};
+
+		struct pmove_t
+		{
+			playerState_s* ps;
+			usercmd_s cmd;
+			usercmd_s oldcmd;
+			int tracemask;
+			int numtouch;
+			int touchents[32];
+			Bounds bounds;
+		};
+
+		static_assert(offsetof(pmove_t, touchents) == 144);
+
+		struct pml_t
+		{
+			float forward[3];
+			float right[3];
+			float up[3];
+			float frametime;
 		};
 
 		struct clientHeader_t
 		{
 			int state;
-			char __pad0[36];
+			char __pad0[44];
 			netadr_s remoteAddress;
 		}; // size = ?
 
 		struct client_t
 		{
 			clientHeader_t header;
-			char __pad0[3044];
+			char __pad0[265164];
 			int reliableSequence;
 			int reliableAcknowledge;
-			char __pad1[265864];
-			gentity_s* gentity; // 268976
-			char name[32]; // 268984
-			char __pad2[8];
-			int nextSnapshotTime; // 269024
-			char __pad3[544];
-			LiveClientDropType liveDropRequest; //269572
-			char __pad4[24];
-			TestClientType testClient; // 269600
-			char __pad5[610012];
-		}; // size = 661304
+			char __pad1[397928];
+			gentity_s* gentity;
+			char name[32];
+			char __pad5[348752];
+		}; // size = 1011960
+
+		static_assert(sizeof(client_t) == 1011960);
 	}
 
 	namespace sp
@@ -1430,6 +1641,10 @@ namespace game
 
 	namespace hks
 	{
+		struct lua_State;
+		struct HashTable;
+		struct cclosure;
+
 		struct GenericChunkHeader
 		{
 			unsigned __int64 m_flags;
@@ -1455,9 +1670,6 @@ namespace game
 			char m_data[30];
 		};
 
-		struct HashTable;
-		struct cclosure;
-
 		union HksValue
 		{
 			cclosure* cClosure;
@@ -1469,6 +1681,8 @@ namespace game
 			void* thread;
 			void* ptr;
 			float number;
+			long long i64;
+			unsigned long long ui64;
 			unsigned int native;
 			bool boolean;
 		};
@@ -1554,6 +1768,14 @@ namespace game
 
 		enum HksError
 		{
+			HKS_NO_ERROR = 0x0,
+			HKS_ERRSYNTAX = 0xFFFFFFFC,
+			HKS_ERRFILE = 0xFFFFFFFB,
+			HKS_ERRRUN = 0xFFFFFF9C,
+			HKS_ERRMEM = 0xFFFFFF38,
+			HKS_ERRERR = 0xFFFFFED4,
+			HKS_THROWING_ERROR = 0xFFFFFE0C,
+			HKS_GC_YIELD = 0x1,
 		};
 
 		struct lua_Debug
@@ -1572,24 +1794,6 @@ namespace game
 			char short_src[512];
 			int callstack_level;
 			int is_tail_call;
-		};
-
-		struct lua_State : ChunkHeader
-		{
-			void* m_global;
-			CallStack m_callStack;
-			ApiStack m_apistack;
-			UpValue* pending;
-			HksObject globals;
-			HksObject m_cEnv;
-			CallSite* m_callsites;
-			int m_numberOfCCalls;
-			void* m_context;
-			InternString* m_name;
-			lua_State* m_nextState;
-			lua_State* m_nextStateStack;
-			Status m_status;
-			HksError m_error;
 		};
 
 		using lua_function = int(__fastcall*)(lua_State*);
@@ -1629,6 +1833,232 @@ namespace game
 			__int16 m_flags;
 			InternString* m_name;
 			HksObject m_upvalues[1];
+		};
+
+		enum HksCompilerSettings_BytecodeSharingFormat
+		{
+			BYTECODE_DEFAULT = 0x0,
+			BYTECODE_INPLACE = 0x1,
+			BYTECODE_REFERENCED = 0x2,
+		};
+
+		enum HksCompilerSettings_IntLiteralOptions
+		{
+			INT_LITERALS_NONE = 0x0,
+			INT_LITERALS_LUD = 0x1,
+			INT_LITERALS_32BIT = 0x1,
+			INT_LITERALS_UI64 = 0x2,
+			INT_LITERALS_64BIT = 0x2,
+			INT_LITERALS_ALL = 0x3,
+		};
+
+		struct HksCompilerSettings
+		{
+			int m_emitStructCode;
+			const char** m_stripNames;
+			int m_emitGlobalMemoization;
+			int _m_isHksGlobalMemoTestingMode;
+			HksCompilerSettings_BytecodeSharingFormat m_bytecodeSharingFormat;
+			HksCompilerSettings_IntLiteralOptions m_enableIntLiterals;
+			int(__fastcall* m_debugMap)(const char*, int);
+		};
+
+		enum HksBytecodeSharingMode
+		{
+			HKS_BYTECODE_SHARING_OFF = 0x0,
+			HKS_BYTECODE_SHARING_ON = 0x1,
+			HKS_BYTECODE_SHARING_SECURE = 0x2,
+		};
+
+		struct HksGcWeights
+		{
+			int m_removeString;
+			int m_finalizeUserdataNoMM;
+			int m_finalizeUserdataGcMM;
+			int m_cleanCoroutine;
+			int m_removeWeak;
+			int m_markObject;
+			int m_traverseString;
+			int m_traverseUserdata;
+			int m_traverseCoroutine;
+			int m_traverseWeakTable;
+			int m_freeChunk;
+			int m_sweepTraverse;
+		};
+
+		struct GarbageCollector_Stack
+		{
+			void* m_storage;
+			unsigned int m_numEntries;
+			unsigned int m_numAllocated;
+		};
+
+		struct ProtoList
+		{
+			void** m_protoList;
+			unsigned __int16 m_protoSize;
+			unsigned __int16 m_protoAllocSize;
+		};
+
+		struct GarbageCollector
+		{
+			int m_target;
+			int m_stepsLeft;
+			int m_stepLimit;
+			HksGcWeights m_costs;
+			int m_unit;
+			_SETJMP_FLOAT128(*m_jumpPoint)[16];
+			lua_State* m_mainState;
+			lua_State* m_finalizerState;
+			void* m_memory;
+			int m_phase;
+			GarbageCollector_Stack m_resumeStack;
+			GarbageCollector_Stack m_greyStack;
+			GarbageCollector_Stack m_remarkStack;
+			GarbageCollector_Stack m_weakStack;
+			int m_finalizing;
+			HksObject m_safeTableValue;
+			lua_State* m_startOfStateStackList;
+			lua_State* m_endOfStateStackList;
+			lua_State* m_currentState;
+			HksObject m_safeValue;
+			void* m_compiler;
+			void* m_bytecodeReader;
+			void* m_bytecodeWriter;
+			int m_pauseMultiplier;
+			int m_stepMultiplier;
+			bool m_stopped;
+			int(__fastcall* m_gcPolicy)(lua_State*);
+			unsigned __int64 m_pauseTriggerMemoryUsage;
+			int m_stepTriggerCountdown;
+			unsigned int m_stringTableIndex;
+			unsigned int m_stringTableSize;
+			UserData* m_lastBlackUD;
+			UserData* m_activeUD;
+		};
+
+		enum MemoryManager_ChunkColor
+		{
+			RED = 0x0,
+			BLACK = 0x1,
+		};
+
+		struct ChunkList
+		{
+			ChunkHeader m_prevToStart;
+		};
+
+		enum Hks_DeleteCheckingMode
+		{
+			HKS_DELETE_CHECKING_OFF = 0x0,
+			HKS_DELETE_CHECKING_ACCURATE = 0x1,
+			HKS_DELETE_CHECKING_SAFE = 0x2,
+		};
+
+		struct MemoryManager
+		{
+			void* (__fastcall* m_allocator)(void*, void*, unsigned __int64, unsigned __int64);
+			void* m_allocatorUd;
+			MemoryManager_ChunkColor m_chunkColor;
+			unsigned __int64 m_used;
+			unsigned __int64 m_highwatermark;
+			ChunkList m_allocationList;
+			ChunkList m_sweepList;
+			ChunkHeader* m_lastKeptChunk;
+			lua_State* m_state;
+			ChunkList m_deletedList;
+			int m_deleteMode;
+			Hks_DeleteCheckingMode m_deleteCheckingMode;
+		};
+
+		struct StaticStringCache
+		{
+			HksObject m_objects[41];
+		};
+
+		enum HksBytecodeEndianness
+		{
+			HKS_BYTECODE_DEFAULT_ENDIAN = 0x0,
+			HKS_BYTECODE_BIG_ENDIAN = 0x1,
+			HKS_BYTECODE_LITTLE_ENDIAN = 0x2,
+		};
+
+		struct RuntimeProfileData_Stats
+		{
+			unsigned __int64 hksTime;
+			unsigned __int64 callbackTime;
+			unsigned __int64 gcTime;
+			unsigned __int64 cFinalizerTime;
+			unsigned __int64 compilerTime;
+			unsigned int hkssTimeSamples;
+			unsigned int callbackTimeSamples;
+			unsigned int gcTimeSamples;
+			unsigned int compilerTimeSamples;
+			unsigned int num_newuserdata;
+			unsigned int num_tablerehash;
+			unsigned int num_pushstring;
+			unsigned int num_pushcfunction;
+			unsigned int num_newtables;
+		};
+
+		struct RuntimeProfileData
+		{
+			__int64 stackDepth;
+			__int64 callbackDepth;
+			unsigned __int64 lastTimer;
+			RuntimeProfileData_Stats frameStats;
+			unsigned __int64 gcStartTime;
+			unsigned __int64 finalizerStartTime;
+			unsigned __int64 compilerStartTime;
+			unsigned __int64 compilerStartGCTime;
+			unsigned __int64 compilerStartGCFinalizerTime;
+			unsigned __int64 compilerCallbackStartTime;
+			__int64 compilerDepth;
+			void* outFile;
+			lua_State* rootState;
+		};
+
+		struct HksGlobal
+		{
+			MemoryManager m_memory;
+			GarbageCollector m_collector;
+			StringTable m_stringTable;
+			HksBytecodeSharingMode m_bytecodeSharingMode;
+			unsigned int m_tableVersionInitializer;
+			HksObject m_registry;
+			ProtoList m_protoList;
+			HashTable* m_structProtoByName;
+			ChunkList m_userDataList;
+			lua_State* m_root;
+			StaticStringCache m_staticStringCache;
+			void* m_debugger;
+			void* m_profiler;
+			RuntimeProfileData m_runProfilerData;
+			HksCompilerSettings m_compilerSettings;
+			int(__fastcall* m_panicFunction)(lua_State*);
+			void* m_luaplusObjectList;
+			int m_heapAssertionFrequency;
+			int m_heapAssertionCount;
+			void (*m_logFunction)(lua_State*, const char*, ...);
+			HksBytecodeEndianness m_bytecodeDumpEndianness;
+		};
+
+		struct lua_State : ChunkHeader
+		{
+			HksGlobal* m_global;
+			CallStack m_callStack;
+			ApiStack m_apistack;
+			UpValue* pending;
+			HksObject globals;
+			HksObject m_cEnv;
+			CallSite* m_callsites;
+			int m_numberOfCCalls;
+			void* m_context;
+			InternString* m_name;
+			lua_State* m_nextState;
+			lua_State* m_nextStateStack;
+			Status m_status;
+			HksError m_error;
 		};
 	}
 }

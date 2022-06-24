@@ -35,12 +35,17 @@ namespace dvars
 
 	struct dvar_vector3 : dvar_base
 	{
-
 		float x{};
 		float y{};
 		float z{};
 		float min{};
 		float max{};
+	};
+
+	struct dvar_enum : dvar_base
+	{
+		const char* const* value_list{};
+		int default_index{};
 	};
 
 	struct dvar_int : dvar_base
@@ -139,6 +144,7 @@ namespace dvars
 		static std::unordered_map<std::string, dvar_string> register_string_overrides;
 		static std::unordered_map<std::string, dvar_vector2> register_vector2_overrides;
 		static std::unordered_map<std::string, dvar_vector3> register_vector3_overrides;
+		static std::unordered_map<std::string, dvar_enum> register_enum_overrides;
 
 		static std::unordered_map<std::string, bool> set_bool_overrides;
 		static std::unordered_map<std::string, float> set_float_overrides;
@@ -210,6 +216,16 @@ namespace dvars
 			register_vector3_overrides[name] = std::move(values);
 		}
 
+		void register_enum(const std::string& name, /*const char* const* value_list, int default_index,*/
+			const unsigned int flags)
+		{
+			dvar_enum values;
+			//values.value_list = value_list;
+			//values.default_index = default_index;
+			values.flags = flags;
+			register_enum_overrides[name] = std::move(values);
+		}
+
 		void set_bool(const std::string& name, const bool value)
 		{
 			set_bool_overrides[name] = value;
@@ -237,11 +253,15 @@ namespace dvars
 	}
 
 	utils::hook::detour dvar_register_bool_hook;
+	utils::hook::detour dvar_register_bool_hashed_hook;
 	utils::hook::detour dvar_register_float_hook;
+	utils::hook::detour dvar_register_float_hashed_hook;
 	utils::hook::detour dvar_register_int_hook;
+	utils::hook::detour dvar_register_int_hashed_hook;
 	utils::hook::detour dvar_register_string_hook;
 	utils::hook::detour dvar_register_vector2_hook;
 	utils::hook::detour dvar_register_vector3_hook;
+	utils::hook::detour dvar_register_enum_hook;
 
 	utils::hook::detour dvar_set_bool_hook;
 	utils::hook::detour dvar_set_float_hook;
@@ -261,6 +281,18 @@ namespace dvars
 		return dvar_register_bool_hook.invoke<game::dvar_t*>(hash, name, value, flags);
 	}
 
+	game::dvar_t* dvar_register_bool_hashed(const int hash, const char* name, bool value, unsigned int flags)
+	{
+		auto* var = find_dvar(override::register_bool_overrides, hash);
+		if (var)
+		{
+			value = var->value;
+			flags = var->flags;
+		}
+
+		return dvar_register_bool_hashed_hook.invoke<game::dvar_t*>(hash, name, value, flags);
+	}
+
 	game::dvar_t* dvar_register_float(const int hash, const char* name, float value, float min, float max, unsigned int flags)
 	{
 		auto* var = find_dvar(override::register_float_overrides, hash);
@@ -275,6 +307,20 @@ namespace dvars
 		return dvar_register_float_hook.invoke<game::dvar_t*>(hash, name, value, min, max, flags);
 	}
 
+	game::dvar_t* dvar_register_float_hashed(const int hash, const char* name, float value, float min, float max, unsigned int flags)
+	{
+		auto* var = find_dvar(override::register_float_overrides, hash);
+		if (var)
+		{
+			value = var->value;
+			min = var->min;
+			max = var->max;
+			flags = var->flags;
+		}
+
+		return dvar_register_float_hashed_hook.invoke<game::dvar_t*>(hash, name, value, min, max, flags);
+	}
+
 	game::dvar_t* dvar_register_int(const int hash, const char* name, int value, int min, int max, unsigned int flags)
 	{
 		auto* var = find_dvar(override::register_int_overrides, hash);
@@ -287,6 +333,20 @@ namespace dvars
 		}
 
 		return dvar_register_int_hook.invoke<game::dvar_t*>(hash, name, value, min, max, flags);
+	}
+
+	game::dvar_t* dvar_register_int_hashed(const int hash, const char* name, int value, int min, int max, unsigned int flags)
+	{
+		auto* var = find_dvar(override::register_int_overrides, hash);
+		if (var)
+		{
+			value = var->value;
+			min = var->min;
+			max = var->max;
+			flags = var->flags;
+		}
+
+		return dvar_register_int_hashed_hook.invoke<game::dvar_t*>(hash, name, value, min, max, flags);
 	}
 
 	game::dvar_t* dvar_register_string(const int hash, const char* name, const char* value, unsigned int flags)
@@ -332,6 +392,19 @@ namespace dvars
 		}
 
 		return dvar_register_vector3_hook.invoke<game::dvar_t*>(hash, name, x, y, z, min, max, flags);
+	}
+
+	game::dvar_t* dvar_register_enum(const int hash, const char* name, const char* const value_list, int default_index, unsigned int flags)
+	{
+		auto* var = find_dvar(override::register_enum_overrides, hash);
+		if (var)
+		{
+			//value_list = var->value_list;
+			//default_index = var->default_index;
+			flags = var->flags;
+		}
+
+		return dvar_register_enum_hook.invoke<game::dvar_t*>(hash, name, value_list, default_index, flags);
 	}
 
 	void dvar_set_bool(game::dvar_t* dvar, bool boolean)
@@ -424,18 +497,26 @@ namespace dvars
 	public:
 		void post_unpack() override
 		{
-			dvar_register_bool_hook.create(SELECT_VALUE(0x1403C47E0, 0x1404FA540), &dvar_register_bool);
-			dvar_register_float_hook.create(SELECT_VALUE(0x1403C4BB0, 0x1404FA910), &dvar_register_float);
-			dvar_register_int_hook.create(SELECT_VALUE(0x1403C4CC0, 0x1404FAA20), &dvar_register_int);
-			dvar_register_string_hook.create(SELECT_VALUE(0x1403C4DA0, 0x1404FAB00), &dvar_register_string);
-			dvar_register_vector2_hook.create(SELECT_VALUE(0x1403C4E80, 0x1404FABE0), &dvar_register_vector2);
-			dvar_register_vector3_hook.create(SELECT_VALUE(0x1403C4FC0, 0x1404FACE0), &dvar_register_vector3);
+			dvar_register_bool_hook.create(SELECT_VALUE(0x419220_b, 0x182340_b), &dvar_register_bool);
+			dvar_register_float_hook.create(SELECT_VALUE(0x4195F0_b, 0x1827F0_b), &dvar_register_float);
+			dvar_register_int_hook.create(SELECT_VALUE(0x419700_b, 0x182A10_b), &dvar_register_int);
+			dvar_register_string_hook.create(SELECT_VALUE(0x4197E0_b, 0x182BD0_b), &dvar_register_string);
+			dvar_register_vector2_hook.create(SELECT_VALUE(0x4198C0_b, 0x182CB0_b), &dvar_register_vector2);
+			dvar_register_vector3_hook.create(SELECT_VALUE(0x419A00_b, 0x182DB0_b), &dvar_register_vector3);
+			dvar_register_enum_hook.create(SELECT_VALUE(0x419500_b, 0x182700_b), &dvar_register_enum);
 
-			dvar_set_bool_hook.create(SELECT_VALUE(0x1403C7020, 0x1404FCDF0), &dvar_set_bool);
-			dvar_set_float_hook.create(SELECT_VALUE(0x1403C7420, 0x1404FD360), &dvar_set_float);
-			dvar_set_int_hook.create(SELECT_VALUE(0x1403C76C0, 0x1404FD5E0), &dvar_set_int);
-			dvar_set_string_hook.create(SELECT_VALUE(0x1403C7900, 0x1404FD8D0), &dvar_set_string);
-			dvar_set_from_string_hook.create(SELECT_VALUE(0x1403C7620, 0x1404FD520), &dvar_set_from_string);
+			if (!game::environment::is_sp())
+			{
+				dvar_register_bool_hashed_hook.create(SELECT_VALUE(0x0, 0x182420_b), &dvar_register_bool_hashed);
+				dvar_register_float_hashed_hook.create(SELECT_VALUE(0x0, 0x182900_b), &dvar_register_float_hashed);
+				dvar_register_int_hashed_hook.create(SELECT_VALUE(0x0, 0x182AF0_b), &dvar_register_int_hashed);
+			}
+
+			dvar_set_bool_hook.create(SELECT_VALUE(0x41B820_b, 0x185520_b), &dvar_set_bool);
+			dvar_set_float_hook.create(SELECT_VALUE(0x41BC60_b, 0x185AA0_b), &dvar_set_float);
+			dvar_set_int_hook.create(SELECT_VALUE(0x41BEE0_b, 0x185D10_b), &dvar_set_int);
+			dvar_set_string_hook.create(SELECT_VALUE(0x41C0F0_b, 0x186080_b), &dvar_set_string);
+			dvar_set_from_string_hook.create(SELECT_VALUE(0x41BE20_b, 0x185C60_b), &dvar_set_from_string);
 		}
 	};
 }

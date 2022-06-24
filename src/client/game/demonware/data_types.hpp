@@ -141,4 +141,70 @@ namespace demonware
 			buffer->read_string(&this->timezone);
 		}
 	};
+
+	// made up name
+	class bdFile final : public bdTaskResult
+	{
+	public:
+		uint64_t owner_id;
+		std::string platform;
+		std::string filename;
+		uint32_t unk;
+		std::string data;
+
+		void serialize(byte_buffer* buffer) override
+		{
+			buffer->write_uint64(this->owner_id);
+			buffer->write_string(this->platform);
+			buffer->write_string(this->filename);
+			buffer->write_uint32(this->unk);
+			buffer->write_blob(this->data);
+		}
+
+		void deserialize(byte_buffer* buffer) override
+		{
+			buffer->read_uint64(&this->owner_id);
+			buffer->read_string(&this->platform);
+			buffer->read_string(&this->filename);
+			buffer->read_uint32(&this->unk);
+			buffer->read_blob(&this->data);
+		}
+	};
+
+	class bdFile2 final : public bdTaskResult
+	{
+	public:
+		uint32_t unk1;
+		uint32_t unk2;
+		uint32_t unk3;
+		bool priv;
+		uint64_t owner_id;
+		std::string platform;
+		std::string filename;
+		std::string data;
+
+		void serialize(byte_buffer* buffer) override
+		{
+			buffer->write_uint32(this->unk1);
+			buffer->write_uint32(this->unk2);
+			buffer->write_uint32(this->unk3);
+			buffer->write_bool(this->priv);
+			buffer->write_uint64(this->owner_id);
+			buffer->write_string(this->platform);
+			buffer->write_string(this->filename);
+			buffer->write_blob(this->data);
+		}
+
+		void deserialize(byte_buffer* buffer) override
+		{
+			buffer->read_uint32(&this->unk1);
+			buffer->read_uint32(&this->unk2);
+			buffer->read_uint32(&this->unk3);
+			buffer->read_bool(&this->priv);
+			buffer->read_uint64(&this->owner_id);
+			buffer->read_string(&this->platform);
+			buffer->read_string(&this->filename);
+			buffer->read_blob(&this->data);
+		}
+	};
 }

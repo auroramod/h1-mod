@@ -104,6 +104,11 @@ namespace utils::io
 		return std::filesystem::is_empty(directory);
 	}
 
+	bool remove_directory(const std::string& directory)
+	{
+		return std::filesystem::remove_all(directory);
+	}
+
 	std::vector<std::string> list_files(const std::string& directory)
 	{
 		std::vector<std::string> files;

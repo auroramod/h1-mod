@@ -18,7 +18,7 @@ namespace demonware
 		this->register_task(12, &bdStorage::unk12);
 
 		this->map_publisher_resource("motd-.*\\.txt", DW_MOTD);
-		this->map_publisher_resource("ffotd-.*\\.ff", DW_FASTFILE);
+		// this->map_publisher_resource("ffotd-.*\\.ff", DW_FASTFILE);
 		this->map_publisher_resource("playlists(_.+)?\\.aggr", DW_PLAYLISTS);
 	}
 
@@ -147,71 +147,45 @@ namespace demonware
 		utils::io::write_file("demonware/bdStorage/set_user_file", buffer->get_buffer());
 #endif
 
-		auto reply = server->create_reply(this->task_id());
 		uint64_t owner;
+		uint32_t numfiles;
+		std::string game, platform;
 
+		buffer->read_string(&game);
+		buffer->read_uint64(&owner);
+		buffer->read_string(&platform);
+		buffer->read_uint32(&numfiles);
+
+		auto reply = server->create_reply(this->task_id());
+
+		for (uint32_t i = 0; i < numfiles; i++)
 		{
-			bool priv;
-			uint32_t unk32_0;
-			uint32_t unk32_1;
-			std::string game, platform, filename, data;
-
-			buffer->read_string(&game);
-			buffer->read_uint64(&owner);
-			buffer->read_string(&platform);
-			buffer->read_uint32(&unk32_0);
-
-			buffer->read_string(&filename);
-			buffer->read_blob(&data);
-			buffer->read_uint32(&unk32_1);
-			buffer->read_bool(&priv);
-
-			const auto path = get_user_file_path(filename);
-			utils::io::write_file(path, data);
-
-#ifdef DEBUG
-			printf("[DW]: [bdStorage]: set user file: %s\n", filename.data());
-#endif
-
-			auto* info = new bdFileInfo;
-
-			info->file_id = *reinterpret_cast<const uint64_t*>(utils::cryptography::sha1::compute(filename).data());
-			info->filename = filename;
-			info->create_time = uint32_t(time(nullptr));
-			info->modified_time = info->create_time;
-			info->file_size = uint32_t(data.size());
-			info->owner_id = uint64_t(owner);
-			info->priv = priv;
-
-			reply->add(info);
-		}
-
-		{
-			bool priv;
-			uint32_t unk32_0;
 			std::string filename, data;
+			uint32_t unk;
+			bool priv;
 
 			buffer->read_string(&filename);
 			buffer->read_blob(&data);
-			buffer->read_uint32(&unk32_0);
+			buffer->read_uint32(&unk);
 			buffer->read_bool(&priv);
 
 			const auto path = get_user_file_path(filename);
 			utils::io::write_file(path, data);
 
+			auto* info = new bdFile2;
+
+			info->unk1 = 0;
+			info->unk2 = 0;
+			info->unk3 = 0;
+			info->priv = false;
+			info->owner_id = owner;
+			info->platform = platform;
+			info->filename = filename;
+			info->data = data;
+
 #ifdef DEBUG
 			printf("[DW]: [bdStorage]: set user file: %s\n", filename.data());
 #endif
-
-			auto* info = new bdFileInfo;
-
-			info->file_id = *reinterpret_cast<const uint64_t*>(utils::cryptography::sha1::compute(filename).data());
-			info->filename = filename;
-			info->create_time = uint32_t(time(nullptr));
-			info->modified_time = info->create_time;
-			info->file_size = uint32_t(data.size());
-			info->owner_id = uint64_t(owner);
-			info->priv = priv;
 
 			reply->add(info);
 		}
@@ -226,10 +200,9 @@ namespace demonware
 #endif
 
 		uint32_t unk32_0;
-		uint32_t unk32_1;
+		uint32_t numfiles, count = 0;
 		uint64_t owner;
-		std::string game, filename, filename2, 
-			platform, data, data2;
+		std::string game, platform;
 
 		buffer->read_string(&game);
 		buffer->read_uint32(&unk32_0);
@@ -237,30 +210,42 @@ namespace demonware
 		buffer->read_string(&platform);
 		buffer->read_uint64(&owner);
 		buffer->read_string(&platform);
-		buffer->read_uint32(&unk32_1);
-		buffer->read_string(&filename);
-		buffer->read_string(&filename2);
+		buffer->read_uint32(&numfiles);
 
-#ifdef DEBUG
-		printf("[DW]: [bdStorage]: get user file: %s, %s, %s\n", game.data(), filename.data(), platform.data());
-#endif
+		auto reply = server->create_reply(this->task_id());
 
-#ifdef DEBUG
-		printf("[DW]: [bdStorage]: get user file: %s, %s, %s\n", game.data(), filename2.data(), platform.data());
-#endif
-
-		const auto path = get_user_file_path(filename);
-		const auto path2 = get_user_file_path(filename2);
-
-		if (utils::io::read_file(path, &data) && utils::io::read_file(path2, &data2))
+		for (uint32_t i = 0; i < numfiles; i++)
 		{
-			// TODO: find out what the response should be for 2 files
-			// auto reply = server->create_reply(this->task_id());
-			// reply->add(new bdFileData(data));
-			// reply->add(new bdFileData(data2));
-			// reply->send();
+			std::string filename, data;
+			buffer->read_string(&filename);
 
-			server->create_reply(this->task_id(), game::BD_NO_FILE)->send();
+			const auto path = get_user_file_path(filename);
+			if (!utils::io::read_file(path, &data))
+			{
+#ifdef DEBUG
+				printf("[DW]: [bdStorage]: get user file: missing file: %s, %s, %s\n", game.data(), filename.data(), platform.data());
+#endif
+				continue;
+			}
+
+			auto response = new bdFile;
+			response->owner_id = owner;
+			response->unk = 0;
+			response->platform = platform;
+			response->filename = filename;
+			response->data = data;
+
+			reply->add(response);
+			++count;
+
+#ifdef DEBUG
+			printf("[DW]: [bdStorage]: get user file: %s, %s, %s\n", game.data(), filename.data(), platform.data());
+#endif
+		}
+
+		if (count == numfiles)
+		{
+			reply->send();
 		}
 		else
 		{
