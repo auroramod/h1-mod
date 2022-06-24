@@ -1,4 +1,3 @@
-local originaldialog = LUI.ShaderCacheDialog.new
 LUI.MenuBuilder.registerPopupType("ShaderCacheDialog_original", LUI.ShaderCacheDialog.new)
 
 game:addlocalizedstring("PLATFORM_SHADER_PRECACHE_ASK", "Would you like to populate the shader cache? It may cause crashes with certain GPUs (e.g. RTX cards) but will improve performance if successful.")
