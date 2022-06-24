@@ -2,7 +2,9 @@ if (game:issingleplayer()) then
 	return
 end
 
-require("shaderdialog")
+if (Engine.InFrontend()) then
+	require("shaderdialog")
+end
 
 -- defined in mp_hud/hudutils.lua
 function GetGameModeName()
