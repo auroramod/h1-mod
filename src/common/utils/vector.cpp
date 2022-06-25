@@ -46,6 +46,13 @@ namespace utils::vector
 		out[1] = veca[1] - vecb[1];
 		out[2] = veca[2] - vecb[2];
 	}
+
+	void add(const float* veca, const float* vecb, float* out)
+	{
+		out[0] = veca[0] + vecb[0];
+		out[1] = veca[1] + vecb[1];
+		out[2] = veca[2] + vecb[2];
+	}
 	
 	float length(float* v)
 	{
