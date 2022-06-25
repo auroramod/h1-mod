@@ -7,6 +7,19 @@ namespace game
 	/***************************************************************
 	 * Functions
 	 **************************************************************/
+	
+	namespace mp
+	{
+		WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cbuf_AddText{ 0x0, 0x1CF480 };
+		WEAK symbol<void(const char* text_in, int limit)> Cmd_TokenizeStringWithLimit{ 0x0, 0x157A40 };
+	}
+
+	namespace sp
+	{
+		WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{ 0x3764A0, 0x0 };
+		WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{ 0x377790, 0x0 };
+		WEAK symbol<void()> Cmd_EndTokenizeString{ 0x376C90, 0x0 };
+	}
 
 	WEAK symbol<void(int type, VariableUnion u)> AddRefToValue{0x3C1F50, 0x5090E0};
 	WEAK symbol<void(int type, VariableUnion u)> RemoveRefToValue{0x3C3A60, 0x50ABF0};
@@ -15,16 +28,6 @@ namespace game
 	WEAK symbol<unsigned int(unsigned int id)> AllocThread{0x3C22B0, 0x509440};
 	WEAK symbol<ObjectVariableValue*(unsigned int* id)> AllocVariable{0x3C2310, 0x5094A0};
 
-	namespace sp
-	{
-		WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{0x3764A0, 0x0};
-	}
-
-	namespace mp
-	{
-		WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cbuf_AddText{0x0, 0x1CF480};
-	}
-
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* buffer,
 		void (int, int, const char*))> Cbuf_ExecuteBufferInternal{0x3765B0, 0x155BC0};
 	WEAK symbol<void(const char* message)> Conbuf_AppendText{0x0, 0x0};
@@ -32,17 +35,6 @@ namespace game
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cmd_ExecuteSingleCommand{0x376FF0, 0x156E90};
 	WEAK symbol<void(const char* cmdName, void(), cmd_function_s* allocedCmd)> Cmd_AddCommandInternal{0x376A40, 0x156880};
 	WEAK symbol<void(const char*)> Cmd_RemoveCommand{0x377670, 0x157690};
-
-	namespace sp
-	{
-		WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{0x377790, 0x0};
-		WEAK symbol<void()> Cmd_EndTokenizeString{0x376C90, 0x0};
-	}
-
-	namespace mp
-	{
-		WEAK symbol<void(const char* text_in, int limit)> Cmd_TokenizeStringWithLimit{0x0, 0x157A40};
-	}
 
 	WEAK symbol<void(void*, void*)> AimAssist_AddToTargetList{0x0, 0xE66C0};
 
