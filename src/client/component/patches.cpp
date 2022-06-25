@@ -236,7 +236,7 @@ namespace patches
 			utils::hook::nop(SELECT_VALUE(0x1A9DDC_b, 0x13388F_b), 6);
 
 			// Show missing fastfiles
-			utils::hook::call(SELECT_VALUE(0x0_b, 0x39A78E_b), missing_content_error_stub);
+			utils::hook::call(SELECT_VALUE(0x1F588B_b, 0x39A78E_b), missing_content_error_stub);
 
 			// Allow executing custom cfg files with the "exec" command
 			utils::hook::call(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
