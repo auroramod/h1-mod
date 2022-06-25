@@ -339,8 +339,7 @@ namespace ui_scripting
 
 			game_type["virtuallobbypresentable"] = [](const game&)
 			{
-				static const auto presentable = ::game::Dvar_FindVar("virtualLobbyPresentable");
-				presentable->current.enabled = true;
+				::game::Dvar_SetFromStringByNameFromSource("virtualLobbyPresentable", "1", ::game::DvarSetSource::DVAR_SOURCE_INTERNAL);
 			};
 
 			auto updater_table = table();
