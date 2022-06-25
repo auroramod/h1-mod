@@ -169,6 +169,15 @@ namespace patches
 		{
 			return 1;
 		}
+
+		utils::hook::detour cl_gamepad_scrolling_buttons_hook;
+		void cl_gamepad_scrolling_buttons_stub(int local_client_num, int a2)
+		{
+			if (local_client_num <= 3)
+			{
+				cl_gamepad_scrolling_buttons_hook.invoke<void>(local_client_num, a2);
+			}
+		}
 	}
 
 	class component final : public component_interface
@@ -302,6 +311,9 @@ namespace patches
 
 			// Dont free server/client memory on asset loading (fixes crashing on map rotation)
 			utils::hook::nop(0x132474_b, 5);
+
+			// Fix gamepad related crash
+			cl_gamepad_scrolling_buttons_hook.create(0x133210_b, cl_gamepad_scrolling_buttons_stub);
 		}
 	};
 }
