@@ -337,6 +337,12 @@ namespace ui_scripting
 				};
 			}
 
+			game_type["virtuallobbypresentable"] = [](const game&)
+			{
+				static const auto presentable = ::game::Dvar_FindVar("virtualLobbyPresentable");
+				presentable->current.enabled = true;
+			};
+
 			auto updater_table = table();
 			lua["updater"] = updater_table;
 
