@@ -2,6 +2,7 @@
 #include "loader/component_loader.hpp"
 
 #include "dvars.hpp"
+#include "fastfiles.hpp"
 #include "version.h"
 #include "command.hpp"
 #include "console.hpp"
@@ -155,6 +156,12 @@ namespace patches
 			game::AimAssist_AddToTargetList(aaGlob, screenTarget);
 		}
 
+		void missing_content_error_stub(int, const char*)
+		{
+			game::Com_Error(game::ERR_DROP, utils::string::va("MISSING FILE\n%s.ff", 
+				fastfiles::get_current_fastfile().data()));
+		}
+
 		utils::hook::detour init_network_dvars_hook;
 		void init_network_dvars_stub(game::dvar_t* dvar)
 		{
@@ -168,6 +175,33 @@ namespace patches
 		int ui_draw_crosshair()
 		{
 			return 1;
+		}
+
+		utils::hook::detour cl_gamepad_scrolling_buttons_hook;
+		void cl_gamepad_scrolling_buttons_stub(int local_client_num, int a2)
+		{
+			if (local_client_num <= 3)
+			{
+				cl_gamepad_scrolling_buttons_hook.invoke<void>(local_client_num, a2);
+			}
+		}
+
+		int out_of_memory_text_stub(char* dest, int size, const char* fmt, ...)
+		{
+			fmt = "%s (%d)\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.\n\n"
+				"If this still occurs, try using the '-memoryfix' parameter to generate the 'players2' folder.";
+
+			char buffer[2048];
+
+			va_list ap;
+			va_start(ap, fmt);
+
+			vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+			va_end(ap);
+
+			return utils::hook::invoke<int>(SELECT_VALUE(0x429200_b, 0x5AF0F0_b), dest, size, "%s", buffer);
 		}
 	}
 
@@ -201,8 +235,20 @@ namespace patches
 			utils::hook::nop(SELECT_VALUE(0x1AC0CE_b, 0x135EFB_b), 2);
 			utils::hook::nop(SELECT_VALUE(0x1A9DDC_b, 0x13388F_b), 6);
 
+			// Show missing fastfiles
+			utils::hook::call(SELECT_VALUE(0x0_b, 0x39A78E_b), missing_content_error_stub);
+
 			// Allow executing custom cfg files with the "exec" command
 			utils::hook::call(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
+
+			// Remove useless information from errors + add additional help to common errors
+			utils::hook::set<const char*>(SELECT_VALUE(0x7E3DF0_b, 0x937B80_b),
+				"Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.");
+			utils::hook::set<const char*>(SELECT_VALUE(0x800EA8_b, 0x954FF0_b),
+				"IDXGISwapChain::Present failed: %s\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.");
+			utils::hook::call(SELECT_VALUE(0x457BC9_b, 0x1D8E09_b), out_of_memory_text_stub); // "Out of memory. You are probably low on disk space."
 
 			if (!game::environment::is_sp())
 			{
@@ -302,6 +348,9 @@ namespace patches
 
 			// Dont free server/client memory on asset loading (fixes crashing on map rotation)
 			utils::hook::nop(0x132474_b, 5);
+
+			// Fix gamepad related crash
+			cl_gamepad_scrolling_buttons_hook.create(0x133210_b, cl_gamepad_scrolling_buttons_stub);
 		}
 	};
 }
