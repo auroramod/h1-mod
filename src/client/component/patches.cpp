@@ -188,7 +188,9 @@ namespace patches
 
 		int out_of_memory_text_stub(char* dest, int size, const char* fmt, ...)
 		{
-			fmt = "%s (%d)\n\nDisable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.\n\nIf this still occurs, try using the '-memoryfix' parameter to generate the 'players2' folder.";
+			fmt = "%s (%d)\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.\n\n"
+				"If this still occurs, try using the '-memoryfix' parameter to generate the 'players2' folder.";
 
 			char buffer[2048];
 
