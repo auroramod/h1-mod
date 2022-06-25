@@ -375,11 +375,14 @@ namespace server_list
 		{
 			if (!game::environment::is_mp()) return;
 
-			// add dvars to change destination master server ip/port
-			master_server_ip = dvars::register_string("masterServerIP", "master.h1.gg", 0x0,
-				"IP of the destination master server to connect to");
-			master_server_port = dvars::register_string("masterServerPort", "20810", 0x0,
-				"Port of the destination master server to connect to");
+			scheduler::once([]()
+			{
+				// add dvars to change destination master server ip/port
+				master_server_ip = dvars::register_string("masterServerIP", "master.h1.gg", game::DVAR_FLAG_NONE,
+					"IP of the destination master server to connect to");
+				master_server_port = dvars::register_string("masterServerPort", "20810", game::DVAR_FLAG_NONE,
+					"Port of the destination master server to connect to");
+			}, scheduler::pipeline::main);
 
 			localized_strings::override("PLATFORM_SYSTEM_LINK_TITLE", "SERVER LIST");
 			
