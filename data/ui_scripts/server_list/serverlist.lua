@@ -206,10 +206,6 @@ function menu_systemlink_join(f19_arg0, f19_arg1)
 		side = "all"
 	})
 
-	LUI.Options.InitScrollingList(menu.list, nil, {
-		rows = 18,
-	})
-
 	menu:AddHelp({
 		name = "add_button_helper_text",
 		button_ref = "button_alt1",
