@@ -63,9 +63,18 @@ function menu_xboxlive(f16_arg0, f16_arg1)
         Engine.ExecNow("eliteclan_refresh", Engine.GetFirstActiveController())
     end
 
-    menu:addElement(LUI.UITimer.new(4000, "vl"))
-    menu:registerEventHandler("vl", function()
-        game:virtuallobbypresentable()
+    local root = Engine.GetLuiRoot()
+    if (root.vltimer) then
+        root.vltimer:close()
+    end
+
+    root.vltimer = LUI.UITimer.new(4000, "vl")
+    root:addElement(root.vltimer)
+    root:registerEventHandler("vl", function()
+        if (Engine.GetDvarBool("virtualLobbyReady")) then
+            root.vltimer:close()
+            game:virtuallobbypresentable()
+        end
     end)
 
     return menu
