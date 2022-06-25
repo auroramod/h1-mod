@@ -2,6 +2,7 @@
 #include "loader/component_loader.hpp"
 
 #include "dvars.hpp"
+#include "fastfiles.hpp"
 #include "version.h"
 #include "command.hpp"
 #include "console.hpp"
@@ -155,6 +156,12 @@ namespace patches
 			game::AimAssist_AddToTargetList(aaGlob, screenTarget);
 		}
 
+		void missing_content_error_stub(int, const char*)
+		{
+			game::Com_Error(game::ERR_DROP, utils::string::va("MISSING FILE\n%s.ff", 
+				fastfiles::get_current_fastfile().data()));
+		}
+
 		utils::hook::detour init_network_dvars_hook;
 		void init_network_dvars_stub(game::dvar_t* dvar)
 		{
@@ -209,6 +216,9 @@ namespace patches
 			// Allow kbam input when gamepad is enabled
 			utils::hook::nop(SELECT_VALUE(0x1AC0CE_b, 0x135EFB_b), 2);
 			utils::hook::nop(SELECT_VALUE(0x1A9DDC_b, 0x13388F_b), 6);
+
+			// Show missing fastfiles
+			utils::hook::call(SELECT_VALUE(0x0_b, 0x39A78E_b), missing_content_error_stub);
 
 			// Allow executing custom cfg files with the "exec" command
 			utils::hook::call(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
