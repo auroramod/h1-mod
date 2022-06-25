@@ -10,6 +10,7 @@
 #include "command.hpp"
 
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 #include "game/ui_scripting/execution.hpp"
 
 #include <utils/cryptography.hpp>
@@ -50,6 +51,9 @@ namespace server_list
 		size_t server_list_page = 0;
 		volatile bool update_server_list = false;
 		std::chrono::high_resolution_clock::time_point last_scroll{};
+
+		game::dvar_t* master_server_ip;
+		game::dvar_t* master_server_port;
 
 		size_t get_page_count()
 		{
@@ -300,7 +304,8 @@ namespace server_list
 
 	bool get_master_server(game::netadr_s& address)
 	{
-		return game::NET_StringToAdr("master.h1.gg:20810", &address);
+		return game::NET_StringToAdr(utils::string::va("%s:%s", 
+			master_server_ip->current.string, master_server_port->current.string), &address);
 	}
 
 	void handle_info_response(const game::netadr_s& address, const utils::info_string& info)
@@ -369,6 +374,15 @@ namespace server_list
 		void post_unpack() override
 		{
 			if (!game::environment::is_mp()) return;
+
+			scheduler::once([]()
+			{
+				// add dvars to change destination master server ip/port
+				master_server_ip = dvars::register_string("masterServerIP", "master.h1.gg", game::DVAR_FLAG_NONE,
+					"IP of the destination master server to connect to");
+				master_server_port = dvars::register_string("masterServerPort", "20810", game::DVAR_FLAG_NONE,
+					"Port of the destination master server to connect to");
+			}, scheduler::pipeline::main);
 
 			localized_strings::override("PLATFORM_SYSTEM_LINK_TITLE", "SERVER LIST");
 			
