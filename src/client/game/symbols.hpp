@@ -10,15 +10,15 @@ namespace game
 	
 	namespace mp
 	{
-		WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cbuf_AddText{ 0x0, 0x1CF480 };
-		WEAK symbol<void(const char* text_in, int limit)> Cmd_TokenizeStringWithLimit{ 0x0, 0x157A40 };
+		WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cbuf_AddText{0x0, 0x1CF480};
+		WEAK symbol<void(const char* text_in, int limit)> Cmd_TokenizeStringWithLimit{0x0, 0x157A40};
 	}
 
 	namespace sp
 	{
-		WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{ 0x3764A0, 0x0 };
-		WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{ 0x377790, 0x0 };
-		WEAK symbol<void()> Cmd_EndTokenizeString{ 0x376C90, 0x0 };
+		WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{0x3764A0, 0x0};
+		WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{0x377790, 0x0};
+		WEAK symbol<void()> Cmd_EndTokenizeString{0x376C90, 0x0};
 	}
 
 	WEAK symbol<void(int type, VariableUnion u)> AddRefToValue{0x3C1F50, 0x5090E0};
