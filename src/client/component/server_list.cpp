@@ -52,6 +52,9 @@ namespace server_list
 		volatile bool update_server_list = false;
 		std::chrono::high_resolution_clock::time_point last_scroll{};
 
+		game::dvar_t* master_server_ip;
+		game::dvar_t* master_server_port;
+
 		size_t get_page_count()
 		{
 			const auto count = servers.size() / server_limit;
@@ -373,9 +376,9 @@ namespace server_list
 			if (!game::environment::is_mp()) return;
 
 			// add dvars to change destination master server ip/port
-			game::dvar_t* master_server_ip = dvars::register_string("masterServerIP", "master.h1.gg", 0x0,
+			master_server_ip = dvars::register_string("masterServerIP", "master.h1.gg", 0x0,
 				"IP of the destination master server to connect to");
-			game::dvar_t* master_server_port = dvars::register_string("masterServerPort", "20810", 0x0,
+			master_server_port = dvars::register_string("masterServerPort", "20810", 0x0,
 				"Port of the destination master server to connect to");
 
 			localized_strings::override("PLATFORM_SYSTEM_LINK_TITLE", "SERVER LIST");
