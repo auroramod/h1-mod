@@ -250,6 +250,17 @@ namespace patches
 				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.");
 			utils::hook::call(SELECT_VALUE(0x457BC9_b, 0x1D8E09_b), out_of_memory_text_stub); // "Out of memory. You are probably low on disk space."
 
+			// "fix" for rare 'Out of memory error' error
+			// this will *at least* generate the configs for mp/sp, which is the #1 issue
+			if (utils::flags::has_flag("memoryfix"))
+			{
+				utils::hook::jump(SELECT_VALUE(0x5110D0_b, 0x6200C0_b), malloc);
+				utils::hook::jump(SELECT_VALUE(0x510FF0_b, 0x61FFE0_b), _aligned_malloc);
+				utils::hook::jump(SELECT_VALUE(0x511130_b, 0x620120_b), free);
+				utils::hook::jump(SELECT_VALUE(0x511220_b, 0x620210_b), realloc);
+				utils::hook::jump(SELECT_VALUE(0x511050_b, 0x620040_b), _aligned_realloc);
+			}
+
 			if (!game::environment::is_sp())
 			{
 				patch_mp();
@@ -332,16 +343,6 @@ namespace patches
 
 			// Prevent clients from sending invalid reliableAcknowledge
 			utils::hook::call(0x1CBD06_b, sv_execute_client_message_stub);
-
-			// "fix" for rare 'Out of memory error' error
-			if (utils::flags::has_flag("memoryfix"))
-			{
-				utils::hook::jump(0x6200C0_b, malloc);
-				utils::hook::jump(0x61FFE0_b, _aligned_malloc);
-				utils::hook::jump(0x620120_b, free);
-				utils::hook::jump(0x620210_b, realloc);
-				utils::hook::jump(0x620040_b, _aligned_realloc);
-			}
 
 			// Change default hostname and make it replicated
 			dvars::override::register_string("sv_hostname", "^2H1-Mod^7 Default Server", game::DVAR_FLAG_REPLICATED);
