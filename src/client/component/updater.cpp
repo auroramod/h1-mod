@@ -27,6 +27,7 @@
 #define DATA_PATH_DEV "data-dev/"
 
 #define ERR_UPDATE_CHECK_FAIL "Failed to check for updates"
+#define ERR_UPDATE_CHECK_FAIL_BAD_RESPONSE "Bad response"
 #define ERR_DOWNLOAD_FAIL "Failed to download file "
 #define ERR_WRITE_FAIL "Failed to write file "
 
@@ -345,7 +346,7 @@ namespace updater
 
 			if (!j.IsArray())
 			{
-				set_update_check_status(true, false, ERR_UPDATE_CHECK_FAIL);
+				set_update_check_status(true, false, ERR_UPDATE_CHECK_FAIL_BAD_RESPONSE);
 				return;
 			}
 
