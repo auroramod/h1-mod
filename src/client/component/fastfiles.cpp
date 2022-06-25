@@ -154,8 +154,7 @@ namespace fastfiles
 			// Allow loading of unsigned fastfiles
 			if (!game::environment::is_sp())
 			{
-				utils::hook::set<uint8_t>(0x367B5B_b, 0xEB); // main function
-				utils::hook::nop(0x368153_b, 2); // DB_AuthLoad_InflateInit
+				utils::hook::nop(0x368153_b, 2); // DB_InflateInit
 			}
 
 			// Allow loading of mixed compressor types
