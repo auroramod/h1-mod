@@ -70,13 +70,13 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", "XLabs"
+            VALUE "CompanyName", "H1-Mod"
             VALUE "FileDescription", "H1-Mod"
             VALUE "FileVersion", VERSION_FILE
             VALUE "InternalName", "H1-Mod"
-            VALUE "LegalCopyright", "Copyright (C) 2021 X Labs Project. All rights reserved."
+            VALUE "LegalCopyright", "Copyright (C) 2021 H1-Mod. All rights reserved."
             VALUE "Licence", "GPLv3"
-            VALUE "Info", "https://github.com/skkuull/h1-mod/"
+            VALUE "Info", "https://h1.gg"
             VALUE "OriginalFilename", "h1-mod.exe"
             VALUE "ProductName", "h1-mod"
             VALUE "ProductVersion", VERSION_PRODUCT
