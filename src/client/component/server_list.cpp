@@ -10,6 +10,7 @@
 #include "command.hpp"
 
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 #include "game/ui_scripting/execution.hpp"
 
 #include <utils/cryptography.hpp>
@@ -300,7 +301,8 @@ namespace server_list
 
 	bool get_master_server(game::netadr_s& address)
 	{
-		return game::NET_StringToAdr("master.h1.gg:20810", &address);
+		return game::NET_StringToAdr(utils::string::va("%s:%s", 
+			master_server_ip->current.string, master_server_port->current.string), &address);
 	}
 
 	void handle_info_response(const game::netadr_s& address, const utils::info_string& info)
@@ -369,6 +371,12 @@ namespace server_list
 		void post_unpack() override
 		{
 			if (!game::environment::is_mp()) return;
+
+			// add dvars to change destination master server ip/port
+			game::dvar_t* master_server_ip = dvars::register_string("masterServerIP", "master.h1.gg", 0x0,
+				"IP of the destination master server to connect to");
+			game::dvar_t* master_server_port = dvars::register_string("masterServerPort", "20810", 0x0,
+				"Port of the destination master server to connect to");
 
 			localized_strings::override("PLATFORM_SYSTEM_LINK_TITLE", "SERVER LIST");
 			
