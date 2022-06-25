@@ -185,6 +185,22 @@ namespace patches
 				cl_gamepad_scrolling_buttons_hook.invoke<void>(local_client_num, a2);
 			}
 		}
+
+		int out_of_memory_text_stub(char* dest, int size, const char* fmt, ...)
+		{
+			fmt = "%s (%d)\n\nDisable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.\n\nIf this still occurs, try using the '-memoryfix' parameter to generate the 'players2' folder.";
+
+			char buffer[2048];
+
+			va_list ap;
+			va_start(ap, fmt);
+
+			vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+			va_end(ap);
+
+			return utils::hook::invoke<int>(SELECT_VALUE(0x429200_b, 0x5AF0F0_b), dest, size, "%s", buffer);
+		}
 	}
 
 	class component final : public component_interface
@@ -222,6 +238,15 @@ namespace patches
 
 			// Allow executing custom cfg files with the "exec" command
 			utils::hook::call(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
+
+			// Remove useless information from errors + add additional help to common errors
+			utils::hook::set<const char*>(SELECT_VALUE(0x7E3DF0_b, 0x937B80_b),
+				"Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.");
+			utils::hook::set<const char*>(SELECT_VALUE(0x800EA8_b, 0x954FF0_b),
+				"IDXGISwapChain::Present failed: %s\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.");
+			utils::hook::call(SELECT_VALUE(0x457BC9_b, 0x1D8E09_b), out_of_memory_text_stub); // "Out of memory. You are probably low on disk space."
 
 			if (!game::environment::is_sp())
 			{
