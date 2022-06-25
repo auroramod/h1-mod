@@ -10,7 +10,7 @@ game:addlocalizedstring("MENU_PING", "Ping")
 
 local columns = {
 	{
-		offset = 10,
+		offset = 40,
 		text = "@MENU_HOST_NAME",
 		dataindex = 0
 	},
@@ -33,6 +33,28 @@ local columns = {
 		offset = 1100,
 		text = "@MENU_PING",
 		dataindex = 4
+	},
+	{
+		offset = 10,
+		image = "s1_icon_locked",
+		customelement = function(value, offset)
+			return LUI.UIImage.new({
+				leftAnchor = true,
+				topAnchor = true,
+				height = 20,
+				width = 20,
+				left = offset,
+				top = 2,
+				material = RegisterMaterial(CoD.Material.RestrictedIcon),
+				alpha = value == "1" and 1 or 0,
+				color = {
+					r = 1,
+					b = 1,
+					g = 1
+				}
+			})
+		end,
+		dataindex = 5
 	}
 }
 
@@ -68,7 +90,20 @@ SystemLinkJoinMenu.AddHeaderButton = function(menu, f12_arg1, width)
 	button.m_eventHandlers = {}
 
 	for i = 1, #columns do
-		SystemLinkJoinMenu.MakeText(button.textHolder, columns[i].offset, Engine.Localize(columns[i].text), nil)
+		if (columns[i].text) then
+			SystemLinkJoinMenu.MakeText(button.textHolder, columns[i].offset, Engine.Localize(columns[i].text), nil)
+		elseif (columns[i].image) then
+			local image = LUI.UIImage.new({
+				leftAnchor = true,
+				topAnchor = true,
+				height = 20,
+				width = 20,
+				top = 2,
+				left = columns[i].offset,
+				material = RegisterMaterial(columns[i].image)
+			})
+			button.textHolder:addElement(image)
+		end
 	end
 
 	element:addElement(button)
@@ -83,6 +118,9 @@ SystemLinkJoinMenu.AddServerButton = function(menu, controller, index)
 
 	local gettext = function(i)
 		local text = Lobby.GetServerData(controller, index, columns[i].dataindex)
+		if (columns[i].customelement) then
+			text = columns[i].customelement(text)
+		end
 
 		local islast = not columns[i + 1]
 		local end_ = islast and 1130 or columns[i + 1].offset
@@ -100,7 +138,13 @@ SystemLinkJoinMenu.AddServerButton = function(menu, controller, index)
 	end
 
 	for i = 1, #columns do
-		SystemLinkJoinMenu.MakeText(button.textHolder, columns[i].offset, gettext(i), luiglobals.Colors.h1.medium_grey)
+		if (columns[i].customelement) then
+			local value = Lobby.GetServerData(controller, index, columns[i].dataindex)
+			local element = columns[i].customelement(value, columns[i].offset)
+			button.textHolder:addElement(element)
+		else
+			SystemLinkJoinMenu.MakeText(button.textHolder, columns[i].offset, gettext(i), luiglobals.Colors.h1.medium_grey)
+		end
 	end
 
 	menu.list:addElement(button)
@@ -131,6 +175,8 @@ SystemLinkJoinMenu.MakeText = function(menu, f5_arg1, text, color)
 
 	el:setText(text)
 	menu:addElement(el)
+
+	return el
 end
 
 function menu_systemlink_join(f19_arg0, f19_arg1)
