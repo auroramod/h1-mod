@@ -7,6 +7,8 @@ end
 
 game:addlocalizedstring("MENU_NUMPLAYERS", "Players")
 game:addlocalizedstring("MENU_PING", "Ping")
+game:addlocalizedstring("SERVERLIST_PLAYER_COUNT", "&&1 Players")
+game:addlocalizedstring("SERVERLIST_SERVER_COUNT", "&&1 Servers")
 
 local columns = {
 	{
@@ -195,8 +197,33 @@ function menu_systemlink_join(f19_arg0, f19_arg1)
 	SystemLinkJoinMenu.UpdateCounterText(menu, nil)
 	Lobby.BuildServerList(Engine.GetFirstActiveController())
 
+	local playercount = LUI.UIText.new({
+		rightAnchor = true,
+		topAnchor = true,
+		height = 18,
+		bottom = 58,
+		font = CoD.TextSettings.BodyFont.Font,
+		width = 300,
+		alignment = LUI.Alignment.Right,
+	})
+	menu:addElement(playercount)
+
+	local servercount = LUI.UIText.new({
+		rightAnchor = true,
+		topAnchor = true,
+		height = 18,
+		bottom = 58 - 25,
+		font = CoD.TextSettings.BodyFont.Font,
+		width = 300,
+		alignment = LUI.Alignment.Right,
+	})
+	menu:addElement(servercount)
+
 	menu.list:registerEventHandler(LUI.UIScrollIndicator.UpdateEvent, function(element, event)
 		SystemLinkJoinMenu.UpdateCounterText(menu, event)
+
+		playercount:setText(Engine.Localize("@SERVERLIST_PLAYER_COUNT", serverlist:getplayercount()))
+		servercount:setText(Engine.Localize("@SERVERLIST_SERVER_COUNT", serverlist:getservercount()))
 	end)
 
 	SystemLinkJoinMenu.UpdateGameList(menu)
