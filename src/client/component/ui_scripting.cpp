@@ -337,6 +337,11 @@ namespace ui_scripting
 				};
 			}
 
+			game_type["virtuallobbypresentable"] = [](const game&)
+			{
+				::game::Dvar_SetFromStringByNameFromSource("virtualLobbyPresentable", "1", ::game::DvarSetSource::DVAR_SOURCE_INTERNAL);
+			};
+
 			auto updater_table = table();
 			lua["updater"] = updater_table;
 

@@ -40,6 +40,7 @@ namespace dedicated
 			game::netadr_s target{};
 			if (server_list::get_master_server(target))
 			{
+				console::info("Sending heartbeat");
 				network::send(target, "heartbeat", "H1");
 			}
 		}

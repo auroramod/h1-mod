@@ -36,6 +36,7 @@ namespace server_list
 			game::CodPlayMode play_mode;
 			char in_game;
 			game::netadr_s address;
+			bool is_private;
 		};
 
 		struct
@@ -154,6 +155,11 @@ namespace server_list
 			if (column == 4)
 			{
 				return servers[i].game_type.empty() ? "" : utils::string::va("%i", servers[i].ping);
+			}
+
+			if (column == 5)
+			{
+				return servers[i].is_private ? "1" : "0";
 			}
 
 			return "";
@@ -362,6 +368,7 @@ namespace server_list
 		server.max_clients = atoi(info.get("sv_maxclients").data());
 		server.bots = atoi(info.get("bots").data());
 		server.ping = std::min(now - start_time, 999);
+		server.is_private = atoi(info.get("isPrivate").data()) == 1;
 
 		server.in_game = 1;
 
@@ -373,16 +380,22 @@ namespace server_list
 	public:
 		void post_unpack() override
 		{
-			if (!game::environment::is_mp()) return;
-
-			scheduler::once([]()
+			if (!game::environment::is_sp())
 			{
-				// add dvars to change destination master server ip/port
-				master_server_ip = dvars::register_string("masterServerIP", "master.h1.gg", game::DVAR_FLAG_NONE,
-					"IP of the destination master server to connect to");
-				master_server_port = dvars::register_string("masterServerPort", "20810", game::DVAR_FLAG_NONE,
-					"Port of the destination master server to connect to");
-			}, scheduler::pipeline::main);
+				scheduler::once([]()
+				{
+					// add dvars to change destination master server ip/port
+					master_server_ip = dvars::register_string("masterServerIP", "master.h1.gg", game::DVAR_FLAG_NONE,
+						"IP of the destination master server to connect to");
+					master_server_port = dvars::register_string("masterServerPort", "20810", game::DVAR_FLAG_NONE,
+						"Port of the destination master server to connect to");
+				}, scheduler::pipeline::main);
+			}
+
+			if (!game::environment::is_mp())
+			{
+				return;
+			}
 
 			localized_strings::override("PLATFORM_SYSTEM_LINK_TITLE", "SERVER LIST");
 			

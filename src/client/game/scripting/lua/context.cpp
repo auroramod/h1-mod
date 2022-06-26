@@ -156,11 +156,6 @@ namespace scripting::lua
 				return normalize_vector(a);
 			};
 
-			vector_type["normalize"] = [](const vector& a)
-			{
-				return normalize_vector(a);
-			};
-
 			vector_type["toangles"] = [](const vector& a)
 			{
 				return call("vectortoangles", {a}).as<vector>();
