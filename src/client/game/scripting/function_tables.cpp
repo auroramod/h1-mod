@@ -1500,12 +1500,12 @@ namespace scripting
 		{"_meth_82e8", 0x82E8}, // SP 0x000000 MP 0x411730
 		{"_meth_82e9", 0x82E9}, // SP 0x000000 MP 0x411720
 		{"_meth_82ea", 0x82EA}, // SP 0x2905B0 MP 0x40BAD0
-		{"_meth_82eb", 0x82EB}, // SP 0x28F5E0 MP 0x40AB90
-		{"_meth_82ec", 0x82EC}, // SP 0x28F6D0 MP 0x40ACC0
+		{"fragbuttonpressed", 0x82EB}, // SP 0x28F5E0 MP 0x40AB90
+		{"secondaryoffhandbuttonpressed", 0x82EC}, // SP 0x28F6D0 MP 0x40ACC0
 		{"issighted", 0x82ED}, // SP 0x2919D0 MP 0x40D2E0
 		{"setvelocity", 0x82EE}, // SP 0x28DC30 MP 0x4090E0
 		{"_meth_82ef", 0x82EF}, // SP 0x28E570 MP 0x409920
-		{"_meth_82f0", 0x82F0}, // SP 0x28E980 MP 0x409B70
+		{"getnormalizedmovement", 0x82F0}, // SP 0x28E980 MP 0x409B70
 		{"playlocalsound", 0x82F1}, // SP 0x28DAC0 MP 0x409330
 		{"stoplocalsound", 0x82F2}, // SP 0x28DBA0 MP 0x409420
 		{"setweaponammoclip", 0x82F3}, // SP 0x2928A0 MP 0x405D60
@@ -1603,7 +1603,7 @@ namespace scripting
 		{"botsetstance", 0x8350}, // SP 0x000000 MP 0x5473D0
 		{"botsetscriptmove", 0x8351}, // SP 0x000000 MP 0x547250
 		{"_meth_8352", 0x8352}, // SP 0x000000 MP 0x546EA0
-		{"_meth_8353", 0x8353}, // SP 0x000000 MP 0x547090
+		{"botsetscriptgoal", 0x8353}, // SP 0x000000 MP 0x547090
 		{"botclearscriptgoal", 0x8354}, // SP 0x000000 MP 0x544F60
 		{"getnearestnode", 0x8355}, // SP 0x000000 MP 0x546DE0
 		{"botclearscriptenemy", 0x8356}, // SP 0x000000 MP 0x544EE0
@@ -1616,7 +1616,7 @@ namespace scripting
 		{"_meth_835e", 0x835E}, // SP 0x000000 MP 0x5460F0
 		{"botfindnoderandom", 0x835F}, // SP 0x000000 MP 0x544FE0
 		{"botmemoryevent", 0x8360}, // SP 0x000000 MP 0x545E50
-		{"_meth_8362", 0x8362}, // SP 0x000000 MP 0x546190
+		{"botnodepick", 0x8362}, // SP 0x000000 MP 0x546190
 		{"bothasscriptgoal", 0x8363}, // SP 0x000000 MP 0x545B70
 		{"botgetpersonality", 0x8364}, // SP 0x000000 MP 0x545700
 		{"_meth_8365", 0x8365}, // SP 0x000000 MP 0x5474A0
