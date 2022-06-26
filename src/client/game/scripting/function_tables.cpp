@@ -1500,12 +1500,12 @@ namespace scripting
 		{"_meth_82e8", 0x82E8}, // SP 0x000000 MP 0x411730
 		{"_meth_82e9", 0x82E9}, // SP 0x000000 MP 0x411720
 		{"_meth_82ea", 0x82EA}, // SP 0x2905B0 MP 0x40BAD0
-		{"_meth_82eb", 0x82EB}, // SP 0x28F5E0 MP 0x40AB90
-		{"_meth_82ec", 0x82EC}, // SP 0x28F6D0 MP 0x40ACC0
+		{"fragbuttonpressed", 0x82EB}, // SP 0x28F5E0 MP 0x40AB90
+		{"secondaryoffhandbuttonpressed", 0x82EC}, // SP 0x28F6D0 MP 0x40ACC0
 		{"issighted", 0x82ED}, // SP 0x2919D0 MP 0x40D2E0
 		{"setvelocity", 0x82EE}, // SP 0x28DC30 MP 0x4090E0
 		{"_meth_82ef", 0x82EF}, // SP 0x28E570 MP 0x409920
-		{"_meth_82f0", 0x82F0}, // SP 0x28E980 MP 0x409B70
+		{"getnormalizedmovement", 0x82F0}, // SP 0x28E980 MP 0x409B70
 		{"playlocalsound", 0x82F1}, // SP 0x28DAC0 MP 0x409330
 		{"stoplocalsound", 0x82F2}, // SP 0x28DBA0 MP 0x409420
 		{"setweaponammoclip", 0x82F3}, // SP 0x2928A0 MP 0x405D60
@@ -1603,7 +1603,7 @@ namespace scripting
 		{"botsetstance", 0x8350}, // SP 0x000000 MP 0x5473D0
 		{"botsetscriptmove", 0x8351}, // SP 0x000000 MP 0x547250
 		{"_meth_8352", 0x8352}, // SP 0x000000 MP 0x546EA0
-		{"_meth_8353", 0x8353}, // SP 0x000000 MP 0x547090
+		{"botsetscriptgoal", 0x8353}, // SP 0x000000 MP 0x547090
 		{"botclearscriptgoal", 0x8354}, // SP 0x000000 MP 0x544F60
 		{"getnearestnode", 0x8355}, // SP 0x000000 MP 0x546DE0
 		{"botclearscriptenemy", 0x8356}, // SP 0x000000 MP 0x544EE0
@@ -1616,7 +1616,7 @@ namespace scripting
 		{"_meth_835e", 0x835E}, // SP 0x000000 MP 0x5460F0
 		{"botfindnoderandom", 0x835F}, // SP 0x000000 MP 0x544FE0
 		{"botmemoryevent", 0x8360}, // SP 0x000000 MP 0x545E50
-		{"_meth_8362", 0x8362}, // SP 0x000000 MP 0x546190
+		{"botnodepick", 0x8362}, // SP 0x000000 MP 0x546190
 		{"bothasscriptgoal", 0x8363}, // SP 0x000000 MP 0x545B70
 		{"botgetpersonality", 0x8364}, // SP 0x000000 MP 0x545700
 		{"_meth_8365", 0x8365}, // SP 0x000000 MP 0x5474A0
@@ -2890,10 +2890,10 @@ namespace scripting
 		{"origin", 0x2DF},
 		{"other", 0x2E0},
 		{"over", 0x2E1},
-		{"owner", 0x2E2},
+		{"_not_owner", 0x2E2}, // was "owner"
 		{"pacifist", 0x2E3},
 		{"pacifistwait", 0x2E4},
-		{"pain", 0x2E5},
+		{"owner", 0x2E5}, // was "pain"
 		{"pantssize", 0x2E6},
 		{"parentindex", 0x2E7},
 		{"parentname", 0x2E8},
@@ -2925,10 +2925,10 @@ namespace scripting
 		{"perkrestricted", 0x302},
 		{"perks", 0x303},
 		{"perkslots", 0x304},
-		{"pers", 0x305},
+		{"_not_pers", 0x305}, // was "pers"
 		{"persistentperksunlocked", 0x306},
 		{"persistentweaponsunlocked", 0x307},
-		{"phone_off", 0x308},
+		{"pers", 0x308}, // was "phone_off"
 		{"phone_on", 0x309},
 		{"physics_finished", 0x30A},
 		{"physics_impact", 0x30B},
@@ -3340,10 +3340,10 @@ namespace scripting
 		{"target", 0x4A1},
 		{"target_script_trigger", 0x4A2},
 		{"targetname", 0x4A3},
-		{"team", 0x4A4},
+		{"_not_team", 0x4A4}, // was "team"
 		{"team3", 0x4A5},
 		{"teambalanced", 0x4A6},
-		{"teammode_axisallies", 0x4A7},
+		{"team", 0x4A7}, // was "teammode_axisallies"
 		{"teammode_ffa", 0x4A8},
 		{"teammovewaittime", 0x4A9},
 		{"their_score", 0x4AA},
@@ -3370,10 +3370,10 @@ namespace scripting
 		{"traversecost", 0x4BF},
 		{"traversesoonnotifydist", 0x4C0},
 		{"trend", 0x4C1},
-		{"trigger", 0x4C2},
+		{"_not_trigger", 0x4C2}, // was "trigger"
 		{"trigger_damage", 0x4C3},
 		{"trigger_use", 0x4C4},
-		{"trigger_use_touch", 0x4C5},
+		{"trigger", 0x4C5}, // was "trigger_use_touch"
 		{"truck_cam", 0x4C6},
 		{"turnrate", 0x4C7},
 		{"turret_deactivate", 0x4C8},
@@ -3492,5 +3492,88 @@ namespace scripting
 		{"codescripts/struct", 0x53E},
 		{"codescripts/message", 0x53F},
 		{"maps/mp/gametypes/_callbacksetup", 0x540},
+
+		// additional findings from gametype/map scripts - mikey (6/26/2022)
+		{"common_scripts/_fx", 0xA4FB},
+		{"common_scripts/_pipes", 0xA4F9},
+		{"common_scripts/utility", 0xA4FA},
+
+		{"QuickMessageToAll", 0x70a2},
+		{"SetupCallbacks", 0x8301},
+		{"_effect", 0x58f},
+		{"_objective_delete", 0x603},
+		{"addSpawnPoints", 0x82f},
+		{"addStartSpawnPoints", 0x831},
+		{"addToCharactersArray", 0x848},
+		{"allowUse", 0xab2},
+		{"characters", 0x1c8e},
+		{"checkDynamicSpawns", 0x1cfa},
+		{"clearOnVictimDisconnect", 0x1ef9},
+		{"conf_fx", 0x20e9},
+		{"createUseObject", 0x244c},
+		{"curOrigin", 0x24c8},
+		{"deleteObjPoint", 0x2859},
+		{"dogtags", 0x2cdf},
+		{"finalKill", 0x373e},
+		{"findBoxCenter", 0x3779},
+		{"forfeitInProgress", 0x39df},
+		{"gamemodeModifyPlayerDamage", 0x3bf6},
+		{"getNextObjID", 0x4041},
+		{"getOtherTeam", 0x4067},
+		{"getSpawnPoint", 0x40d2},
+		{"getSpawnpoint_FreeForAll", 0x40d5},
+		{"getTeamSpawnPoints", 0x411f},
+		{"guid", 0x4450},
+		{"inGracePeriod", 0x4c6d},
+		{"initSpawns", 0x4e26},
+		{"initializeMatchRules", 0x4de0},
+		{"initializeTagPathVariables", 0x4de3},
+		{"mapCenter", 0x5986},
+		{"maps/mp/_compass", 0xa731},
+		{"maps/mp/_load", 0xa74c},
+		{"maps/mp/_utility", 0xa764},
+		{"maps/mp/gametypes/_damage", 0xa78d},
+		{"maps/mp/gametypes/_gameobjects", 0xa794},
+		{"maps/mp/gametypes/_globallogic", 0xa797},
+		{"maps/mp/gametypes/_objpoints", 0xa7ac},
+		{"maps/mp/gametypes/_spawnlogic", 0xa7b9},
+		{"maps/mp/gametypes/_spawnscoring", 0xa7ba},
+		{"matchRules_damageMultiplier", 0x59e6},
+		{"matchRules_vampirism", 0x59eb},
+		{"modifyPlayerDamage", 0x5d51},
+		{"objId", 0x6304},
+		{"onForfeit", 0x64af},
+		{"onNormalDeath", 0x64bf},
+		{"onPlayerScore", 0x64d5},
+		{"onStartGameType", 0x64ec},
+		{"onUse", 0x64f8},
+		{"participants", 0x669d},
+		{"reInitializeMatchRulesOnMigration", 0x7307},
+		{"registerHalfTimeDvar", 0x72ef},
+		{"registerNumLivesDvar", 0x72f4},
+		{"registerRoundLimitDvar", 0x72f6},
+		{"registerRoundSwitchDvar", 0x72f7},
+		{"registerScoreLimitDvar", 0x72f8},
+		{"registerTimeLimitDvar", 0x72f9},
+		{"registerWinLimitDvar", 0x72fe},
+		{"removeFromCharactersArray", 0x73a7},
+		{"setCommonRulesFromMatchRulesData", 0x7f3f},
+		{"setObjectiveHintText", 0x7fc3},
+		{"setObjectiveScoreText", 0x7fc4},
+		{"setObjectiveText", 0x7fc5},
+		{"setUseTime", 0x834c},
+		{"setupMiniMap", 0x8324},
+		{"showToTeam", 0x8535},
+		{"spawnDogTags", 0x899e},
+		{"spawnMaxs", 0x89f3},
+		{"spawnMins", 0x89f6},
+		{"spawnPoints", 0x8a01},
+		{"tagTeamUpdater", 0x910a},
+		{"teamBased", 0x91eb},
+		{"teamNameList", 0x91f7},
+		{"teamObjIds", 0x6305},
+		{"teamSpawnPoints", 0x9201},
+		{"v", 0x9c42},
+		{"visuals", 0x9e9c},
 	};
 }
