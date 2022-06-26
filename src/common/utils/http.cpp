@@ -56,8 +56,6 @@ namespace utils::http
 
 			return result;
 		}
-
-		return {};
 	}
 
 	std::future<std::optional<result>> get_data_async(const std::string& url)
