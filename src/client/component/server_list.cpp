@@ -375,6 +375,23 @@ namespace server_list
 		insert_server(std::move(server));
 	}
 
+	int get_player_count()
+	{
+		std::lock_guard<std::mutex> _(mutex);
+		auto count = 0;
+		for (const auto& server : servers)
+		{
+			count += server.clients - server.bots;
+		}
+		return count;
+	}
+
+	int get_server_count()
+	{
+		std::lock_guard<std::mutex> _(mutex);
+		return static_cast<int>(servers.size());
+	}
+
 	class component final : public component_interface
 	{
 	public:
