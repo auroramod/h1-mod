@@ -1,7 +1,3 @@
-if (game:issingleplayer() or not Engine.InFrontend()) then
-    return
-end
-
 Cac.GameModes.Data = {
     Standard = {
         Label = Engine.Localize("@MPUI_STANDARD_CAPS"),
