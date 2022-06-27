@@ -3,9 +3,9 @@ local localization = {
         LANGUAGE_BUTTON = "Language",
         LANGUAGE_BUTTON_DESC = "Change your game language.",
         POPUP_RESTART_REQUIRED_TITLE = "RESTART REQUIRED",
-        POPUP_RESTART_REQUIRED_TEXT = "WARNING: To work properly, you need to have your language into zone directory of your game root. You have changed your game language, wish you restart?",
+        POPUP_RESTART_REQUIRED_TEXT = "WARNING: To work properly, you need to have your language's zone files in the zone directory of your game root. You have changed your game language, do you wish to restart?",
         POPUP_NO_ZONE_FOUND_TITLE = "LANGUAGE NOT FOUND",
-        POPUP_NO_ZONE_FOUND_TEXT = "We are unable to find the language folder you have selected, to avoid bugs, we will not change anything.",
+        POPUP_NO_ZONE_FOUND_TEXT = "We are unable to find the language folder you have selected. To avoid bugs, we will not change anything.",
         LANG_ENGLISH = "English",
         LANG_FRENCH = "French",
         LANG_ITALIAN = "Italian",
@@ -16,9 +16,9 @@ local localization = {
         LANGUAGE_BUTTON = "Langue",
         LANGUAGE_BUTTON_DESC = "Changez la langue de votre jeu.",
         POPUP_RESTART_REQUIRED_TITLE = "REDÉMARRAGE REQUIS",
-        POPUP_RESTART_REQUIRED_TEXT = "ATTENTION : Pour fonctionner correctement, vous devez avoir votre langue dans le répertoire zone de la racine de votre jeu. Vous avez changé la langue de votre jeu, souhaitez-vous redémarrer ?",
+        POPUP_RESTART_REQUIRED_TEXT = "ATTENTION : Pour fonctionner correctement, vous devez avoir les fichiers de zone de votre langue dans le répertoire de zone de la racine de votre jeu. Vous avez changé la langue de votre jeu, souhaitez-vous redémarrer ?",
         POPUP_NO_ZONE_FOUND_TITLE = "LANGUE INTROUVABLE",
-        POPUP_NO_ZONE_FOUND_TEXT = "Nous ne parvenons pas à trouver le dossier de langue que vous avez sélectionné, pour éviter les bugs, nous ne changerons rien.",
+        POPUP_NO_ZONE_FOUND_TEXT = "Nous ne parvenons pas à trouver le dossier de langue que vous avez sélectionné. Pour éviter les bugs, nous ne changerons rien.",
         LANG_ENGLISH = "Anglais",
         LANG_FRENCH = "Français",
         LANG_ITALIAN = "Italien",
@@ -29,9 +29,9 @@ local localization = {
         LANGUAGE_BUTTON = "Lingua",
         LANGUAGE_BUTTON_DESC = "Cambia la tua lingua di gioco.",
         POPUP_RESTART_REQUIRED_TITLE = "RIPARTENZA RICHIESTA",
-        POPUP_RESTART_REQUIRED_TEXT = "ATTENZIONE: per funzionare correttamente, devi avere la tua lingua nella directory zone della tua root di gioco. Hai cambiato la lingua del gioco, desideri riavviare?",
+        POPUP_RESTART_REQUIRED_TEXT = "ATTENZIONE: per funzionare correttamente, devi avere i file di zona della tua lingua nella directory zone della tua root di gioco. Hai cambiato la lingua del gioco, desideri riavviare?",
         POPUP_NO_ZONE_FOUND_TITLE = "LINGUA NON TROVATA",
-        POPUP_NO_ZONE_FOUND_TEXT = "Non siamo in grado di trovare la cartella della lingua che hai selezionato, per evitare bug, non cambieremo nulla.",
+        POPUP_NO_ZONE_FOUND_TEXT = "Non siamo in grado di trovare la cartella della lingua che hai selezionato. Per evitare bug, non cambieremo nulla.",
         LANG_ENGLISH = "Inglese",
         LANG_FRENCH = "Francese",
         LANG_ITALIAN = "Italiano",
@@ -42,9 +42,9 @@ local localization = {
         LANGUAGE_BUTTON = "Sprache",
         LANGUAGE_BUTTON_DESC = "Ändern Sie Ihre Spielsprache.",
         POPUP_RESTART_REQUIRED_TITLE = "NEUSTART ERFORDERLICH",
-        POPUP_RESTART_REQUIRED_TEXT = "WARNUNG: Um richtig zu funktionieren, müssen Sie Ihre Sprache im Zonenverzeichnis Ihres Spielstammverzeichnisses haben. Du hast deine Spielsprache geändert, möchtest du neu starten?",
+        POPUP_RESTART_REQUIRED_TEXT = "WARNUNG: Um richtig zu funktionieren, müssen Sie die Zonendateien Ihrer Sprache im Zonenverzeichnis Ihres Spielstammverzeichnisses haben. Du hast deine Spielsprache geändert, möchtest du neu starten?",
         POPUP_NO_ZONE_FOUND_TITLE = "SPRACHE NICHT GEFUNDEN",
-        POPUP_NO_ZONE_FOUND_TEXT = "Wir können den von Ihnen ausgewählten Sprachordner nicht finden, um Fehler zu vermeiden, werden wir nichts ändern.",
+        POPUP_NO_ZONE_FOUND_TEXT = "Wir können den von Ihnen ausgewählten Sprachordner nicht finden. Um Fehler zu vermeiden, werden wir nichts ändern.",
         LANG_ENGLISH = "Englisch",
         LANG_FRENCH = "Französisch",
         LANG_ITALIAN = "Italienisch",
@@ -55,9 +55,9 @@ local localization = {
         LANGUAGE_BUTTON = "Idioma",
         LANGUAGE_BUTTON_DESC = "Cambia el idioma de tu juego.",
         POPUP_RESTART_REQUIRED_TITLE = "REINICIO REQUERIDO",
-        POPUP_RESTART_REQUIRED_TEXT = "ADVERTENCIA: para que funcione correctamente, debe tener su idioma en el directorio de zone de la raíz del juego. Has cambiado el idioma de tu juego, ¿deseas reiniciar?",
+        POPUP_RESTART_REQUIRED_TEXT = "ADVERTENCIA: para que funcione correctamente, debe tener los archivos de zona de su idioma en el directorio de zona de la raíz del juego. Ha cambiado el idioma de su juego, ¿desea reiniciar?",
         POPUP_NO_ZONE_FOUND_TITLE = "IDIOMA NO ENCONTRADO",
-        POPUP_NO_ZONE_FOUND_TEXT = "No podemos encontrar la carpeta de idioma que ha seleccionado, para evitar errores, no cambiaremos nada.",
+        POPUP_NO_ZONE_FOUND_TEXT = "No podemos encontrar la carpeta de idioma que ha seleccionado. Para evitar errores, no cambiaremos nada.",
         LANG_ENGLISH = "Inglés",
         LANG_FRENCH = "Francés",
         LANG_ITALIAN = "Italiano",
@@ -90,6 +90,7 @@ function does_zone_folder_exists(language)
     local isok, errstr, errcode = os.rename("zone/" .. language .. "/", "zone/" .. language .. "/")
 
     if isok == nil then
+        -- Permissions denied, but exists.
         if errcode == 13 then
             return true
         end
