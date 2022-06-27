@@ -29,7 +29,7 @@ namespace steam
 			}
 
 			// default to english if no file is found
-			strcpy_s(language, 0x30, "english");
+			strcpy_s(language, sizeof(language), "english");
 		}
 
 		virtual bool BIsSubscribed();
