@@ -9,4 +9,7 @@ namespace server_list
 	void handle_info_response(const game::netadr_s& address, const utils::info_string& info);
 
 	bool sl_key_event(int key, int down);
+
+	int get_player_count();
+	int get_server_count();
 }

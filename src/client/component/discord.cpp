@@ -138,21 +138,37 @@ namespace discord
 		{
 			const auto data = utils::http::get_data(
 				utils::string::va(AVATAR_URL, id.data(), avatar.data()));
-			if (data.has_value())
+			if (!data.has_value())
 			{
-				materials::add(utils::string::va(AVATAR, id.data()), data.value());
+				return;
 			}
+
+			const auto& value = data.value();
+			if (value.code != CURLE_OK)
+			{
+				return;
+			}
+
+			materials::add(utils::string::va(AVATAR, id.data()), value.buffer);
 		}
 
 		bool has_default_avatar = false;
 		void download_default_avatar()
 		{
 			const auto data = utils::http::get_data(DEFAULT_AVATAR_URL);
-			if (data.has_value())
+			if (!data.has_value())
 			{
-				has_default_avatar = true;
-				materials::add(DEFAULT_AVATAR, data.value());
+				return;
 			}
+
+			const auto& value = data.value();
+			if (value.code != CURLE_OK)
+			{
+				return;
+			}
+
+			has_default_avatar = true;
+			materials::add(DEFAULT_AVATAR, value.buffer);
 		}
 	}
 

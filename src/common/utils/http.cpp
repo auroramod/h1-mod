@@ -4,41 +4,61 @@
 
 namespace utils::http
 {
-	std::optional<std::string> get_data(const std::string& url)
+	namespace
 	{
-		CComPtr<IStream> stream;
-
-		if (FAILED(URLOpenBlockingStreamA(nullptr, url.data(), &stream, 0, nullptr)))
+		size_t write_callback(void* contents, const size_t size, const size_t nmemb, void* userp)
 		{
-			return {};
+			auto* buffer = static_cast<std::string*>(userp);
+
+			const auto total_size = size * nmemb;
+			buffer->append(static_cast<char*>(contents), total_size);
+			return total_size;
 		}
-
-		char buffer[0x1000];
-		std::string result;
-
-		HRESULT status{};
-
-		do
-		{
-			DWORD bytes_read = 0;
-			status = stream->Read(buffer, sizeof(buffer), &bytes_read);
-
-			if (bytes_read > 0)
-			{
-				result.append(buffer, bytes_read);
-			}
-		}
-		while (SUCCEEDED(status) && status != S_FALSE);
-
-		if (FAILED(status))
-		{
-			return {};
-		}
-
-		return {result};
 	}
 
-	std::future<std::optional<std::string>> get_data_async(const std::string& url)
+	std::optional<result> get_data(const std::string& url)
+	{
+		curl_slist* header_list = nullptr;
+		auto* curl = curl_easy_init();
+		if (!curl)
+		{
+			return {};
+		}
+
+		auto _ = gsl::finally([&]()
+		{
+			curl_slist_free_all(header_list);
+			curl_easy_cleanup(curl);
+		});
+
+		std::string buffer{};
+
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_list);
+		curl_easy_setopt(curl, CURLOPT_URL, url.data());
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
+		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1);
+
+		const auto code = curl_easy_perform(curl);
+
+		if (code == CURLE_OK)
+		{
+			result result;
+			result.code = code;
+			result.buffer = std::move(buffer);
+
+			return result;
+		}
+		else
+		{
+			result result;
+			result.code = code;
+
+			return result;
+		}
+	}
+
+	std::future<std::optional<result>> get_data_async(const std::string& url)
 	{
 		return std::async(std::launch::async, [url]()
 		{

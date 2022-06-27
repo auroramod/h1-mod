@@ -5,16 +5,67 @@
 
 #include "command.hpp"
 #include "console.hpp"
+#include "scheduler.hpp"
 
 #include <utils/hook.hpp>
 
 namespace lui
 {
+	namespace
+	{
+		uint64_t event_count{};
+		bool begin_game_message_event_stub(int a1, const char* name, void* a3)
+		{
+			if (event_count > 30)
+			{
+				return false;
+			}
+			else
+			{
+				event_count++;
+			}
+
+			return utils::hook::invoke<bool>(0x2655A0_b, a1, name, a3);
+		}
+	}
+
 	class component final : public component_interface
 	{
 	public:
 		void post_unpack() override
 		{
+			if (game::environment::is_mp())
+			{
+				// Patch game message overflow
+				utils::hook::call(0x266E6B_b, begin_game_message_event_stub);
+
+				scheduler::loop([]()
+				{
+					if (event_count > 0)
+					{
+						event_count--;
+					}
+				}, scheduler::pipeline::lui, 50ms);
+			}
+
+			// Increase max extra LUI memory
+			/*const auto max_memory = 0x900000 * 2;
+			utils::hook::set<uint32_t>(0x278E61_b - 4, max_memory);
+			utils::hook::set<uint32_t>(0x27A2C5_b - 4, max_memory);
+			utils::hook::set<uint32_t>(0x27A993_b - 4, max_memory);
+			utils::hook::set<uint32_t>(0x27AB3A_b - 4, max_memory);
+			utils::hook::set<uint32_t>(0x27AB35_b - 4, max_memory);
+			utils::hook::set<uint32_t>(0x27C002_b - 4, max_memory);*/
+
+			// Increase max extra frontend memory
+			/*const auto max_frontend_memory = 0x180000 * 2;
+			utils::hook::set<uint32_t>(0x278EA6_b - 4, max_frontend_memory);
+			utils::hook::set<uint32_t>(0x278F01_b - 4, max_frontend_memory);
+			utils::hook::set<uint32_t>(0x27A2D4_b - 4, max_frontend_memory);
+			utils::hook::set<uint32_t>(0x27A2E3_b - 4, max_frontend_memory);
+			utils::hook::set<uint32_t>(0x27F9E9_b - 4, max_frontend_memory);
+			utils::hook::set<uint32_t>(0x27FA84_b - 4, max_frontend_memory);*/
+
 			command::add("lui_open", [](const command::params& params)
 			{
 				if (params.size() <= 1)

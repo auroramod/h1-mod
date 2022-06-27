@@ -42,7 +42,7 @@ namespace auth
 
 		std::string get_protected_data()
 		{
-			std::string input = "X-Labs-H1Mod-Auth";
+			std::string input = "H1Mod-Auth";
 
 			DATA_BLOB data_in{}, data_out{};
 			data_in.pbData = reinterpret_cast<uint8_t*>(input.data());

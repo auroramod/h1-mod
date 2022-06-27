@@ -197,6 +197,7 @@ namespace game
 	WEAK symbol<void(mp::client_t*, const char*, int)> SV_ExecuteClientCommand{0x0, 0x0};
 	WEAK symbol<void(int localClientNum)> SV_FastRestart{0x0, 0x54BE00};
 	WEAK symbol<void(void* cl, int type, const char* fmt, ...)> SV_SendServerCommand{0x0, 0x1CC040};
+	WEAK symbol<void(mp::client_t* drop, const char* reason, bool tellThem)> SV_DropClient_Internal{0x0, 0x54E7F0};
 
 	WEAK symbol<void()> Sys_ShowConsole{0x0, 0x0};
 	WEAK symbol<void(const char* error, ...)> Sys_Error{0x0, 0x1D8710};
@@ -295,6 +296,7 @@ namespace game
 		WEAK symbol<int(lua_State* s, const char* what, lua_Debug* ar)> hksi_lua_getinfo{0xB84D0, 0x22FFE0};
 		WEAK symbol<int(lua_State* s, int level, lua_Debug* ar)> hksi_lua_getstack{0xB87A0, 0x2302B0};
 		WEAK symbol<void(lua_State* s, const char* fmt, ...)> hksi_luaL_error{0xBF120, 0x22F930};
+		WEAK symbol<void(lua_State* s, int what, int data)> hksi_lua_gc{0, 0x236EF0};
 		WEAK symbol<const char*> typenames{0x98CD20, 0x10AD750};
 	}
 }

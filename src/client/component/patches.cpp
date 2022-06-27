@@ -123,9 +123,10 @@ namespace patches
 			const auto menu_id = atoi(params.get(1));
 			const auto client = &svs_clients[ent->s.entityNum];
 
-			// 22 => "end_game"
-			if (menu_id == 22 && client->header.remoteAddress.type != game::NA_LOOPBACK)
+			// 32 => "end_game"
+			if (menu_id == 32 && client->header.remoteAddress.type != game::NA_LOOPBACK)
 			{
+				game::SV_DropClient_Internal(client, "PLATFORM_STEAM_KICK_CHEAT", true);
 				return;
 			}
 
@@ -158,7 +159,7 @@ namespace patches
 
 		void missing_content_error_stub(int, const char*)
 		{
-			game::Com_Error(game::ERR_DROP, utils::string::va("MISSING FILE\n%s.ff", 
+			game::Com_Error(game::ERR_DROP, utils::string::va("MISSING FILE\n%s.ff",
 				fastfiles::get_current_fastfile().data()));
 		}
 
@@ -194,14 +195,73 @@ namespace patches
 
 			char buffer[2048];
 
-			va_list ap;
-			va_start(ap, fmt);
+			{
+				va_list ap;
+				va_start(ap, fmt);
 
-			vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
 
-			va_end(ap);
+				va_end(ap);
+			}
 
 			return utils::hook::invoke<int>(SELECT_VALUE(0x429200_b, 0x5AF0F0_b), dest, size, "%s", buffer);
+		}
+
+		void create_2d_texture_stub_1(const char* fmt, ...)
+		{
+			fmt = "Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
+
+			char buffer[2048];
+
+			{
+				va_list ap;
+				va_start(ap, fmt);
+
+				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+				va_end(ap);
+			}
+
+			game::Sys_Error("%s", buffer);
+		}
+
+		void create_2d_texture_stub_2(game::errorParm code, const char* fmt, ...)
+		{
+			fmt = "Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
+
+			char buffer[2048];
+
+			{
+				va_list ap;
+				va_start(ap, fmt);
+
+				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+				va_end(ap);
+			}
+
+			game::Com_Error(code, "%s", buffer);
+		}
+
+		void swap_chain_stub(game::errorParm code, const char* fmt, ...)
+		{
+			fmt = "IDXGISwapChain::Present failed: %s\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
+
+			char buffer[2048];
+
+			{
+				va_list ap;
+				va_start(ap, fmt);
+
+				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+				va_end(ap);
+			}
+
+			game::Com_Error(code, "%s", buffer);
 		}
 	}
 
@@ -242,13 +302,10 @@ namespace patches
 			utils::hook::call(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
 
 			// Remove useless information from errors + add additional help to common errors
-			utils::hook::set<const char*>(SELECT_VALUE(0x7E3DF0_b, 0x937B80_b),
-				"Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
-				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.");
-			utils::hook::set<const char*>(SELECT_VALUE(0x800EA8_b, 0x954FF0_b),
-				"IDXGISwapChain::Present failed: %s\n\n"
-				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.");
-			utils::hook::call(SELECT_VALUE(0x457BC9_b, 0x1D8E09_b), out_of_memory_text_stub); // "Out of memory. You are probably low on disk space."
+			utils::hook::call(SELECT_VALUE(0x55E919_b, 0x681A69_b), create_2d_texture_stub_1); 	// Sys_Error for "Create2DTexture( %s, %i, %i, %i, %i ) failed"
+			utils::hook::call(SELECT_VALUE(0x55EACB_b, 0x681C1B_b), create_2d_texture_stub_2); 	// Com_Error for ^
+			utils::hook::call(SELECT_VALUE(0x5B35BA_b, 0x6CB1BC_b), swap_chain_stub); 			// Com_Error for "IDXGISwapChain::Present failed: %s"
+			utils::hook::call(SELECT_VALUE(0x457BC9_b, 0x1D8E09_b), out_of_memory_text_stub); 	// Com_sprintf for "Out of memory. You are probably low on disk space."
 
 			// "fix" for rare 'Out of memory error' error
 			// this will *at least* generate the configs for mp/sp, which is the #1 issue
