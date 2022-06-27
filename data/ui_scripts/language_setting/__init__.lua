@@ -3,7 +3,7 @@ local localization = {
         LANGUAGE_BUTTON = "Language",
         LANGUAGE_BUTTON_DESC = "Change your game language.",
         POPUP_RESTART_REQUIRED_TITLE = "RESTART REQUIRED",
-        POPUP_RESTART_REQUIRED_TEXT = "WARNING: To work properly, you need to have your language's zone files in the zone directory of your game root. You have changed your game language, do you wish to restart?",
+        POPUP_RESTART_REQUIRED_TEXT = "WARNING: To work properly, you need to have your language's zone files in the zone directory of your game root.\n\nYou have changed your game language, do you wish to restart?",
         POPUP_NO_ZONE_FOUND_TITLE = "LANGUAGE NOT FOUND",
         POPUP_NO_ZONE_FOUND_TEXT = "We are unable to find the language folder you have selected. To avoid bugs, we will not change anything.",
         LANG_ENGLISH = "English",
@@ -16,7 +16,7 @@ local localization = {
         LANGUAGE_BUTTON = "Langue",
         LANGUAGE_BUTTON_DESC = "Changez la langue de votre jeu.",
         POPUP_RESTART_REQUIRED_TITLE = "REDÉMARRAGE REQUIS",
-        POPUP_RESTART_REQUIRED_TEXT = "ATTENTION : Pour fonctionner correctement, vous devez avoir les fichiers de zone de votre langue dans le répertoire de zone de la racine de votre jeu. Vous avez changé la langue de votre jeu, souhaitez-vous redémarrer ?",
+        POPUP_RESTART_REQUIRED_TEXT = "ATTENTION : Pour fonctionner correctement, vous devez avoir les fichiers de zone de votre langue dans le répertoire de zone de la racine de votre jeu.\n\nVous avez changé la langue de votre jeu, souhaitez-vous redémarrer ?",
         POPUP_NO_ZONE_FOUND_TITLE = "LANGUE INTROUVABLE",
         POPUP_NO_ZONE_FOUND_TEXT = "Nous ne parvenons pas à trouver le dossier de langue que vous avez sélectionné. Pour éviter les bugs, nous ne changerons rien.",
         LANG_ENGLISH = "Anglais",
@@ -29,7 +29,7 @@ local localization = {
         LANGUAGE_BUTTON = "Lingua",
         LANGUAGE_BUTTON_DESC = "Cambia la tua lingua di gioco.",
         POPUP_RESTART_REQUIRED_TITLE = "RIPARTENZA RICHIESTA",
-        POPUP_RESTART_REQUIRED_TEXT = "ATTENZIONE: per funzionare correttamente, devi avere i file di zona della tua lingua nella directory zone della tua root di gioco. Hai cambiato la lingua del gioco, desideri riavviare?",
+        POPUP_RESTART_REQUIRED_TEXT = "ATTENZIONE: per funzionare correttamente, devi avere i file di zona della tua lingua nella directory zone della tua root di gioco.\n\nHai cambiato la lingua del gioco, desideri riavviare?",
         POPUP_NO_ZONE_FOUND_TITLE = "LINGUA NON TROVATA",
         POPUP_NO_ZONE_FOUND_TEXT = "Non siamo in grado di trovare la cartella della lingua che hai selezionato. Per evitare bug, non cambieremo nulla.",
         LANG_ENGLISH = "Inglese",
@@ -42,7 +42,7 @@ local localization = {
         LANGUAGE_BUTTON = "Sprache",
         LANGUAGE_BUTTON_DESC = "Ändern Sie Ihre Spielsprache.",
         POPUP_RESTART_REQUIRED_TITLE = "NEUSTART ERFORDERLICH",
-        POPUP_RESTART_REQUIRED_TEXT = "WARNUNG: Um richtig zu funktionieren, müssen Sie die Zonendateien Ihrer Sprache im Zonenverzeichnis Ihres Spielstammverzeichnisses haben. Du hast deine Spielsprache geändert, möchtest du neu starten?",
+        POPUP_RESTART_REQUIRED_TEXT = "WARNUNG: Um richtig zu funktionieren, müssen Sie die Zonendateien Ihrer Sprache im Zonenverzeichnis Ihres Spielstammverzeichnisses haben.\n\nDu hast deine Spielsprache geändert, möchtest du neu starten?",
         POPUP_NO_ZONE_FOUND_TITLE = "SPRACHE NICHT GEFUNDEN",
         POPUP_NO_ZONE_FOUND_TEXT = "Wir können den von Ihnen ausgewählten Sprachordner nicht finden. Um Fehler zu vermeiden, werden wir nichts ändern.",
         LANG_ENGLISH = "Englisch",
@@ -55,7 +55,7 @@ local localization = {
         LANGUAGE_BUTTON = "Idioma",
         LANGUAGE_BUTTON_DESC = "Cambia el idioma de tu juego.",
         POPUP_RESTART_REQUIRED_TITLE = "REINICIO REQUERIDO",
-        POPUP_RESTART_REQUIRED_TEXT = "ADVERTENCIA: para que funcione correctamente, debe tener los archivos de zona de su idioma en el directorio de zona de la raíz del juego. Ha cambiado el idioma de su juego, ¿desea reiniciar?",
+        POPUP_RESTART_REQUIRED_TEXT = "ADVERTENCIA: para que funcione correctamente, debe tener los archivos de zona de su idioma en el directorio de zona de la raíz del juego.\n\nHa cambiado el idioma de su juego, ¿desea reiniciar?",
         POPUP_NO_ZONE_FOUND_TITLE = "IDIOMA NO ENCONTRADO",
         POPUP_NO_ZONE_FOUND_TEXT = "No podemos encontrar la carpeta de idioma que ha seleccionado. Para evitar errores, no cambiaremos nada.",
         LANG_ENGLISH = "Inglés",
@@ -65,7 +65,8 @@ local localization = {
         LANG_SPANISH = "Español"
     }
 }
-local language = "english"
+local available_languages = {"english", "french", "italian", "german", "spanish"}
+local actual_language = "english"
 
 function get_actual_language()
     local file_path = "h1-mod/language.txt"
@@ -76,7 +77,7 @@ function get_actual_language()
     end
 
     local data = file:read("*a")
-    language = data
+    actual_language = data
 end
 
 function set_language(value)
@@ -87,57 +88,60 @@ function set_language(value)
 end
 
 function does_zone_folder_exists(language)
-     return io.directoryexists("zone/" .. language)
+    return io.directoryexists("zone/" .. language)
 end
 
 get_actual_language()
-Engine.SetDvarFromString("game_language", language)
-LUI.addmenuoptionbutton("pc_controls", {
-    index = 6,
-    dvar = "game_language",
-    text = localization[language].LANGUAGE_BUTTON,
-    description = localization[language].LANGUAGE_BUTTON_DESC,
-    options = {{
-        text = localization[language].LANG_ENGLISH,
-        value = "english"
-    }, {
-        text = localization[language].LANG_FRENCH,
-        value = "french"
-    }, {
-        text = localization[language].LANG_ITALIAN,
-        value = "italian"
-    }, {
-        text = localization[language].LANG_GERMAN,
-        value = "german"
-    }, {
-        text = localization[language].LANG_SPANISH,
-        value = "spanish"
-    }},
-    callback = function(value)
-        LUI.yesnopopup({
-            title = localization[value].POPUP_RESTART_REQUIRED_TITLE,
-            text = localization[value].POPUP_RESTART_REQUIRED_TEXT,
-            callback = function(result)
-                if (result) then
-                    if not does_zone_folder_exists(value) then
-                        LUI.confirmationpopup({
-                            title = localization[value].POPUP_NO_ZONE_FOUND_TITLE,
-                            text = localization[value].POPUP_NO_ZONE_FOUND_TEXT,
-                            buttontext = "OK",
-                            callback = function()
-                                LUI.FlowManager.RequestLeaveMenu(popup)
-                            end
-                        })
 
-                        return
-                    end
-
-                    set_language(value)
-                    updater.relaunch()
-                else
-                    LUI.FlowManager.RequestLeaveMenu(popup)
-                end
-            end
-        })
+LUI.addmenubutton("pc_controls", {
+    index = game:issingleplayer() and 5 or 6,
+    text = localization[actual_language].LANGUAGE_BUTTON,
+    description = localization[actual_language].LANGUAGE_BUTTON_DESC,
+    callback = function()
+        LUI.FlowManager.RequestAddMenu(nil, "language_menu")
     end
 })
+
+LUI.MenuBuilder.registerType("language_menu", function(unk1)
+    local menu = LUI.MenuTemplate.new(unk1, {
+        menu_title = (localization[actual_language].LANGUAGE_BUTTON):upper(),
+        exclusiveController = 0
+    })
+
+    for i = 1, #available_languages do
+        menu:AddButton(localization[actual_language]["LANG_" .. available_languages[i]:upper()], function()
+            LUI.yesnopopup({
+                title = localization[available_languages[i]].POPUP_RESTART_REQUIRED_TITLE,
+                text = localization[available_languages[i]].POPUP_RESTART_REQUIRED_TEXT,
+                callback = function(result)
+                    if (result) then
+                        if not does_zone_folder_exists(available_languages[i]) then
+                            LUI.confirmationpopup({
+                                title = localization[available_languages[i]].POPUP_NO_ZONE_FOUND_TITLE,
+                                text = localization[available_languages[i]].POPUP_NO_ZONE_FOUND_TEXT,
+                                buttontext = "OK",
+                                callback = function()
+                                    LUI.FlowManager.RequestLeaveMenu(popup)
+                                end
+                            })
+
+                            return
+                        end
+
+                        set_language(available_languages[i])
+                        updater.relaunch()
+                    else
+                        LUI.FlowManager.RequestLeaveMenu(popup)
+                    end
+                end
+            })
+        end, nil, true, nil, nil)
+    end
+
+    menu:AddBackButton(function(unk1)
+        Engine.PlaySound(CoD.SFX.MenuBack)
+        LUI.FlowManager.RequestLeaveMenu(unk1)
+    end)
+
+    return menu
+end)
