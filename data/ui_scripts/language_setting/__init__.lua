@@ -241,7 +241,8 @@ local localization = {
         LANG_TRADITIONAL_CHINESE = "繁體中文"
     }
 }
-local available_languages = {"english", "french", "italian", "german", "spanish", "japanese_partial", "korean", "polish", "portuguese", "russian", "simplified_chinese", "traditional_chinese"}
+local available_languages = {"english", "french", "italian", "german", "spanish", "japanese_partial", "korean",
+                             "polish", "portuguese", "russian", "simplified_chinese", "traditional_chinese"}
 local actual_language = "english"
 
 function get_actual_language()
@@ -267,10 +268,45 @@ function does_zone_folder_exists(language)
     return io.directoryexists("zone/" .. language)
 end
 
+function create_fancy_text(menu)
+    local template = {
+        leftAnchor = false,
+        topAnchor = false,
+        rightAnchor = false,
+        bottomAnchor = false,
+        left = 150,
+        width = 385,
+        top = 150,
+        height = 30,
+        font = CoD.TextSettings.H1TitleFont.Font,
+        horizontalAlignment = LUI.AdjustAlignmentForLanguage(LUI.Alignment.Left),
+        verticalAlignment = LUI.VerticalAlignment.Top,
+        alpha = 1
+    }
+
+    local texts = {"Jok \"Llama\" Arwent", "H1-MOD Contributor", "Location: UNDISCLOSED"}
+
+    for i = 1, #texts do
+        template.top = template.top + template.height + 5 * 1.2
+        template.height = template.height * 0.75
+
+        local text = LUI.UIText.new(template)
+        menu:addElement(text)
+        text:setText(texts[i])
+        text:setTextStyle(CoD.TextStyle.MW1Title)
+        text:setupAutoScaleText()
+        text:setUsePulseFX(true, false)
+        text:registerAnimationState("hide", {
+            alpha = 0
+        })
+        text:animateInSequence({{"default", 5000 + (3 - i) * 1000}, {"hide", 1000}}, nil, true, true)
+    end
+end
+
 get_actual_language()
 
 LUI.addmenubutton("pc_controls", {
-    index = game:issingleplayer() and 5 or 6,
+    index = Engine.IsMultiplayer() and 6 or 5,
     text = localization[actual_language].LANGUAGE_BUTTON,
     description = localization[actual_language].LANGUAGE_BUTTON_DESC,
     callback = function()
@@ -279,22 +315,35 @@ LUI.addmenubutton("pc_controls", {
 })
 
 LUI.MenuBuilder.registerType("language_menu", function(unk1)
-    local menu = LUI.MenuTemplate.new(unk1, {
-        menu_title = (localization[actual_language].LANGUAGE_BUTTON):upper(),
-        exclusiveController = 0
-    })
+    local menu;
+
+    if Engine.InFrontend() and Engine.IsMultiplayer() then
+        menu = LUI.MenuTemplate.new(unk1, {
+            menu_title = (localization[actual_language].LANGUAGE_BUTTON):upper(),
+            exclusiveController = 0,
+            persistentBackground = PersistentBackground.Variants.Depot
+        })
+
+        Cac.NotifyVirtualLobby("depot", 0)
+        create_fancy_text(menu)
+    else
+        menu = LUI.MenuTemplate.new(unk1, {
+            menu_title = (localization[actual_language].LANGUAGE_BUTTON):upper(),
+            exclusiveController = 0
+        })
+    end
 
     for i = 1, #available_languages do
         menu:AddButton(localization[actual_language]["LANG_" .. available_languages[i]:upper()], function()
             LUI.yesnopopup({
-                title = localization[available_languages[i]].POPUP_RESTART_REQUIRED_TITLE,
-                text = localization[available_languages[i]].POPUP_RESTART_REQUIRED_TEXT,
+                title = Engine.Localize(localization[actual_language].POPUP_RESTART_REQUIRED_TITLE),
+                text = localization[actual_language].POPUP_RESTART_REQUIRED_TEXT,
                 callback = function(result)
                     if (result) then
                         if not does_zone_folder_exists(available_languages[i]) then
                             LUI.confirmationpopup({
-                                title = localization[available_languages[i]].POPUP_NO_ZONE_FOUND_TITLE,
-                                text = localization[available_languages[i]].POPUP_NO_ZONE_FOUND_TEXT,
+                                title = localization[actual_language].POPUP_NO_ZONE_FOUND_TITLE,
+                                text = localization[actual_language].POPUP_NO_ZONE_FOUND_TEXT,
                                 buttontext = "OK",
                                 callback = function()
                                     LUI.FlowManager.RequestLeaveMenu(popup)
@@ -315,9 +364,18 @@ LUI.MenuBuilder.registerType("language_menu", function(unk1)
     end
 
     menu:AddBackButton(function(unk1)
+        if Engine.InFrontend() and Engine.IsMultiplayer() then
+            Cac.NotifyVirtualLobby("leave_depot", 0)
+        end
+
         Engine.PlaySound(CoD.SFX.MenuBack)
         LUI.FlowManager.RequestLeaveMenu(unk1)
     end)
 
     return menu
 end)
+
+if Engine.InFrontend() and Engine.IsMultiplayer() then
+    VLobby.InitMenuMode("language_menu", VirtualLobbyModes.LUI_MODE_LOBBY, PersistentBackground.FadeFromBlackSlow,
+        PersistentBackground.FadeFromBlackSlow)
+end
