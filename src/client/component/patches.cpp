@@ -123,9 +123,10 @@ namespace patches
 			const auto menu_id = atoi(params.get(1));
 			const auto client = &svs_clients[ent->s.entityNum];
 
-			// 22 => "end_game"
-			if (menu_id == 22 && client->header.remoteAddress.type != game::NA_LOOPBACK)
+			// 32 => "end_game"
+			if (menu_id == 32 && client->header.remoteAddress.type != game::NA_LOOPBACK)
 			{
+				game::SV_DropClient_Internal(client, "PLATFORM_STEAM_KICK_CHEAT", true);
 				return;
 			}
 
