@@ -7,6 +7,29 @@ namespace steam
 	public:
 		~apps() = default;
 
+		apps()
+		{
+			if (std::filesystem::exists(LanguageFileName))
+			{
+#if DEBUG
+				printf("[Language] Custom language file has been found.\n");
+#endif
+
+				std::ifstream file;
+				file.open(LanguageFileName);
+				std::string line;
+				while(std::getline(file, line))
+					Language = line.c_str();
+
+#if DEBUG
+				printf("[Language] Switched to \"%s\".\n", Language);
+#endif
+			}
+		}
+
+		const char* LanguageFileName = "language.txt";
+		const char* Language = "english";
+
 		virtual bool BIsSubscribed();
 		virtual bool BIsLowViolence();
 		virtual bool BIsCybercafe();
