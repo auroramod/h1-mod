@@ -1,5 +1,8 @@
 #pragma once
 
+#include "component/console.hpp"
+#include <utils/io.hpp>
+
 namespace steam
 {
 	class apps
@@ -7,28 +10,26 @@ namespace steam
 	public:
 		~apps() = default;
 
+		char language[0x30] = {0};
+
 		apps()
 		{
-			if (std::filesystem::exists(LanguageFileName))
+			const auto* language_file = "h1-mod\\language.txt";
+			if (::utils::io::file_exists(language_file))
 			{
+				std::string content;
+				if (::utils::io::read_file(language_file, &content))
+				{
 #if DEBUG
-				printf("[Language] Custom language file has been found.\n");
+					console::info("Language switched to \"%s\".\n", content.data());
 #endif
-
-				std::ifstream file;
-				file.open(LanguageFileName);
-				std::string line;
-				while(std::getline(file, line))
-					Language = line.c_str();
-
-#if DEBUG
-				printf("[Language] Switched to \"%s\".\n", Language);
-#endif
+					strcpy_s(language, 0x30, content.data());
+					return;
+				}
 			}
-		}
 
-		const char* LanguageFileName = "language.txt";
-		const char* Language = "english";
+			strcpy_s(language, 0x30, "english");
+		}
 
 		virtual bool BIsSubscribed();
 		virtual bool BIsLowViolence();

@@ -25,12 +25,12 @@ namespace steam
 
 	const char* apps::GetCurrentGameLanguage()
 	{
-		return Language;
+		return language;
 	}
 
 	const char* apps::GetAvailableGameLanguages()
 	{
-		return Language;
+		return language;
 	}
 
 	bool apps::BIsSubscribedApp(unsigned int appID)
