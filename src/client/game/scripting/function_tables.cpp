@@ -3312,10 +3312,10 @@ namespace scripting
 		{"tag_sight_off", 0x485},
 		{"tag_sight_on", 0x486},
 		{"tag_stow_back_mid_attach", 0x487},
-		{"tag_stowed_back", 0x488},
+		{"_not_tag_stowed_back", 0x488}, // was "tag_stowed_back"
 		{"tag_stowed_hip_rear", 0x489},
 		{"tag_sync", 0x48A},
-		{"tag_tip", 0x48B},
+		{"tag_stowed_back", 0x48B}, // was "tag_tip"
 		{"tag_turret", 0x48C},
 		{"tag_turret_base", 0x48D},
 		{"tag_turret_pitch", 0x48E},
@@ -3506,6 +3506,7 @@ namespace scripting
 		{"addStartSpawnPoints", 0x831},
 		{"addToCharactersArray", 0x848},
 		{"allowUse", 0xab2},
+		{"applyLoadout", 0xcae}, // has applyLoadout notify like IW6's giveLoadout does at the end + similar logic
 		{"characters", 0x1c8e},
 		{"checkDynamicSpawns", 0x1cfa},
 		{"clearOnVictimDisconnect", 0x1ef9},
@@ -3524,6 +3525,7 @@ namespace scripting
 		{"getSpawnPoint", 0x40d2},
 		{"getSpawnpoint_FreeForAll", 0x40d5},
 		{"getTeamSpawnPoints", 0x411f},
+		{"giveLoadout", 0x41e0}, // this may not even be giveLoadout but it's a wrapper for it and it does the same logic so
 		{"guid", 0x4450},
 		{"inGracePeriod", 0x4c6d},
 		{"initSpawns", 0x4e26},
@@ -3560,6 +3562,7 @@ namespace scripting
 		{"registerTimeLimitDvar", 0x72f9},
 		{"registerWinLimitDvar", 0x72fe},
 		{"removeFromCharactersArray", 0x73a7},
+		{"setClass", 0x7f3b},
 		{"setCommonRulesFromMatchRulesData", 0x7f3f},
 		{"setObjectiveHintText", 0x7fc3},
 		{"setObjectiveScoreText", 0x7fc4},
@@ -3572,6 +3575,7 @@ namespace scripting
 		{"spawnMins", 0x89f6},
 		{"spawnPoints", 0x8a01},
 		{"splitscreen", 0x8a7c},
+		{"tag_stowed_hip", 0x90d3},
 		{"tagTeamUpdater", 0x910a},
 		{"teamBased", 0x91eb},
 		{"teamNameList", 0x91f7},
