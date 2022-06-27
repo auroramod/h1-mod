@@ -74,7 +74,7 @@ BEGIN
             VALUE "FileDescription", "H1-Mod"
             VALUE "FileVersion", VERSION_FILE
             VALUE "InternalName", "H1-Mod"
-            VALUE "LegalCopyright", "Copyright (C) 2021 H1-Mod. All rights reserved."
+            VALUE "LegalCopyright", "Copyright © 2022 H1-Mod. All rights reserved."
             VALUE "Licence", "GPLv3"
             VALUE "Info", "https://h1.gg"
             VALUE "OriginalFilename", "h1-mod.exe"
