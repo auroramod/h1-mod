@@ -1,9 +1,14 @@
 if (game:issingleplayer()) then
+	if (Engine.InFrontend()) then
+		require("options")
+	end
+
 	return
 end
 
 if (Engine.InFrontend()) then
 	require("shaderdialog")
+	require("gamemodes")
 end
 
 -- defined in mp_hud/hudutils.lua
