@@ -87,18 +87,7 @@ function set_language(value)
 end
 
 function does_zone_folder_exists(language)
-    local isok, errstr, errcode = os.rename("zone/" .. language .. "/", "zone/" .. language .. "/")
-
-    if isok == nil then
-        -- Permissions denied, but exists.
-        if errcode == 13 then
-            return true
-        end
-
-        return false
-    end
-
-    return true
+     return io.directoryexists("zone/" .. language)
 end
 
 get_actual_language()
