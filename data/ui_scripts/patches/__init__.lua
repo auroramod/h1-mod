@@ -1,8 +1,4 @@
 if (game:issingleplayer()) then
-	if (Engine.InFrontend()) then
-		require("options")
-	end
-
 	return
 end
 
