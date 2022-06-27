@@ -14,18 +14,14 @@ namespace steam
 
 		apps()
 		{
-			const auto* language_file = "h1-mod\\language.txt";
-			if (::utils::io::file_exists(language_file))
+			std::string content;
+			if (::utils::io::read_file("h1-mod\\language.txt", &content))
 			{
-				std::string content;
-				if (::utils::io::read_file(language_file, &content))
-				{
 #if DEBUG
-					console::info("Language switched to \"%s\".\n", content.data());
+				console::info("Language switched to \"%s\".\n", content.data());
 #endif
-					strcpy_s(language, sizeof(language), content.data());
-					return;
-				}
+				strcpy_s(language, sizeof(language), content.data());
+				return;
 			}
 
 			// default to english if no file is found
