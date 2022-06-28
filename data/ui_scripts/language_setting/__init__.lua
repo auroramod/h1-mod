@@ -368,8 +368,6 @@ LUI.MenuBuilder.registerType("language_menu", function(unk1)
     end
 
     for i = 1, #available_languages do
-        print(available_languages[i] == current_language)
-
         menu:AddButton(get_localized_string(string.format("LANG_%s", Engine.ToUpperCase(available_languages[i]))),
             function()
                 LUI.yesnopopup({
