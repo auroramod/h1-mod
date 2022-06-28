@@ -395,7 +395,7 @@ LUI.MenuBuilder.registerType("language_menu", function(unk1)
                         end
                     end
                 })
-            end, nil, true, nil, nil)
+            end, available_languages[i] == current_language, true, nil, nil)
     end
 
     menu:AddBackButton(function(unk1)
