@@ -17,7 +17,8 @@ local localization = {
         LANG_PORTUGUESE = "Portuguese",
         LANG_RUSSIAN = "Russian",
         LANG_SIMPLIFIED_CHINESE = "Simplified Chinese",
-        LANG_TRADITIONAL_CHINESE = "Traditional Chinese"
+        LANG_TRADITIONAL_CHINESE = "Traditional Chinese",
+        LANG_ENGLISH_SAFE = "Arabic"
     },
     french = {
         LANGUAGE_BUTTON = "Langue",
@@ -37,7 +38,8 @@ local localization = {
         LANG_PORTUGUESE = "Portugais",
         LANG_RUSSIAN = "Russe",
         LANG_SIMPLIFIED_CHINESE = "Chinois simplifié",
-        LANG_TRADITIONAL_CHINESE = "Chinois traditionnel"
+        LANG_TRADITIONAL_CHINESE = "Chinois traditionnel",
+        LANG_ENGLISH_SAFE = "Arabe"
     },
     italian = {
         LANGUAGE_BUTTON = "Lingua",
@@ -52,12 +54,13 @@ local localization = {
         LANG_GERMAN = "Tedesco",
         LANG_SPANISH = "Spagnolo",
         LANG_JAPANESE_PARTIAL = "Japanese",
-        LANG_KOREAN = "Korean",
-        LANG_POLISH = "Polish",
-        LANG_PORTUGUESE = "Portuguese",
-        LANG_RUSSIAN = "Russian",
-        LANG_SIMPLIFIED_CHINESE = "Simplified Chinese",
-        LANG_TRADITIONAL_CHINESE = "Traditional Chinese"
+        LANG_KOREAN = "Coreano",
+        LANG_POLISH = "Polacca",
+        LANG_PORTUGUESE = "Portoghese",
+        LANG_RUSSIAN = "Russa",
+        LANG_SIMPLIFIED_CHINESE = "Cinese semplificato",
+        LANG_TRADITIONAL_CHINESE = "Cinese tradizionale",
+        LANG_ENGLISH_SAFE = "Araba"
     },
     german = {
         LANGUAGE_BUTTON = "Sprache",
@@ -71,13 +74,14 @@ local localization = {
         LANG_ITALIAN = "Italienisch",
         LANG_GERMAN = "Deutsch",
         LANG_SPANISH = "Spanisch",
-        LANG_JAPANESE_PARTIAL = "Japanese",
-        LANG_KOREAN = "Korean",
-        LANG_POLISH = "Polish",
-        LANG_PORTUGUESE = "Portuguese",
-        LANG_RUSSIAN = "Russian",
-        LANG_SIMPLIFIED_CHINESE = "Simplified Chinese",
-        LANG_TRADITIONAL_CHINESE = "Traditional Chinese"
+        LANG_JAPANESE_PARTIAL = "Japanisch",
+        LANG_KOREAN = "Koreanisch",
+        LANG_POLISH = "Polieren",
+        LANG_PORTUGUESE = "Portugiesisch",
+        LANG_RUSSIAN = "Russisch",
+        LANG_SIMPLIFIED_CHINESE = "Vereinfachtes Chinesisch",
+        LANG_TRADITIONAL_CHINESE = "Traditionelles Chinesisch",
+        LANG_ENGLISH_SAFE = "Arabisch"
     },
     spanish = {
         LANGUAGE_BUTTON = "Idioma",
@@ -91,13 +95,14 @@ local localization = {
         LANG_ITALIAN = "Italiano",
         LANG_GERMAN = "Alemán",
         LANG_SPANISH = "Español",
-        LANG_JAPANESE_PARTIAL = "Japanese",
-        LANG_KOREAN = "Korean",
-        LANG_POLISH = "Polish",
-        LANG_PORTUGUESE = "Portuguese",
-        LANG_RUSSIAN = "Russian",
-        LANG_SIMPLIFIED_CHINESE = "Simplified Chinese",
-        LANG_TRADITIONAL_CHINESE = "Traditional Chinese"
+        LANG_JAPANESE_PARTIAL = "Japonesa",
+        LANG_KOREAN = "Coreana",
+        LANG_POLISH = "Polaca",
+        LANG_PORTUGUESE = "Portuguesa",
+        LANG_RUSSIAN = "Rusa",
+        LANG_SIMPLIFIED_CHINESE = "China simplificada",
+        LANG_TRADITIONAL_CHINESE = "China tradicional",
+        LANG_ENGLISH_SAFE = "Arábica"
     },
     ["japanese_partial"] = {
         LANGUAGE_BUTTON = "言語",
@@ -117,7 +122,8 @@ local localization = {
         LANG_PORTUGUESE = "ポルトガル語",
         LANG_RUSSIAN = "ロシア",
         LANG_SIMPLIFIED_CHINESE = "簡略化された中国語",
-        LANG_TRADITIONAL_CHINESE = "繁体字中国語"
+        LANG_TRADITIONAL_CHINESE = "繁体字中国語",
+        LANG_ENGLISH_SAFE = "アラビア語"
     },
     korean = {
         LANGUAGE_BUTTON = "언어",
@@ -137,7 +143,8 @@ local localization = {
         LANG_PORTUGUESE = "포르투갈 인",
         LANG_RUSSIAN = "러시아인",
         LANG_SIMPLIFIED_CHINESE = "중국어 간체",
-        LANG_TRADITIONAL_CHINESE = "중국어 번체"
+        LANG_TRADITIONAL_CHINESE = "중국어 번체",
+        LANG_ENGLISH_SAFE = "아라비아 말"
     },
     polish = {
         LANGUAGE_BUTTON = "Język",
@@ -157,7 +164,8 @@ local localization = {
         LANG_PORTUGUESE = "Portugalczyk",
         LANG_RUSSIAN = "Rosyjski",
         LANG_SIMPLIFIED_CHINESE = "Chiński uproszczony",
-        LANG_TRADITIONAL_CHINESE = "Tradycyjny chiński"
+        LANG_TRADITIONAL_CHINESE = "Tradycyjny chiński",
+        LANG_ENGLISH_SAFE = "Arabski"
     },
     portuguese = {
         LANGUAGE_BUTTON = "Linguagem",
@@ -177,7 +185,8 @@ local localization = {
         LANG_PORTUGUESE = "Português",
         LANG_RUSSIAN = "Russo",
         LANG_SIMPLIFIED_CHINESE = "Chinês simplificado",
-        LANG_TRADITIONAL_CHINESE = "Chinês tradicional"
+        LANG_TRADITIONAL_CHINESE = "Chinês tradicional",
+        LANG_ENGLISH_SAFE = "Árabe"
     },
     russian = {
         LANGUAGE_BUTTON = "Язык",
@@ -198,7 +207,7 @@ local localization = {
         LANG_SIMPLIFIED_CHINESE = "Китайский (упрощенный)",
         LANG_TRADITIONAL_CHINESE = "Китайский (традиционный)",
         LANG_ENGLISH_SAFE = "Арабский",
-        LANG_PORTUGUESE = "Бразильский португальский"
+        LANG_PORTUGUESE = "Бразильский португальский",
     },
     ["simplified_chinese"] = {
         LANGUAGE_BUTTON = "语",
@@ -218,7 +227,8 @@ local localization = {
         LANG_PORTUGUESE = "葡萄牙语",
         LANG_RUSSIAN = "俄语",
         LANG_SIMPLIFIED_CHINESE = "简体中文",
-        LANG_TRADITIONAL_CHINESE = "繁体中文"
+        LANG_TRADITIONAL_CHINESE = "繁体中文",
+        LANG_ENGLISH_SAFE = "阿拉伯"
     },
     ["traditional_chinese"] = {
         LANGUAGE_BUTTON = "語",
@@ -238,11 +248,33 @@ local localization = {
         LANG_PORTUGUESE = "葡萄牙語",
         LANG_RUSSIAN = "俄語",
         LANG_SIMPLIFIED_CHINESE = "簡體中文",
-        LANG_TRADITIONAL_CHINESE = "繁體中文"
+        LANG_TRADITIONAL_CHINESE = "繁體中文",
+        LANG_ENGLISH_SAFE = "阿拉伯"
+    },
+    ["english_safe"] = {
+        LANGUAGE_BUTTON = "لغة",
+        LANGUAGE_BUTTON_DESC = "قم بتغيير لغة لعبتك.",
+        POPUP_RESTART_REQUIRED_TITLE = "مطلوب إعادة التشغيل",
+        POPUP_RESTART_REQUIRED_TEXT = "تحذير: للعمل بشكل صحيح ، يجب أن يكون لديك ملفات منطقة لغتك في دليل المنطقة بجذر اللعبة. لقد قمت بتغيير لغة اللعبة ، هل ترغب في إعادة التشغيل؟",
+        POPUP_NO_ZONE_FOUND_TITLE = "اللغة غير موجودة",
+        POPUP_NO_ZONE_FOUND_TEXT = "لم نتمكن من العثور على مجلد اللغة الذي حددته. لتجنب الأخطاء ، لن نغير أي شيء.",
+        LANG_ENGLISH = "إنجليزي",
+        LANG_FRENCH = "فرنسي",
+        LANG_ITALIAN = "إيطالي",
+        LANG_GERMAN = "ألمانية",
+        LANG_SPANISH = "الأسبانية",
+        LANG_JAPANESE_PARTIAL = "اليابانية",
+        LANG_KOREAN = "الكورية",
+        LANG_POLISH = "تلميع",
+        LANG_PORTUGUESE = "البرتغالية",
+        LANG_RUSSIAN = "الروسية",
+        LANG_SIMPLIFIED_CHINESE = "الصينية المبسطة",
+        LANG_TRADITIONAL_CHINESE = "الصينية التقليدية",
+        LANG_ENGLISH_SAFE = "عربي"
     }
 }
 local available_languages = {"english", "french", "italian", "german", "spanish", "japanese_partial", "korean",
-                             "polish", "portuguese", "russian", "simplified_chinese", "traditional_chinese"}
+                             "polish", "portuguese", "russian", "simplified_chinese", "traditional_chinese", "english_safe"}
 local actual_language = "english"
 
 function get_actual_language()
