@@ -328,7 +328,7 @@ function create_fancy_text(menu)
 end
 
 function get_localized_string(key)
-    return string.format("@LUA_MENU_LANGUAGE_%s_%s", Engine.ToUpperCase(actual_language), key)
+    return Engine.Localize(string.format("@LUA_MENU_LANGUAGE_%s_%s", Engine.ToUpperCase(actual_language), key))
 end
 
 get_actual_language()
@@ -338,7 +338,7 @@ for k, v in pairs(localization[actual_language]) do
 end
 
 LUI.addmenubutton("pc_controls", {
-    index = Engine.IsMultiplayer() and 4 or 5,
+    index = 4,
     text = get_localized_string("LANGUAGE_BUTTON"),
     description = get_localized_string("LANGUAGE_BUTTON_DESC"),
     callback = function()
