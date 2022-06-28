@@ -246,15 +246,7 @@ local available_languages = {"english", "french", "italian", "german", "spanish"
 local actual_language = "english"
 
 function get_actual_language()
-    local file_path = "h1-mod/language.txt"
-    local file = io.open(file_path, "r")
-
-    if file == nil then
-        return
-    end
-
-    local data = file:read("*a")
-    actual_language = data
+    actual_language = game.getcurrentgamelanguage
 end
 
 function set_language(value)
