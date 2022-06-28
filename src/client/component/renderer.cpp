@@ -148,15 +148,10 @@ namespace renderer
 				return;
 			}
 
-			dvars::r_fullbright = dvars::register_int("r_fullbright", 0, 0, 4, game::DVAR_FLAG_SAVED, "Toggles rendering without lighting");
+			dvars::r_fullbright = dvars::register_int("r_fullbright", 0, 0, 4, game::DVAR_FLAG_CHEAT, "Toggles rendering without lighting");
 
 			r_init_draw_method_hook.create(SELECT_VALUE(0x5467E0_b, 0x669580_b), &r_init_draw_method_stub);
 			r_update_front_end_dvar_options_hook.create(SELECT_VALUE(0x583560_b, 0x6A78C0_b), &r_update_front_end_dvar_options_stub);
-
-			// use "saved" flags
-			dvars::override::register_enum("r_normalMap", game::DVAR_FLAG_SAVED);
-			dvars::override::register_enum("r_specularMap", game::DVAR_FLAG_SAVED);
-			dvars::override::register_enum("r_specOccMap", game::DVAR_FLAG_SAVED);
 
 			if (game::environment::is_mp())
 			{
