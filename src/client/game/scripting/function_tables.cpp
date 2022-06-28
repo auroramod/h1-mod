@@ -3511,7 +3511,7 @@ namespace scripting
 		{"allowUse", 0xab2},
 		{"applyLoadout", 0xcae}, // has applyLoadout notify like IW6's giveLoadout does at the end + similar logic
 		{"Callback_PlayerDamage", 0x19f5},
-		{"callbackPlayerDamage", 0x19fe}
+		{"callbackPlayerDamage", 0x19fe},
 		{"characters", 0x1c8e},
 		{"checkDynamicSpawns", 0x1cfa},
 		{"clearOnVictimDisconnect", 0x1ef9},
