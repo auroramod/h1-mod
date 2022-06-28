@@ -333,6 +333,8 @@ namespace patches
 
 		static void patch_mp()
 		{
+			utils::hook::set<uint8_t>(0x139680_b, 0xC3);
+
 			utils::hook::jump(0x5BB9C0_b, &live_get_local_client_name);
 
 			// Disable data validation error popup
