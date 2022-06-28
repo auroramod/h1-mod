@@ -1757,7 +1757,7 @@ namespace scripting
 		{"_meth_83f3", 0x83F3}, // SP 0x294E10 MP 0x000000
 		{"setscriptablepartstate", 0x83F4}, // SP 0x2C1610 MP 0x44A030
 		{"_meth_83f5", 0x83F5}, // SP 0x2C1DE0 MP 0x44AA20
-		{"_meth_83f6", 0x83F6}, // SP 0x2C2770 MP 0x442550
+		{"cancelrocketcorpse", 0x83F6}, // SP 0x2C2770 MP 0x442550
 		{"_meth_83f7", 0x83F7}, // SP 0x4E5620 MP 0x60C5F0
 		{"_meth_83f8", 0x83F8}, // SP 0x2CE8E0 MP 0x4369E0
 		{"_meth_83f9", 0x83F9}, // SP 0x2CE9B0 MP 0x436A80
@@ -7120,16 +7120,25 @@ namespace scripting
 		{"addToTeam", 0x851},
 		{"allowUse", 0xab2},
 		{"applyLoadout", 0xcae}, // has applyLoadout notify like IW6's giveLoadout does at the end + similar logic
+		{"bombSquadIds", 0x154d},
+		{"bombSquadIcons", 0x154c},
+		{"c4explodethisframe", 0x1974},
 		{"Callback_PlayerDamage", 0x19f5},
 		{"callbackPlayerDamage", 0x19fe},
+		{"changingWeapon", 0x1c87},
 		{"characters", 0x1c8e},
 		{"checkDynamicSpawns", 0x1cfa},
+		{"claymoreDetectionDot", 0x1e44},
+		{"claymoreDetectionMinDist", 0x1e46},
 		{"clearOnVictimDisconnect", 0x1ef9},
 		{"conf_fx", 0x20e9},
 		{"console", 0x2153},
 		{"createUseObject", 0x244c},
 		{"curOrigin", 0x24c8},
 		{"deleteObjPoint", 0x2859},
+		{"detectExplosives", 0x2992},
+		{"detectId", 0x2994},
+		{"disabled", 0x2afd},
 		{"disableSpawning", 0x2b28},
 		{"dogtags", 0x2cdf},
 		{"dont_delete_grenades_on_next_spawn",0x2d1e},
@@ -7152,15 +7161,21 @@ namespace scripting
 		{"hitsThisMag", 0x4929},
 		{"inGracePeriod", 0x4c6d},
 		{"initSpawns", 0x4e26},
+		{"inPlayerSmokeScreen", 0x4e42},
 		{"initializeMatchRules", 0x4de0},
 		{"initializeTagPathVariables", 0x4de3},
 		{"isKillstreakWeapon", 0x513d},
+		{"isRocketCorpse", 0x5193},
 		{"lastDroppableWeapon", 0x5598},
 		{"lastHitTime", 0x55ab},
 		{"lastShotFiredTime", 0x55D9},
 		{"lastWave", 0x560e},
+		{"plantedLethalEquip",0x5979},
 		{"mapCenter", 0x5986},
 		{"tookWeaponFrom", 0x680b},
+		{"wasChained", 0xa1c0},
+		{"wasDamaged", 0xa1c3},
+		{"wasDamagedFromBulletPenetration", 0xa1c5},
 		{"waveDelay", 0xa2ab},
 		// additional findings from gametype/map scripts - mikey (6/26/2022)
 		{"common_scripts/_fx", 0xA4FB },
@@ -7186,6 +7201,7 @@ namespace scripting
 		{"maps/mp/gametypes/_perks", 0xa7e4},
 		{"matchRules_damageMultiplier", 0x59e6},
 		{"matchRules_vampirism", 0x59eb},
+		{"iscooked", 0x50e8},
 		{"modifyPlayerDamage", 0x5d51},
 		{"multiTeamBased", 0x5fec},
 		{"objId", 0x6304},
