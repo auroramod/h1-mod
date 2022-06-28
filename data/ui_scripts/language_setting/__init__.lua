@@ -275,10 +275,10 @@ local localization = {
 }
 local available_languages = {"english_safe", "simplified_chinese", "traditional_chinese", "english", "french", "german",
                              "italian", "japanese_partial", "korean", "polish", "portuguese", "russian", "spanish"}
-local actual_language = "english"
+local current_language = "english"
 
-function get_actual_language()
-    actual_language = game.getcurrentgamelanguage
+function get_current_language()
+    current_language = game.getcurrentgamelanguage
 end
 
 function set_language(value)
@@ -328,13 +328,13 @@ function create_fancy_text(menu)
 end
 
 function get_localized_string(key)
-    return Engine.Localize(string.format("@LUA_MENU_LANGUAGE_%s_%s", Engine.ToUpperCase(actual_language), key))
+    return Engine.Localize(string.format("@LUA_MENU_LANGUAGE_%s_%s", Engine.ToUpperCase(current_language), key))
 end
 
-get_actual_language()
+get_current_language()
 
-for k, v in pairs(localization[actual_language]) do
-    game:addlocalizedstring(string.format("LUA_MENU_LANGUAGE_%s_%s", Engine.ToUpperCase(actual_language), k), v)
+for k, v in pairs(localization[current_language]) do
+    game:addlocalizedstring(string.format("LUA_MENU_LANGUAGE_%s_%s", Engine.ToUpperCase(current_language), k), v)
 end
 
 LUI.addmenubutton("pc_controls", {
@@ -366,17 +366,19 @@ LUI.MenuBuilder.registerType("language_menu", function(unk1)
     end
 
     for i = 1, #available_languages do
+        print(available_languages[i] == current_language)
+
         menu:AddButton(get_localized_string(string.format("LANG_%s", Engine.ToUpperCase(available_languages[i]))),
             function()
                 LUI.yesnopopup({
-                    title = Engine.Localize(localization[actual_language].POPUP_RESTART_REQUIRED_TITLE),
-                    text = localization[actual_language].POPUP_RESTART_REQUIRED_TEXT,
+                    title = Engine.Localize(localization[current_language].POPUP_RESTART_REQUIRED_TITLE),
+                    text = localization[current_language].POPUP_RESTART_REQUIRED_TEXT,
                     callback = function(result)
                         if (result) then
                             if not does_zone_folder_exists(available_languages[i]) then
                                 LUI.confirmationpopup({
-                                    title = localization[actual_language].POPUP_NO_ZONE_FOUND_TITLE,
-                                    text = localization[actual_language].POPUP_NO_ZONE_FOUND_TEXT,
+                                    title = localization[current_language].POPUP_NO_ZONE_FOUND_TITLE,
+                                    text = localization[current_language].POPUP_NO_ZONE_FOUND_TEXT,
                                     buttontext = "OK",
                                     callback = function()
                                         LUI.FlowManager.RequestLeaveMenu(popup)
