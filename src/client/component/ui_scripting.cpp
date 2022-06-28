@@ -29,6 +29,8 @@
 #include <utils/io.hpp>
 #include <utils/binary_resource.hpp>
 
+#include <steam/steam.hpp>
+
 namespace ui_scripting
 {
 	namespace
@@ -342,6 +344,8 @@ namespace ui_scripting
 			{
 				::game::Dvar_SetFromStringByNameFromSource("virtualLobbyPresentable", "1", ::game::DvarSetSource::DVAR_SOURCE_INTERNAL);
 			};
+
+			game_type["getcurrentgamelanguage"] = steam::SteamApps()->GetCurrentGameLanguage();
 
 			auto server_list_table = table();
 			lua["serverlist"] = server_list_table;
