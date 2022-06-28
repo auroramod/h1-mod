@@ -327,12 +327,20 @@ function create_fancy_text(menu)
     end
 end
 
+function get_localized_string(key)
+    return string.format("@LUA_MENU_LANGUAGE_%s_%s", Engine.ToUpperCase(actual_language), key)
+end
+
 get_actual_language()
+
+for k, v in pairs(localization[actual_language]) do
+    game:addlocalizedstring(string.format("LUA_MENU_LANGUAGE_%s_%s", Engine.ToUpperCase(actual_language), k), v)
+end
 
 LUI.addmenubutton("pc_controls", {
     index = Engine.IsMultiplayer() and 4 or 5,
-    text = localization[actual_language].LANGUAGE_BUTTON,
-    description = localization[actual_language].LANGUAGE_BUTTON_DESC,
+    text = get_localized_string("LANGUAGE_BUTTON"),
+    description = get_localized_string("LANGUAGE_BUTTON_DESC"),
     callback = function()
         LUI.FlowManager.RequestAddMenu(nil, "language_menu")
     end
@@ -343,7 +351,7 @@ LUI.MenuBuilder.registerType("language_menu", function(unk1)
 
     if Engine.InFrontend() and Engine.IsMultiplayer() then
         menu = LUI.MenuTemplate.new(unk1, {
-            menu_title = (localization[actual_language].LANGUAGE_BUTTON):upper(),
+            menu_title = get_localized_string("LANGUAGE_BUTTON"),
             exclusiveController = 0,
             persistentBackground = PersistentBackground.Variants.Depot
         })
@@ -352,39 +360,40 @@ LUI.MenuBuilder.registerType("language_menu", function(unk1)
         create_fancy_text(menu)
     else
         menu = LUI.MenuTemplate.new(unk1, {
-            menu_title = (localization[actual_language].LANGUAGE_BUTTON):upper(),
+            menu_title = get_localized_string("LANGUAGE_BUTTON"),
             exclusiveController = 0
         })
     end
 
     for i = 1, #available_languages do
-        menu:AddButton(localization[actual_language]["LANG_" .. available_languages[i]:upper()], function()
-            LUI.yesnopopup({
-                title = Engine.Localize(localization[actual_language].POPUP_RESTART_REQUIRED_TITLE),
-                text = localization[actual_language].POPUP_RESTART_REQUIRED_TEXT,
-                callback = function(result)
-                    if (result) then
-                        if not does_zone_folder_exists(available_languages[i]) then
-                            LUI.confirmationpopup({
-                                title = localization[actual_language].POPUP_NO_ZONE_FOUND_TITLE,
-                                text = localization[actual_language].POPUP_NO_ZONE_FOUND_TEXT,
-                                buttontext = "OK",
-                                callback = function()
-                                    LUI.FlowManager.RequestLeaveMenu(popup)
-                                end
-                            })
+        menu:AddButton(get_localized_string(string.format("LANG_%s", Engine.ToUpperCase(available_languages[i]))),
+            function()
+                LUI.yesnopopup({
+                    title = Engine.Localize(localization[actual_language].POPUP_RESTART_REQUIRED_TITLE),
+                    text = localization[actual_language].POPUP_RESTART_REQUIRED_TEXT,
+                    callback = function(result)
+                        if (result) then
+                            if not does_zone_folder_exists(available_languages[i]) then
+                                LUI.confirmationpopup({
+                                    title = localization[actual_language].POPUP_NO_ZONE_FOUND_TITLE,
+                                    text = localization[actual_language].POPUP_NO_ZONE_FOUND_TEXT,
+                                    buttontext = "OK",
+                                    callback = function()
+                                        LUI.FlowManager.RequestLeaveMenu(popup)
+                                    end
+                                })
 
-                            return
+                                return
+                            end
+
+                            set_language(available_languages[i])
+                            updater.relaunch()
+                        else
+                            LUI.FlowManager.RequestLeaveMenu(popup)
                         end
-
-                        set_language(available_languages[i])
-                        updater.relaunch()
-                    else
-                        LUI.FlowManager.RequestLeaveMenu(popup)
                     end
-                end
-            })
-        end, nil, true, nil, nil)
+                })
+            end, nil, true, nil, nil)
     end
 
     menu:AddBackButton(function(unk1)
