@@ -325,9 +325,6 @@ namespace patches
 			dvars::override::register_float("gpad_stick_pressed", 0.4f, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_float("gpad_stick_pressed_hysteresis", 0.1f, 0, 1, game::DVAR_FLAG_SAVED);
 
-			// Prevent the game from modifying Windows microphone volume (since voice chat isn't used)
-			utils::hook::set<uint8_t>(0x5BEEA0_b, 0xC3); // Mixer_SetWaveInRecordLevels
-
 			if (!game::environment::is_sp())
 			{
 				patch_mp();
@@ -419,6 +416,9 @@ namespace patches
 
 			// Fix gamepad related crash
 			cl_gamepad_scrolling_buttons_hook.create(0x133210_b, cl_gamepad_scrolling_buttons_stub);
+
+			// Prevent the game from modifying Windows microphone volume (since voice chat isn't used)
+			utils::hook::set<uint8_t>(0x5BEEA0_b, 0xC3); // Mixer_SetWaveInRecordLevels
 		}
 	};
 }
