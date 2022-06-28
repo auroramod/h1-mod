@@ -356,8 +356,10 @@ LUI.MenuBuilder.registerType("language_menu", function(unk1)
             persistentBackground = PersistentBackground.Variants.Depot
         })
 
-        Cac.NotifyVirtualLobby("depot", 0)
-        create_fancy_text(menu)
+        if Engine.GetDvarBool("virtualLobbyPresentable") then
+            Cac.NotifyVirtualLobby("depot", 0)
+            create_fancy_text(menu)
+        end
     else
         menu = LUI.MenuTemplate.new(unk1, {
             menu_title = get_localized_string("LANGUAGE_BUTTON"),
@@ -400,7 +402,9 @@ LUI.MenuBuilder.registerType("language_menu", function(unk1)
 
     menu:AddBackButton(function(unk1)
         if Engine.InFrontend() and Engine.IsMultiplayer() then
-            Cac.NotifyVirtualLobby("leave_depot", 0)
+            if Engine.GetDvarBool("virtualLobbyPresentable") then
+                Cac.NotifyVirtualLobby("leave_depot", 0)
+            end
         end
 
         Engine.PlaySound(CoD.SFX.MenuBack)
