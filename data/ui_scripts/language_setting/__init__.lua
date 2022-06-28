@@ -351,7 +351,7 @@ LUI.MenuBuilder.registerType("language_menu", function(unk1)
 
     if Engine.InFrontend() and Engine.IsMultiplayer() then
         menu = LUI.MenuTemplate.new(unk1, {
-            menu_title = get_localized_string("LANGUAGE_BUTTON"),
+            menu_title = Engine.ToUpperCase(get_localized_string("LANGUAGE_BUTTON")),
             exclusiveController = 0,
             persistentBackground = PersistentBackground.Variants.Depot
         })
