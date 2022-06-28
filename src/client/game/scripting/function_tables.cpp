@@ -2718,10 +2718,10 @@ namespace scripting
 		{"killanimscript", 0x233},
 		{"killcamentity", 0x234},
 		{"killcamentitylookat", 0x235},
-		{"_not_kills", 0x236}, // was "kills"
+		{"kills", 0x236},
 		{"killstreak", 0x237},
 		{"killstreakcount", 0x238},
-		{"kills", 0x239}, // was "killstreakrestricted"
+		{"killstreakrestricted", 0x239}, 
 		{"killstreakunlocked", 0x23A},
 		{"knife_off", 0x23B},
 		{"knife_on", 0x23C},
@@ -2984,7 +2984,7 @@ namespace scripting
 		{"primaryweapon", 0x33D},
 		{"privatematchactivesquadmember", 0x33E},
 		{"privatematchcustomclasses", 0x33F},
-		{"privatematchsquadmembers", 0x340},
+		{"primaryWeapon", 0x340}, // was privatematchsquadmembers
 		{"projectile_impact", 0x341},
 		{"projectile_impact_player", 0x342},
 		{"prone", 0x343},
@@ -3096,10 +3096,10 @@ namespace scripting
 		{"secondaryfurniturekit", 0x3AD},
 		{"secondaryoffhand", 0x3AE},
 		{"secondaryreticle", 0x3AF},
-		{"secondaryweapon", 0x3B0},
+		{"_not_secondaryweapon", 0x3B0}, // was secondaryweapon
 		{"sentry", 0x3B1},
 		{"sentry_manual", 0x3B2},
-		{"sentry_offline", 0x3B3},
+		{"secondaryweapon", 0x3B3}, // was sentry_offline
 		{"servertimecount", 0x3B4},
 		{"servertimeexceedcount", 0x3B5},
 		{"servertimemax", 0x3B6},
@@ -3492,12 +3492,7 @@ namespace scripting
 		{"codescripts/struct", 0x53E},
 		{"codescripts/message", 0x53F},
 		{"maps/mp/gametypes/_callbacksetup", 0x540},
-
-		// additional findings from gametype/map scripts - mikey (6/26/2022)
-		{"common_scripts/_fx", 0xA4FB},
-		{"common_scripts/_pipes", 0xA4F9},
-		{"common_scripts/utility", 0xA4FA},
-
+		{"blockWeaponDrops", 0x14B5},
 		{"QuickMessageToAll", 0x70a2},
 		{"SetupCallbacks", 0x8301},
 		{"_effect", 0x58f},
@@ -3522,6 +3517,8 @@ namespace scripting
 		{"deleteObjPoint", 0x2859},
 		{"disableSpawning", 0x2b28},
 		{"dogtags", 0x2cdf},
+		{"dont_delete_grenades_on_next_spawn",0x2d1e},
+		{"droppedDeathWeapon ",0x2f74},
 		{"finalKill", 0x373e},
 		{"findBoxCenter", 0x3779},
 		{"forfeitInProgress", 0x39df},
@@ -3534,15 +3531,26 @@ namespace scripting
 		{"getTeamSpawnPoints", 0x411f},
 		{"getWeaponClass", 0x4167},
 		{"giveLoadout", 0x41e0}, // this may not even be giveLoadout but it's a wrapper for it and it does the same logic so
+		{"gotPullbackNotify ", 0x428b},
 		{"guid", 0x4450},
+		{"hits", 0x4926},
+		{"hitsThisMag", 0x4929},
 		{"inGracePeriod", 0x4c6d},
 		{"initSpawns", 0x4e26},
 		{"initializeMatchRules", 0x4de0},
 		{"initializeTagPathVariables", 0x4de3},
 		{"isKillstreakWeapon", 0x513d},
+		{"lastDroppableWeapon", 0x5598},
+		{"lastHitTime", 0x55ab},
+		{"lastShotFiredTime", 0x55D9},
 		{"lastWave", 0x560e},
 		{"mapCenter", 0x5986},
+		{"tookWeaponFrom", 0x680b},
 		{"waveDelay", 0xa2ab},
+		// additional findings from gametype/map scripts - mikey (6/26/2022)
+		{"common_scripts/_fx", 0xA4FB },
+		{"common_scripts/_pipes", 0xA4F9 },
+		{"common_scripts/utility", 0xA4FA },
 		{"maps/mp/_compass", 0xa731},
 		{"maps/mp/_crib", 0xa733}, // sp files, missing on mikey dump
 		{"maps/mp/_hud_util", 0xa747},
@@ -3564,7 +3572,9 @@ namespace scripting
 		{"matchRules_damageMultiplier", 0x59e6},
 		{"matchRules_vampirism", 0x59eb},
 		{"modifyPlayerDamage", 0x5d51},
+		{"multiTeamBased", 0x5fec},
 		{"objId", 0x6304},
+		{"teamObjIds", 0x6305},
 		{"onForfeit", 0x64af},
 		{"onNormalDeath", 0x64bf},
 		{"onPlayerScore", 0x64d5},
@@ -3597,10 +3607,9 @@ namespace scripting
 		{"tagTeamUpdater", 0x910a},
 		{"teamBased", 0x91eb},
 		{"teamNameList", 0x91f7},
-		{"teamObjIds", 0x6305},
+		{"throwingGrenade ", 0x933e},
 		{"teamSpawnPoints", 0x9201},
 		{"v", 0x9c42},
-		{"visuals", 0x9e9c},
-		{"multiTeamBased", 0x5fec},
+		{"visuals", 0x9e9c}
 	};
 }
