@@ -3518,7 +3518,7 @@ namespace scripting
 		{"disableSpawning", 0x2b28},
 		{"dogtags", 0x2cdf},
 		{"dont_delete_grenades_on_next_spawn",0x2d1e},
-		{"droppedDeathWeapon ",0x2f74},
+		{"droppedDeathWeapon",0x2f74},
 		{"finalKill", 0x373e},
 		{"findBoxCenter", 0x3779},
 		{"forfeitInProgress", 0x39df},
