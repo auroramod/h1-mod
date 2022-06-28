@@ -330,7 +330,7 @@ end
 get_actual_language()
 
 LUI.addmenubutton("pc_controls", {
-    index = Engine.IsMultiplayer() and 6 or 5,
+    index = Engine.IsMultiplayer() and 4 or 5,
     text = localization[actual_language].LANGUAGE_BUTTON,
     description = localization[actual_language].LANGUAGE_BUTTON_DESC,
     callback = function()
