@@ -207,7 +207,7 @@ local localization = {
         LANG_SIMPLIFIED_CHINESE = "Китайский (упрощенный)",
         LANG_TRADITIONAL_CHINESE = "Китайский (традиционный)",
         LANG_ENGLISH_SAFE = "Арабский",
-        LANG_PORTUGUESE = "Бразильский португальский",
+        LANG_PORTUGUESE = "Бразильский португальский"
     },
     ["simplified_chinese"] = {
         LANGUAGE_BUTTON = "语",
@@ -273,8 +273,8 @@ local localization = {
         LANG_ENGLISH_SAFE = "عربي"
     }
 }
-local available_languages = {"english", "french", "italian", "german", "spanish", "japanese_partial", "korean",
-                             "polish", "portuguese", "russian", "simplified_chinese", "traditional_chinese", "english_safe"}
+local available_languages = {"english_safe", "simplified_chinese", "traditional_chinese", "english", "french", "german",
+                             "italian", "japanese_partial", "korean", "polish", "portuguese", "russian", "spanish"}
 local actual_language = "english"
 
 function get_actual_language()
