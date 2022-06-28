@@ -322,6 +322,8 @@ namespace patches
 			dvars::override::register_float("gpad_button_deadzone", 0.13f, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_float("gpad_stick_deadzone_min", 0.2f, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_float("gpad_stick_deadzone_max", 0.01f, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_float("gpad_stick_pressed", 0.4, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_float("gpad_stick_pressed_hysteresis", 0.1, 0, 1, game::DVAR_FLAG_SAVED);
 
 			if (!game::environment::is_sp())
 			{
