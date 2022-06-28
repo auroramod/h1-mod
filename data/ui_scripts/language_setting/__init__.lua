@@ -190,11 +190,11 @@ local localization = {
     },
     russian = {
         LANGUAGE_BUTTON = "Язык",
-        LANGUAGE_BUTTON_DESC = "Сменить язык игры.",
+        LANGUAGE_BUTTON_DESC = "Изменить язык игры.",
         POPUP_RESTART_REQUIRED_TITLE = "ТРЕБУЕТСЯ ПЕРЕЗАПУСК",
-        POPUP_RESTART_REQUIRED_TEXT = "ВНИМАНИЕ: Для правильной работы необходимо, чтобы файлы вашей локализации находились по пути zone/[название-языка] внутри корневой папки игры.\n\nВы переключили язык игры, хотите перезапустить ее?",
+        POPUP_RESTART_REQUIRED_TEXT = "ВНИМАНИЕ: Для правильной работы необходимо, чтобы файлы вашей локализации находились по пути zone/[название-языка] внутри корневой папки игры.\n\nВы изменили язык игры, хотите перезапустить ее?",
         POPUP_NO_ZONE_FOUND_TITLE = "ЛОКАЛИЗАЦИЯ НЕ НАЙДЕНА",
-        POPUP_NO_ZONE_FOUND_TEXT = "Нам не удалось найти папку локализации на выбранном языке. Во избежание ошибок настройки останутся без изменений.",
+        POPUP_NO_ZONE_FOUND_TEXT = "Не удалось найти папку локализации на выбранном языке. Во избежание ошибок настройки останутся без изменений.",
         LANG_ENGLISH = "Английский",
         LANG_FRENCH = "Французский",
         LANG_ITALIAN = "Итальянский",
@@ -207,7 +207,7 @@ local localization = {
         LANG_SIMPLIFIED_CHINESE = "Китайский (упрощенный)",
         LANG_TRADITIONAL_CHINESE = "Китайский (традиционный)",
         LANG_ENGLISH_SAFE = "Арабский",
-        LANG_PORTUGUESE = "Бразильский португальский"
+        LANG_PORTUGUESE = "Португальский"
     },
     ["simplified_chinese"] = {
         LANGUAGE_BUTTON = "语",
