@@ -3625,8 +3625,8 @@ namespace scripting
 		{"maps/mp/gametypes/_objpoints", 0xa7ac},
 		{"maps/mp/gametypes/_presistence", 0xa7ae},
 		{"maps/mp/gametypes/_playerlogic", 0xa7b1},
-		{"maps/mp/gametypes/_spawnlogic", 0xa7b9},
 		{"maps/mp/gametypes/_rank", 0xa7b4},
+		{"maps/mp/gametypes/_spawnlogic", 0xa7b9},
 		{"maps/mp/gametypes/_spawnscoring", 0xa7ba},
 		{"maps/mp/gametypes/_perks", 0xa7e4},
 	};
