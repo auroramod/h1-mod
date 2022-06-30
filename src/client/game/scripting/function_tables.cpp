@@ -2981,10 +2981,10 @@ namespace scripting
 		{"primaryfurniturekit", 0x33A},
 		{"primaryoffhand", 0x33B},
 		{"primaryreticle", 0x33C},
-		{"primaryweapon", 0x33D},
+		{"_not_primaryweapon", 0x33D},
 		{"privatematchactivesquadmember", 0x33E},
 		{"privatematchcustomclasses", 0x33F},
-		{"primaryWeapon", 0x340}, // was privatematchsquadmembers
+		{"primaryweapon", 0x340}, // was privatematchsquadmembers
 		{"projectile_impact", 0x341},
 		{"projectile_impact_player", 0x342},
 		{"prone", 0x343},
