@@ -44,6 +44,8 @@ namespace scripting
 
 		game::dvar_t* g_dump_scripts;
 
+		std::vector<std::function<void()>> shutdown_callbacks;
+
 		void vm_notify_stub(const unsigned int notify_list_owner_id, const game::scr_string_t string_value,
 			game::VariableValue* top)
 		{
@@ -92,6 +94,11 @@ namespace scripting
 			if (free_scripts)
 			{
 				script_function_table.clear();
+			}
+
+			for (const auto& callback : shutdown_callbacks)
+			{
+				callback();
 			}
 
 			scripting::notify(*game::levelEntityId, "shutdownGame_called", {1});
@@ -160,6 +167,11 @@ namespace scripting
 			scripting::token_map[str] = result;
 			return result;
 		}
+	}
+
+	void on_shutdown(const std::function<void()>& callback)
+	{
+		shutdown_callbacks.push_back(callback);
 	}
 
 	class component final : public component_interface

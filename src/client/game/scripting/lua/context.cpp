@@ -7,12 +7,15 @@
 #include "../functions.hpp"
 
 #include "../../../component/command.hpp"
+#include "../../../component/http.hpp"
 #include "../../../component/logfile.hpp"
 #include "../../../component/scripting.hpp"
 #include "../../../component/fastfiles.hpp"
+#include "../../../component/scheduler.hpp"
 
 #include <utils/string.hpp>
 #include <utils/io.hpp>
+#include <utils/http.hpp>
 
 namespace scripting::lua
 {
@@ -566,6 +569,20 @@ namespace scripting::lua
 				{
 					return sol::lua_value{s, sol::lua_nil};
 				}
+			};
+
+			game_type["httpget"] = [](const game& game, const sol::this_state s, 
+				const std::string& url)
+			{
+				const auto request = http::http_get(url);
+				return convert(s, scripting::entity{request});
+			};
+
+			game_type["httprequest"] = [](const game& game, const sol::this_state s,
+				const std::string& url, sol::variadic_args va)
+			{
+				const auto request = http::http_request(url, va);
+				return convert(s, scripting::entity{request});
 			};
 		}
 	}

@@ -2,6 +2,7 @@
 #include "script_value.hpp"
 #include "entity.hpp"
 #include "array.hpp"
+#include "functions.hpp"
 
 namespace scripting
 {
@@ -289,5 +290,40 @@ namespace scripting
 	const game::VariableValue& script_value::get_raw() const
 	{
 		return this->value_.get();
+	}
+
+	std::string script_value::to_string() const
+	{
+		if (this->is<int>())
+		{
+			return utils::string::va("%i", this->as<int>());
+		}
+
+		if (this->is<float>())
+		{
+			return utils::string::va("%f", this->as<float>());
+		}
+
+		if (this->is<std::string>())
+		{
+			return this->as<std::string>();
+		}
+
+		if (this->is<vector>())
+		{
+			const auto vec = this->as<vector>();
+			return utils::string::va("(%g, %g, %g)",
+				vec.get_x(),
+				vec.get_y(),
+				vec.get_z()
+			);
+		}
+
+		if (this->is<std::function<void()>>())
+		{
+			return utils::string::va("[[ function ]]");
+		}
+
+		return this->type_name();
 	}
 }
