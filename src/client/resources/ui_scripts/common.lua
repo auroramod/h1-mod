@@ -147,6 +147,34 @@ LUI.addmenubutton = function(name, data)
 	end)
 end
 
+LUI.addmenuoptionbutton = function(name, data)
+    LUI.onmenuopen(name, function(menu)
+        if (not menu.list) then
+            return
+        end
+
+        local button = LUI.Options.CreateOptionButton(menu, data.dvar, data.text, data.description, data.options, nil,
+            nil, data.callback)
+
+        local buttonlist = menu:getChildById(menu.type .. "_list")
+
+        if (data.id) then
+            button.id = data.id
+        end
+
+        if (data.index) then
+            buttonlist:removeElement(button)
+            buttonlist:insertElement(button, data.index)
+        end
+
+        local hintbox = menu.optionTextInfo
+        menu:removeElement(hintbox)
+
+        LUI.Options.InitScrollingList(menu.list, nil)
+        menu.optionTextInfo = LUI.Options.AddOptionTextInfo(menu)
+    end)
+end
+
 LUI.openmenu = function(menu, args)
 	stack = args
 	LUI.FlowManager.RequestAddMenu(nil, menu)
