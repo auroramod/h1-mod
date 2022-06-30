@@ -345,8 +345,6 @@ namespace ui_scripting
 				::game::Dvar_SetFromStringByNameFromSource("virtualLobbyPresentable", "1", ::game::DvarSetSource::DVAR_SOURCE_INTERNAL);
 			};
 
-			game_type["getcurrentgamelanguage"] = steam::SteamApps()->GetCurrentGameLanguage();
-
 			auto server_list_table = table();
 			lua["serverlist"] = server_list_table;
 
