@@ -364,9 +364,9 @@ namespace server_list
 		server.map_name = game::UI_GetMapDisplayName(info.get("mapname").data());
 		server.game_type = game::UI_GetGameTypeDisplayName(info.get("gametype").data());
 		server.play_mode = playmode;
-		server.clients = atoi(info.get("clients").data());
 		server.max_clients = atoi(info.get("sv_maxclients").data());
 		server.bots = atoi(info.get("bots").data());
+		server.clients = atoi(info.get("clients").data()) - server.bots;
 		server.ping = std::min(now - start_time, 999);
 		server.is_private = atoi(info.get("isPrivate").data()) == 1;
 
