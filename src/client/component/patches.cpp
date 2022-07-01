@@ -123,6 +123,12 @@ namespace patches
 			const auto menu_id = atoi(params.get(1));
 			const auto client = &svs_clients[ent->s.entityNum];
 
+			// 13 => change class
+			if (menu_id == 13 && ent->client->team == game::mp::TEAM_SPECTATOR)
+			{
+				return;
+			}
+
 			// 32 => "end_game"
 			if (menu_id == 32 && client->header.remoteAddress.type != game::NA_LOOPBACK)
 			{
