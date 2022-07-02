@@ -145,7 +145,7 @@ TryShowCollectionCompleted = function(controller, reward_data, unk1)
                 collectionData = reward_data
             })
 
-            if collection_details_menu then
+            if custom_depot.collection_details_menu then
                 custom_depot.collection_details_menu:OnCompletedSet()
             end
 
@@ -281,3 +281,40 @@ MPDepotOpenLootMenu = function(unk1, unk2)
     return open_loot_menu
 end
 LUI.MenuBuilder.m_types_build["MPDepotOpenLootMenu"] = MPDepotOpenLootMenu
+
+AddLootDropTabSelector_orig = LUI.MPDepotBase.AddLootDropTabSelector
+LUI.MPDepotBase.AddLootDropTabSelector = function(unk1, unk2)
+    if not custom_depot.get_function("has_accepted_mod_eula")() then
+        local item_sets = GetItemSets()
+
+        unk1:AddButtonWithInfo("depot_collections", "@DEPOT_COLLECTIONS", "MPDepotCollectionsMenu", nil, nil,
+            Engine.Localize("@MPUI_X_SLASH_Y", item_sets.completedSets, item_sets.numSets))
+
+        unk1:AddButtonWithInfo("depot_armory", "@DEPOT_ARMORY", "MPDepotArmoryMenu")
+        return
+    end
+
+    AddLootDropTabSelector_orig(unk1, unk2)
+end
+
+MPDepotMenu_orig = LUI.MenuBuilder.m_types_build["MPDepotMenu"]
+MPDepotMenu = function(unk1, unk2)
+    local depot_menu = MPDepotMenu_orig(unk1, unk2)
+
+    if not custom_depot.get_function("has_seen_mod_eula")() then
+        LUI.FlowManager.RequestAddMenu(nil, "mod_eula", true, 0, false, {
+            acceptCallback = function()
+                custom_depot.get_function("set_has_accepted_mod_eula")(true)
+                custom_depot.get_function("set_has_seen_mod_eula")(true)
+                LUI.FlowManager.RequestLeaveMenu(depot_menu)
+            end,
+            declineCallback = function()
+                custom_depot.get_function("set_has_accepted_mod_eula")(false)
+                custom_depot.get_function("set_has_seen_mod_eula")(true)
+            end
+        })
+    end
+
+    return depot_menu
+end
+LUI.MenuBuilder.m_types_build["MPDepotMenu"] = MPDepotMenu

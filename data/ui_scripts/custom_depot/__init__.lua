@@ -11,7 +11,9 @@ custom_depot = {
             [5] = 0 -- Bonus
         },
         items = {},
-        reward_splashes = {}
+        reward_splashes = {},
+        has_accepted_mod_eula = false,
+        has_seen_mod_eula = false,
     },
     directory_path = "data/ui_scripts",
     file_name = "depot_save.json",
@@ -81,6 +83,25 @@ custom_depot.functions["has_reward_splash"] = function(item)
     return custom_depot.data.reward_splashes[item] ~= nil
 end
 
+custom_depot.functions["has_accepted_mod_eula"] = function()
+    return custom_depot.data.has_accepted_mod_eula
+end
+
+custom_depot.functions["set_has_accepted_mod_eula"] = function(value)
+    custom_depot.data.has_accepted_mod_eula = value
+    custom_depot.get_function("save_depot_data")()
+end
+
+custom_depot.functions["has_seen_mod_eula"] = function()
+    return custom_depot.data.has_seen_mod_eula
+end
+
+custom_depot.functions["set_has_seen_mod_eula"] = function(value)
+    custom_depot.data.has_seen_mod_eula = value
+    custom_depot.get_function("save_depot_data")()
+end
+
 custom_depot.get_function("load_depot_data")()
+require("mod_eula")
 require("depot_override")
 require("scoreboard_override")
