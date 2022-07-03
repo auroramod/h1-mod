@@ -1,11 +1,16 @@
-game:addlocalizedstring("MOD_EULA_1",
-    "SOMETHING TO WRITE HERE, HELLO WORLD, I GUESS I WILL NEED SOMEONE TO WRITE THIS TEXT BECAUSE MY ENGLISH IS SHITTY AS FUCK.")
-game:addlocalizedstring("MOD_EULA_2",
-    "YEAH, WE HAVE NOW THIS \"EULA\" TO ACCEPT FOR SOME COUNTRIES, AND H1-MOD STAFF IS NOT RESPONSIBLE, OK? BYE NOW.")
+game:addlocalizedstring("CUSTOM_DEPOT_EULA_1", "Dear User,")
+game:addlocalizedstring("CUSTOM_DEPOT_EULA_2",
+    "By using this feature, you acknowledge that you are over 18 years old, and that any sort of chance games / gambling are allowed in your country (even if they do not involve real money).")
+game:addlocalizedstring("CUSTOM_DEPOT_EULA_3",
+    "The H1-Mod team is not responsible if you break the law within your country, and the sole responsibility will be upon you to respect the same.")
+game:addlocalizedstring("CUSTOM_DEPOT_EULA_4",
+    "The H1-Mod team will never include real money transactions within the modified systems. The only way to get currency, should you wish to, is by playing the game.")
+game:addlocalizedstring("CUSTOM_DEPOT_EULA_5", "Best Regards,")
+game:addlocalizedstring("CUSTOM_DEPOT_EULA_6", "The H1-Mod Team.")
 
 local mod_eula = function(unk1, unk2)
     return LUI.EULABase.new(CoD.CreateState(0, 0, 0, 0, CoD.AnchorTypes.All), {
-        textStrings = LUI.EULABase.CreateTextStrings("@MOD_EULA_", 2),
+        textStrings = LUI.EULABase.CreateTextStrings("@CUSTOM_DEPOT_EULA_", 6),
         declineCallback = function(unk3)
             unk2.declineCallback(unk3)
         end,
