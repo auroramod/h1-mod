@@ -5041,6 +5041,11 @@ namespace dvars
 			generate_hash("melee_debug")
 		},
 		{
+			"mis_cheat",
+			"Set when level unlock cheat is performed",
+			generate_hash("mis_cheat")
+		},
+		{
 			"migration_dvarErrors",
 			"Whether to check for illegal script dvar changes.",
 			generate_hash("migration_dvarErrors")
