@@ -37,7 +37,7 @@ end
 
 custom_depot.functions["load_depot_data"] = function()
     if not io.directoryexists(custom_depot.directory_path) then
-        os.execute(string.format("mkdir %s", custom_depot.directory_path))
+        io.createdirectory(custom_depot.directory_path)
     end
 
     if not io.fileexists(custom_depot.file_path) then
