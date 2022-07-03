@@ -1,3 +1,7 @@
+if (game:issingleplayer() or not Engine.InFrontend()) then
+    return
+end
+
 custom_depot = {
     collection_details_menu = nil,
     data = {
@@ -11,7 +15,7 @@ custom_depot = {
         items = {},
         reward_splashes = {},
         has_accepted_mod_eula = false,
-        has_seen_mod_eula = false,
+        has_seen_mod_eula = false
     },
     directory_path = "h1-mod",
     file_name = "depot_save.json",
@@ -48,11 +52,13 @@ custom_depot.functions["load_depot_data"] = function()
 end
 
 custom_depot.functions["add_currency"] = function(currency_type, amount)
-    custom_depot.data.currencies[tostring(currency_type)] = custom_depot.data.currencies[tostring(currency_type)] + amount
+    custom_depot.data.currencies[tostring(currency_type)] = custom_depot.data.currencies[tostring(currency_type)] +
+                                                                amount
 end
 
 custom_depot.functions["remove_currency"] = function(currency_type, amount)
-    custom_depot.data.currencies[tostring(currency_type)] = custom_depot.data.currencies[tostring(currency_type)] - amount
+    custom_depot.data.currencies[tostring(currency_type)] = custom_depot.data.currencies[tostring(currency_type)] -
+                                                                amount
 end
 
 custom_depot.functions["get_currency"] = function(currency_type)
@@ -98,6 +104,12 @@ custom_depot.functions["set_has_seen_mod_eula"] = function(value)
 end
 
 custom_depot.get_function("load_depot_data")()
-require("mod_eula")
-require("depot_override")
-require("scoreboard_override")
+
+if (Engine.InFrontend()) then
+    require("mod_eula")
+    require("depot_override")
+end
+
+if (Engine.InFrontend() == false) then
+    require("scoreboard_override")
+end
