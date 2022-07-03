@@ -1,4 +1,4 @@
-if (game:issingleplayer()) then
+if game:issingleplayer() then
     return
 end
 
@@ -74,11 +74,13 @@ custom_depot.functions["remove_currency"] = function(currency_type, amount)
 end
 
 custom_depot.functions["get_currency"] = function(currency_type)
-    if not currency_type or not custom_depot.data.currencies[tostring(currency_type)] then
+    local type = convert_currency_to_string(currency_type)
+
+    if not currency_type or not custom_depot.data.currencies[type] then
         return nil
     end
 
-    return custom_depot.data.currencies[tostring(currency_type)]
+    return custom_depot.data.currencies[type]
 end
 
 custom_depot.functions["add_item"] = function(item, value)
@@ -117,11 +119,11 @@ end
 
 custom_depot.get_function("load_depot_data")()
 
-if (Engine.InFrontend()) then
+if Engine.InFrontend() then
     require("mod_eula")
     require("depot_override")
 end
 
-if (not Engine.InFrontend()) then
+if not Engine.InFrontend() then
     require("scoreboard_override")
 end

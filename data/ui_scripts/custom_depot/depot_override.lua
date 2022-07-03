@@ -1,12 +1,3 @@
-InventoryCurrencyType = {
-    LaunchCredits = 1,
-    Credits = 2,
-    Parts = 3,
-    CoDPoints = 4,
-    Bonus = 5,
-    Max = 6
-}
-
 GetCurrencyBalance = function(currency_type)
     return custom_depot.get_function("get_currency")(currency_type)
 end
