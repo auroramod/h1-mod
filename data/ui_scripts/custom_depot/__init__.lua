@@ -1,4 +1,4 @@
-if (game:issingleplayer() or not Engine.InFrontend()) then
+if (game:issingleplayer()) then
     return
 end
 
@@ -6,11 +6,11 @@ custom_depot = {
     collection_details_menu = nil,
     data = {
         currencies = {
-            ["1"] = 0, -- LaunchCredits
-            ["2"] = 0, -- Credits
-            ["3"] = 0, -- Parts
-            ["4"] = 0, -- CoDPoints
-            ["5"] = 0 -- Bonus
+            launchCredits = 0, -- LaunchCredits
+            credits = 0, -- Credits
+            parts = 0, -- Parts
+            codPoints = 0, -- CoDPoints
+            bonus = 0 -- Bonus
         },
         items = {},
         reward_splashes = {},
@@ -34,9 +34,7 @@ custom_depot.get_function = function(function_name)
 end
 
 custom_depot.functions["save_depot_data"] = function()
-    io.writefile(custom_depot.file_path, json.encode(custom_depot.data, {
-        indent = true
-    }), false)
+    io.writefile(custom_depot.file_path, json.encode(custom_depot.data), false)
 end
 
 custom_depot.functions["load_depot_data"] = function()
@@ -51,14 +49,28 @@ custom_depot.functions["load_depot_data"] = function()
     custom_depot.data = json.decode(io.readfile(custom_depot.file_path))
 end
 
+local function convert_currency_to_string(type)
+    if type == InventoryCurrencyType.LaunchCredits then
+        return "launchCredits"
+    elseif type == InventoryCurrencyType.Credits then
+        return "credits"
+    elseif type == InventoryCurrencyType.Parts then
+        return "parts"
+    elseif type == InventoryCurrencyType.CoDPoints then
+        return "codPoints"
+    elseif type == InventoryCurrencyType.Bonus then
+        return "bonus"
+    end
+end
+
 custom_depot.functions["add_currency"] = function(currency_type, amount)
-    custom_depot.data.currencies[tostring(currency_type)] = custom_depot.data.currencies[tostring(currency_type)] +
-                                                                amount
+    local type = convert_currency_to_string(currency_type)
+    custom_depot.data.currencies[type] = custom_depot.data.currencies[type] + amount
 end
 
 custom_depot.functions["remove_currency"] = function(currency_type, amount)
-    custom_depot.data.currencies[tostring(currency_type)] = custom_depot.data.currencies[tostring(currency_type)] -
-                                                                amount
+    local type = convert_currency_to_string(currency_type)
+    custom_depot.data.currencies[type] = custom_depot.data.currencies[type] - amount
 end
 
 custom_depot.functions["get_currency"] = function(currency_type)
@@ -110,6 +122,6 @@ if (Engine.InFrontend()) then
     require("depot_override")
 end
 
-if (Engine.InFrontend() == false) then
+if (not Engine.InFrontend()) then
     require("scoreboard_override")
 end
