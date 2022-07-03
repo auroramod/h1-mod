@@ -1,28 +1,24 @@
-local json = require("dkjson")
-
 custom_depot = {
     collection_details_menu = nil,
     data = {
         currencies = {
-            [1] = 0, -- LaunchCredits
-            [2] = 0, -- Credits
-            [3] = 0, -- Parts
-            [4] = 0, -- CoDPoints
-            [5] = 0 -- Bonus
+            ["1"] = 0, -- LaunchCredits
+            ["2"] = 0, -- Credits
+            ["3"] = 0, -- Parts
+            ["4"] = 0, -- CoDPoints
+            ["5"] = 0 -- Bonus
         },
         items = {},
         reward_splashes = {},
         has_accepted_mod_eula = false,
         has_seen_mod_eula = false,
     },
-    directory_path = "data/ui_scripts",
+    directory_path = "h1-mod",
     file_name = "depot_save.json",
     file_path = nil,
-    functions = {},
-    mod_name = "custom_depot"
+    functions = {}
 }
 
-custom_depot.directory_path = string.format("%s/%s", custom_depot.directory_path, custom_depot.mod_name)
 custom_depot.file_path = string.format("%s/%s", custom_depot.directory_path, custom_depot.file_name)
 
 custom_depot.get_function = function(function_name)
@@ -52,19 +48,19 @@ custom_depot.functions["load_depot_data"] = function()
 end
 
 custom_depot.functions["add_currency"] = function(currency_type, amount)
-    custom_depot.data.currencies[currency_type] = custom_depot.data.currencies[currency_type] + amount
+    custom_depot.data.currencies[tostring(currency_type)] = custom_depot.data.currencies[tostring(currency_type)] + amount
 end
 
 custom_depot.functions["remove_currency"] = function(currency_type, amount)
-    custom_depot.data.currencies[currency_type] = custom_depot.data.currencies[currency_type] - amount
+    custom_depot.data.currencies[tostring(currency_type)] = custom_depot.data.currencies[tostring(currency_type)] - amount
 end
 
 custom_depot.functions["get_currency"] = function(currency_type)
-    if not currency_type or not custom_depot.data.currencies[currency_type] then
+    if not currency_type or not custom_depot.data.currencies[tostring(currency_type)] then
         return nil
     end
 
-    return custom_depot.data.currencies[currency_type]
+    return custom_depot.data.currencies[tostring(currency_type)]
 end
 
 custom_depot.functions["add_item"] = function(item, value)

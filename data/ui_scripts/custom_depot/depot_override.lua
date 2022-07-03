@@ -211,8 +211,6 @@ MPDepotOpenLootMenu = function(unk1, unk2)
                 .SuppyDropLootStream[unk2.crateType]].lootTableColName)
             local random_item = items_list[math.random(#items_list)]
 
-            print(random_item.inventoryItemType ~= Cac.InventoryItemType.Loot)
-            print(random_item.inventoryItemType)
             while random_item.inventoryItemType ~= Cac.InventoryItemType.Loot do
                 random_item = items_list[math.random(#items_list)]
             end
