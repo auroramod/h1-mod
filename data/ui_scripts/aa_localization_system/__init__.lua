@@ -1,3 +1,7 @@
+if game:getcurrentgamelanguage() == "english" then
+	return
+end
+
 -- set table full of localized strings
 localizations = {}
 
