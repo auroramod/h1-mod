@@ -2,6 +2,16 @@ if game:issingleplayer() then
     return
 end
 
+-- from mpdepotbase.lua, global definition isn't working
+InventoryCurrencyType = {
+    LaunchCredits = 1,
+    Credits = 2,
+    Parts = 3,
+    CoDPoints = 4,
+    Bonus = 5,
+    Max = 6
+}
+
 custom_depot = {
     collection_details_menu = nil,
     data = {
