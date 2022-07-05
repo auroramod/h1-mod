@@ -60,7 +60,7 @@ namespace bots
 
 			if (bot_ent)
 			{
-				spawn_bot(bot_ent->s.entityNum);
+				spawn_bot(bot_ent->s.number);
 			}
 			else
 			{

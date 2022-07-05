@@ -40,7 +40,7 @@
 [submodule "deps/protobuf"]
 	path = deps/protobuf
 	url = https://github.com/protocolbuffers/protobuf.git
-	branch = 3.17.x
+	branch = 3.20.x
 [submodule "deps/zlib"]
 	path = deps/zlib
 	url = https://github.com/madler/zlib.git

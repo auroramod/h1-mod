@@ -1565,7 +1565,7 @@ namespace game
 
 		struct EntityState
 		{
-			uint16_t entityNum;
+			uint16_t number;
 		}; // size = ?
 
 #pragma pack(push, 1)

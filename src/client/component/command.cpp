@@ -1,17 +1,16 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
+#include "game/game.hpp"
+#include "game/dvars.hpp"
+#include "game/scripting/execution.hpp"
+
 #include "command.hpp"
 #include "console.hpp"
 #include "game_console.hpp"
 #include "fastfiles.hpp"
 #include "scheduler.hpp"
 #include "logfile.hpp"
-
-#include "game/game.hpp"
-#include "game/dvars.hpp"
-
-#include "game/scripting/execution.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
@@ -39,8 +38,14 @@ namespace command
 			}
 		}
 
-		void client_command(const int client_num)
+		void client_command(const char client_num)
 		{
+			if (game::mp::g_entities[client_num].client == nullptr)
+			{
+				// Client is not fully connected
+				return;
+			}
+
 			if (!logfile::client_command_stub(client_num))
 			{
 				return;
@@ -539,9 +544,9 @@ namespace command
 		static void add_commands_generic()
 		{
 			add("quit", game::Quit);
-			add("crash", []()
+			add("crash", []
 			{
-				*reinterpret_cast<int*>(1) = 0;
+				*reinterpret_cast<int*>(1) = 0x12345678;
 			});
 
 			add("commandDump", [](const params& argument)

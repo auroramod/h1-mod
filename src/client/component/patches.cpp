@@ -122,7 +122,7 @@ namespace patches
 
 			command::params_sv params{};
 			const auto menu_id = atoi(params.get(1));
-			const auto client = &svs_clients[ent->s.entityNum];
+			const auto client = &svs_clients[ent->s.number];
 
 			// 13 => change class
 			if (menu_id == 13 && ent->client->team == game::mp::TEAM_SPECTATOR)
