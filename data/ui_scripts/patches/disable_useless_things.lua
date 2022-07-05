@@ -5,7 +5,7 @@ Engine.SetDvarInt("ui_enable_cp", 0)
 Engine.SetDvarInt("ui_show_store", 0)
 
 -- Remove CoD account button
-if Engine.IsMultiplayer() then
+if Engine.IsMultiplayer() and CoD.IsCoDAccountRegistrationAvailableInMyRegion() then
     LUI.removemenubutton("pc_controls", 4)
 end
 
