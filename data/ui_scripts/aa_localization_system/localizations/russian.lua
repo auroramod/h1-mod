@@ -2,6 +2,9 @@
 -- branding
 localizations["LUA_MENU_MULTIPLAYER_CAPS"] = "H1-MOD: СЕТЕВАЯ ИГРА\n"
 localizations["MENU_MULTIPLAYER_CAPS"] = "H1-MOD: СЕТЕВАЯ ИГРА"
+-- chat
+localizations["EXE_SAY"] = "^3Всем^7"
+localizations["EXE_SAYTEAM"] = "^5Команде^7"
 -- updater
 localizations["UPDATER_POPUP_NO_UPDATES_AVAILABLE"] = "У вас установлены все последние обновления"
 localizations["UPDATER_POPUP_AVAILABLE_UPDATE_TEXT"] = "Доступно обновление клиента игры,\nначать установку сейчас?"
