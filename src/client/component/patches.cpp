@@ -67,7 +67,8 @@ namespace patches
 
 		void set_client_dvar_from_server_stub(void* clientNum, void* cgameGlob, const char* dvar, const char* value)
 		{
-			if (dvar == "cg_fov"s || dvar == "cg_fovMin"s)
+			const auto dvar_lowercase = utils::string::to_lower(dvar);
+			if (dvar_lowercase == "cg_fov"s || dvar_lowercase == "cg_fovMin"s)
 			{
 				return;
 			}
