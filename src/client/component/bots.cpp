@@ -77,30 +77,26 @@ namespace bots
 
 		void load_bot_data()
 		{
-			static const char* bots_json = "h1-mod/bots.json";
+			static const char* bots_txt = "h1-mod/bots.txt";
 
 			std::string bots_content;
-
-			if (!utils::io::read_file(bots_json, &bots_content))
+			if (!utils::io::read_file(bots_txt, &bots_content))
 			{
-				console::error(utils::string::va("%s was not found.\n", bots_json));
+				console::error(utils::string::va("%s was not found.\n", bots_txt));
 				return;
 			}
 
-			rapidjson::Document bots;
-			bots.Parse(bots_content.data());
-
-			// must be in a ["name1, "name2", "name3"] format
-			if (!bots.IsArray())
+			auto names = utils::string::split(bots_content, '\n');
+			for (auto& name : names)
 			{
-				console::error("bots.json must be a array of names.\n");
-				return;
-			}
-
-			const auto names = bots.GetArray();
-			for (const auto& name : names)
-			{
-				bot_names.emplace_back(std::string(name.GetString()));
+				name = utils::string::replace(name, "\r", "");
+#ifdef DEBUG
+				console::info(utils::string::va("Loading name '%s' for bot names...\n", name.data()));
+#endif
+				if (!name.empty())
+				{
+					bot_names.emplace_back(name);
+				}
 			}
 		}
 
@@ -112,6 +108,10 @@ namespace bots
 			{
 				load_bot_data();
 			}
+
+#ifdef DEBUG
+			console::info(utils::string::va("Bot ID is %d\n", bot_id));
+#endif
 
 			// only use bot names once, no dupes in names
 			if (!bot_names.empty() && bot_id < bot_names.size())
