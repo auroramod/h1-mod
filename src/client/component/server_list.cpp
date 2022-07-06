@@ -143,8 +143,9 @@ namespace server_list
 
 			if (column == 2)
 			{
-				return utils::string::va("%d/%d [%d]", servers[i].clients, servers[index].max_clients,
-					servers[i].bots);
+				const auto client_count = servers[i].clients - servers[i].bots;
+				return utils::string::va("%d/%d [%d]", client_count, servers[i].max_clients,
+					servers[i].clients);
 			}
 
 			if (column == 3)
@@ -169,12 +170,20 @@ namespace server_list
 		{
 			std::stable_sort(servers.begin(), servers.end(), [](const server_info& a, const server_info& b)
 			{
-				if (a.clients == b.clients)
+				const auto a_players = a.clients - a.bots;
+				const auto b_players = b.clients - b.bots;
+
+				if (a_players == b_players)
 				{
-					return a.ping < b.ping;
+					if (a.clients == b.clients)
+					{
+						return a.ping < b.ping;
+					}
+
+					return a.clients > b.clients;
 				}
 
-				return a.clients > b.clients;
+				return a_players > b_players;
 			});
 		}
 
