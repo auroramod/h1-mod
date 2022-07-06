@@ -100,7 +100,7 @@ namespace bots
 			const auto names = bots.GetArray();
 			for (const auto& name : names)
 			{
-				bot_names.emplace_back(name.Get<std::string>());
+				bot_names.emplace_back(std::string(name.GetString()));
 			}
 		}
 
