@@ -197,7 +197,7 @@ MPDepotOpenLootMenu = function(unk1, unk2)
         custom_depot.get_function("remove_currency")(supply_drop_price.type, supply_drop_price.amount)
         custom_depot.get_function("save_depot_data")()
 
-        for i = 1, math.random(1, 3) do
+        for i = 1, unk2.crateType:find("_basic") and math.random(1, 2) or math.random(2, 3) do
             local items_list = LUI.MPLootDropsBase.GetGenericItemList(x, LUI.MPDepot.LootDropsData[LUI.MPDepot
                 .SuppyDropLootStream[unk2.crateType]].lootTableColName)
             local random_item = items_list[math.random(#items_list)]
@@ -215,7 +215,19 @@ MPDepotOpenLootMenu = function(unk1, unk2)
             if not custom_depot.get_function("has_item")(f48_arg1.items[i]) then
                 custom_depot.get_function("add_item")(f48_arg1.items[i], true)
             else
-                local dismantled_amount = math.random(1, 1000)
+                local item_rarity = tonumber(Engine.TableLookup(LootTable.File, LootTable.Cols.GUID, f48_arg1.items[i],
+                    LootTable.Cols.Rarity))
+                local dismantled_amount = 0
+
+                if item_rarity == ItemRarity.Common then
+                    dismantled_amount = math.random(1, 75)
+                elseif item_rarity == ItemRarity.Rare then
+                    dismantled_amount = math.random(75, 155)
+                elseif item_rarity == ItemRarity.Legendary then
+                    dismantled_amount = math.random(155, 260)
+                elseif item_rarity == ItemRarity.Epic then
+                    dismantled_amount = math.random(260, 550)
+                end
 
                 table.insert(f48_arg1.replacements, {
                     item_index = i,

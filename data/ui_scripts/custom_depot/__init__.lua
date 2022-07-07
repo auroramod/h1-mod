@@ -12,6 +12,13 @@ InventoryCurrencyType = {
     Max = 6
 }
 
+ItemRarity = {
+    Common = 0,
+    Rare = 1,
+    Legendary = 2,
+    Epic = 3
+}
+
 custom_depot = {
     collection_details_menu = nil,
     data = {

@@ -56,6 +56,10 @@ local scoreboard = function(unk1, unk2)
 
             custom_depot.get_function("add_currency")(InventoryCurrencyType.Parts, currency_gain)
 
+            if custom_depot.functions["has_accepted_mod_eula"]() then
+                custom_depot.get_function("add_currency")(InventoryCurrencyType.Credits, math.random(2, 3))
+            end
+
             player_old_score = player_score
             custom_depot.get_function("save_depot_data")()
         end
