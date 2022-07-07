@@ -82,7 +82,6 @@ namespace bots
 			std::string bots_content;
 			if (!utils::io::read_file(bots_txt, &bots_content))
 			{
-				console::error(utils::string::va("%s was not found.\n", bots_txt));
 				return;
 			}
 
@@ -90,9 +89,6 @@ namespace bots
 			for (auto& name : names)
 			{
 				name = utils::string::replace(name, "\r", "");
-#ifdef DEBUG
-				console::info(utils::string::va("Loading name '%s' for bot names...\n", name.data()));
-#endif
 				if (!name.empty())
 				{
 					bot_names.emplace_back(name);
@@ -100,18 +96,14 @@ namespace bots
 			}
 		}
 
-		static size_t bot_id = 0;
-
 		const char* get_random_bot_name()
 		{
+			static size_t bot_id = 0;
+
 			if (bot_names.empty())
 			{
 				load_bot_data();
 			}
-
-#ifdef DEBUG
-			console::info(utils::string::va("Bot ID is %d\n", bot_id));
-#endif
 
 			// only use bot names once, no dupes in names
 			if (!bot_names.empty() && bot_id < bot_names.size())
