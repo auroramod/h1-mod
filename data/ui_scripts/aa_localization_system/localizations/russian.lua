@@ -18,6 +18,9 @@ localizations["LUA_MENU_LATENCY"] = "Задержка до сервера"
 localizations["LUA_MENU_LATENCY_DESC"] = "Показывать пинг до сервера."
 localizations["LUA_MENU_RED_DOT_BRIGHTNESS"] = "Яркость коллиматора"
 localizations["LUA_MENU_RED_DOT_BRIGHTNESS_DESC"] = "Регулировка яркости красной точки коллиматорных прицелов."
+localizations["MENU_DEUTERANOPIA"] = "Дейтеранопия"
+localizations["MENU_PROTANOPIA"] = "Протанопия"
+localizations["MENU_TRITANOPIA"] = "Тританопия"
 -- mods/loading.lua
 localizations["MENU_MODS"] = "МОДИФИКАЦИИ"
 localizations["MENU_MODS_DESC"] = "Загрузка установленных модификаций."
@@ -33,7 +36,7 @@ localizations["MENU_NO_DONT_ASK"] = "Нет, больше не спрашива�
 -- server_list/lobby.lua
 localizations["LUA_MENU_SERVERLIST"] = "Список серверов"
 -- server_list/serverlist.lua
-localizations["MENU_NUMPLAYERS"] = "Игроки [Боты]"
+localizations["MENU_NUMPLAYERS"] = "Игроки [+боты]"
 localizations["MENU_PING"] = "Пинг"
 localizations["MENU_SB_TOOLTIP_BTN_REFRESH"] = "Обновить список"
 localizations["MENU_TYPE1"] = "Режим"
