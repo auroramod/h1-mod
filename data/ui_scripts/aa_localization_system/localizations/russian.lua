@@ -11,6 +11,10 @@ localizations["UPDATER_POPUP_AVAILABLE_UPDATE_TEXT"] = "Доступно обн�
 localizations["UPDATER_POPUP_SUCESSFUL"] = "Обновление завершено"
 localizations["UPDATER_POPUP_RESTART_POPUP_TEXT"] = "Для применения изменений необходим перезапуск игры"
 localizations["UPDATER_POPUP_CHECKING_FOR_UPDATES"] = "Проверка наличия обновлений..."
+-- hud_info/hud.lua
+localizations["MPHUD_FPS"] = "К/С: "
+localizations["MPHUD_LATENCY"] = "Пинг: "
+localizations["MPHUD_LATENCY_MS"] = " мс"
 -- hud_info/settings.lua
 localizations["LUA_MENU_FPS"] = "Счетчик кадров"
 localizations["LUA_MENU_FPS_DESC"] = "Показывать частоту кадров в секунду (FPS)."
@@ -18,6 +22,7 @@ localizations["LUA_MENU_LATENCY"] = "Задержка до сервера"
 localizations["LUA_MENU_LATENCY_DESC"] = "Показывать пинг до сервера."
 localizations["LUA_MENU_RED_DOT_BRIGHTNESS"] = "Яркость коллиматора"
 localizations["LUA_MENU_RED_DOT_BRIGHTNESS_DESC"] = "Регулировка яркости красной точки коллиматорных прицелов."
+localizations["LUA_MENU_TELEMETRY"] = "ТЕЛЕМЕТРИЯ"
 localizations["MENU_DEUTERANOPIA"] = "Дейтеранопия"
 localizations["MENU_PROTANOPIA"] = "Протанопия"
 localizations["MENU_TRITANOPIA"] = "Тританопия"
