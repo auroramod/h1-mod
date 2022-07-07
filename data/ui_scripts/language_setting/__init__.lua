@@ -108,7 +108,7 @@ LUI.MenuBuilder.registerType("language_menu", function(unk1)
                                 LUI.confirmationpopup({
                                     title = Engine.Localize("LUA_MENU_LANGUAGE_POPUP_NO_ZONE_FOUND_TITLE"),
                                     text = Engine.Localize("LUA_MENU_LANGUAGE_POPUP_NO_ZONE_FOUND_TEXT"),
-                                    buttontext = "OK",
+                                    buttontext = Engine.Localize("MENU_OK"),
                                     callback = function()
                                         LUI.FlowManager.RequestLeaveMenu(popup)
                                     end
