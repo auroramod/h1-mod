@@ -95,11 +95,11 @@ namespace bots
 				}
 			}
 		}
+		
+		size_t bot_id = 0;
 
 		const char* get_random_bot_name()
 		{
-			static size_t bot_id = 0;
-
 			if (bot_names.empty())
 			{
 				load_bot_data();
