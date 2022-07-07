@@ -319,3 +319,14 @@ MPDepotMenu = function(unk1, unk2)
     return depot_menu
 end
 LUI.MenuBuilder.m_types_build["MPDepotMenu"] = MPDepotMenu
+
+GetLootDataForRef_orig = LUI.InventoryUtils.GetLootDataForRef
+LUI.InventoryUtils.GetLootDataForRef = function(f13_arg0, f13_arg1, f13_arg2, f13_arg3, f13_arg4)
+    local loot_data = GetLootDataForRef_orig(f13_arg0, f13_arg1, f13_arg2, f13_arg3, f13_arg4)
+
+    if loot_data and custom_depot.get_function("has_item")(loot_data.guid) then
+        loot_data.lockState = "Unlocked"
+    end
+
+    return loot_data
+end
