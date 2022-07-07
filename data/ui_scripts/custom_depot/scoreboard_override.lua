@@ -1,21 +1,7 @@
 -- from roundend.lua, dev comments says that the game["round_end"] array contains indexes for this table
-local ending_reasons = {
-    "MP_DRAW",
-    "LUA_MENU_REPORT_DRAW",
-    "MP_ROUND_WIN",
-    "MP_ROUND_LOSS",
-    "LUA_MENU_REPORT_VICTORY",
-    "LUA_MENU_REPORT_DEFEAT",
-    "MP_HALFTIME",
-    "MP_OVERTIME",
-    "MP_ROUNDEND",
-    "MP_INTERMISSION",
-    "MP_SWITCHING_SIDES",
-    "MP_MATCH_BONUS_IS",
-    "MP_MATCH_TIE",
-    "MP_GAME_END",
-    "SPLASHES_BLANK"
-}
+local ending_reasons = {"MP_DRAW", "LUA_MENU_REPORT_DRAW", "MP_ROUND_WIN", "MP_ROUND_LOSS", "LUA_MENU_REPORT_VICTORY",
+                        "LUA_MENU_REPORT_DEFEAT", "MP_HALFTIME", "MP_OVERTIME", "MP_ROUNDEND", "MP_INTERMISSION",
+                        "MP_SWITCHING_SIDES", "MP_MATCH_BONUS_IS", "MP_MATCH_TIE", "MP_GAME_END", "SPLASHES_BLANK"}
 
 local function starts_with(str, start)
     return str:sub(1, #start) == start
