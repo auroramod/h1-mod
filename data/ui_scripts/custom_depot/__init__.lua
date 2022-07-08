@@ -34,8 +34,8 @@ custom_depot = {
         has_accepted_mod_eula = false,
         has_seen_mod_eula = false
     },
-    directory_path = "h1-mod",
-    file_name = "depot_save.json",
+    directory_path = "players2/user",
+    file_name = "depot.json",
     file_path = nil,
     functions = {}
 }
