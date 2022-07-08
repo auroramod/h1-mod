@@ -21,7 +21,8 @@ namespace utils::flags
 				if (wide_flag[0] == L'-')
 				{
 					wide_flag.erase(wide_flag.begin());
-					flags.emplace_back(string::convert(wide_flag));
+					const auto flag = string::convert(wide_flag);
+					flags.emplace_back(string::to_lower(flag));
 				}
 			}
 
@@ -40,14 +41,7 @@ namespace utils::flags
 			parsed = true;
 		}
 
-		for (const auto& entry : enabled_flags)
-		{
-			if (string::to_lower(entry) == string::to_lower(flag))
-			{
-				return true;
-			}
-		}
-
-		return false;
+		return std::ranges::any_of(enabled_flags.cbegin(), enabled_flags.cend(),
+			[flag](const auto& elem) { return elem == string::to_lower(flag); });
 	}
 }

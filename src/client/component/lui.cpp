@@ -14,6 +14,8 @@ namespace lui
 	namespace
 	{
 		uint64_t event_count{};
+		uint64_t obituary_count{};
+
 		bool begin_game_message_event_stub(int a1, const char* name, void* a3)
 		{
 			if (event_count > 30)
@@ -27,6 +29,16 @@ namespace lui
 
 			return utils::hook::invoke<bool>(0x2655A0_b, a1, name, a3);
 		}
+
+		void cg_entity_event_stub(void* a1, void* a2, unsigned int event_type, void* a4)
+		{
+			if (event_type == 140 && obituary_count++ >= 20)
+			{
+				return;
+			}
+
+			utils::hook::invoke<void>(0xF9400_b, a1, a2, event_type, a4);
+		}
 	}
 
 	class component final : public component_interface
@@ -38,6 +50,7 @@ namespace lui
 			{
 				// Patch game message overflow
 				utils::hook::call(0x266E6B_b, begin_game_message_event_stub);
+				utils::hook::call(0xEAC1C_b, cg_entity_event_stub);
 
 				scheduler::loop([]()
 				{
@@ -46,6 +59,11 @@ namespace lui
 						event_count--;
 					}
 				}, scheduler::pipeline::lui, 50ms);
+
+				scheduler::loop([]()
+				{
+					obituary_count = 0;
+				}, scheduler::pipeline::lui, 0ms);
 			}
 
 			// Increase max extra LUI memory

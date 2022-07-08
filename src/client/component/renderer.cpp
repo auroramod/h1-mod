@@ -49,12 +49,8 @@ namespace renderer
 		{
 			switch (dvars::r_fullbright->current.integer)
 			{
-			case 4:
-				return 3;
-			case 3:
-				return 13;
 			case 2:
-				return 25;
+				return 13;
 			default:
 				return game::TECHNIQUE_UNLIT;
 			}
@@ -148,7 +144,7 @@ namespace renderer
 				return;
 			}
 
-			dvars::r_fullbright = dvars::register_int("r_fullbright", 0, 0, 4, game::DVAR_FLAG_SAVED, "Toggles rendering without lighting");
+			dvars::r_fullbright = dvars::register_int("r_fullbright", 0, 0, 2, game::DVAR_FLAG_SAVED, "Toggles rendering without lighting");
 
 			r_init_draw_method_hook.create(SELECT_VALUE(0x5467E0_b, 0x669580_b), &r_init_draw_method_stub);
 			r_update_front_end_dvar_options_hook.create(SELECT_VALUE(0x583560_b, 0x6A78C0_b), &r_update_front_end_dvar_options_stub);

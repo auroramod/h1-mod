@@ -9,6 +9,8 @@ game:addlocalizedstring("LUA_MENU_LATENCY_DESC", "Show server latency.")
 game:addlocalizedstring("LUA_MENU_RED_DOT_BRIGHTNESS", "Red dot Brightness")
 game:addlocalizedstring("LUA_MENU_RED_DOT_BRIGHTNESS_DESC", "Adjust the brightness of red dot reticles.")
 
+game:replacelocalizedstring("MENU_SYSINFO_CUSTOMER_SUPPORT_URL", "https://h1.gg/")
+
 function createdivider(menu, text)
 	local element = LUI.UIElement.new({
 		leftAnchor = true,

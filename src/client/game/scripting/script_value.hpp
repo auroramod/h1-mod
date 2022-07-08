@@ -3,6 +3,8 @@
 #include "variable_value.hpp"
 #include "vector.hpp"
 
+#include <utils/string.hpp>
+
 namespace scripting
 {
 	class entity;
@@ -31,6 +33,14 @@ namespace scripting
 
 		template <typename T>
 		bool is() const;
+
+		// was gonna do this but no clue if this is the same on H1 so just return string (https://github.com/fedddddd/t6-gsc-utils/blob/main/src/game/scripting/script_value.hpp#L18)
+		std::string type_name() const
+		{
+			return utils::string::va("%s", this->get_raw().type);
+		}
+
+		std::string to_string() const;
 
 		template <typename T>
 		T as() const

@@ -67,7 +67,8 @@ namespace patches
 
 		void set_client_dvar_from_server_stub(void* clientNum, void* cgameGlob, const char* dvar, const char* value)
 		{
-			if (dvar == "cg_fov"s || dvar == "cg_fovMin"s)
+			const auto dvar_lowercase = utils::string::to_lower(dvar);
+			if (dvar_lowercase == "cg_fov"s || dvar_lowercase == "cg_fovMin"s)
 			{
 				return;
 			}
@@ -121,7 +122,13 @@ namespace patches
 
 			command::params_sv params{};
 			const auto menu_id = atoi(params.get(1));
-			const auto client = &svs_clients[ent->s.entityNum];
+			const auto client = &svs_clients[ent->s.number];
+
+			// 13 => change class
+			if (menu_id == 13 && ent->client->team == game::mp::TEAM_SPECTATOR)
+			{
+				return;
+			}
 
 			// 32 => "end_game"
 			if (menu_id == 32 && client->header.remoteAddress.type != game::NA_LOOPBACK)
@@ -318,6 +325,13 @@ namespace patches
 				utils::hook::jump(SELECT_VALUE(0x511050_b, 0x620040_b), _aligned_realloc);
 			}
 
+			// Uncheat protect gamepad-related dvars
+			dvars::override::register_float("gpad_button_deadzone", 0.13f, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_float("gpad_stick_deadzone_min", 0.2f, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_float("gpad_stick_deadzone_max", 0.01f, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_float("gpad_stick_pressed", 0.4f, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_float("gpad_stick_pressed_hysteresis", 0.1f, 0, 1, game::DVAR_FLAG_SAVED);
+
 			if (!game::environment::is_sp())
 			{
 				patch_mp();
@@ -326,6 +340,9 @@ namespace patches
 
 		static void patch_mp()
 		{
+			// fix vid_restart crash
+			utils::hook::set<uint8_t>(0x139680_b, 0xC3);
+
 			utils::hook::jump(0x5BB9C0_b, &live_get_local_client_name);
 
 			// Disable data validation error popup
@@ -409,6 +426,9 @@ namespace patches
 
 			// Fix gamepad related crash
 			cl_gamepad_scrolling_buttons_hook.create(0x133210_b, cl_gamepad_scrolling_buttons_stub);
+
+			// Prevent the game from modifying Windows microphone volume (since voice chat isn't used)
+			utils::hook::set<uint8_t>(0x5BEEA0_b, 0xC3); // Mixer_SetWaveInRecordLevels
 		}
 	};
 }
