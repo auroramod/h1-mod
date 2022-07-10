@@ -163,6 +163,11 @@ namespace server_list
 				return servers[i].is_private ? "1" : "0";
 			}
 
+			if (column == 6)
+			{
+				return network::net_adr_to_string(servers[i].address);
+			}
+
 			return "";
 		}
 
