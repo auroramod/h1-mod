@@ -10,11 +10,8 @@ game:addlocalizedstring("MENU_PING", "Ping")
 game:addlocalizedstring("SERVERLIST_PLAYER_COUNT", "&&1 Players")
 game:addlocalizedstring("SERVERLIST_SERVER_COUNT", "&&1 Servers")
 
-game:addlocalizedstring("SERVERLIST_ADD_TO_FAVOURITES", "Add to favourites")
 game:addlocalizedstring("SERVERLIST_ADD_TO_BLACKLIST", "Add to blacklist")
-game:addlocalizedstring("SERVERLIST_REMOVE_FROM_FAVOURITES", "Remove from favourites")
 game:addlocalizedstring("SERVERLIST_REMOVE_FROM_BLACKLIST", "Remove from blacklist")
-game:addlocalizedstring("SERVERLIST_CLEAR_LIST", "Clear list")
 
 game:addlocalizedstring("LUI_MENU_BLACKLIST", "Blacklist")
 game:addlocalizedstring("LUI_MENU_SETTINGS", "Settings")
@@ -392,7 +389,7 @@ SystemLinkJoinMenu.BuildList = function( menu, controller )
 		menu.removefromfavourites = menu:AddHelp({
 			name = "add_button_helper_text",
 			button_ref = "button_left",
-			helper_text = Engine.Localize("@SERVERLIST_REMOVE_FROM_FAVOURITES"),
+			helper_text = Engine.Localize("@MENU_REMOVE_FROM_FAVORITES"),
 			side = "right",
 			clickable = false,
 			priority = -1000
@@ -402,7 +399,7 @@ SystemLinkJoinMenu.BuildList = function( menu, controller )
 		menu.clearlist = menu:AddHelp({
 			name = "add_button_helper_text",
 			button_ref = "button_left_trigger",
-			helper_text = Engine.Localize("@SERVERLIST_CLEAR_LIST"),
+			helper_text = Engine.Localize("@MENU_DEMO_CLEAR_ALL_SEGMENTS"),
 			side = "right",
 			clickable = false,
 			priority = -1000
@@ -478,7 +475,7 @@ SystemLinkJoinMenu.BuildList = function( menu, controller )
 		menu.addtoblacklist = menu:AddHelp({
 			name = "add_button_helper_text",
 			button_ref = "button_right",
-			helper_text = Engine.Localize("@SERVERLIST_ADD_TO_FAVOURITES"),
+			helper_text = Engine.Localize("@MENU_ADD_TO_FAVORITES"),
 			side = "right",
 			clickable = true,
 			priority = -1000
