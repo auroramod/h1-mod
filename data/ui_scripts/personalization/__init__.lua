@@ -1,6 +1,5 @@
 local s1MPPlayercardMenu = LUI.mp_menus.s1MPPlayercardMenu
 
-game:addlocalizedstring("LUA_MENU_CHANGE_NAME", "Name")
 
 
 playercard_menu = function(f17_arg0, f17_arg1)
@@ -56,11 +55,11 @@ playercard_menu = function(f17_arg0, f17_arg1)
             f17_local9.desc_text = f17_local8
             f17_local9.showLockOnDisable = true
         end
-        local personalizationMenu0 = personalizationMenu:AddButton("LUA_MP_FRONTEND_TAG", "TagEditPopup", f17_local4,
+        local personalizationMenu0 = personalizationMenu:AddButton("@LUA_MP_FRONTEND_TAG", "TagEditPopup", f17_local4,
             nil, nil, f17_local9)
         personalizationMenu0:clearActionSFX()
 
-        personalizationMenu:AddButton("LUA_MENU_CHANGE_NAME", function(a1, a2)
+        personalizationMenu:AddButton("@MPUI_NAME", function(a1, a2)
             LUI.FlowManager.RequestAddMenu(a1, "client_set_name", true, nil)
         end)
     end
@@ -89,7 +88,7 @@ playercard_menu = function(f17_arg0, f17_arg1)
         personalizationMenu1.desc_text = f17_local8
     end
  
-    s1MPPlayercardMenu.UpdateCheckbox(personalizationMenu:AddButton("MENU_OPTION_CHARACTER_PATCH",
+    s1MPPlayercardMenu.UpdateCheckbox(personalizationMenu:AddButton("@MENU_OPTION_CHARACTER_PATCH",
     s1MPPlayercardMenu.OnToggleCharacterPatch, not personalizationMenu2, nil, nil, personalizationMenu1),
     s1MPPlayercardMenu.GetCharacterPatchOption(exclusiveController))
 
@@ -104,7 +103,7 @@ playercard_menu = function(f17_arg0, f17_arg1)
         personalizationMenu3.desc_text = f17_local8
     end
     s1MPPlayercardMenu.UpdateCheckbox(
-        personalizationMenu:AddButton("MENU_OPTION_WEAPON_STICKER", s1MPPlayercardMenu.OnToggleWeaponSticker, not personalizationMenu4,
+        personalizationMenu:AddButton("@MENU_OPTION_WEAPON_STICKER", s1MPPlayercardMenu.OnToggleWeaponSticker, not personalizationMenu4,
             nil, nil, personalizationMenu3), s1MPPlayercardMenu.GetWeaponStickerOption(exclusiveController))  
 
     personalizationMenu:AddMenuDescription(3)
@@ -179,7 +178,7 @@ ClientRenamePopupButtons = function ()
 			properties = {
 				style = GenericButtonSettings.Styles.GlassButton,
 				substyle = GenericButtonSettings.Styles.GlassButton.SubStyles.Popup,
-				button_text = "Change",
+				button_text = Engine.Localize("MPUI_RENAME"),
 				index = 2,
 				button_action_func = ConfirmChangeName
 			},
@@ -191,7 +190,7 @@ end
 ClientRenameField = function ( f50_arg0, f50_arg1 )
 	return LUI.MenuBuilder.BuildRegisteredType( "generic_selectionList_popup", {
 		popup_childfeeder = ClientRenamePopupButtons,
-		popup_title = "Change name"
+		popup_title = Engine.Localize("LUA_MENU_EDIT_MODE_NAME_CAPS")
 	} )
 end
 

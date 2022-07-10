@@ -10,15 +10,10 @@ game:addlocalizedstring("MENU_PING", "Ping")
 game:addlocalizedstring("SERVERLIST_PLAYER_COUNT", "&&1 Players")
 game:addlocalizedstring("SERVERLIST_SERVER_COUNT", "&&1 Servers")
 
-game:addlocalizedstring("SERVERLIST_ADD_TO_FAVOURITES", "Add to favourites")
 game:addlocalizedstring("SERVERLIST_ADD_TO_BLACKLIST", "Add to blacklist")
-game:addlocalizedstring("SERVERLIST_REMOVE_FROM_FAVOURITES", "Remove from favourites")
 game:addlocalizedstring("SERVERLIST_REMOVE_FROM_BLACKLIST", "Remove from blacklist")
-game:addlocalizedstring("SERVERLIST_CLEAR_LIST", "Clear list")
 
 game:addlocalizedstring("LUI_MENU_BLACKLIST", "Blacklist")
-game:addlocalizedstring("LUI_MENU_PUBLIC", "Public")
-game:addlocalizedstring("LUI_MENU_FAVOURITES", "Favourites")
 game:addlocalizedstring("LUI_MENU_SETTINGS", "Settings")
 
 game:addlocalizedstring("LUA_MENU_SERVERTYPE", "TYPE")
@@ -394,7 +389,7 @@ SystemLinkJoinMenu.BuildList = function( menu, controller )
 		menu.removefromfavourites = menu:AddHelp({
 			name = "add_button_helper_text",
 			button_ref = "button_left",
-			helper_text = Engine.Localize("@SERVERLIST_REMOVE_FROM_FAVOURITES"),
+			helper_text = Engine.Localize("@MENU_REMOVE_FROM_FAVORITES"),
 			side = "right",
 			clickable = false,
 			priority = -1000
@@ -404,7 +399,7 @@ SystemLinkJoinMenu.BuildList = function( menu, controller )
 		menu.clearlist = menu:AddHelp({
 			name = "add_button_helper_text",
 			button_ref = "button_left_trigger",
-			helper_text = Engine.Localize("@SERVERLIST_CLEAR_LIST"),
+			helper_text = Engine.Localize("@MENU_DEMO_CLEAR_ALL_SEGMENTS"),
 			side = "right",
 			clickable = false,
 			priority = -1000
@@ -480,7 +475,7 @@ SystemLinkJoinMenu.BuildList = function( menu, controller )
 		menu.addtoblacklist = menu:AddHelp({
 			name = "add_button_helper_text",
 			button_ref = "button_right",
-			helper_text = Engine.Localize("@SERVERLIST_ADD_TO_FAVOURITES"),
+			helper_text = Engine.Localize("@MENU_ADD_TO_FAVORITES"),
 			side = "right",
 			clickable = true,
 			priority = -1000
@@ -592,12 +587,12 @@ function menu_systemlink_join(f19_arg0, f19_arg1)
 	local serverTypes = {
 		{
 			menu = showOnlyPublicServers,
-			name = Engine.ToUpperCase( Engine.Localize( "LUI_MENU_PUBLIC" ) ),
+			name = Engine.ToUpperCase( Engine.Localize( "MENU_PUBLIC" ) ),
 			type = "PUBLIC"
 		},
 		{
 			menu = showOnlyFavouritesServers,
-			name = Engine.Localize( "LUI_MENU_FAVOURITES" ),
+			name = Engine.Localize( "MENU_FAVORITES_CAPS" ),
 			type = "FAVOURITES"
 		},
 		{
@@ -775,7 +770,7 @@ PasswordPopupButtons = function ()
 			properties = {
 				style = GenericButtonSettings.Styles.GlassButton,
 				substyle = GenericButtonSettings.Styles.GlassButton.SubStyles.Popup,
-				button_text = "Connect",
+				button_text = Engine.Localize("MENU_CONNECT"),
 				index = 2,
 				button_action_func = Connect
 			},
@@ -787,7 +782,7 @@ end
 PasswordField = function ( f50_arg0, f50_arg1 )
 	return LUI.MenuBuilder.BuildRegisteredType( "generic_selectionList_popup", {
 		popup_childfeeder = PasswordPopupButtons,
-		popup_title = "Type password"
+		popup_title = Engine.Localize("MENU_FACEBOOK_PASSWORD")
 	} )
 end
 
