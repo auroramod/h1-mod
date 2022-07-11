@@ -13,6 +13,7 @@ game:addlocalizedstring("SERVERLIST_SERVER_COUNT", "&&1 Servers")
 game:addlocalizedstring("SERVERLIST_ADD_TO_BLACKLIST", "Add to blacklist")
 game:addlocalizedstring("SERVERLIST_REMOVE_FROM_BLACKLIST", "Remove from blacklist")
 
+game:addlocalizedstring("LUI_MENU_PUBLIC", "Public")
 game:addlocalizedstring("LUI_MENU_BLACKLIST", "Blacklist")
 game:addlocalizedstring("LUI_MENU_SETTINGS", "Settings")
 
@@ -138,10 +139,12 @@ function MakeHeaderText(textHolder, f5_arg1, column, color, menu)
 			end
 		end
 		Engine.SetDvarInt("ui_sorting", element.ui_sorting)
+
 		element.root:processEvent( {
-			name = "button_alt1",
+			name = Engine.GetDvarString("ui_server_type") .. "_servers",
 			dispatchChildren = true
 		} )
+		
 		Engine.PlaySound( CoD.SFX.MenuAppear )
 	end)
 
@@ -240,7 +243,11 @@ SystemLinkJoinMenu.AddServerButton = function(menu, controller, index)
 				file:write(address .. "\n")
 				file:close()
 				Engine.PlaySound( CoD.SFX.PopupAppears )
-				Lobby.RefreshServerList( controller )
+				local root = Engine.GetLuiRoot()
+				root:processEvent( {
+					name = "public_servers",
+					dispatchChildren = true
+				} )
 			else
 				Engine.PlaySound( CoD.SFX.DenySelect )
 			end
@@ -255,7 +262,11 @@ SystemLinkJoinMenu.AddServerButton = function(menu, controller, index)
 			file:write(servers)
 			file:close()
 
-			Lobby.RefreshServerList( controller )
+			local root = Engine.GetLuiRoot()
+			root:processEvent( {
+				name = "favourites_servers",
+				dispatchChildren = true
+			} )
 			Engine.PlaySound( CoD.SFX.H1TabChange )
 		end
 	end)
@@ -275,7 +286,12 @@ SystemLinkJoinMenu.AddServerButton = function(menu, controller, index)
 				file:write(address .. "\n")
 				file:close()
 				Engine.PlaySound( CoD.SFX.PopupAppears )
-				Lobby.RefreshServerList( controller )
+
+				local root = Engine.GetLuiRoot()
+				root:processEvent( {
+					name = "public_servers",
+					dispatchChildren = true
+				} )
 			else
 				Engine.PlaySound( CoD.SFX.DenySelect )
 			end
@@ -291,7 +307,12 @@ SystemLinkJoinMenu.AddServerButton = function(menu, controller, index)
 			file:close()
 
 			button:close()
-			Lobby.RefreshServerList( controller )
+
+			local root = Engine.GetLuiRoot()
+			root:processEvent( {
+				name = "blacklisted_servers",
+				dispatchChildren = true
+			} )
 			Engine.PlaySound( CoD.SFX.H1TabChange )
 		end
 	end)
@@ -359,6 +380,152 @@ function SortServerList(menu, controller)
 	return servers
 end
 
+BuildListBlacklist = function( menu, controller )
+
+	if menu.addtoblacklist then
+		menu.addtoblacklist:close()
+	end
+
+	if menu.removefromblacklist then
+		menu.removefromblacklist:close()
+	end
+
+	if menu.addtofavourites then
+		menu.addtofavourites:close()
+	end
+
+	if menu.removefromfavourites then
+		menu.removefromfavourites:close()
+	end
+
+	if menu.clearlist then
+		menu.clearlist:close()
+	end
+
+	menu.list:closeChildren()
+	local serversSorted = SortServerList(menu, controller)
+	menu.removefromblacklist = menu:AddHelp({
+		name = "add_button_helper_text",
+		button_ref = "button_right",
+		helper_text = Engine.Localize("@SERVERLIST_REMOVE_FROM_BLACKLIST"),
+		side = "right",
+		clickable = false,
+		priority = -1000
+	}, nil, nil, true)
+
+	menu.clearlist = menu:AddHelp({
+		name = "add_button_helper_text",
+		button_ref = "button_left_trigger",
+		helper_text = Engine.Localize("@SERVERLIST_CLEAR_LIST"),
+		side = "right",
+		clickable = false,
+		priority = -1000
+	}, function(f21_arg0, f21_arg1)
+		local type = Engine.GetDvarString("ui_server_type")
+		if type == "favourites" then
+			file = io.open("players2/favourites.txt", "w")
+			file:write("")
+			file:close()
+		elseif type == "blacklisted" then
+			file = io.open("players2/blacklisted.txt", "w")
+			file:write("")
+			file:close()
+		end
+		SystemLinkJoinMenu.BuildList(menu, Engine.GetFirstActiveController())
+	end)
+
+	local servers = lines_as_hashmap("players2/blacklisted.txt")
+	for index = 1, #serversSorted, 1 do
+		local ip = Lobby.GetServerData(controller,  serversSorted[index].index, 6)
+		if servers[ip] ~= nil then
+			SystemLinkJoinMenu.AddServerButton(menu, controller, serversSorted[index].index)
+		end 
+	end
+
+	if menu.serverCount > 0 then
+		menu.list:registerEventHandler( LUI.FormatAnimStateFinishEvent( "default" ), function ( element, event )
+			ListPaging.InitList( menu.list, 18, nil, nil, nil, {
+				enabled = false
+			} )
+		end )
+		menu.list:animateToState( "default" )
+	end
+end
+
+BuildListFavourties = function( menu, controller )
+
+	if menu.addtoblacklist then
+		menu.addtoblacklist:close()
+	end
+
+	if menu.removefromblacklist then
+		menu.removefromblacklist:close()
+	end
+
+	if menu.addtofavourites then
+		menu.addtofavourites:close()
+	end
+
+	if menu.removefromfavourites then
+		menu.removefromfavourites:close()
+	end
+
+	if menu.clearlist then
+		menu.clearlist:close()
+	end
+
+	menu.list:closeChildren()
+	local serversSorted = SortServerList(menu, controller)
+	menu.removefromfavourites = menu:AddHelp({
+		name = "add_button_helper_text",
+		button_ref = "button_left",
+		helper_text = Engine.Localize("@MENU_REMOVE_FROM_FAVORITES"),
+		side = "right",
+		clickable = false,
+		priority = -1000
+	}, nil, nil, true)
+
+
+	menu.clearlist = menu:AddHelp({
+		name = "add_button_helper_text",
+		button_ref = "button_left_trigger",
+		helper_text = Engine.Localize("@MENU_DEMO_CLEAR_ALL_SEGMENTS"),
+		side = "right",
+		clickable = false,
+		priority = -1000
+	}, function(f21_arg0, f21_arg1)
+		local type = Engine.GetDvarString("ui_server_type")
+		if type == "favourites" then
+			file = io.open("players2/favourites.txt", "w")
+			file:write("")
+			file:close()
+		elseif type == "blacklisted" then
+			file = io.open("players2/blacklisted.txt", "w")
+			file:write("")
+			file:close()
+		end
+		SystemLinkJoinMenu.BuildList(menu, Engine.GetFirstActiveController())
+	end)
+	
+	local servers = lines_as_hashmap("players2/favourites.txt")
+	for index = 1, #serversSorted, 1 do
+		local ip = Lobby.GetServerData(controller, serversSorted[index].index, 6)
+		if servers[ip] ~= nil then
+			SystemLinkJoinMenu.AddServerButton(menu, controller, serversSorted[index].index)
+		end 
+	end
+
+	if menu.serverCount > 0 then
+		menu.list:registerEventHandler( LUI.FormatAnimStateFinishEvent( "default" ), function ( element, event )
+			ListPaging.InitList( menu.list, 18, nil, nil, nil, {
+				enabled = false
+			} )
+		end )
+		menu.list:animateToState( "default" )
+	end
+end
+
+
 SystemLinkJoinMenu.BuildList = function( menu, controller )
 
 	if menu.addtoblacklist then
@@ -382,114 +549,33 @@ SystemLinkJoinMenu.BuildList = function( menu, controller )
 	end
 
 	menu.list:closeChildren()
-	local type = Engine.GetDvarString("ui_server_type")
-
 	local serversSorted = SortServerList(menu, controller)
-	if type == "favourites" then
-		menu.removefromfavourites = menu:AddHelp({
-			name = "add_button_helper_text",
-			button_ref = "button_left",
-			helper_text = Engine.Localize("@MENU_REMOVE_FROM_FAVORITES"),
-			side = "right",
-			clickable = false,
-			priority = -1000
-		}, nil, nil, true)
+	menu.addtofavourites = menu:AddHelp({
+		name = "add_button_helper_text",
+		button_ref = "button_left",
+		helper_text = Engine.Localize("@SERVERLIST_ADD_TO_BLACKLIST"),
+		side = "right",
+		clickable = true,
+		priority = -1000
+	}, nil, nil, true)
 
-	
-		menu.clearlist = menu:AddHelp({
-			name = "add_button_helper_text",
-			button_ref = "button_left_trigger",
-			helper_text = Engine.Localize("@MENU_DEMO_CLEAR_ALL_SEGMENTS"),
-			side = "right",
-			clickable = false,
-			priority = -1000
-		}, function(f21_arg0, f21_arg1)
-			local type = Engine.GetDvarString("ui_server_type")
-			if type == "favourites" then
-				file = io.open("players2/favourites.txt", "w")
-				file:write("")
-				file:close()
-			elseif type == "blacklisted" then
-				file = io.open("players2/blacklisted.txt", "w")
-				file:write("")
-				file:close()
-			end
-			SystemLinkJoinMenu.BuildList(menu, Engine.GetFirstActiveController())
-		end)
-		
-		local servers = lines_as_hashmap("players2/favourites.txt")
-		for index = 1, #serversSorted, 1 do
-			local ip = Lobby.GetServerData(controller, serversSorted[index].index, 6)
-			if servers[ip] ~= nil then
-				SystemLinkJoinMenu.AddServerButton(menu, controller, serversSorted[index].index)
-			end 
-		end
-	elseif type == "blacklisted" then
-		menu.removefromblacklist = menu:AddHelp({
-			name = "add_button_helper_text",
-			button_ref = "button_right",
-			helper_text = Engine.Localize("@SERVERLIST_REMOVE_FROM_BLACKLIST"),
-			side = "right",
-			clickable = false,
-			priority = -1000
-		}, nil, nil, true)
+	menu.addtoblacklist = menu:AddHelp({
+		name = "add_button_helper_text",
+		button_ref = "button_right",
+		helper_text = Engine.Localize("@MENU_ADD_TO_FAVORITES"),
+		side = "right",
+		clickable = true,
+		priority = -1000
+	}, nil, nil, true)
 
-		menu.clearlist = menu:AddHelp({
-			name = "add_button_helper_text",
-			button_ref = "button_left_trigger",
-			helper_text = Engine.Localize("@SERVERLIST_CLEAR_LIST"),
-			side = "right",
-			clickable = false,
-			priority = -1000
-		}, function(f21_arg0, f21_arg1)
-			local type = Engine.GetDvarString("ui_server_type")
-			if type == "favourites" then
-				file = io.open("players2/favourites.txt", "w")
-				file:write("")
-				file:close()
-			elseif type == "blacklisted" then
-				file = io.open("players2/blacklisted.txt", "w")
-				file:write("")
-				file:close()
-			end
-			SystemLinkJoinMenu.BuildList(menu, Engine.GetFirstActiveController())
-		end)
-
-		local servers = lines_as_hashmap("players2/blacklisted.txt")
-		for index = 1, #serversSorted, 1 do
-			local ip = Lobby.GetServerData(controller,  serversSorted[index].index, 6)
-			if servers[ip] ~= nil then
-				SystemLinkJoinMenu.AddServerButton(menu, controller, serversSorted[index].index)
-			end 
-		end
-	else
-		menu.addtofavourites = menu:AddHelp({
-			name = "add_button_helper_text",
-			button_ref = "button_left",
-			helper_text = Engine.Localize("@SERVERLIST_ADD_TO_BLACKLIST"),
-			side = "right",
-			clickable = true,
-			priority = -1000
-		}, nil, nil, true)
-
-		menu.addtoblacklist = menu:AddHelp({
-			name = "add_button_helper_text",
-			button_ref = "button_right",
-			helper_text = Engine.Localize("@MENU_ADD_TO_FAVORITES"),
-			side = "right",
-			clickable = true,
-			priority = -1000
-		}, nil, nil, true)
-	
-		local servers = lines_as_hashmap("players2/blacklisted.txt")
-		for index = 1, #serversSorted, 1 do
-			local ip = Lobby.GetServerData(controller,  serversSorted[index].index, 6)
-			if servers[ip] == nil then
-				SystemLinkJoinMenu.AddServerButton(menu, controller, serversSorted[index].index)
-			end
+	local servers = lines_as_hashmap("players2/blacklisted.txt")
+	for index = 1, #serversSorted, 1 do
+		local ip = Lobby.GetServerData(controller,  serversSorted[index].index, 6)
+		if servers[ip] == nil then
+			SystemLinkJoinMenu.AddServerButton(menu, controller, serversSorted[index].index)
 		end
 	end
-	
+
 	if menu.serverCount > 0 then
 		menu.list:registerEventHandler( LUI.FormatAnimStateFinishEvent( "default" ), function ( element, event )
 			ListPaging.InitList( menu.list, 18, nil, nil, nil, {
@@ -586,17 +672,17 @@ function menu_systemlink_join(f19_arg0, f19_arg1)
 
 	local serverTypes = {
 		{
-			menu = showOnlyPublicServers,
-			name = Engine.ToUpperCase( Engine.Localize( "MENU_PUBLIC" ) ),
+			menu = public_servers,
+			name = Engine.ToUpperCase( Engine.Localize( "LUI_MENU_PUBLIC" ) ),
 			type = "PUBLIC"
 		},
 		{
-			menu = showOnlyFavouritesServers,
+			menu = favourites_servers,
 			name = Engine.Localize( "MENU_FAVORITES_CAPS" ),
 			type = "FAVOURITES"
 		},
 		{
-			menu = showOnlyBlacklistedServers,
+			menu = blacklisted_servers,
 			name = Engine.ToUpperCase( Engine.Localize( "LUI_MENU_BLACKLIST" ) ),
 			type = "BLACKLIST"
 		},
@@ -646,6 +732,18 @@ function menu_systemlink_join(f19_arg0, f19_arg1)
 		servercount:setText(Engine.Localize("@SERVERLIST_SERVER_COUNT", serverlist:getservercount()))
 	end)
 
+	menu.list:registerEventHandler("favourites_servers", function(element, event)
+		BuildListFavourties(menu, Engine.GetFirstActiveController())
+	end)
+
+	menu.list:registerEventHandler("blacklisted_servers", function(element, event)
+		BuildListBlacklist(menu, Engine.GetFirstActiveController())
+	end)
+
+	menu.list:registerEventHandler("public_servers", function(element, event)
+		SystemLinkJoinMenu.BuildList(menu, Engine.GetFirstActiveController())
+	end)
+
 	Lobby.BuildServerList(Engine.GetFirstActiveController())
 
 	SystemLinkJoinMenu.UpdateGameList(menu)
@@ -681,52 +779,39 @@ function menu_systemlink_join(f19_arg0, f19_arg1)
 	return menu
 end
 
-function showOnlyPublicServers()
+function public_servers()
 	Engine.SetDvarFromString("ui_server_type", "public")
 	local ui = LUI.UIElement.new({})
 	
 	local root = Engine.GetLuiRoot()
 	root:processEvent( {
-		name = "button_alt1",
+		name = "public_servers",
 		dispatchChildren = true
 	} )
 
 	return ui
 end
 
-function showOnlyLocalServers()
-	Engine.SetDvarFromString("ui_server_type", "local")
-	local ui = LUI.UIElement.new({})
-
-	local root = Engine.GetLuiRoot()
-	root:processEvent( {
-		name = "button_alt1",
-		dispatchChildren = true
-	} )
-
-	return ui
-end
-
-function showOnlyFavouritesServers()
+function favourites_servers()
 	Engine.SetDvarFromString("ui_server_type", "favourites")
 	local ui = LUI.UIElement.new({})
 
 	local root = Engine.GetLuiRoot()
 	root:processEvent( {
-		name = "button_alt1",
+		name = "favourites_servers",
 		dispatchChildren = true
 	} )
 
 	return ui
 end
 
-function showOnlyBlacklistedServers()
+function blacklisted_servers()
 	Engine.SetDvarFromString("ui_server_type", "blacklisted")
 	local ui = LUI.UIElement.new({})
 
 	local root = Engine.GetLuiRoot()
 	root:processEvent( {
-		name = "button_alt1",
+		name = "blacklisted_servers",
 		dispatchChildren = true
 	} )
 
@@ -735,13 +820,13 @@ end
 
 LUI.MenuBuilder.m_types_build["menu_systemlink_join"] = menu_systemlink_join
 
-function Connect( f3_arg0, f3_arg1 )
+function connect( f3_arg0, f3_arg1 )
 	local data = LUI.FlowManager.GetMenuScopedDataFromElement( f3_arg0 )
 	local ConnectTo = Lobby.JoinServer
 	ConnectTo( data.controller, data.server.index )
 end
 
-PasswordPopupButtons = function ()
+password_popup_buttons = function ()
 	local keyboard = LUI.FlowManager.GetMenuScopedDataByMenuName( "virtual_keyboard" )
 	local buttons = {
 		[1] = {
@@ -772,21 +857,21 @@ PasswordPopupButtons = function ()
 				substyle = GenericButtonSettings.Styles.GlassButton.SubStyles.Popup,
 				button_text = Engine.Localize("MENU_CONNECT"),
 				index = 2,
-				button_action_func = Connect
+				button_action_func = connect
 			},
 		},
 	}
 	return buttons
 end
 
-PasswordField = function ( f50_arg0, f50_arg1 )
+password_field = function ( f50_arg0, f50_arg1 )
 	return LUI.MenuBuilder.BuildRegisteredType( "generic_selectionList_popup", {
-		popup_childfeeder = PasswordPopupButtons,
+		popup_childfeeder = password_popup_buttons,
 		popup_title = Engine.Localize("MENU_FACEBOOK_PASSWORD")
 	} )
 end
 
-LUI.MenuBuilder.registerPopupType( "server_password_field", PasswordField )
+LUI.MenuBuilder.registerPopupType( "server_password_field", password_field )
 
 function file_exists(file)
 	local f = io.open(file, "rb")
