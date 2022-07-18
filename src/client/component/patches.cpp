@@ -298,6 +298,9 @@ namespace patches
 			dvars::override::register_float("cg_fovScale", 1.f, 0.1f, 2.f, game::DvarFlags::DVAR_FLAG_SAVED);
 			dvars::override::register_float("cg_fovMin", 1.f, 1.0f, 90.f, game::DvarFlags::DVAR_FLAG_SAVED);
 
+			// Makes mis_cheat saved dvar
+			dvars::override::register_bool("mis_cheat", 0, game::DVAR_FLAG_SAVED);
+
 			// Allow kbam input when gamepad is enabled
 			utils::hook::nop(SELECT_VALUE(0x1AC0CE_b, 0x135EFB_b), 2);
 			utils::hook::nop(SELECT_VALUE(0x1A9DDC_b, 0x13388F_b), 6);
