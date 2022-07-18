@@ -273,6 +273,10 @@ namespace gameplay
 	public:
 		void post_unpack() override
 		{
+			dvars::player_sustainAmmo = dvars::register_bool("player_sustainAmmo", false,
+				game::DVAR_FLAG_REPLICATED, "Firing weapon will not decrease clip ammo");
+			pm_weapon_use_ammo_hook.create(SELECT_VALUE(0x4AF600_b, 0x2DF830_b), &pm_weapon_use_ammo_stub);
+
 			// Influence PM_JitterPoint code flow so the trace->startsolid checks are 'ignored'
 			pm_player_trace_hook.create(SELECT_VALUE(0x4A0A90_b, 0x2D14C0_b), &pm_player_trace_stub);
 
@@ -284,10 +288,6 @@ namespace gameplay
 			{
 				return;
 			}
-
-			dvars::player_sustainAmmo = dvars::register_bool("player_sustainAmmo", false,
-				game::DVAR_FLAG_REPLICATED, "Firing weapon will not decrease clip ammo");
-			pm_weapon_use_ammo_hook.create(0x2DF830_b, &pm_weapon_use_ammo_stub);
 			
 			utils::hook::nop(0x4006AD_b, 15);
 			utils::hook::jump(0x4006AD_b, g_speed_stub(), true);
