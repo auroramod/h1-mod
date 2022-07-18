@@ -166,11 +166,11 @@ namespace gameplay
 			a.jnz(allsolid);
 
 			a.bind(stand);
-			a.and_(dword_ptr(r15, 0x54), 0xFFFFFFFD);
-			a.jmp(0x2C9F9D_b);
+			a.and_(dword_ptr(SELECT_VALUE(r14, r15), 0x54), 0xFFFFFFFD);
+			a.jmp(SELECT_VALUE(0x499628_b, 0x2C9F9D_b));
 
 			a.bind(allsolid);
-			a.jmp(0x2C9F9F_b);
+			a.jmp(SELECT_VALUE(0x6878D4_b, 0x2C9F9F_b));
 		};
 
 		void client_end_frame_stub2(game::mp::gentity_s* entity)
@@ -273,6 +273,13 @@ namespace gameplay
 	public:
 		void post_unpack() override
 		{
+			// Influence PM_JitterPoint code flow so the trace->startsolid checks are 'ignored'
+			pm_player_trace_hook.create(SELECT_VALUE(0x4A0A90_b, 0x2D14C0_b), &pm_player_trace_stub);
+
+			// If g_enableElevators is 1 the 'ducked' flag will always be removed from the player state
+			utils::hook::jump(SELECT_VALUE(0x499617_b, 0x2C9F90_b), utils::hook::assemble(pm_trace_stub), true);
+			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DVAR_FLAG_REPLICATED, "Enables Elevators");
+
 			if (game::environment::is_sp())
 			{
 				return;
@@ -299,12 +306,6 @@ namespace gameplay
 				"Game gravity in inches per second squared");
 			utils::hook::jump(0x3FF812_b, client_end_frame_stub(), true);
 			utils::hook::nop(0x3FF808_b, 1);
-
-			// Influence PM_JitterPoint code flow so the trace->startsolid checks are 'ignored'
-			pm_player_trace_hook.create(0x2D14C0_b, &pm_player_trace_stub);
-			// If g_enableElevators is 1 the 'ducked' flag will always be removed from the player state
-			utils::hook::jump(0x2C9F90_b, utils::hook::assemble(pm_trace_stub), true);
-			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DVAR_FLAG_REPLICATED, "Enables Elevators");
 
 			auto* timescale = dvars::register_float("timescale", 1.0f, 0.1f, 50.0f, game::DVAR_FLAG_REPLICATED, "Changes Timescale of the game");
 			utils::hook::inject(0x15B204_b, &timescale->current.value); // Com_GetTimeScale

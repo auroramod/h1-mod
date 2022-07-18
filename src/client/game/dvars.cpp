@@ -3757,7 +3757,7 @@ namespace dvars
 		},
 		{
 			"g_ai",
-			"Enable AI.",
+			"Enable AI",
 			generate_hash("g_ai")
 		},
 		{
@@ -4159,6 +4159,16 @@ namespace dvars
 			"g_voiceChatTalkingDuration",
 			"Time after the last talk packet was received that the player is considered by the\nserver to still be talking in milliseconds",
 			generate_hash("g_voiceChatTalkingDuration")
+		},
+		{
+			"g_gravity",
+			"Game gravity in inches per second squared",
+			generate_hash("g_gravity")
+		},
+		{
+			"g_speed",
+			"changes the speed of the player",
+			generate_hash("g_speed")
 		},
 		{
 			"gamedate",
@@ -4604,6 +4614,11 @@ namespace dvars
 			"jump_slowdownEnable",
 			"Slow player movement after jumping",
 			generate_hash("jump_slowdownEnable")
+		},
+		{
+			"jump_height",
+			"The maximum height of a player\'s jump",
+			generate_hash("jump_height")
 		},
 		{
 			"laserDebug",
