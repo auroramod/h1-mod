@@ -4,5 +4,5 @@ localizations["LUA_MENU_LANGUAGE_POPUP_RESTART_REQUIRED_TEXT"] = "警告: 正し
 localizations["LUA_MENU_LANGUAGE_POPUP_NO_ZONE_FOUND_TITLE"] = "言語が見つかりません"
 localizations["LUA_MENU_LANGUAGE_POPUP_NO_ZONE_FOUND_TEXT"] = "選択した言語フォルダが見つかりません. バグを避けるため、何も変更しません."
 localizations["MENU_ENGLISH"] = "英語"
-localizations["MENU_ENGLISH_SAFE"] = "アラビア語"
+localizations["MENU_ENGLISH_SAFE"] = "英語(検閲)"
 

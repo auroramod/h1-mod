@@ -4,6 +4,6 @@ localizations["LUA_MENU_LANGUAGE_POPUP_RESTART_REQUIRED_TEXT"] = "OSTRZEŻENIE: 
 localizations["LUA_MENU_LANGUAGE_POPUP_NO_ZONE_FOUND_TITLE"] = "NIE ZNALEZIONO JĘZYKA"
 localizations["LUA_MENU_LANGUAGE_POPUP_NO_ZONE_FOUND_TEXT"] = "Nie możemy znaleźć wybranego folderu językowego. Aby uniknąć błędów, niczego nie zmienimy."
 localizations["MENU_ENGLISH"] = "Angielski"
-localizations["MENU_ENGLISH_SAFE"] = "Arabski"
+localizations["MENU_ENGLISH_SAFE"] = "Angielski (cenzuralny)"
 localizations["MENU_GERMAN"] = "Niemiecki"
 localizations["MENU_RUSSIAN"] = "Rosyjski"

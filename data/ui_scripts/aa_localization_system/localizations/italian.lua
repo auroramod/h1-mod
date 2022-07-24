@@ -4,5 +4,5 @@ localizations["LUA_MENU_LANGUAGE_POPUP_RESTART_REQUIRED_TEXT"] = "ATTENZIONE: pe
 localizations["LUA_MENU_LANGUAGE_POPUP_NO_ZONE_FOUND_TITLE"] = "LINGUA NON TROVATA"
 localizations["LUA_MENU_LANGUAGE_POPUP_NO_ZONE_FOUND_TEXT"] = "Non siamo in grado di trovare la cartella della lingua che hai selezionato. Per evitare bug, non cambieremo nulla."
 localizations["MENU_ENGLISH"] = "Inglese"
-localizations["MENU_ENGLISH_SAFE"] = "Arabo"
+localizations["MENU_ENGLISH_SAFE"] = "Inglese (sicuro)"
 localizations["MENU_RUSSIAN"] = "Russo"

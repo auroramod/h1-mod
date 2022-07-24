@@ -1,4 +1,4 @@
-if game:getcurrentgamelanguage() == "english" then
+if game:getcurrentgamelanguage() == "english" or "english_safe" then
 	return
 end
 
@@ -18,3 +18,4 @@ for k, v in pairs(localizations) do
         game:replacelocalizedstring(k, v)
     end
 end
+
