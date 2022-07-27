@@ -292,6 +292,13 @@ namespace console
 				update();
 				break;
 			}
+			case VK_ESCAPE:
+			{
+				con.cursor = 0;
+				clear_output();
+				strncpy_s(con.buffer, "", sizeof(con.buffer));
+				break;
+			}
 			default:
 			{
 				const auto c = record.Event.KeyEvent.uChar.AsciiChar;
