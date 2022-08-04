@@ -150,6 +150,8 @@ namespace game
 	WEAK symbol<const float*(const float* v)> Scr_AllocVector{0x3C42D0, 0x50B330};
 	WEAK symbol<float(int index)> Scr_GetFloat{0x3C87D0, 0x50F870};
 	WEAK symbol<const char*(int index)> Scr_GetString{0x3C8CC0, 0x50FCB0};
+	WEAK symbol<int(unsigned int index)> Scr_GetInt{0, 0x50F920};
+	WEAK symbol<void(const char* value)> Scr_AddString{0, 0x50EC50};
 	WEAK symbol<int()> Scr_GetNumParam{0x0, 0x50F9D0};
 	WEAK symbol<void()> Scr_ClearOutParams{0x3C7EF0, 0x50F070};
 	WEAK symbol<scr_entref_t(unsigned int entId)> Scr_GetEntityIdRef{0x3C6760, 0x50D8E0};

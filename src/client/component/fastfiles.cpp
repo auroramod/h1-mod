@@ -6,6 +6,7 @@
 #include "fastfiles.hpp"
 #include "command.hpp"
 #include "console.hpp"
+#include "sound.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/concurrency.hpp>
@@ -55,6 +56,15 @@ namespace fastfiles
 
 		game::XAssetHeader db_find_xasset_header_stub(game::XAssetType type, const char* name, int allow_create_default)
 		{
+			if (type == game::ASSET_TYPE_SOUND)
+			{
+				const auto res = sound::find_sound(name);
+				if (res.sound != nullptr)
+				{
+					return res;
+				}
+			}
+
 			const auto start = game::Sys_Milliseconds();
 			const auto result = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, name, allow_create_default);
 			const auto diff = game::Sys_Milliseconds() - start;

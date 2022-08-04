@@ -1244,9 +1244,31 @@ namespace game
 		StreamFileNamePacked packed;
 	};
 
+	struct SpeakerLevels
+	{
+		char speaker;
+		char numLevels;
+		float levels[2];
+	};
+
+	struct ChannelMap
+	{
+		int speakerCount;
+		SpeakerLevels speakers[6];
+	};
+
+	struct SpeakerMap
+	{
+		bool isDefault;
+		const char* name;
+		int a;
+		ChannelMap channelMaps[2][2];
+	}; static_assert(sizeof(SpeakerMap) == 0x148);
+
 	struct StreamFileName
 	{
-		unsigned __int16 isLocalized;
+		bool isLocalized;
+		bool isStreamed;
 		unsigned __int16 fileIndex;
 		StreamFileInfo info;
 	};
@@ -1257,9 +1279,39 @@ namespace game
 		unsigned int totalMsec;
 	};
 
+	struct LoadedSoundInfo
+	{
+		char* data;
+		unsigned int sampleRate;
+		unsigned int dataByteCount;
+		unsigned int numSamples;
+		char channels;
+		char numBits;
+		char blockAlign;
+		short format;
+		int loadedSize;
+	}; static_assert(sizeof(LoadedSoundInfo) == 0x20);
+
+	struct LoadedSound
+	{
+		const char* name;
+		StreamFileName filename;
+		LoadedSoundInfo info;
+	}; static_assert(sizeof(LoadedSound) == 0x40);
+
 	union SoundFileRef
 	{
+		LoadedSound* loadSnd;
 		StreamedSound streamSnd;
+	};
+
+	enum snd_alias_type_t : std::int8_t
+	{
+		SAT_UNKNOWN = 0x0,
+		SAT_LOADED = 0x1,
+		SAT_STREAMED = 0x2,
+		SAT_PRIMED = 0x3,
+		SAT_COUNT = 0x4,
 	};
 
 	struct SoundFile
@@ -1269,20 +1321,79 @@ namespace game
 		SoundFileRef u;
 	};
 
+	struct SndContext
+	{
+		const char* name;
+		char __pad0[8];
+	};
+
+	struct SndCurve
+	{
+		bool isDefault;
+		union
+		{
+			const char* filename;
+			const char* name;
+		};
+		unsigned short knotCount;
+		float knots[16][2];
+	}; static_assert(sizeof(SndCurve) == 0x98);
+
+	struct DopplerPreset
+	{
+		const char* name;
+		float speedOfSound;
+		float playerVelocityScale;
+		float minPitch;
+		float maxPitch;
+		float smoothing;
+	}; static_assert(sizeof(DopplerPreset) == 0x20);
+
 	struct snd_alias_t
 	{
 		const char* aliasName;
-		char __pad0[24];
+		const char* subtitle;
+		const char* secondaryAliasName;
+		const char* chainAliasName;
 		SoundFile* soundFile;
-		char __pad1[198];
-		// not gonna map this out...
+		const char* mixerGroup;
+		char __pad0[8];
+		int sequence;
+		int u4;
+		int u5;
+		float volMin;
+		float volMax;
+		int volModIndex;
+		float pitchMin;
+		float pitchMax;
+		float distMin;
+		float distMax;
+		float velocityMin;
+		int flags;
+		char masterPriority;
+		float masterPercentage;
+		float slavePercentage;
+		char u18;
+		float probability;
+		char u20; // value: 0-4
+		SndContext* sndContext;
+		char __pad1[12];
+		int startDelay;
+		SndCurve* sndCurve;
+		char __pad2[8];
+		SndCurve* lpfCurve;
+		SndCurve* hpfCurve;
+		SndCurve* reverbSendCurve;
+		SpeakerMap* speakerMap;
+		char __pad3[47];
+		float u34;
 	};
 
 	struct snd_alias_list_t
 	{
 		const char* aliasName;
 		snd_alias_t* head;
-		void* unk;
+		short* unk;
 		unsigned char count;
 		unsigned char unkCount;
 		char __pad0[6];
@@ -1408,6 +1519,11 @@ namespace game
 		LuaFile* luaFile;
 		GfxImage* image;
 		TTF* ttf;
+		snd_alias_list_t* sound;
+		DopplerPreset* doppler_preset;
+		SndContext* snd_context;
+		SndCurve* snd_curve;
+		LoadedSound* loaded_sound;
 	};
 
 	struct XAsset

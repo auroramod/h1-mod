@@ -75,6 +75,21 @@ namespace filesystem
 		return false;
 	}
 
+	bool find_file(const std::string& path, std::string* real_path)
+	{
+		for (const auto& search_path : get_search_paths())
+		{
+			const auto path_ = search_path + "/" + path;
+			if (utils::io::file_exists(path_))
+			{
+				*real_path = path_;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	class component final : public component_interface
 	{
 	public:
