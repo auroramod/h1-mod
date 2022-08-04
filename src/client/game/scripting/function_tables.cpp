@@ -4348,7 +4348,7 @@ namespace scripting
 		{"maps/mp/gametypes/_hud_util", 0xA7A7},
 		{"maps/mp/gametypes/_killcam", 0xA7A8},
 		{"maps/mp/gametypes/_menus", 0xA7A9},
-		{"maps/mp/gametypes/_misions", 0xA7AA},
+		{"maps/mp/gametypes/_missions", 0xA7AA},
 		{"maps/mp/gametypes/_music_and_dialog", 0xA7AB},
 		{"maps/mp/gametypes/_objpoints", 0xA7AC},
 		{"maps/mp/gametypes/_orbital", 0xA7AD},
