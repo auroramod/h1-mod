@@ -32,6 +32,7 @@ namespace dvars
 
 	game::dvar_t* pm_bouncing = nullptr;
 	game::dvar_t* pm_bouncingAllAngles = nullptr;
+	game::dvar_t* pm_sprintInAir = nullptr;
 
 	game::dvar_t* jump_ladderPushVel = nullptr;
 

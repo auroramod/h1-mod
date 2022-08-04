@@ -266,6 +266,39 @@ namespace gameplay
 				vel_out[2] = new_z * length_scale;
 			}
 		}
+
+
+
+		void* pm_can_start_sprint_stub()
+		{
+			return utils::hook::assemble([=](utils::hook::assembler& a)
+				{
+					const auto skip_jz = a.newLabel();
+					const auto loc_2C98EF = a.newLabel();
+
+					a.push(rax);
+					a.mov(rax, qword_ptr(reinterpret_cast<uint64_t>(&dvars::pm_sprintInAir)));
+					a.mov(al, byte_ptr(rax, 0x10));
+					a.cmp(al, 1);
+					a.pop(rax);
+
+					a.jz(skip_jz);
+
+					a.mov(eax, 0x7FF);
+					a.cmp(word_ptr(rbx, 0x22), ax);
+
+					a.jz(loc_2C98EF);
+
+					a.bind(skip_jz);
+					a.mov(edx, dword_ptr(rdi, 0x8));
+					a.mov(rcx, rbx);
+
+					a.jmp(0x2C98CC_b);
+
+					a.bind(loc_2C98EF);
+					a.jmp(0x2C98EF_b);
+				});
+		}
 	}
 
 	class component final : public component_interface
@@ -306,6 +339,10 @@ namespace gameplay
 				"Game gravity in inches per second squared");
 			utils::hook::jump(0x3FF812_b, client_end_frame_stub(), true);
 			utils::hook::nop(0x3FF808_b, 1);
+
+			dvars::pm_sprintInAir = dvars::register_bool("pm_sprintInAir", false,
+				game::DVAR_FLAG_REPLICATED, "Enable Mid-Air Sprinting");
+			utils::hook::jump(0x2C98C0_b, pm_can_start_sprint_stub(), true);
 
 			auto* timescale = dvars::register_float("timescale", 1.0f, 0.1f, 50.0f, game::DVAR_FLAG_REPLICATED, "Changes Timescale of the game");
 			utils::hook::inject(0x15B204_b, &timescale->current.value); // Com_GetTimeScale
