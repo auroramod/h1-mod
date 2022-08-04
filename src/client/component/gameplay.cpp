@@ -267,37 +267,50 @@ namespace gameplay
 			}
 		}
 
-
-
 		void* pm_can_start_sprint_stub()
 		{
 			return utils::hook::assemble([=](utils::hook::assembler& a)
-				{
-					const auto skip_jz = a.newLabel();
-					const auto loc_2C98EF = a.newLabel();
+			{
+				const auto skip_jz = a.newLabel();
+				const auto loc_2C98EF = a.newLabel();
 
-					a.push(rax);
-					a.mov(rax, qword_ptr(reinterpret_cast<uint64_t>(&dvars::pm_sprintInAir)));
-					a.mov(al, byte_ptr(rax, 0x10));
-					a.cmp(al, 1);
-					a.pop(rax);
+				// save rax's original value
+				a.push(rax);
 
-					a.jz(skip_jz);
+				// move dvar pointer to rax
+				a.mov(rax, qword_ptr(reinterpret_cast<uint64_t>(&dvars::pm_sprintInAir)));
 
-					a.mov(eax, 0x7FF);
-					a.cmp(word_ptr(rbx, 0x22), ax);
+				// move *(rax + 16) into al
+				a.mov(al, byte_ptr(rax, 0x10));
 
-					a.jz(loc_2C98EF);
+				// compare al with 1
+				a.cmp(al, 1);
 
-					a.bind(skip_jz);
-					a.mov(edx, dword_ptr(rdi, 0x8));
-					a.mov(rcx, rbx);
+				// restore rax to its original value
+				a.pop(rax);
 
-					a.jmp(0x2C98CC_b);
+				// jz == jump zero, jumps if the two operands in cmp are equal
+				a.jz(skip_jz); // skip the last cmp & jz
 
-					a.bind(loc_2C98EF);
-					a.jmp(0x2C98EF_b);
-				});
+				// execute original code at 0x2C98C0 & 0x2C98C6
+				// necessary because our jump overwrites 12 bytes after it
+				a.mov(eax, 0x7FF); // rax got overwritted by our long jump (it does mov rax, <jmpaddr>; jmp rax)
+				a.cmp(word_ptr(rbx, 0x22), ax);
+				a.jz(loc_2C98EF);
+
+				a.bind(skip_jz);
+
+				// execute original code from 0x2C98C6 to 0x2C98CC
+				a.mov(edx, dword_ptr(rdi, 0x8));
+				a.mov(rcx, rbx);
+
+				// the section of code that was overwritten by our jump is finished so we can jump back to the game code
+				a.jmp(0x2C98CC_b);
+
+				// original code
+				a.bind(loc_2C98EF);
+				a.jmp(0x2C98EF_b);
+			});
 		}
 	}
 
