@@ -25,9 +25,9 @@ namespace console
 	template <typename... Args>
 	void debug(const char* fmt, Args&&... args)
 	{
-#ifdef DEBUG
+//#ifdef DEBUG
 		print(con_type_debug, fmt, std::forward<Args>(args)...);
-#endif
+//#endif
 	}
 
 	template <typename... Args>
