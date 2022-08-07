@@ -156,6 +156,10 @@ namespace game
 	WEAK symbol<unsigned int(int classnum, unsigned int entnum)> Scr_GetEntityId{0x3C66B0, 0x50D830};
 	WEAK symbol<int(unsigned int classnum, int entnum, int offset)> Scr_SetObjectField{0x2E8FC0, 0x459CD0};
 
+	WEAK symbol<int(const char* filename)> Scr_LoadScript{0x0, 0x504FA0};
+	WEAK symbol<unsigned int(const char*, unsigned int)> Scr_GetFunctionHandle{0x0, 0x504E30};
+	WEAK symbol<unsigned int(int handle, int num_param)> Scr_ExecThread{0x0, 0x50F150};
+
 	WEAK symbol<ScreenPlacement*()> ScrPlace_GetViewPlacement{0x1BCED0, 0x362840};
 
 	WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)>
