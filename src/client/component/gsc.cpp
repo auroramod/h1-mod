@@ -27,14 +27,14 @@ namespace gsc
 		//std::unordered_map<std::string, unsigned int> scr_main_handles;
 		//std::unordered_map<std::string, unsigned int> scr_init_handles;
 
-		game::ScriptFile* load_custom_script(const char* name)
+		game::ScriptFile* load_custom_script(const char* file_name)
 		{
 			utils::memory::allocator script_allocator;
 
 			std::string script_dir = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Call of Duty Modern Warfare Remastered\\h1-mod\\gsc";
 
 			//auto id = static_cast<std::uint16_t>(std::atoi(name));
-			if (!strcmp("maps/mp/gametypes/war", name)) // has no ID
+			if (!strcmp("maps/mp/gametypes/war", file_name)) // has no ID
 			{
 				console::debug("[OVERRIDE] Loading maps/mp/gametypes/war...");
 
