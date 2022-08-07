@@ -108,22 +108,22 @@ namespace arxan
 		{
 			return SetThreadContext(thread, context);
 		}
+	}
 
-		bool is_wine()
+	bool is_wine()
+	{
+		static bool is_wine = false;
+		static bool is_wine_set = false;
+		const utils::nt::library ntdll("ntdll.dll");
+
+		if (!is_wine_set)
 		{
-			static bool is_wine = false;
-			static bool is_wine_set = false;
-			const utils::nt::library ntdll("ntdll.dll");
-
-			if (!is_wine_set)
-			{
-				// wine_get_host_version - wine_nt_to_unix_file_name
-				is_wine = ntdll.get_proc<void*>("wine_get_version") != nullptr;
-				is_wine_set = true;
-			}
-
-			return is_wine;
+			// wine_get_host_version - wine_nt_to_unix_file_name
+			is_wine = ntdll.get_proc<void*>("wine_get_version") != nullptr;
+			is_wine_set = true;
 		}
+
+		return is_wine;
 	}
 
 	class component final : public component_interface
