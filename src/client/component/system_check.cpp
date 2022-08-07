@@ -1,6 +1,7 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 #include "system_check.hpp"
+#include "arxan.hpp"
 
 #include "game/game.hpp"
 
@@ -86,6 +87,11 @@ namespace system_check
 	public:
 		void post_load() override
 		{
+			if (arxan::is_wine())
+			{
+				return;
+			}
+
 			verify_binary_version();
 
 			if (!is_valid())
