@@ -2084,4 +2084,14 @@ namespace game
 			HksError m_error;
 		};
 	}
+
+	enum PMem_Source
+	{
+		PMEM_SOURCE_EXTERNAL = 0x0,
+		PMEM_SOURCE_DATABASE = 0x1,
+		PMEM_SOURCE_DEFAULT_LOW = 0x2,
+		PMEM_SOURCE_DEFAULT_HIGH = 0x3,
+		PMEM_SOURCE_MOVIE = 0x4,
+		PMEM_SOURCE_SCRIPT = 0x5,
+	};
 }

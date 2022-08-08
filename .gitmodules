@@ -48,6 +48,6 @@
 [submodule "deps/curl"]
 	path = deps/curl
 	url = https://github.com/curl/curl.git
-[submodule "deps/gsc-tool"]
-	path = deps/gsc-tool
-	url = https://github.com/xensik/gsc-tool.git
+[submodule "deps/gsc-tool-h1"]
+	path = deps/gsc-tool-h1
+	url = https://github.com/mjkzy/gsc-tool-h1.git

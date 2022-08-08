@@ -21,6 +21,8 @@ namespace game
 		WEAK symbol<void()> Cmd_EndTokenizeString{0x376C90, 0x0};
 	}
 
+	WEAK symbol<char* (unsigned __int64 size, unsigned __int64 alignment, unsigned int type, PMem_Source source)> PMem_AllocFromSource_NoDebug{0x0, 0x5A4DC0};
+
 	WEAK symbol<void(int type, VariableUnion u)> AddRefToValue{0x3C1F50, 0x5090E0};
 	WEAK symbol<void(int type, VariableUnion u)> RemoveRefToValue{0x3C3A60, 0x50ABF0};
 	WEAK symbol<void(unsigned int id)> AddRefToObject{0x3C1F40, 0x5090D0};

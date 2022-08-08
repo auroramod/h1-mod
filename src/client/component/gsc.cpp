@@ -21,16 +21,16 @@ namespace gsc
 {
 	namespace
 	{
-		//auto compiler = ::gsc::compiler();
-		//auto assembler = ::gsc::assembler();
+		auto compiler = ::gsc::compiler();
+		auto assembler = ::gsc::assembler();
 
 		//std::unordered_map<std::string, unsigned int> scr_main_handles;
 		//std::unordered_map<std::string, unsigned int> scr_init_handles;
 
-		game::ScriptFile* load_custom_script(const char* file_name)
-		{
-			utils::memory::allocator script_allocator;
+		game::ScriptFile script_file_;
 
+		game::ScriptFile* load_custom_script(const char* file_name, std::string const& real_name)
+		{
 			std::string script_dir = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Call of Duty Modern Warfare Remastered\\h1-mod\\gsc";
 
 			//auto id = static_cast<std::uint16_t>(std::atoi(name));
@@ -38,7 +38,57 @@ namespace gsc
 			{
 				console::debug("[OVERRIDE] Loading maps/mp/gametypes/war...");
 
-				const auto data = utils::io::read_file(script_dir + "\\war.gscbin");
+				filesystem::file source{"war.gsc"}; // we store this in main/raw
+				if (!source.exists())
+				{
+					console::debug("source gsc doesn't exist");
+					return nullptr;
+				}
+
+				auto source_buffer = source.get_buffer();
+				auto data = std::vector<uint8_t>{ source_buffer.begin(), source_buffer.end()};
+
+				try
+				{
+					compiler->compile(real_name, data);
+					console::debug("compile finished");
+				}
+				catch (std::exception& e)
+				{
+					game::Com_Error(game::ERR_DROP, "Failed to compile '%s'.\n%s", real_name.data(), e.what());
+					return nullptr;
+				}
+
+				auto assembly = compiler->output();
+
+				assembler->assemble(real_name, assembly);
+
+				auto* script_file_ptr = &script_file_;
+				script_file_ptr->name = file_name;
+
+				auto stack = assembler->output_stack();
+				script_file_ptr->len = stack.size();
+
+				auto script = assembler->output_script();
+				script_file_ptr->bytecodeLen = script.size();
+
+				auto* buffer = game::PMem_AllocFromSource_NoDebug(script.size() + stack.size() + 1, 4, 0, game::PMEM_SOURCE_SCRIPT);
+				memset(buffer, 0, script.size() + stack.size() + 1);
+				memcpy(buffer, stack.data(), stack.size());
+				memcpy(&buffer[stack.size()], script.data(), script.size());
+
+				script_file_ptr->bytecode = &buffer[stack.size()];
+				script_file_ptr->buffer = (const char*)buffer;
+
+				auto stack_data = std::string{ reinterpret_cast<char*>(stack.data() + 4), stack.size() - 4 };
+				auto compressed = utils::compression::zlib::compress(stack_data);
+				script_file_ptr->compressedLen = compressed.size();
+
+				return script_file_ptr;
+
+				/*
+				const auto data = utils::io::read_file(script_dir + "\\war.gsc");
+
 				const auto allocated_data = script_allocator.allocate(data.size());
 				auto allocated_struct = script_allocator.allocate<game::ScriptFile>();
 				std::memcpy(allocated_data, data.data(), data.size());
@@ -54,6 +104,7 @@ namespace gsc
 				allocated_struct->bytecode = reinterpret_cast<char*>(reinterpret_cast<std::uintptr_t>(allocated_data) + len + 12 + allocated_struct->compressedLen);
 
 				return allocated_struct;
+				*/
 			}
 
 			return nullptr;
@@ -72,7 +123,7 @@ namespace gsc
 
 			console::debug("Loading script %s (%s)\n", real_name.data(), name);
 
-			auto* script = load_custom_script(name);
+			auto* script = load_custom_script(name, real_name);
 			if (script)
 			{
 				// TODO: need to fix this whole thing. we are able to hit here, but we can't even print out data from script. is the data destroyed?

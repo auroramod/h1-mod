@@ -1,5 +1,5 @@
 gsc_tool = {
-    source = path.join(dependencies.basePath, "gsc-tool/src")
+    source = path.join(dependencies.basePath, "gsc-tool-h1/src")
 }
 
 function gsc_tool.import()
