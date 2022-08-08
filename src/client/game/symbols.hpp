@@ -263,7 +263,7 @@ namespace game
 		WEAK symbol<gentity_s> g_entities{0x0, 0x71F19E0};
 		WEAK symbol<client_t*> svs_clients{0x0, 0x2DC3390};
 		WEAK symbol<int> svs_numclients{0x0, 0x2DC338C};
-		WEAK symbol<int> gameTime{0x0, 0x0};
+		WEAK symbol<int> gameTime{0x0, 0x7361F9C};
 
 		WEAK symbol<int> sv_serverId_value{0x0, 0x0};
 
