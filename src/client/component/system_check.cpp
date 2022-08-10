@@ -72,7 +72,7 @@ namespace system_check
 
 			if (arxan::is_wine())
 			{
-				if (value != 0xFFB81143)
+				if (value != 0xFFB81262 && value != 0xFFB81143)
 				{
 					throw std::runtime_error("Unsupported Call of Duty: Modern Warfare Remastered version (1.15)");
 				}
