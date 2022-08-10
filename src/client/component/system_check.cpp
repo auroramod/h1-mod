@@ -87,7 +87,7 @@ namespace system_check
 	public:
 		void post_load() override
 		{
-			// i don't think this check is actually needed. after skull's research, i believe that Steam is the main problem -mikey
+			// TODO: find correct values for wine
 			if (arxan::is_wine())
 			{
 				return;
