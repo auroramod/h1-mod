@@ -98,12 +98,6 @@ namespace system_check
 	public:
 		void post_load() override
 		{
-			// TODO: find correct values for wine
-			if (arxan::is_wine())
-			{
-				return;
-			}
-
 			verify_binary_version();
 
 			if (!is_valid())
