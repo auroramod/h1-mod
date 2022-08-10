@@ -3,6 +3,8 @@
 #include "steam_proxy.hpp"
 #include "scheduler.hpp"
 
+#include "arxan.hpp"
+
 #include <utils/nt.hpp>
 #include <utils/flags.hpp>
 #include <utils/string.hpp>
@@ -37,6 +39,12 @@ namespace steam_proxy
 			}
 			
 			if (!FindWindowA(0, "Steam"))
+			{
+				return;
+			}
+
+			// TODO: add this back later after everything is working on Wine, i'm pretty sure this isn't needed for wine
+			if (arxan::is_wine())
 			{
 				return;
 			}
