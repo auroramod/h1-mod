@@ -31,12 +31,12 @@ namespace gsc
 
 		game::ScriptFile* load_custom_script(const char* file_name, std::string const& real_name)
 		{
-			memset(&script_file_, 0, sizeof(script_file_));
+			memset(&script_file_, 0, sizeof(script_file_)); // we need to memset this so we can reuse i again
 
+			// TODO: change this to h1-mod directory, i just don't have time atm
 			std::string script_dir = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Call of Duty Modern Warfare Remastered\\h1-mod\\gsc";
 
-			//auto id = static_cast<std::uint16_t>(std::atoi(name));
-			if (!strcmp("maps/mp/gametypes/_playercards", real_name.data())) // has no ID
+			if (!strcmp("maps/mp/gametypes/_playercards", real_name.data()))
 			{
 				console::debug("[OVERRIDE] Loading maps/mp/gametypes/war...");
 
@@ -68,18 +68,22 @@ namespace gsc
 				auto* script_file_ptr = &script_file_;
 				script_file_ptr->name = file_name;
 
-				auto stack = assembler->output_stack();
+				auto stack = assembler->output_stack(); // this is the uncompressed stack
 				script_file_ptr->len = stack.size();
 
-				auto script = assembler->output_script();
+				auto script = assembler->output_script(); // this is the assembly bytecode
 				script_file_ptr->bytecodeLen = script.size();
 
-				auto compressed = utils::compression::zlib::gsc_compress(stack);
+				// we compress the assembler's stack because that's the only way ProcessScript knows how to read it
+				auto compressed = utils::compression::zlib::gsc_compress(stack); // this util comes from gsc-tool, could just change the dependency to add it lmfao
 
-				auto* buffer = game::PMem_AllocFromSource_NoDebug(script.size() + compressed.size() + 1, 4, 0, game::PMEM_SOURCE_SCRIPT);
-				memset(buffer, 0, script.size() + compressed.size() + 1);
-				memcpy(buffer, script.data(), script.size());
-				memcpy(&buffer[script.size()], compressed.data(), compressed.size());
+				// the size of the whole buffer for the bytecode assembly + compressed buffer
+				size_t buffer_size = script.size() + compressed.size() + 1;
+
+				auto* buffer = game::PMem_AllocFromSource_NoDebug(buffer_size, 4, 0, game::PMEM_SOURCE_SCRIPT);
+				memset(buffer, 0, buffer_size);
+				memcpy(buffer, script.data(), script.size()); // the first part of the buffer will be the bytecode assembly
+				memcpy(&buffer[script.size()], compressed.data(), compressed.size()); // then, at the end of the bytecode assembly, the compressed stack buffer starts
 
 				script_file_ptr->bytecode = &buffer[0];
 				script_file_ptr->buffer = &buffer[script.size()];
