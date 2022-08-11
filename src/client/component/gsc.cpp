@@ -69,10 +69,10 @@ namespace gsc
 				script_file_ptr->name = file_name;
 
 				auto stack = assembler->output_stack(); // this is the uncompressed stack
-				script_file_ptr->len = stack.size();
+				script_file_ptr->len = static_cast<int>(stack.size());
 
 				auto script = assembler->output_script(); // this is the assembly bytecode
-				script_file_ptr->bytecodeLen = script.size();
+				script_file_ptr->bytecodeLen = static_cast<int>(script.size());
 
 				// we compress the assembler's stack because that's the only way ProcessScript knows how to read it
 				auto compressed = utils::compression::zlib::gsc_compress(stack); // this util comes from gsc-tool, could just change the dependency to add it lmfao
@@ -87,7 +87,7 @@ namespace gsc
 
 				script_file_ptr->bytecode = &buffer[0];
 				script_file_ptr->buffer = &buffer[script.size()];
-				script_file_ptr->compressedLen = compressed.size();
+				script_file_ptr->compressedLen = static_cast<int>(compressed.size());
 
 				return script_file_ptr;
 			}
