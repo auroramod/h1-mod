@@ -11,6 +11,8 @@ namespace utils::compression
 	{
 		std::string compress(const std::string& data);
 		std::string decompress(const std::string& data);
+
+		auto gsc_compress(const std::vector<std::uint8_t>& data)->std::vector<std::uint8_t>;
 	}
 
 	namespace zip

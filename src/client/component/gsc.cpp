@@ -31,14 +31,16 @@ namespace gsc
 
 		game::ScriptFile* load_custom_script(const char* file_name, std::string const& real_name)
 		{
+			memset(&script_file_, 0, sizeof(script_file_));
+
 			std::string script_dir = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Call of Duty Modern Warfare Remastered\\h1-mod\\gsc";
 
 			//auto id = static_cast<std::uint16_t>(std::atoi(name));
-			if (!strcmp("maps/mp/gametypes/war", file_name)) // has no ID
+			if (!strcmp("maps/mp/gametypes/_playercards", real_name.data())) // has no ID
 			{
 				console::debug("[OVERRIDE] Loading maps/mp/gametypes/war...");
 
-				filesystem::file source{"war.gsc"}; // we store this in main/raw
+				filesystem::file source{"_playercards.gsc"}; // we store this in main/raw
 				if (!source.exists())
 				{
 					console::debug("source gsc doesn't exist");
@@ -46,7 +48,7 @@ namespace gsc
 				}
 
 				auto source_buffer = source.get_buffer();
-				auto data = std::vector<uint8_t>{ source_buffer.begin(), source_buffer.end()};
+				auto data = std::vector<uint8_t>{source_buffer.begin(), source_buffer.end()};
 
 				try
 				{
@@ -72,39 +74,18 @@ namespace gsc
 				auto script = assembler->output_script();
 				script_file_ptr->bytecodeLen = script.size();
 
-				auto* buffer = game::PMem_AllocFromSource_NoDebug(script.size() + stack.size() + 1, 4, 0, game::PMEM_SOURCE_SCRIPT);
-				memset(buffer, 0, script.size() + stack.size() + 1);
-				memcpy(buffer, stack.data(), stack.size());
-				memcpy(&buffer[stack.size()], script.data(), script.size());
+				auto compressed = utils::compression::zlib::gsc_compress(stack);
 
-				script_file_ptr->bytecode = &buffer[stack.size()];
-				script_file_ptr->buffer = (const char*)buffer;
+				auto* buffer = game::PMem_AllocFromSource_NoDebug(script.size() + compressed.size() + 1, 4, 0, game::PMEM_SOURCE_SCRIPT);
+				memset(buffer, 0, script.size() + compressed.size() + 1);
+				memcpy(buffer, script.data(), script.size());
+				memcpy(&buffer[script.size()], compressed.data(), compressed.size());
 
-				auto stack_data = std::string{ reinterpret_cast<char*>(stack.data() + 4), stack.size() - 4 };
-				auto compressed = utils::compression::zlib::compress(stack_data);
+				script_file_ptr->bytecode = &buffer[0];
+				script_file_ptr->buffer = &buffer[script.size()];
 				script_file_ptr->compressedLen = compressed.size();
 
 				return script_file_ptr;
-
-				/*
-				const auto data = utils::io::read_file(script_dir + "\\war.gsc");
-
-				const auto allocated_data = script_allocator.allocate(data.size());
-				auto allocated_struct = script_allocator.allocate<game::ScriptFile>();
-				std::memcpy(allocated_data, data.data(), data.size());
-
-				const auto* name = reinterpret_cast<const char*>(allocated_data);
-				auto len = strlen(name) + 1;
-
-				allocated_struct->name = name;
-				allocated_struct->compressedLen = *reinterpret_cast<int*>(reinterpret_cast<std::uintptr_t>(allocated_data) + len);
-				allocated_struct->len = *reinterpret_cast<int*>(reinterpret_cast<std::uintptr_t>(allocated_data) + len + 4);
-				allocated_struct->bytecodeLen = *reinterpret_cast<int*>(reinterpret_cast<std::uintptr_t>(allocated_data) + len + 8);
-				allocated_struct->buffer = reinterpret_cast<const char*>(reinterpret_cast<std::uintptr_t>(allocated_data) + len + 12);
-				allocated_struct->bytecode = reinterpret_cast<char*>(reinterpret_cast<std::uintptr_t>(allocated_data) + len + 12 + allocated_struct->compressedLen);
-
-				return allocated_struct;
-				*/
 			}
 
 			return nullptr;

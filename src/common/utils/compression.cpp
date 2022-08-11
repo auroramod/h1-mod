@@ -109,6 +109,22 @@ namespace utils::compression
 			result.resize(length);
 			return result;
 		}
+
+		auto gsc_compress(const std::vector<std::uint8_t>& data) -> std::vector<std::uint8_t>
+		{
+			auto length = compressBound(static_cast<uLong>(data.size()));
+
+			std::vector<std::uint8_t> output;
+			output.resize(length);
+
+			auto result = compress2(reinterpret_cast<Bytef*>(output.data()), &length, reinterpret_cast<const Bytef*>(data.data()), static_cast<uLong>(data.size()), Z_BEST_COMPRESSION);
+
+			if (result != Z_OK) return {};
+
+			output.resize(length);
+
+			return output;
+		}
 	}
 
 	namespace zip
