@@ -12,6 +12,8 @@
 #ifdef _DEBUG
 // remove this if you do not want to test the wine debugging stuff, remove to ship
 #define DEBUG_WINE_STUFF
+
+#define MSG_BOX_INFO(message) MessageBoxA(nullptr, message, "H1-Mod", MB_ICONINFORMATION);
 #endif
 
 namespace steam
@@ -43,7 +45,7 @@ namespace steam
 				return;
 			}
 
-			if (dialog->SetTitle(L"Select a valid Steam install (contains libraries like 'steam_api64.dll'") != S_OK)
+			if (dialog->SetTitle(L"Select a valid Steam install (contains libraries like 'steam_api64.dll')") != S_OK)
 			{
 				return;
 			}
@@ -243,7 +245,7 @@ namespace steam
 		char path[MAX_PATH] = {0};
 		DWORD length = sizeof(path);
 
-#ifdef DEBUG_WINE_STUFF
+#ifndef DEBUG_WINE_STUFF
 		HKEY reg_key;
 
 		// check if Steam contains information in registry for the install path
@@ -264,7 +266,9 @@ namespace steam
 			// the above if statement *could* work if the user emulated Steam via Wine but pretty sure no one is gonna do that so... :P
 			HKEY steam_install_reg;
 
+#ifndef DEBUG_WINE_STUFF
 			if (arxan::is_wine())
+#endif
 			{
 				// let's check the registry to see if the user has already manually selected the Steam installation path
 				if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, KEY_QUERY_VALUE, &steam_install_reg) 
@@ -299,14 +303,19 @@ namespace steam
 
 				// query "steam_install" inside "Software\\h1-mod" and define it to our path variableand set install_path to path
 				RegQueryValueExA(steam_install_reg, "steam_install", nullptr, nullptr, reinterpret_cast<BYTE*>(path), &length);
+
+#ifdef MSG_BOX_INFO
+				MSG_BOX_INFO(::utils::string::va("Path stored in registry is '%s'", path));
+#endif
+
 				install_path = path;
 				RegCloseKey(steam_install_reg);
 			}
+#ifndef DEBUG_WINE_STUFF
 			else
 			{
 				MSG_BOX_ERROR("Failed to find a Steam installation.");
 			}
-#ifdef DEBUG_WINE_STUFF
 		}
 #endif
 
