@@ -153,6 +153,7 @@ namespace steam
 		callbacks::unregister_callback(handler);
 	}
 
+	// TODO: does the registry even work for Wine? i seriously doubt it does, so this may need to be fixed for Wine
 	const char* SteamAPI_GetSteamInstallPath()
 	{
 		static std::string install_path{};
