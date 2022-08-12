@@ -155,7 +155,10 @@ namespace arxan
 		void post_unpack() override
 		{
 			// cba to implement sp, not sure if it's even needed
-			if (game::environment::is_sp()) return;
+			if (game::environment::is_sp())
+			{
+				return;
+			}
 		}
 	};
 }

@@ -13,6 +13,8 @@ namespace steam
 	{
 		void open_folder_prompt(char* directory)
 		{
+			MSG_BOX_INFO(__FUNCTION__);
+
 			if (CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) != S_OK)
 			{
 				MSG_BOX_ERROR("CoInitializeEx failed. This could be because uninitialization failed, try again.");
@@ -181,6 +183,8 @@ namespace steam
 
 	bool SteamAPI_Init()
 	{
+		MSG_BOX_INFO(__FUNCTION__);
+
 		const std::filesystem::path steam_path = steam::SteamAPI_GetSteamInstallPath();
 		if (steam_path.empty()) 
 		{
@@ -227,6 +231,8 @@ namespace steam
 	// TODO: does the registry even work for Wine? i seriously doubt it does, so this may need to be fixed for Wine
 	const char* SteamAPI_GetSteamInstallPath()
 	{
+		MSG_BOX_INFO(__FUNCTION__);
+
 		static std::string install_path{};
 		if (!install_path.empty())
 		{
@@ -242,14 +248,23 @@ namespace steam
 		if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\WOW6432Node\\Valve\\Steam", 0, KEY_QUERY_VALUE,
 		                  &reg_key) == ERROR_SUCCESS)
 		{
+			MSG_BOX_INFO("RegOpenKeyExA worked for steam");
+			if (arxan::is_wine())
+			{
+				MSG_BOX_INFO("and it's on wine");
+			}
+
 			RegQueryValueExA(reg_key, "InstallPath", nullptr, nullptr, reinterpret_cast<BYTE*>(path),
 			                 &length);
 			RegCloseKey(reg_key);
+
+			MSG_BOX_INFO(::utils::string::va("path is '%s'", path));
 
 			install_path = path;
 		}
 		else
 		{
+			MSG_BOX_INFO("RegOpenKeyExA couldn't find Steam registry, continuing...");
 			// if we can't find Steam in the registry, let's check if we are on Wine or not.
 			// to add onto this, Steam has a Linux-specific build and it obviously doesn't register in the Wine registry. 
 			// the above if statement *could* work if the user emulated Steam via Wine but pretty sure no one is gonna do that so... :P
@@ -257,10 +272,14 @@ namespace steam
 
 			if (arxan::is_wine())
 			{
+				MSG_BOX_INFO("arxan::is_wine() is true, so we are continuing below!");
+
 				// let's check the registry to see if the user has already manually selected the Steam installation path
 				if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, KEY_QUERY_VALUE, &steam_install_reg) 
 					!= ERROR_SUCCESS)
 				{
+					MSG_BOX_INFO("creating key");
+
 					// create a registry key
 					if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, nullptr, 0, KEY_WRITE, nullptr, &steam_install_reg, nullptr) 
 						!= ERROR_SUCCESS)
@@ -269,16 +288,22 @@ namespace steam
 						return "";
 					}
 
+					MSG_BOX_INFO("1");
+
 					// create a pointer to our path variable to use in our open_folder function
 					char* directory_ptr = path;
 
 					// open a file explorer prompt to find the Steam directory (user input)
 					open_folder_prompt(directory_ptr);
+					MSG_BOX_INFO("2");
 					while (!strcmp(directory_ptr, "")) // if this while statement goes, this means that the operation was cancelled
 					{
+						MSG_BOX_INFO("3");
 						MSG_BOX_ERROR("You must select a valid Steam directory before you can continue.");
 						open_folder_prompt(directory_ptr);
 					}
+
+					MSG_BOX_INFO("4");
 
 					// if the directory pointer is defined, then we set "steam_install" inside "Software\\h1-mod" to the path
 					if (RegSetKeyValueA(steam_install_reg, nullptr, "steam_install", REG_SZ, ::utils::string::va("\"%s\"", path), length) != ERROR_SUCCESS)
@@ -286,7 +311,11 @@ namespace steam
 						MSG_BOX_ERROR("Failed to set valid Steam install path in registry. Please try again.");
 						return "";
 					}
+
+					MSG_BOX_INFO("5");
 				}
+
+				MSG_BOX_INFO("6");
 
 				// query "steam_install" inside "Software\\h1-mod" and define it to our path variableand set install_path to path
 				RegQueryValueExA(steam_install_reg, "steam_install", nullptr, nullptr, reinterpret_cast<BYTE*>(path), &length);
