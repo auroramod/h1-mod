@@ -8,61 +8,73 @@
 #include <utils/string.hpp>
 
 #define MSG_BOX_ERROR(message) MessageBoxA(nullptr, message, "ERROR", MB_ICONERROR);
-#define MSG_BOX_WARNING(message) MessageBoxA(nullptr, message, "H1-Mod", MB_ICONWARNING);
-#define MSG_BOX_INFO(message) MessageBoxA(nullptr, message, "H1-Mod", MB_ICONINFORMATION);
 
 namespace steam
 {
 	namespace
 	{
-		std::string open_folder(HWND owner)
+		void open_folder_prompt(char* directory)
 		{
-			std::string temp_path{};
+			if (CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) != S_OK)
+			{
+				MSG_BOX_ERROR("CoInitializeEx failed. This could be because uninitialization failed, try again.");
+				return;
+			}
 
 			IFileOpenDialog* dialog;
-			HRESULT result = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog));
-
-			if (FAILED(result))
+			if (CoCreateInstance(CLSID_FileOpenDialog, 0, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog)) != S_OK)
 			{
-				return "";
+				return;
 			}
 
-			DWORD dw_options;
-			if (SUCCEEDED(result = dialog->GetOptions(&dw_options)))
+			FILEOPENDIALOGOPTIONS dw_options;
+			if (dialog->GetOptions(&dw_options) != S_OK)
 			{
-				result = dialog->SetOptions(dw_options | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST);
-
-				if (SUCCEEDED(result))
-				{
-					dialog->SetTitle(L"Select Steam installation path (should have steamclient64.dll in it)");
-				}
-
-				result = dialog->Show(nullptr);
-
-				if (SUCCEEDED(result))
-				{
-					IShellItem* shell_item_result;
-					result = dialog->GetResult(&shell_item_result);
-
-					LPWSTR folder = 0;
-					shell_item_result->GetDisplayName(SIGDN_FILESYSPATH, &folder);
-					char path[MAX_PATH] = {0};
-					wcstombs_s(0, path, folder, MAX_PATH);
-					temp_path = path;
-
-					if (folder)
-					{
-						delete[] folder;
-					}
-
-					CoTaskMemFree(folder);
-					shell_item_result->Release();
-				}
+				return;
 			}
 
+			if (dialog->SetOptions(dw_options | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST) != S_OK)
+			{
+				return;
+			}
+
+			if (dialog->SetTitle(L"Select a valid Steam install (contains libraries like 'steam_api64.dll'") != S_OK)
+			{
+				return;
+			}
+
+			if (dialog->Show(0) != S_OK) // doesn't returns S_OK when operation is cancelled
+			{
+				// uninitialize on error so we can use this function again
+				dialog->Release();
+				CoUninitialize();
+				return;
+			}
+
+			IShellItem* shell_item_result;
+			if (dialog->GetResult(&shell_item_result) != S_OK)
+			{
+				return;
+			}
+
+			PWSTR tmp = nullptr;
+			if (shell_item_result->GetDisplayName(SIGDN_FILESYSPATH, &tmp) != S_OK)
+			{
+				return;
+			}
+
+			shell_item_result->Release();
 			dialog->Release();
+			CoUninitialize();
 
-			return temp_path;
+			if (tmp == nullptr)
+			{
+				MSG_BOX_ERROR("Failed to get temporary path from GetDisplayName.");
+				return;
+			}
+
+			std::size_t i;
+			wcstombs_s(&i, directory, MAX_PATH, tmp, MAX_PATH);
 		}
 	}
 
@@ -223,15 +235,15 @@ namespace steam
 			return install_path.data();
 		}
 
-#ifndef _DEBUG
+		char path[MAX_PATH] = {0};
+		DWORD length = sizeof(path);
+
 		HKEY reg_key;
 
 		// check if Steam contains information in registry for the install path
 		if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\WOW6432Node\\Valve\\Steam", 0, KEY_QUERY_VALUE,
 		                  &reg_key) == ERROR_SUCCESS)
 		{
-			char path[MAX_PATH] = {0};
-			DWORD length = sizeof(path);
 			RegQueryValueExA(reg_key, "InstallPath", nullptr, nullptr, reinterpret_cast<BYTE*>(path),
 			                 &length);
 			RegCloseKey(reg_key);
@@ -240,60 +252,50 @@ namespace steam
 		}
 		else
 		{
-#endif
 			// if we can't find Steam in the registry, let's check if we are on Wine or not.
 			// to add onto this, Steam has a Linux-specific build and it obviously doesn't register in the Wine registry. 
-			// the above if statement *could* work if the user emulated Steam via Wine but who knows
+			// the above if statement *could* work if the user emulated Steam via Wine but pretty sure no one is gonna do that so... :P
 			HKEY steam_install_reg;
-			
-#ifndef _DEBUG
+
 			if (arxan::is_wine())
-#endif
 			{
-				char path[MAX_PATH] = {};
-				DWORD length = sizeof(path);
-
 				// let's check the registry to see if the user has already manually selected the Steam installation path
-				auto result = RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, KEY_QUERY_VALUE, &steam_install_reg);
-				if (result != ERROR_SUCCESS)
+				if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, KEY_QUERY_VALUE, &steam_install_reg) 
+					!= ERROR_SUCCESS)
 				{
-					MSG_BOX_WARNING("Could not find a pre-existing key in 'Software\\h1-mod' registry, creating...\n");
-
-					result = RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, nullptr, 0, KEY_WRITE, nullptr, &steam_install_reg, nullptr);
-					if (result != ERROR_SUCCESS)
+					// create a registry key
+					if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, nullptr, 0, KEY_WRITE, nullptr, &steam_install_reg, nullptr) 
+						!= ERROR_SUCCESS)
 					{
 						MSG_BOX_ERROR("Could not create registry for Steam install path.");
-						return install_path.data();
+						return "";
 					}
 
-					auto temp_path = open_folder(nullptr);
-					MSG_BOX_INFO(::utils::string::va("the path is: '%s'", temp_path.data()));
-					while (temp_path != "")
+					// create a pointer to our path variable to use in our open_folder function
+					char* directory_ptr = path;
+
+					// open a file explorer prompt to find the Steam directory (user input)
+					open_folder_prompt(directory_ptr);
+					while (!strcmp(directory_ptr, "")) // if this while statement goes, this means that the operation was cancelled
 					{
-						temp_path = open_folder(nullptr);
+						MSG_BOX_ERROR("You must select a valid Steam directory before you can continue.");
+						open_folder_prompt(directory_ptr);
 					}
 
-					strcpy_s(path, temp_path.data());
-
-					result = RegSetKeyValueA(steam_install_reg, nullptr, "steam_install", REG_SZ, path, length);
-					if (result != ERROR_SUCCESS)
+					// if the directory pointer is defined, then we set "steam_install" inside "Software\\h1-mod" to the path
+					if (RegSetKeyValueA(steam_install_reg, nullptr, "steam_install", REG_SZ, ::utils::string::va("\"%s\"", path), length) != ERROR_SUCCESS)
 					{
-						MSG_BOX_ERROR("Could not set value in registry for Steam install path.");
-						return install_path.data();
+						MSG_BOX_ERROR("Failed to set valid Steam install path in registry. Please try again.");
+						return "";
 					}
 				}
 
+				// query "steam_install" inside "Software\\h1-mod" and define it to our path variableand set install_path to path
 				RegQueryValueExA(steam_install_reg, "steam_install", nullptr, nullptr, reinterpret_cast<BYTE*>(path), &length);
-
 				install_path = path;
-
 				RegCloseKey(steam_install_reg);
-
-				// use SHBrowseForFolderA?
 			}
-#ifndef _DEBUG
 		}
-#endif
 
 		return install_path.data();
 	}
