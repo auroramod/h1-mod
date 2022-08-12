@@ -9,6 +9,11 @@
 
 #define MSG_BOX_ERROR(message) MessageBoxA(nullptr, message, "ERROR", MB_ICONERROR);
 
+#ifdef _DEBUG
+// remove this if you do not want to test the wine debugging stuff, remove to ship
+#define DEBUG_WINE_STUFF
+#endif
+
 namespace steam
 {
 	namespace
@@ -238,6 +243,7 @@ namespace steam
 		char path[MAX_PATH] = {0};
 		DWORD length = sizeof(path);
 
+#ifdef DEBUG_WINE_STUFF
 		HKEY reg_key;
 
 		// check if Steam contains information in registry for the install path
@@ -252,6 +258,7 @@ namespace steam
 		}
 		else
 		{
+#endif
 			// if we can't find Steam in the registry, let's check if we are on Wine or not.
 			// to add onto this, Steam has a Linux-specific build and it obviously doesn't register in the Wine registry. 
 			// the above if statement *could* work if the user emulated Steam via Wine but pretty sure no one is gonna do that so... :P
@@ -295,7 +302,13 @@ namespace steam
 				install_path = path;
 				RegCloseKey(steam_install_reg);
 			}
+			else
+			{
+				MSG_BOX_ERROR("Failed to find a Steam installation.");
+			}
+#ifdef DEBUG_WINE_STUFF
 		}
+#endif
 
 		return install_path.data();
 	}
