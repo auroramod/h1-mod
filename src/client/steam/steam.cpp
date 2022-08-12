@@ -116,11 +116,10 @@ namespace steam
 			return true;
 		}
 
-		// TODO: some of these libraries seem to be different on Linux, so need to change the namings if so. also, LoadLibrary may not work on them
-		::utils::nt::library::load(steam_path / "tier0_s64.dll");
-		::utils::nt::library::load(steam_path / "vstdlib_s64.dll");
-		::utils::nt::library::load(steam_path / "gameoverlayrenderer64.dll");
-		::utils::nt::library::load(steam_path / "steamclient64.dll");
+		::utils::nt::library::load(steam_path / "tier0_s64.dll"); 				// not shipped with Steam on linux
+		::utils::nt::library::load(steam_path / "vstdlib_s64.dll"); 			// ^
+		::utils::nt::library::load(steam_path / "gameoverlayrenderer64.dll");	// however, this one is shipped
+		::utils::nt::library::load(steam_path / "steamclient64.dll");			// and this one too
 
 		return true;
 	}
