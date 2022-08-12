@@ -25,6 +25,7 @@ namespace steam
 
 			DWORD dw_options;
 			if (SUCCEEDED(result = dialog->GetOptions(&dw_options)))
+			{
 				result = dialog->SetOptions(dw_options | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST);
 
 				if (SUCCEEDED(result))
@@ -53,7 +54,7 @@ namespace steam
 					CoTaskMemFree(folder);
 					shell_item_result->Release();
 				}
-			
+			}
 
 			dialog->Release();
 
