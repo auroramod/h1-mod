@@ -8,6 +8,8 @@
 #include <utils/string.hpp>
 
 #define MSG_BOX_ERROR(message) MessageBoxA(nullptr, message, "ERROR", MB_ICONERROR);
+#define MSG_BOX_WARNING(message) MessageBoxA(nullptr, message, "H1-Mod", MB_ICONWARNING);
+#define MSG_BOX_INFO(message) MessageBoxA(nullptr, message, "H1-Mod", MB_ICONINFORMATION);
 
 namespace steam
 {
@@ -21,7 +23,9 @@ namespace steam
 			HRESULT result = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog));
 
 			if (FAILED(result))
+			{
 				return "";
+			}
 
 			DWORD dw_options;
 			if (SUCCEEDED(result = dialog->GetOptions(&dw_options)))
@@ -43,7 +47,7 @@ namespace steam
 					LPWSTR folder = 0;
 					shell_item_result->GetDisplayName(SIGDN_FILESYSPATH, &folder);
 					char path[MAX_PATH] = {0};
-					wcstombs(path, folder, MAX_PATH);
+					wcstombs_s(0, path, folder, MAX_PATH);
 					temp_path = path;
 
 					if (folder)
@@ -253,7 +257,7 @@ namespace steam
 				auto result = RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, KEY_QUERY_VALUE, &steam_install_reg);
 				if (result != ERROR_SUCCESS)
 				{
-					MSG_BOX_ERROR("Could not find a pre-existing key in 'Software\\h1-mod' registry, creating...\n");
+					MSG_BOX_WARNING("Could not find a pre-existing key in 'Software\\h1-mod' registry, creating...\n");
 
 					result = RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, nullptr, 0, KEY_WRITE, nullptr, &steam_install_reg, nullptr);
 					if (result != ERROR_SUCCESS)
@@ -263,13 +267,13 @@ namespace steam
 					}
 
 					auto temp_path = open_folder(nullptr);
-					MSG_BOX_ERROR(::utils::string::va("the path is: '%s'", temp_path.data()));
+					MSG_BOX_INFO(::utils::string::va("the path is: '%s'", temp_path.data()));
 					while (temp_path != "")
 					{
 						temp_path = open_folder(nullptr);
 					}
 
-					strcpy(path, temp_path.data());
+					strcpy_s(path, temp_path.data());
 
 					result = RegSetKeyValueA(steam_install_reg, nullptr, "steam_install", REG_SZ, path, length);
 					if (result != ERROR_SUCCESS)
