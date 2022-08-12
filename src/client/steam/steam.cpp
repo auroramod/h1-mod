@@ -18,9 +18,9 @@ namespace steam
 			std::string temp_path{};
 
 			IFileOpenDialog* dialog;
-			HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog));
+			HRESULT result = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog));
 
-			if (FAILED(hr))
+			if (FAILED(result))
 				return "";
 
 			DWORD dw_options;
@@ -53,7 +53,7 @@ namespace steam
 					CoTaskMemFree(folder);
 					shell_item_result->Release();
 				}
-			}
+			
 
 			dialog->Release();
 
