@@ -31,12 +31,7 @@ namespace steam_proxy
 	public:
 		void post_load() override
 		{
-			if (game::environment::is_dedi() || is_disabled())
-			{
-				return;
-			}
-			
-			if (!FindWindowA(0, "Steam"))
+			if (game::environment::is_dedi() || is_disabled() || !FindWindowA(0, "Steam"))
 			{
 				return;
 			}
