@@ -7,6 +7,19 @@ namespace game
 	/***************************************************************
 	 * Functions
 	 **************************************************************/
+	
+	namespace mp
+	{
+		WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cbuf_AddText{0x0, 0x1CF480};
+		WEAK symbol<void(const char* text_in, int limit)> Cmd_TokenizeStringWithLimit{0x0, 0x157A40};
+	}
+
+	namespace sp
+	{
+		WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{0x3764A0, 0x0};
+		WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{0x377790, 0x0};
+		WEAK symbol<void()> Cmd_EndTokenizeString{0x376C90, 0x0};
+	}
 
 	WEAK symbol<void(int type, VariableUnion u)> AddRefToValue{0x3C1F50, 0x5090E0};
 	WEAK symbol<void(int type, VariableUnion u)> RemoveRefToValue{0x3C3A60, 0x50ABF0};
@@ -15,16 +28,6 @@ namespace game
 	WEAK symbol<unsigned int(unsigned int id)> AllocThread{0x3C22B0, 0x509440};
 	WEAK symbol<ObjectVariableValue*(unsigned int* id)> AllocVariable{0x3C2310, 0x5094A0};
 
-	namespace sp
-	{
-		WEAK symbol<void(int localClientNum, const char* text)> Cbuf_AddText{0x3764A0, 0x0};
-	}
-
-	namespace mp
-	{
-		WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cbuf_AddText{0x0, 0x1CF480};
-	}
-
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* buffer,
 		void (int, int, const char*))> Cbuf_ExecuteBufferInternal{0x3765B0, 0x155BC0};
 	WEAK symbol<void(const char* message)> Conbuf_AppendText{0x0, 0x0};
@@ -32,17 +35,6 @@ namespace game
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cmd_ExecuteSingleCommand{0x376FF0, 0x156E90};
 	WEAK symbol<void(const char* cmdName, void(), cmd_function_s* allocedCmd)> Cmd_AddCommandInternal{0x376A40, 0x156880};
 	WEAK symbol<void(const char*)> Cmd_RemoveCommand{0x377670, 0x157690};
-
-	namespace sp
-	{
-		WEAK symbol<void(const char* text_in)> Cmd_TokenizeString{0x377790, 0x0};
-		WEAK symbol<void()> Cmd_EndTokenizeString{0x376C90, 0x0};
-	}
-
-	namespace mp
-	{
-		WEAK symbol<void(const char* text_in, int limit)> Cmd_TokenizeStringWithLimit{0x0, 0x157A40};
-	}
 
 	WEAK symbol<void(void*, void*)> AimAssist_AddToTargetList{0x0, 0xE66C0};
 
@@ -207,6 +199,7 @@ namespace game
 	WEAK symbol<void(mp::client_t*, const char*, int)> SV_ExecuteClientCommand{0x0, 0x0};
 	WEAK symbol<void(int localClientNum)> SV_FastRestart{0x0, 0x54BE00};
 	WEAK symbol<void(void* cl, int type, const char* fmt, ...)> SV_SendServerCommand{0x0, 0x1CC040};
+	WEAK symbol<void(mp::client_t* drop, const char* reason, bool tellThem)> SV_DropClient_Internal{0x0, 0x54E7F0};
 
 	WEAK symbol<void()> Sys_ShowConsole{0x0, 0x0};
 	WEAK symbol<void(const char* error, ...)> Sys_Error{0x0, 0x1D8710};
@@ -273,7 +266,7 @@ namespace game
 		WEAK symbol<gentity_s> g_entities{0x0, 0x71F19E0};
 		WEAK symbol<client_t*> svs_clients{0x0, 0x2DC3390};
 		WEAK symbol<int> svs_numclients{0x0, 0x2DC338C};
-		WEAK symbol<int> gameTime{0x0, 0x0};
+		WEAK symbol<int> gameTime{0x0, 0x7361F9C};
 
 		WEAK symbol<int> sv_serverId_value{0x0, 0x0};
 
@@ -306,6 +299,7 @@ namespace game
 		WEAK symbol<int(lua_State* s, const char* what, lua_Debug* ar)> hksi_lua_getinfo{0xB84D0, 0x22FFE0};
 		WEAK symbol<int(lua_State* s, int level, lua_Debug* ar)> hksi_lua_getstack{0xB87A0, 0x2302B0};
 		WEAK symbol<void(lua_State* s, const char* fmt, ...)> hksi_luaL_error{0xBF120, 0x22F930};
+		WEAK symbol<void(lua_State* s, int what, int data)> hksi_lua_gc{0, 0x236EF0};
 		WEAK symbol<const char*> typenames{0x98CD20, 0x10AD750};
 	}
 }

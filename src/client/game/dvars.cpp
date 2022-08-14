@@ -32,6 +32,7 @@ namespace dvars
 
 	game::dvar_t* pm_bouncing = nullptr;
 	game::dvar_t* pm_bouncingAllAngles = nullptr;
+	game::dvar_t* pm_sprintInAir = nullptr;
 
 	game::dvar_t* jump_ladderPushVel = nullptr;
 
@@ -3757,7 +3758,7 @@ namespace dvars
 		},
 		{
 			"g_ai",
-			"Enable AI.",
+			"Enable AI",
 			generate_hash("g_ai")
 		},
 		{
@@ -4159,6 +4160,16 @@ namespace dvars
 			"g_voiceChatTalkingDuration",
 			"Time after the last talk packet was received that the player is considered by the\nserver to still be talking in milliseconds",
 			generate_hash("g_voiceChatTalkingDuration")
+		},
+		{
+			"g_gravity",
+			"Game gravity in inches per second squared",
+			generate_hash("g_gravity")
+		},
+		{
+			"g_speed",
+			"changes the speed of the player",
+			generate_hash("g_speed")
 		},
 		{
 			"gamedate",
@@ -4606,6 +4617,11 @@ namespace dvars
 			generate_hash("jump_slowdownEnable")
 		},
 		{
+			"jump_height",
+			"The maximum height of a player\'s jump",
+			generate_hash("jump_height")
+		},
+		{
 			"laserDebug",
 			"Enables the display of various debug info.",
 			generate_hash("laserDebug")
@@ -5039,6 +5055,11 @@ namespace dvars
 			"melee_debug",
 			"Turn on debug lines for melee traces",
 			generate_hash("melee_debug")
+		},
+		{
+			"mis_cheat",
+			"Set when level unlock cheat is performed",
+			generate_hash("mis_cheat")
 		},
 		{
 			"migration_dvarErrors",

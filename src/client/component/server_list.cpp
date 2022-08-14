@@ -10,6 +10,7 @@
 #include "command.hpp"
 
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 #include "game/ui_scripting/execution.hpp"
 
 #include <utils/cryptography.hpp>
@@ -35,6 +36,7 @@ namespace server_list
 			game::CodPlayMode play_mode;
 			char in_game;
 			game::netadr_s address;
+			bool is_private;
 		};
 
 		struct
@@ -50,6 +52,9 @@ namespace server_list
 		size_t server_list_page = 0;
 		volatile bool update_server_list = false;
 		std::chrono::high_resolution_clock::time_point last_scroll{};
+
+		game::dvar_t* master_server_ip;
+		game::dvar_t* master_server_port;
 
 		size_t get_page_count()
 		{
@@ -138,8 +143,9 @@ namespace server_list
 
 			if (column == 2)
 			{
-				return utils::string::va("%d/%d [%d]", servers[i].clients, servers[index].max_clients,
-					servers[i].bots);
+				const auto client_count = servers[i].clients - servers[i].bots;
+				return utils::string::va("%d/%d [%d]", client_count, servers[i].max_clients,
+					servers[i].clients);
 			}
 
 			if (column == 3)
@@ -152,6 +158,11 @@ namespace server_list
 				return servers[i].game_type.empty() ? "" : utils::string::va("%i", servers[i].ping);
 			}
 
+			if (column == 5)
+			{
+				return servers[i].is_private ? "1" : "0";
+			}
+
 			return "";
 		}
 
@@ -159,12 +170,20 @@ namespace server_list
 		{
 			std::stable_sort(servers.begin(), servers.end(), [](const server_info& a, const server_info& b)
 			{
-				if (a.clients == b.clients)
+				const auto a_players = a.clients - a.bots;
+				const auto b_players = b.clients - b.bots;
+
+				if (a_players == b_players)
 				{
-					return a.ping < b.ping;
+					if (a.clients == b.clients)
+					{
+						return a.ping < b.ping;
+					}
+
+					return a.clients > b.clients;
 				}
 
-				return a.clients > b.clients;
+				return a_players > b_players;
 			});
 		}
 
@@ -300,7 +319,8 @@ namespace server_list
 
 	bool get_master_server(game::netadr_s& address)
 	{
-		return game::NET_StringToAdr("master.h1.gg:20810", &address);
+		return game::NET_StringToAdr(utils::string::va("%s:%s", 
+			master_server_ip->current.string, master_server_port->current.string), &address);
 	}
 
 	void handle_info_response(const game::netadr_s& address, const utils::info_string& info)
@@ -357,10 +377,28 @@ namespace server_list
 		server.max_clients = atoi(info.get("sv_maxclients").data());
 		server.bots = atoi(info.get("bots").data());
 		server.ping = std::min(now - start_time, 999);
+		server.is_private = atoi(info.get("isPrivate").data()) == 1;
 
 		server.in_game = 1;
 
 		insert_server(std::move(server));
+	}
+
+	int get_player_count()
+	{
+		std::lock_guard<std::mutex> _(mutex);
+		auto count = 0;
+		for (const auto& server : servers)
+		{
+			count += server.clients - server.bots;
+		}
+		return count;
+	}
+
+	int get_server_count()
+	{
+		std::lock_guard<std::mutex> _(mutex);
+		return static_cast<int>(servers.size());
 	}
 
 	class component final : public component_interface
@@ -368,7 +406,22 @@ namespace server_list
 	public:
 		void post_unpack() override
 		{
-			if (!game::environment::is_mp()) return;
+			if (!game::environment::is_sp())
+			{
+				scheduler::once([]()
+				{
+					// add dvars to change destination master server ip/port
+					master_server_ip = dvars::register_string("masterServerIP", "master.h1.gg", game::DVAR_FLAG_NONE,
+						"IP of the destination master server to connect to");
+					master_server_port = dvars::register_string("masterServerPort", "20810", game::DVAR_FLAG_NONE,
+						"Port of the destination master server to connect to");
+				}, scheduler::pipeline::main);
+			}
+
+			if (!game::environment::is_mp())
+			{
+				return;
+			}
 
 			localized_strings::override("PLATFORM_SYSTEM_LINK_TITLE", "SERVER LIST");
 			

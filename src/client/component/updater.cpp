@@ -26,8 +26,9 @@
 #define DATA_PATH "data/"
 #define DATA_PATH_DEV "data-dev/"
 
-#define ERR_UPDATE_CHECK_FAIL "Failed to check for updates"
-#define ERR_DOWNLOAD_FAIL "Failed to download file "
+#define ERR_UPDATE_CHECK_FAIL "Failed to check for updates:\n%s"
+#define ERR_UPDATE_CHECK_FAIL_BAD_RESPONSE "Bad response"
+#define ERR_DOWNLOAD_FAIL "Failed to download file %s:\n%s"
 #define ERR_WRITE_FAIL "Failed to write file "
 
 #define BINARY_NAME "h1-mod.exe"
@@ -138,7 +139,7 @@ namespace updater
 			return utils::string::va("%i", uint32_t(time(nullptr)));
 		}
 
-		std::optional<std::string> download_file(const std::string& name)
+		std::optional<utils::http::result> download_file(const std::string& name)
 		{
 			return utils::http::get_data(MASTER + select(DATA_PATH, DATA_PATH_DEV) + name + "?" + get_time_str());
 		}
@@ -189,6 +190,12 @@ namespace updater
 			}
 
 			return {};
+		}
+
+		std::string curl_error(CURLcode code)
+		{
+			const auto str_error = curl_easy_strerror(code);
+			return utils::string::va("%s (%i)", str_error, code);
 		}
 	}
 
@@ -336,16 +343,24 @@ namespace updater
 
 			if (!files_data.has_value())
 			{
-				set_update_check_status(true, false, ERR_UPDATE_CHECK_FAIL);
+				set_update_check_status(true, false, utils::string::va(ERR_UPDATE_CHECK_FAIL, "Unknown error"));
+				return;
+			}
+
+			const auto& value = files_data.value();
+			if (value.code != CURLE_OK)
+			{
+				const auto error = curl_error(value.code);
+				set_update_check_status(true, false, utils::string::va(ERR_UPDATE_CHECK_FAIL, error.data()));
 				return;
 			}
 
 			rapidjson::Document j;
-			j.Parse(files_data.value().data());
+			j.Parse(value.buffer.data());
 
 			if (!j.IsArray())
 			{
-				set_update_check_status(true, false, ERR_UPDATE_CHECK_FAIL);
+				set_update_check_status(true, false, ERR_UPDATE_CHECK_FAIL_BAD_RESPONSE);
 				return;
 			}
 
@@ -432,11 +447,19 @@ namespace updater
 
 				if (!data.has_value())
 				{
-					set_update_download_status(true, false, ERR_DOWNLOAD_FAIL + file);
+					set_update_download_status(true, false, utils::string::va(ERR_DOWNLOAD_FAIL, file.data(), "Unknown error"));
 					return;
 				}
 
-				downloads.push_back({file, data.value()});
+				const auto& value = data.value();
+				if (value.code != CURLE_OK)
+				{
+					const auto error = curl_error(value.code);
+					set_update_download_status(true, false, utils::string::va(ERR_DOWNLOAD_FAIL, file.data(), error.data()));
+					return;
+				}
+
+				downloads.push_back({file, value.buffer});
 			}
 
 			for (const auto& download : downloads)

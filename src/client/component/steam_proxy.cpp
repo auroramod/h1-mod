@@ -31,7 +31,7 @@ namespace steam_proxy
 	public:
 		void post_load() override
 		{
-			if (game::environment::is_dedi() || is_disabled())
+			if (game::environment::is_dedi() || is_disabled() || !FindWindowA(0, "Steam"))
 			{
 				return;
 			}
@@ -152,29 +152,29 @@ namespace steam_proxy
 		void clean_up_on_error()
 		{
 			scheduler::schedule([this]()
+			{
+				if (this->steam_client_module_
+					&& this->steam_pipe_
+					&& this->global_user_
+					&& this->steam_client_module_.invoke<bool>("Steam_BConnected", this->global_user_,
+						this->steam_pipe_)
+					&& this->steam_client_module_.invoke<bool>("Steam_BLoggedOn", this->global_user_, this->steam_pipe_)
+					)
 				{
-					if (this->steam_client_module_
-						&& this->steam_pipe_
-						&& this->global_user_
-						&& this->steam_client_module_.invoke<bool>("Steam_BConnected", this->global_user_,
-							this->steam_pipe_)
-						&& this->steam_client_module_.invoke<bool>("Steam_BLoggedOn", this->global_user_, this->steam_pipe_)
-						)
-					{
-						return scheduler::cond_continue;
-					}
+					return scheduler::cond_continue;
+				}
 
-					this->client_engine_ = nullptr;
-					this->client_user_ = nullptr;
-					this->client_utils_ = nullptr;
+				this->client_engine_ = nullptr;
+				this->client_user_ = nullptr;
+				this->client_utils_ = nullptr;
 
-					this->steam_pipe_ = nullptr;
-					this->global_user_ = nullptr;
+				this->steam_pipe_ = nullptr;
+				this->global_user_ = nullptr;
 
-					this->steam_client_module_ = utils::nt::library{nullptr};
+				this->steam_client_module_ = utils::nt::library{nullptr};
 
-					return scheduler::cond_end;
-				});
+				return scheduler::cond_end;
+			});
 		}
 	};
 

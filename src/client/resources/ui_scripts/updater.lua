@@ -12,11 +12,6 @@ function startupdatecheck(popup, autoclose)
 		end
 
 		if (not updater.getupdatecheckstatus()) then
-			if (autoclose) then
-				LUI.FlowManager.RequestLeaveMenu(popup)
-				return
-			end
-
 			popup.text:setText("Error: " .. updater.getlasterror())
 			return
 		end
@@ -71,11 +66,6 @@ function startupdatedownload(popup, autoclose)
 		end
 
 		if (not updater.getupdatedownloadstatus()) then
-			if (autoclose) then
-				LUI.FlowManager.RequestLeaveMenu(popup)
-				return
-			end
-
 			popup.text:setText("Error: " .. updater.getlasterror())
 			return
 		end

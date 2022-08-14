@@ -17,6 +17,7 @@
 #include "fastfiles.hpp"
 #include "scripting.hpp"
 #include "updater.hpp"
+#include "server_list.hpp"
 
 #include "game/ui_scripting/execution.hpp"
 #include "game/scripting/execution.hpp"
@@ -336,6 +337,17 @@ namespace ui_scripting
 					}, ::scheduler::pipeline::server);
 				};
 			}
+
+			game_type["virtuallobbypresentable"] = [](const game&)
+			{
+				::game::Dvar_SetFromStringByNameFromSource("virtualLobbyPresentable", "1", ::game::DvarSetSource::DVAR_SOURCE_INTERNAL);
+			};
+
+			auto server_list_table = table();
+			lua["serverlist"] = server_list_table;
+
+			server_list_table["getplayercount"] = server_list::get_player_count;
+			server_list_table["getservercount"] = server_list::get_server_count;
 
 			auto updater_table = table();
 			lua["updater"] = updater_table;

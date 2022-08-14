@@ -269,13 +269,13 @@ namespace game_console
 			if (matches.size() > 24)
 			{
 				draw_hint_box(1, dvars::con_inputHintBoxColor->current.vector);
-				draw_hint_text(0, utils::string::va("%i matches (too many to show here). Press SHIFT + TAB to show them", matches.size()),
+				draw_hint_text(0, utils::string::va("%i matches (too many to show here). Press SHIFT + TAB to show more", matches.size()),
 					dvars::con_inputDvarMatchColor->current.vector);
 
 				if (game::playerKeys[0].keys[game::keyNum_t::K_SHIFT].down && game::playerKeys[0].keys[game::keyNum_t::K_TAB].down)
 				{
 					console::info("]%s\n", con.buffer);
-					for (int i = 0; i < matches.size(); i++)
+					for (size_t i = 0; i < matches.size(); i++)
 					{
 						console::info("\t%s\n", matches[i].name.data());
 					}

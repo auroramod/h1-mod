@@ -1533,16 +1533,39 @@ namespace game
 			int usesDelta;
 		};
 
+		enum sessionState_t
+		{
+			SESS_STATE_PLAYING = 0x0,
+			SESS_STATE_DEAD = 0x1,
+			SESS_STATE_SPECTATOR = 0x2,
+			SESS_STATE_INTERMISSION = 0x3,
+		};
+
+		enum team_t
+		{
+			TEAM_FREE = 0x0,
+			TEAM_BAD = 0x0,
+			TEAM_AXIS = 0x1,
+			TEAM_ALLIES = 0x2,
+			TEAM_SPECTATOR = 0x3,
+			TEAM_NUM_TEAMS = 0x4,
+		};
+
 		struct gclient_s
 		{
 			char __pad0[2];
 			char pm_type; // 2
-			char __pad1[18831];
+			char __pad1[18573];
+			sessionState_t sessionState;
+			char __pad2[220]; // 254
+			team_t team;
+			char __pad3[30];
 			char name[32]; // 18834
-			char __pad2[622];
+			char __pad4[622];
 			int flags; // 19488 
 		}; // size = ?
 
+		static_assert(offsetof(gclient_s, team) == 18800);
 		static_assert(offsetof(gclient_s, name) == 18834);
 		static_assert(offsetof(gclient_s, flags) == 19488);
 
@@ -1556,7 +1579,7 @@ namespace game
 
 		struct EntityState
 		{
-			uint16_t entityNum;
+			uint16_t number;
 		}; // size = ?
 
 #pragma pack(push, 1)

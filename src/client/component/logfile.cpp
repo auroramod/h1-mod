@@ -32,7 +32,7 @@ namespace logfile
 				return {};
 			}
 
-			const scripting::entity player{game::Scr_GetEntityId(ent->s.entityNum, 0)};
+			const scripting::entity player{game::Scr_GetEntityId(ent->s.number, 0)};
 			return scripting::lua::convert(state, player);
 		}
 
@@ -262,7 +262,7 @@ namespace logfile
 			scheduler::once([cmd, message, self, hidden]()
 			{
 				const scripting::entity level{*game::levelEntityId};
-				const scripting::entity player{game::Scr_GetEntityId(self->s.entityNum, 0)};
+				const scripting::entity player{game::Scr_GetEntityId(self->s.number, 0)};
 
 				scripting::notify(level, cmd, {player, message, hidden});
 				scripting::notify(player, cmd, {message, hidden});

@@ -32,7 +32,7 @@ namespace utils::io
 
 		if (stream.is_open())
 		{
-			stream.write(data.data(), data.size());
+			stream.write(data.data(), static_cast<std::streamsize>(data.size()));
 			stream.close();
 			return true;
 		}

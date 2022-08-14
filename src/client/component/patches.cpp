@@ -2,6 +2,7 @@
 #include "loader/component_loader.hpp"
 
 #include "dvars.hpp"
+#include "fastfiles.hpp"
 #include "version.h"
 #include "command.hpp"
 #include "console.hpp"
@@ -66,7 +67,8 @@ namespace patches
 
 		void set_client_dvar_from_server_stub(void* clientNum, void* cgameGlob, const char* dvar, const char* value)
 		{
-			if (dvar == "cg_fov"s || dvar == "cg_fovMin"s)
+			const auto dvar_lowercase = utils::string::to_lower(dvar);
+			if (dvar_lowercase == "cg_fov"s || dvar_lowercase == "cg_fovMin"s)
 			{
 				return;
 			}
@@ -120,11 +122,18 @@ namespace patches
 
 			command::params_sv params{};
 			const auto menu_id = atoi(params.get(1));
-			const auto client = &svs_clients[ent->s.entityNum];
+			const auto client = &svs_clients[ent->s.number];
 
-			// 22 => "end_game"
-			if (menu_id == 22 && client->header.remoteAddress.type != game::NA_LOOPBACK)
+			// 13 => change class
+			if (menu_id == 13 && ent->client->team == game::mp::TEAM_SPECTATOR)
 			{
+				return;
+			}
+
+			// 32 => "end_game"
+			if (menu_id == 32 && client->header.remoteAddress.type != game::NA_LOOPBACK)
+			{
+				game::SV_DropClient_Internal(client, "PLATFORM_STEAM_KICK_CHEAT", true);
 				return;
 			}
 
@@ -155,6 +164,12 @@ namespace patches
 			game::AimAssist_AddToTargetList(aaGlob, screenTarget);
 		}
 
+		void missing_content_error_stub(int, const char*)
+		{
+			game::Com_Error(game::ERR_DROP, utils::string::va("MISSING FILE\n%s.ff",
+				fastfiles::get_current_fastfile().data()));
+		}
+
 		utils::hook::detour init_network_dvars_hook;
 		void init_network_dvars_stub(game::dvar_t* dvar)
 		{
@@ -168,6 +183,92 @@ namespace patches
 		int ui_draw_crosshair()
 		{
 			return 1;
+		}
+
+		utils::hook::detour cl_gamepad_scrolling_buttons_hook;
+		void cl_gamepad_scrolling_buttons_stub(int local_client_num, int a2)
+		{
+			if (local_client_num <= 3)
+			{
+				cl_gamepad_scrolling_buttons_hook.invoke<void>(local_client_num, a2);
+			}
+		}
+
+		int out_of_memory_text_stub(char* dest, int size, const char* fmt, ...)
+		{
+			fmt = "%s (%d)\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.\n\n"
+				"If this still occurs, try using the '-memoryfix' parameter to generate the 'players2' folder.";
+
+			char buffer[2048];
+
+			{
+				va_list ap;
+				va_start(ap, fmt);
+
+				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+				va_end(ap);
+			}
+
+			return utils::hook::invoke<int>(SELECT_VALUE(0x429200_b, 0x5AF0F0_b), dest, size, "%s", buffer);
+		}
+
+		void create_2d_texture_stub_1(const char* fmt, ...)
+		{
+			fmt = "Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
+
+			char buffer[2048];
+
+			{
+				va_list ap;
+				va_start(ap, fmt);
+
+				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+				va_end(ap);
+			}
+
+			game::Sys_Error("%s", buffer);
+		}
+
+		void create_2d_texture_stub_2(game::errorParm code, const char* fmt, ...)
+		{
+			fmt = "Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
+
+			char buffer[2048];
+
+			{
+				va_list ap;
+				va_start(ap, fmt);
+
+				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+				va_end(ap);
+			}
+
+			game::Com_Error(code, "%s", buffer);
+		}
+
+		void swap_chain_stub(game::errorParm code, const char* fmt, ...)
+		{
+			fmt = "IDXGISwapChain::Present failed: %s\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
+
+			char buffer[2048];
+
+			{
+				va_list ap;
+				va_start(ap, fmt);
+
+				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+				va_end(ap);
+			}
+
+			game::Com_Error(code, "%s", buffer);
 		}
 	}
 
@@ -192,17 +293,50 @@ namespace patches
 				}, scheduler::pipeline::main);
 			}
 
+			// Set compassSize dvar minimum to 0.1
+			dvars::override::register_float("compassSize", 1.0f, 0.1f, 50.0f, game::DVAR_FLAG_SAVED);
+
 			// Make cg_fov and cg_fovscale saved dvars
 			dvars::override::register_float("cg_fov", 65.f, 40.f, 200.f, game::DvarFlags::DVAR_FLAG_SAVED);
 			dvars::override::register_float("cg_fovScale", 1.f, 0.1f, 2.f, game::DvarFlags::DVAR_FLAG_SAVED);
 			dvars::override::register_float("cg_fovMin", 1.f, 1.0f, 90.f, game::DvarFlags::DVAR_FLAG_SAVED);
 
+			// Makes mis_cheat saved dvar
+			dvars::override::register_bool("mis_cheat", 0, game::DVAR_FLAG_SAVED);
+
 			// Allow kbam input when gamepad is enabled
 			utils::hook::nop(SELECT_VALUE(0x1AC0CE_b, 0x135EFB_b), 2);
 			utils::hook::nop(SELECT_VALUE(0x1A9DDC_b, 0x13388F_b), 6);
 
+			// Show missing fastfiles
+			utils::hook::call(SELECT_VALUE(0x1F588B_b, 0x39A78E_b), missing_content_error_stub);
+
 			// Allow executing custom cfg files with the "exec" command
 			utils::hook::call(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
+
+			// Remove useless information from errors + add additional help to common errors
+			utils::hook::call(SELECT_VALUE(0x55E919_b, 0x681A69_b), create_2d_texture_stub_1); 	// Sys_Error for "Create2DTexture( %s, %i, %i, %i, %i ) failed"
+			utils::hook::call(SELECT_VALUE(0x55EACB_b, 0x681C1B_b), create_2d_texture_stub_2); 	// Com_Error for ^
+			utils::hook::call(SELECT_VALUE(0x5B35BA_b, 0x6CB1BC_b), swap_chain_stub); 			// Com_Error for "IDXGISwapChain::Present failed: %s"
+			utils::hook::call(SELECT_VALUE(0x457BC9_b, 0x1D8E09_b), out_of_memory_text_stub); 	// Com_sprintf for "Out of memory. You are probably low on disk space."
+
+			// "fix" for rare 'Out of memory error' error
+			// this will *at least* generate the configs for mp/sp, which is the #1 issue
+			if (utils::flags::has_flag("memoryfix"))
+			{
+				utils::hook::jump(SELECT_VALUE(0x5110D0_b, 0x6200C0_b), malloc);
+				utils::hook::jump(SELECT_VALUE(0x510FF0_b, 0x61FFE0_b), _aligned_malloc);
+				utils::hook::jump(SELECT_VALUE(0x511130_b, 0x620120_b), free);
+				utils::hook::jump(SELECT_VALUE(0x511220_b, 0x620210_b), realloc);
+				utils::hook::jump(SELECT_VALUE(0x511050_b, 0x620040_b), _aligned_realloc);
+			}
+
+			// Uncheat protect gamepad-related dvars
+			dvars::override::register_float("gpad_button_deadzone", 0.13f, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_float("gpad_stick_deadzone_min", 0.2f, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_float("gpad_stick_deadzone_max", 0.01f, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_float("gpad_stick_pressed", 0.4f, 0, 1, game::DVAR_FLAG_SAVED);
+			dvars::override::register_float("gpad_stick_pressed_hysteresis", 0.1f, 0, 1, game::DVAR_FLAG_SAVED);
 
 			if (!game::environment::is_sp())
 			{
@@ -212,6 +346,9 @@ namespace patches
 
 		static void patch_mp()
 		{
+			// fix vid_restart crash
+			utils::hook::set<uint8_t>(0x139680_b, 0xC3);
+
 			utils::hook::jump(0x5BB9C0_b, &live_get_local_client_name);
 
 			// Disable data validation error popup
@@ -287,21 +424,17 @@ namespace patches
 			// Prevent clients from sending invalid reliableAcknowledge
 			utils::hook::call(0x1CBD06_b, sv_execute_client_message_stub);
 
-			// "fix" for rare 'Out of memory error' error
-			if (utils::flags::has_flag("memoryfix"))
-			{
-				utils::hook::jump(0x6200C0_b, malloc);
-				utils::hook::jump(0x61FFE0_b, _aligned_malloc);
-				utils::hook::jump(0x620120_b, free);
-				utils::hook::jump(0x620210_b, realloc);
-				utils::hook::jump(0x620040_b, _aligned_realloc);
-			}
-
 			// Change default hostname and make it replicated
 			dvars::override::register_string("sv_hostname", "^2H1-Mod^7 Default Server", game::DVAR_FLAG_REPLICATED);
 
 			// Dont free server/client memory on asset loading (fixes crashing on map rotation)
 			utils::hook::nop(0x132474_b, 5);
+
+			// Fix gamepad related crash
+			cl_gamepad_scrolling_buttons_hook.create(0x133210_b, cl_gamepad_scrolling_buttons_stub);
+
+			// Prevent the game from modifying Windows microphone volume (since voice chat isn't used)
+			utils::hook::set<uint8_t>(0x5BEEA0_b, 0xC3); // Mixer_SetWaveInRecordLevels
 		}
 	};
 }

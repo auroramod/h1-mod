@@ -1,0 +1,1 @@
+-- this patch has been moved to ui_scripts/patches/no_mode_switch.lua

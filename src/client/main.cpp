@@ -40,12 +40,12 @@ launcher::mode detect_mode_from_arguments()
 	return launcher::mode::none;
 }
 
-bool apply_aslr_patch(std::string* data)
+void apply_aslr_patch(std::string* data)
 {
 	// mp binary, sp binary
 	if (data->size() != 0x1B97788 && data->size() != 0x1346D88)
 	{
-		return false;
+		throw std::runtime_error("File size mismatch, bad game files");
 	}
 
 	auto* dos_header = reinterpret_cast<PIMAGE_DOS_HEADER>(&data->at(0));
@@ -56,22 +56,26 @@ bool apply_aslr_patch(std::string* data)
 	{
 		optional_header->DllCharacteristics &= ~(IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE);
 	}
-
-	return true;
 }
 
 void get_aslr_patched_binary(std::string* binary, std::string* data)
 {
-	std::string patched_binary = "h1-mod\\" + *binary;
+	const auto patched_binary = "h1-mod\\"s + *binary;
 
-	if (!apply_aslr_patch(data) ||
-		(!utils::io::file_exists(patched_binary) &&
-			!utils::io::write_file(patched_binary, *data, false)))
+	try
 	{
-		throw std::runtime_error(utils::string::va(
-			"Could not create aslr patched binary!\n(%s)",
-			binary->data()
-		));
+		apply_aslr_patch(data);
+		if (!utils::io::file_exists(patched_binary) && !utils::io::write_file(patched_binary, *data, false))
+		{
+			throw std::runtime_error("Could not write file");
+		}
+	}
+	catch (const std::exception& e)
+	{
+		throw std::runtime_error(
+			utils::string::va("Could not create aslr patched binary for %s! %s", 
+				binary->data(), e.what())
+		);
 	}
 
 	*binary = patched_binary;
@@ -177,16 +181,6 @@ void limit_parallel_dll_loading()
 	RegCloseKey(key);
 }
 
-// solution for other processes that may launch the mod
-void apply_proper_directory()
-{
-	char module_path[MAX_PATH];
-	GetModuleFileNameA(nullptr, module_path, MAX_PATH);
-	PathRemoveFileSpecA(module_path);
-	SetCurrentDirectoryA(module_path);
-	SetDllDirectoryA(module_path);
-}
-
 int main()
 {
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
@@ -213,8 +207,6 @@ int main()
 
 		try
 		{
-			//apply_proper_directory();
-
 			if (!component_loader::post_start()) return 0;
 
 			auto mode = detect_mode_from_arguments();
