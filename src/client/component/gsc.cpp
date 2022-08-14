@@ -119,11 +119,7 @@ namespace gsc
 
 		void load_gametype_script_stub()
 		{
-			console::debug(__FUNCTION__ "\n");
-
-			const auto in_vl = game::VirtualLobby_Loaded();
-			console::debug("in vl? %d", in_vl);
-			if (in_vl)
+			if (game::VirtualLobby_Loaded())
 			{
 				utils::hook::invoke<void>(0x18BC00_b);
 				return;
@@ -166,11 +162,7 @@ namespace gsc
 
 		void g_load_structs_stub()
 		{
-			console::debug(__FUNCTION__ "\n");
-
-			const auto in_vl = game::VirtualLobby_Loaded();
-			console::debug("in vl? %d", in_vl);
-			if (in_vl)
+			if (game::VirtualLobby_Loaded())
 			{
 				utils::hook::invoke<void>(0x458520_b);
 				return;
@@ -190,13 +182,9 @@ namespace gsc
 			utils::hook::invoke<void>(0x458520_b);
 		}
 
-		void idk_lol_stub()
+		void save_registered_weapons_stub()
 		{
-			console::debug(__FUNCTION__ "\n");
-
-			const auto in_vl = game::VirtualLobby_Loaded();
-			console::debug("in vl? %d", in_vl);
-			if (in_vl)
+			if (game::VirtualLobby_Loaded())
 			{
 				utils::hook::invoke<void>(0x41DBC0_b);
 				return;
@@ -230,7 +218,7 @@ namespace gsc
 
 			// execute handles
 			utils::hook::call(0x420EA2_b, g_load_structs_stub); // execute main handles (Scr_LoadGameType is inlined)
-			utils::hook::call(0x420F19_b, idk_lol_stub); // execute init handles (Scr_StartupGameType is inlined)
+			utils::hook::call(0x420F19_b, save_registered_weapons_stub); // execute init handles (Scr_StartupGameType is inlined)
 
 			//utils::hook::jump(0x479270, script_error);
 		}
