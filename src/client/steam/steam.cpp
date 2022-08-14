@@ -7,15 +7,18 @@
 #include <utils/nt.hpp>
 #include <utils/string.hpp>
 
+#define GENERIC_RETURN_IF_FAIL(condition) \
+	if (condition != S_OK) \
+	{ \
+		return; \
+	}
+
 namespace steam
 {
 	namespace
 	{
 		void open_folder_prompt(char* directory)
 		{
-#ifdef _DEBUG
-			MSG_BOX_INFO(__FUNCTION__);
-#endif
 			if (CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) != S_OK)
 			{
 				MSG_BOX_ERROR("CoInitializeEx failed. This could be because uninitialization failed, try again.");
@@ -23,26 +26,14 @@ namespace steam
 			}
 
 			IFileOpenDialog* dialog;
-			if (CoCreateInstance(CLSID_FileOpenDialog, 0, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog)) != S_OK)
-			{
-				return;
-			}
+			GENERIC_RETURN_IF_FAIL(CoCreateInstance(CLSID_FileOpenDialog, 0, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog)));
 
 			FILEOPENDIALOGOPTIONS dw_options;
-			if (dialog->GetOptions(&dw_options) != S_OK)
-			{
-				return;
-			}
+			GENERIC_RETURN_IF_FAIL(dialog->GetOptions(&dw_options));
 
-			if (dialog->SetOptions(dw_options | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST) != S_OK)
-			{
-				return;
-			}
+			GENERIC_RETURN_IF_FAIL(dialog->SetOptions(dw_options | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST));
 
-			if (dialog->SetTitle(L"Select a valid Steam install (contains libraries like 'steam_api64.dll')") != S_OK)
-			{
-				return;
-			}
+			GENERIC_RETURN_IF_FAIL(dialog->SetTitle(L"Select a valid Steam install (contains libraries like 'steam_api64.dll')"));
 
 			if (dialog->Show(0) != S_OK) // doesn't returns S_OK when operation is cancelled
 			{
@@ -53,16 +44,10 @@ namespace steam
 			}
 
 			IShellItem* shell_item_result;
-			if (dialog->GetResult(&shell_item_result) != S_OK)
-			{
-				return;
-			}
+			GENERIC_RETURN_IF_FAIL(dialog->GetResult(&shell_item_result));
 
 			PWSTR tmp = nullptr;
-			if (shell_item_result->GetDisplayName(SIGDN_FILESYSPATH, &tmp) != S_OK)
-			{
-				return;
-			}
+			GENERIC_RETURN_IF_FAIL(shell_item_result->GetDisplayName(SIGDN_FILESYSPATH, &tmp))
 
 			shell_item_result->Release();
 			dialog->Release();
@@ -184,9 +169,6 @@ namespace steam
 
 	bool SteamAPI_Init()
 	{
-#ifdef _DEBUG
-		MSG_BOX_INFO(__FUNCTION__);
-#endif
 		const std::filesystem::path steam_path = steam::SteamAPI_GetSteamInstallPath();
 		if (steam_path.empty()) 
 		{
@@ -230,12 +212,10 @@ namespace steam
 		callbacks::unregister_callback(handler);
 	}
 
-	// TODO: does the registry even work for Wine? i seriously doubt it does, so this may need to be fixed for Wine
+	// all this additional work I did just for the user to manually select the file may not be needed (Proton recognizes Steam registry) 
+	// or even work half the time. because of that, we may need to revert to the old file dialog too :P -mikey
 	const char* SteamAPI_GetSteamInstallPath()
 	{
-#ifdef _DEBUG
-		MSG_BOX_INFO(__FUNCTION__);
-#endif
 		static std::string install_path{};
 		if (!install_path.empty())
 		{
@@ -251,43 +231,24 @@ namespace steam
 		if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\WOW6432Node\\Valve\\Steam", 0, KEY_QUERY_VALUE,
 		                  &reg_key) == ERROR_SUCCESS)
 		{
-#ifdef _DEBUG
-			MSG_BOX_INFO("RegOpenKeyExA worked for steam");
-			if (arxan::is_wine())
-			{
-				MSG_BOX_INFO("and it's on wine");
-			}
-#endif
 			RegQueryValueExA(reg_key, "InstallPath", nullptr, nullptr, reinterpret_cast<BYTE*>(path),
 			                 &length);
 			RegCloseKey(reg_key);
-#ifdef _DEBUG
-			MSG_BOX_INFO(::utils::string::va("path is '%s'", path));
-#endif
 			install_path = path;
 		}
 		else
 		{
-#ifdef _DEBUG
-			MSG_BOX_INFO("RegOpenKeyExA couldn't find Steam registry, continuing...");
-#endif
 			// if we can't find Steam in the registry, let's check if we are on Wine or not.
-			// to add onto this, Steam has a Linux-specific build and it obviously doesn't register in the Wine registry. 
-			// the above if statement *could* work if the user emulated Steam via Wine but pretty sure no one is gonna do that so... :P
+			// if the user is using Steam's Proton, a fork of Wine, then this code won't even be hit as it works above
+			// however, on [other] Wine [forks], this should be hit. also, the file dialog may not work.. :P
 			HKEY steam_install_reg;
 
 			if (arxan::is_wine())
 			{
-#ifdef _DEBUG
-				MSG_BOX_INFO("arxan::is_wine() is true, so we are continuing below!");
-#endif
 				// let's check the registry to see if the user has already manually selected the Steam installation path
 				if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, KEY_QUERY_VALUE, &steam_install_reg) 
 					!= ERROR_SUCCESS)
 				{
-#ifdef _DEBUG
-					MSG_BOX_INFO("creating key");
-#endif
 					// create a registry key
 					if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, nullptr, 0, KEY_WRITE, nullptr, &steam_install_reg, nullptr) 
 						!= ERROR_SUCCESS)
@@ -295,49 +256,28 @@ namespace steam
 						MSG_BOX_ERROR("Could not create registry for Steam install path.");
 						return "";
 					}
-#ifdef _DEBUG
-					MSG_BOX_INFO("1");
-#endif
+
 					// create a pointer to our path variable to use in our open_folder function
 					char* directory_ptr = path;
 
 					// open a file explorer prompt to find the Steam directory (user input)
 					open_folder_prompt(directory_ptr);
-#ifdef _DEBUG
-					MSG_BOX_INFO("2");
-#endif
 					while (!strcmp(directory_ptr, "")) // if this while statement goes, this means that the operation was cancelled
 					{
-#ifdef _DEBUG
-						MSG_BOX_INFO("3");
-#endif
 						MSG_BOX_ERROR("You must select a valid Steam directory before you can continue.");
 						open_folder_prompt(directory_ptr);
 					}
 
-#ifdef _DEBUG
-					MSG_BOX_INFO("4");
-#endif
 					// if the directory pointer is defined, then we set "steam_install" inside "Software\\h1-mod" to the path
 					if (RegSetKeyValueA(steam_install_reg, nullptr, "steam_install", REG_SZ, ::utils::string::va("\"%s\"", path), length) != ERROR_SUCCESS)
 					{
-						MSG_BOX_ERROR("Failed to set valid Steam install path in registry. Please try again.");
+						MSG_BOX_ERROR("Failed to set valid Steam install path in registry, please try again.");
 						return "";
 					}
-#ifdef _DEBUG
-					MSG_BOX_INFO("5");
-#endif
 				}
-#ifdef _DEBUG
-				MSG_BOX_INFO("6");
-#endif
-				// query "steam_install" inside "Software\\h1-mod" and define it to our path variableand set install_path to path
+
+				// query "steam_install" inside "Software\\h1-mod" which will define our path variable
 				RegQueryValueExA(steam_install_reg, "steam_install", nullptr, nullptr, reinterpret_cast<BYTE*>(path), &length);
-
-#ifdef MSG_BOX_INFO
-				MSG_BOX_INFO(::utils::string::va("Path stored in registry is '%s'", path));
-#endif
-
 				install_path = path;
 				RegCloseKey(steam_install_reg);
 			}

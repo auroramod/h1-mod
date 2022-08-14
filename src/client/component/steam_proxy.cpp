@@ -43,12 +43,6 @@ namespace steam_proxy
 				return;
 			}
 
-			// TODO: add this back later after everything is working on Wine, i'm pretty sure this isn't needed for wine
-			if (arxan::is_wine())
-			{
-				return;
-			}
-
 			this->load_client();
 			this->clean_up_on_error();
 

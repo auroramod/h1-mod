@@ -61,10 +61,6 @@
 
 #define MSG_BOX_ERROR(message) MessageBoxA(nullptr, message, "H1-Mod: ERROR", MB_ICONERROR);
 
-#ifdef _DEBUG
-#define MSG_BOX_INFO(message) MessageBoxA(nullptr, message, "H1-Mod", MB_ICONINFORMATION);
-#endif
-
 #include <map>
 #include <atomic>
 #include <vector>

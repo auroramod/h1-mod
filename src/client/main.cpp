@@ -189,7 +189,7 @@ int main()
 
 	FARPROC entry_point;
 
-	// TODO: check if these can be done via Linux, but not needed atm
+	// leaving these for Windows only for now, need to test to see if we can have for Wine -mikey
 	if (!arxan::is_wine())
 	{
 		enable_dpi_awareness();
