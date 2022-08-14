@@ -81,6 +81,26 @@ void get_aslr_patched_binary(std::string* binary, std::string* data)
 	*binary = patched_binary;
 }
 
+bool is_steam_registry_found()
+{
+	static bool is_steam_installed = false;
+	static bool is_steam_installed_set = false;
+
+	if (!is_steam_installed_set)
+	{
+		HKEY key = nullptr;
+		if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Valve\\Steam", 0, KEY_ALL_ACCESS, &key) == ERROR_SUCCESS)
+		{
+			is_steam_installed = true;
+			RegCloseKey(key);
+		}
+
+		is_steam_installed_set = true;
+	}
+
+	return is_steam_installed;
+}
+
 FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 {
 	loader loader;
@@ -91,6 +111,11 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 		if (library == "steam_api64.dll"
 			&& function != "SteamAPI_GetSteamInstallPath") // Arxan requires one valid steam api import - maybe SteamAPI_Shutdown is better?
 		{
+			if (!is_steam_registry_found())
+			{
+				MSG_BOX_WARN("Could not find Steam in the registry. If Steam is not installed, you must install it for H1-Mod to work.");
+			}
+
 			return self.get_proc<FARPROC>(function);
 		}
 		else if (function == "ExitProcess")
@@ -234,7 +259,7 @@ int main()
 		}
 		catch (std::exception& e)
 		{
-			MessageBoxA(nullptr, e.what(), "ERROR", MB_ICONERROR);
+			MSG_BOX_ERROR(e.what());
 			return 1;
 		}
 	}

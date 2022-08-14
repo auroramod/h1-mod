@@ -101,7 +101,7 @@ namespace exception
 			utils::thread::suspend_other_threads();
 			show_mouse_cursor();
 
-			MessageBoxA(nullptr, error_str.data(), "H1-Mod ERROR", MB_ICONERROR);
+			MSG_BOX_ERROR(error_str.data());
 			TerminateProcess(GetCurrentProcess(), exception_data.code);
 		}
 
