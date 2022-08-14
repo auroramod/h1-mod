@@ -44,7 +44,7 @@ namespace scripting
 
 		game::dvar_t* g_dump_scripts;
 
-		std::vector<std::function<void()>> shutdown_callbacks;
+		std::vector<std::function<void(bool)>> shutdown_callbacks;
 
 		void vm_notify_stub(const unsigned int notify_list_owner_id, const game::scr_string_t string_value,
 			game::VariableValue* top)
@@ -98,7 +98,7 @@ namespace scripting
 
 			for (const auto& callback : shutdown_callbacks)
 			{
-				callback();
+				callback(free_scripts);
 			}
 
 			scripting::notify(*game::levelEntityId, "shutdownGame_called", {1});
@@ -136,6 +136,11 @@ namespace scripting
 
 		void add_function(const std::string& file, unsigned int id, const char* pos)
 		{
+			if (file == "gsc/ye")
+			{
+				printf("add_function %i\n", id);
+			}
+
 			const auto function_names = scripting::find_token(id);
 			for (const auto& name : function_names)
 			{
@@ -169,7 +174,7 @@ namespace scripting
 		}
 	}
 
-	void on_shutdown(const std::function<void()>& callback)
+	void on_shutdown(const std::function<void(bool)>& callback)
 	{
 		shutdown_callbacks.push_back(callback);
 	}

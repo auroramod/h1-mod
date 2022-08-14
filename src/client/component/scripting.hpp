@@ -9,5 +9,5 @@ namespace scripting
 	extern std::unordered_map<std::string, std::unordered_map<std::string, const char*>> script_function_table;
 	extern utils::concurrency::container<shared_table_t> shared_table;
 
-	void on_shutdown(const std::function<void()>& callback);
+	void on_shutdown(const std::function<void(bool)>& callback);
 }

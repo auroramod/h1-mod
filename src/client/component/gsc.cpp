@@ -3,13 +3,16 @@
 
 #include "console.hpp"
 #include "filesystem.hpp"
+#include "scripting.hpp"
 
 #include "game/game.hpp"
+#include "game/scripting/execution.hpp"
 
 #include <xsk/gsc/types.hpp>
 #include <xsk/gsc/interfaces/compiler.hpp>
 #include <xsk/gsc/interfaces/assembler.hpp>
 #include <xsk/resolver.hpp>
+#include <xsk/utils/compression.hpp>
 #include <interface.hpp>
 
 #include <utils/hook.hpp>
@@ -24,59 +27,60 @@ namespace gsc
 		auto compiler = ::gsc::compiler();
 		auto assembler = ::gsc::assembler();
 
-		std::unordered_map<std::string, unsigned int> scr_main_handles;
-		std::unordered_map<std::string, unsigned int> scr_init_handles;
+		std::unordered_map<std::string, const char*> main_handles;
+		std::unordered_map<std::string, const char*> init_handles;
+		utils::memory::allocator script_allocator;
 
-		game::ScriptFile script_file_;
+		bool override_is_default_script = false;
+		
+		char* allocate_buffer(void* data, size_t size)
+		{
+			const auto buffer = script_allocator.allocate_array<char>(size);
+			std::memcpy(buffer, data, size);
+			return buffer;
+		}
 
 		game::ScriptFile* load_custom_script(const char* file_name, const std::string& real_name)
 		{
-			memset(&script_file_, 0, sizeof(script_file_)); // we need to memset this so we can reuse i again
-
-			filesystem::file source{real_name + ".gsc"};
-			if (!source.exists())
+			std::string source_buffer{};
+			if (!utils::io::read_file(real_name + ".gsc", &source_buffer))
 			{
+				override_is_default_script = false;
 				return nullptr;
 			}
 
-			console::debug("found '%s.gsc'\n", real_name.data());
-
-			const auto& source_buffer = source.get_buffer();
 			auto data = std::vector<uint8_t>{source_buffer.begin(), source_buffer.end()};
 
 			try
 			{
 				compiler->compile(real_name, data);
 			}
-			catch (std::exception& e)
+			catch (const std::exception& e)
 			{
-				game::Com_Error(game::ERR_DROP, "Failed to compile '%s'.\n%s", real_name.data(), e.what());
+				console::error("Failed to compile '%s':\n%s", real_name.data(), e.what());
+				override_is_default_script = false;
 				return nullptr;
 			}
 
 			auto assembly = compiler->output();
-
 			assembler->assemble(real_name, assembly);
 
-			auto* script_file_ptr = &script_file_;
+			const auto script_file_ptr = script_allocator.allocate<game::ScriptFile>();
 			script_file_ptr->name = file_name;
 
-			auto stack = assembler->output_stack(); // this is the uncompressed stack
+			const auto stack = assembler->output_stack();
 			script_file_ptr->len = static_cast<int>(stack.size());
 
-			auto script = assembler->output_script(); // this is the assembly bytecode
+			const auto script = assembler->output_script();
 			script_file_ptr->bytecodeLen = static_cast<int>(script.size());
 
-			// we compress the assembler's stack because that's the only way ProcessScript knows how to read it
-			auto compressed = utils::compression::zlib::gsc_compress(stack); // this util comes from gsc-tool, could just change the dependency to add it lmfao
+			const auto compressed = xsk::utils::zlib::compress(stack);
+			const auto buffer_size = script.size() + compressed.size() + 1;
+			const auto script_size = script.size();
 
-			// the size of the whole buffer for the bytecode assembly + compressed buffer
-			size_t buffer_size = script.size() + compressed.size() + 1;
-
-			auto* buffer = game::PMem_AllocFromSource_NoDebug(buffer_size, 4, 0, game::PMEM_SOURCE_SCRIPT);
-			memset(buffer, 0, buffer_size);
-			memcpy(buffer, script.data(), script.size()); // the first part of the buffer will be the bytecode assembly
-			memcpy(&buffer[script.size()], compressed.data(), compressed.size()); // then, at the end of the bytecode assembly, the compressed stack buffer starts
+			const auto buffer = utils::memory::get_allocator()->allocate_array<char>(buffer_size);
+			std::memcpy(buffer, script.data(), script_size);
+			std::memcpy(&buffer[script_size], compressed.data(), compressed.size()); 
 
 			script_file_ptr->bytecode = &buffer[0];
 			script_file_ptr->buffer = &buffer[script.size()];
@@ -85,123 +89,162 @@ namespace gsc
 			return script_file_ptr;
 		}
 
-		uint16_t resolve_token(const std::string& token)
-		{
-			return xsk::gsc::h1::resolver::token_id(token);
-		}
-
 		game::ScriptFile* load_script(int, const char* name, int)
 		{
-			std::string real_name{name};
-			auto id = static_cast<std::uint16_t>(std::atoi(name));
+			std::string real_name = name;
+			const auto id = static_cast<std::uint16_t>(std::atoi(name));
 			if (id)
 			{
 				real_name = xsk::gsc::h1::resolver::token_name(id);
 			}
 
-			auto* script = load_custom_script(name, real_name);
+			const auto script = load_custom_script(name, real_name);
 			if (script)
 			{
-				console::debug("--------script data--------\n");
-				console::debug("name is '%s'\n", script->name);
-				console::debug("compressedLen is %d\n", script->compressedLen);
-				console::debug("len is %d\n", script->len);
-				console::debug("bytecodeLen is %d\n", script->bytecodeLen);
-				//console::debug("buffer is %s\n", script->buffer);
-				//console::debug("bytecode is %s\n", script->bytecode);
-				console::debug("---------------------------\n");
-
 				return script;
 			}
 
 			return game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, name, 1).scriptfile;
 		}
 
-		void load_gametype_script_stub()
+		void load_scripts(const std::string& script_dir)
 		{
-			if (game::VirtualLobby_Loaded())
+			if (!utils::io::directory_exists(script_dir))
 			{
-				utils::hook::invoke<void>(0x18BC00_b);
 				return;
 			}
 
-			// TODO: clear handles
-			scr_main_handles.clear();
-			scr_init_handles.clear();
-
-			char path[MAX_PATH]{};
-			sprintf_s(path, "%s/%s", "gsc", "ye"); // TODO: change this to not be hardcoded
-
-			auto script_loaded = game::Scr_LoadScript(path);
-			if (script_loaded)
+			const auto scripts = utils::io::list_files(script_dir);
+			for (const auto& script : scripts)
 			{
-				console::debug("load script was successful, path is '%s'\n", path);
-				console::debug("load script returned '%x'\n", script_loaded);
-
-				auto token = resolve_token("main");
-				auto main_handle = game::Scr_GetFunctionHandle(path, token);
-				console::debug("main_handle is %x\n", main_handle);
-				if (main_handle)
+				if (!script.ends_with(".gsc"))
 				{
-					console::debug("Found valid function handle '%s::main'.\n", path);
-					scr_main_handles.insert_or_assign(path, main_handle);
+					continue;
 				}
 
-				token = resolve_token("init");
-				auto init_handle = game::Scr_GetFunctionHandle(path, token);
-				console::debug("init_handle is %x\n", init_handle);
-				if (init_handle)
+				const auto base_name = script.substr(0, script.size() - 4);
+
+				override_is_default_script = true;
+				if (!game::Scr_LoadScript(base_name.data()) ||
+					scripting::script_function_table.find(base_name) == scripting::script_function_table.end())
 				{
-					console::debug("Found valid function handle '%s::init'.\n", path);
-					scr_init_handles.insert_or_assign(path, init_handle);
+					continue;
+				}
+
+				const auto& script_table = scripting::script_function_table[base_name];
+				if (script_table.find("init") != script_table.end())
+				{
+					main_handles[base_name] = script_table.at("init");
+				}
+				
+				if (script_table.find("main") != script_table.end())
+				{
+					init_handles[base_name] = script_table.at("main");
 				}
 			}
+		}
 
-			utils::hook::invoke<void>(0x18BC00_b);
+		void clear()
+		{
+			script_allocator.clear();
+			main_handles.clear();
+			init_handles.clear();
+		}
+
+		void gscr_print_stub()
+		{
+			const auto num = game::Scr_GetNumParam();
+			std::string buffer{};
+
+			for (auto i = 0; i < num; i++)
+			{
+				const auto str = game::Scr_GetString(i);
+				buffer.append(str);
+				buffer.append("\t");
+			}
+
+			printf("%s\n", buffer.data());
+		}
+
+		void load_gametype_script_stub()
+		{
+			const auto _0 = gsl::finally([]()
+			{
+				utils::hook::invoke<void>(0x18BC00_b);
+			});
+
+			if (game::VirtualLobby_Loaded())
+			{
+				return;
+			}
+
+			clear();
+
+			for (const auto& path : filesystem::get_search_paths())
+			{
+				load_scripts(path + "/scripts/");
+				if (game::environment::is_sp())
+				{
+					load_scripts(path + "/scripts/sp/");
+				}
+				else
+				{
+					load_scripts(path + "/scripts/mp/");
+				}
+			}
 		}
 
 		void g_load_structs_stub()
 		{
-			if (game::VirtualLobby_Loaded())
+			const auto _0 = gsl::finally([]()
 			{
 				utils::hook::invoke<void>(0x458520_b);
+			});
+
+			if (game::VirtualLobby_Loaded())
+			{
 				return;
 			}
 
-			for (auto& function_handle : scr_main_handles)
+			for (auto& function_handle : main_handles)
 			{
-				const auto* name = function_handle.first.data();
-
-				console::debug("[" __FUNCTION__ "] Loading main handle '%x::main'...\n", name);
-				unsigned int thread = game::Scr_ExecThread(function_handle.second, 0);
-				console::debug("[" __FUNCTION__ "] Thread ID is %d\n", thread);
-				game::RemoveRefToObject(thread);
-				console::debug("[" __FUNCTION__ "] Executed handle '%x::main'.\n", name);
+				console::info("Executing '%s::main'\n", function_handle.first.data());
+				scripting::exec_ent_thread(*game::levelEntityId, function_handle.second, {});
 			}
 
-			utils::hook::invoke<void>(0x458520_b);
+			main_handles.clear();
 		}
 
 		void save_registered_weapons_stub()
 		{
-			if (game::VirtualLobby_Loaded())
+			const auto _0 = gsl::finally([]()
 			{
 				utils::hook::invoke<void>(0x41DBC0_b);
+			});
+
+			if (game::VirtualLobby_Loaded())
+			{
 				return;
 			}
 
-			for (auto& function_handle : scr_init_handles)
+			for (auto& function_handle : init_handles)
 			{
-				const auto* name = function_handle.first.data();
-
-				console::debug("[" __FUNCTION__ "] Loading main handle '%x::init'...\n", name);
-				auto thread = game::Scr_ExecThread(function_handle.second, 0);
-				console::debug("[" __FUNCTION__ "] Thread ID is %d\n", thread);
-				game::RemoveRefToObject(thread);
-				console::debug("[" __FUNCTION__ "] Executed handle '%x::init'.\n", name);
+				console::info("Executing '%s::init'\n", function_handle.first.data());
+				scripting::exec_ent_thread(*game::levelEntityId, function_handle.second, {});
 			}
 
-			utils::hook::invoke<void>(0x41DBC0_b);
+			init_handles.clear();
+		}
+
+		int db_is_xasset_default(int type, const char* name)
+		{
+			if (override_is_default_script)
+			{
+				override_is_default_script = false;
+				return 0;
+			}
+
+			return utils::hook::invoke<int>(0x3968C0_b, type, name);
 		}
 	}
 
@@ -210,17 +253,25 @@ namespace gsc
 	public:
 		void post_unpack() override
 		{
-			// hook scriptfile loading
-			utils::hook::call(0x50E357_b, load_script); // hooking DB_FindXAssetHeader for ASSET script
+			utils::hook::call(0x50E357_b, load_script);
+			utils::hook::call(0x50E367_b, db_is_xasset_default);
 
-			// load custom scripts
 			utils::hook::call(0x18C325_b, load_gametype_script_stub);
 
 			// execute handles
-			utils::hook::call(0x420EA2_b, g_load_structs_stub); // execute main handles (Scr_LoadGameType is inlined)
-			utils::hook::call(0x420F19_b, save_registered_weapons_stub); // execute init handles (Scr_StartupGameType is inlined)
+			utils::hook::call(0x420EA2_b, g_load_structs_stub);
+			utils::hook::call(0x420F19_b, save_registered_weapons_stub);
 
-			//utils::hook::jump(0x479270, script_error);
+			// replace builtin print function
+			utils::hook::jump(0x437C40_b, gscr_print_stub);
+
+			scripting::on_shutdown([](int free_scripts)
+			{
+				if (free_scripts)
+				{
+					clear();
+				}
+			});
 		}
 	};
 }
