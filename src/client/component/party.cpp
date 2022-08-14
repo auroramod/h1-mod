@@ -247,13 +247,13 @@ namespace party
 		return connect_state.challenge;
 	}
 
-	void start_map(const std::string& mapname)
+	void start_map(const std::string& mapname, bool dev)
 	{
 		if (game::Live_SyncOnlineDataFlags(0) > 32)
 		{
 			scheduler::once([=]()
 			{
-				command::execute("map " + mapname, false);
+				start_map(mapname, dev);
 			}, scheduler::pipeline::main, 1s);
 		}
 		else
@@ -298,6 +298,8 @@ namespace party
 				command::execute(utils::string::va("ui_maxclients %i", maxclients->current.integer), true);
 				command::execute(utils::string::va("party_maxplayers %i", maxclients->current.integer), true);
 			}*/
+
+			command::execute((dev ? "sv_cheats 1" : "sv_cheats 0"), true);
 
 			const auto* args = "StartServer";
 			game::UI_RunMenuScript(0, &args);
@@ -349,7 +351,17 @@ namespace party
 					return;
 				}
 
-				start_map(argument[1]);
+				start_map(argument[1], false);
+			});
+
+			command::add("devmap", [](const command::params& argument)
+			{
+				if (argument.size() != 2)
+				{
+					return;
+				}
+
+				party::start_map(argument[1], true);
 			});
 
 			command::add("map_restart", []()

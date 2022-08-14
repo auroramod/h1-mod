@@ -263,6 +263,8 @@ namespace dvars
 	utils::hook::detour dvar_register_vector3_hook;
 	utils::hook::detour dvar_register_enum_hook;
 
+	utils::hook::detour dvar_register_new_hook;
+
 	utils::hook::detour dvar_set_bool_hook;
 	utils::hook::detour dvar_set_float_hook;
 	utils::hook::detour dvar_set_int_hook;
@@ -407,6 +409,26 @@ namespace dvars
 		return dvar_register_enum_hook.invoke<game::dvar_t*>(hash, name, value_list, default_index, flags);
 	}
 
+	std::unordered_map<int, std::function<void()>> dvar_on_register_function_map;
+	void on_register(const std::string& name, const std::function<void()>& callback)
+	{
+		dvar_on_register_function_map[game::generateHashValue(name.data())] = callback;
+	}
+
+	game::dvar_t* dvar_register_new(const int hash, const char* name, game::dvar_type type, unsigned int flags,
+		game::dvar_value* value, game::dvar_limits* domain, const char* description)
+	{
+		auto* dvar = dvar_register_new_hook.invoke<game::dvar_t*>(hash, name, type, flags, value, domain, description);
+
+		if (dvar && dvar_on_register_function_map.find(hash) != dvar_on_register_function_map.end())
+		{
+			dvar_on_register_function_map[hash]();
+			dvar_on_register_function_map.erase(hash);
+		}
+
+		return dvar;
+	}
+
 	void dvar_set_bool(game::dvar_t* dvar, bool boolean)
 	{
 		const auto disabled = find_dvar(disable::set_bool_disables, dvar->hash);
@@ -504,6 +526,8 @@ namespace dvars
 			dvar_register_vector2_hook.create(SELECT_VALUE(0x4198C0_b, 0x182CB0_b), &dvar_register_vector2);
 			dvar_register_vector3_hook.create(SELECT_VALUE(0x419A00_b, 0x182DB0_b), &dvar_register_vector3);
 			dvar_register_enum_hook.create(SELECT_VALUE(0x419500_b, 0x182700_b), &dvar_register_enum);
+
+			dvar_register_new_hook.create(SELECT_VALUE(0x41B1D0_b, 0x184DF0_b), &dvar_register_new);
 
 			if (!game::environment::is_sp())
 			{

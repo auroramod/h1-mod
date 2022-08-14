@@ -26,4 +26,6 @@ namespace dvars
 		void set_string(const std::string& name, const std::string& string);
 		void set_from_string(const std::string& name, const std::string& value);
 	}
+
+	void on_register(const std::string& name, const std::function<void()>& callback);
 }

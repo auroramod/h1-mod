@@ -1411,6 +1411,11 @@ namespace game
 		const char* name;
 	};
 
+	struct WeaponDef
+	{
+		const char* name;
+	};
+
 	union XAssetHeader
 	{
 		void* data;
@@ -1422,6 +1427,7 @@ namespace game
 		LuaFile* luaFile;
 		GfxImage* image;
 		TTF* ttf;
+		WeaponDef* weapon;
 	};
 
 	struct XAsset

@@ -114,11 +114,99 @@ namespace fastfiles
 			a.and_(esi, r14d);
 			a.jmp(0x39814F_b);
 		}
+
+		utils::hook::detour sys_createfile_hook;
+		HANDLE sys_create_file_stub(game::Sys_Folder folder, const char* base_filename)
+		{
+			auto* fs_basepath = game::Dvar_FindVar("fs_basepath");
+			auto* fs_game = game::Dvar_FindVar("fs_game");
+
+			std::string dir = fs_basepath ? fs_basepath->current.string : "";
+			std::string mod_dir = fs_game ? fs_game->current.string : "";
+
+			if (base_filename == "mod.ff"s)
+			{
+				if (!mod_dir.empty())
+				{
+					auto path = utils::string::va("%s\\%s\\%s", dir.data(), mod_dir.data(), base_filename);
+					if (utils::io::file_exists(path))
+					{
+						return CreateFileA(path, 0x80000000, 1u, 0, 3u, 0x60000000u, 0);
+					}
+				}
+				return (HANDLE)-1;
+			}
+
+			return sys_createfile_hook.invoke<HANDLE>(folder, base_filename);
+		}
+
+		template <typename T> inline void merge(std::vector<T>* target, T* source, size_t length)
+		{
+			if (source)
+			{
+				for (size_t i = 0; i < length; ++i)
+				{
+					target->push_back(source[i]);
+				}
+			}
+		}
+
+		template <typename T> inline void merge(std::vector<T>* target, std::vector<T> source)
+		{
+			for (auto& entry : source)
+			{
+				target->push_back(entry);
+			}
+		}
+
+		void load_pre_gfx_zones(game::XZoneInfo* zoneInfo, unsigned int zoneCount, game::DBSyncMode syncMode)
+		{
+			std::vector<game::XZoneInfo> data;
+			merge(&data, zoneInfo, zoneCount);
+
+			// code_pre_gfx_mp
+
+			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
+		}
+
+		void load_post_gfx_and_ui_and_common_zones(game::XZoneInfo* zoneInfo, unsigned int zoneCount, game::DBSyncMode syncMode)
+		{
+			std::vector<game::XZoneInfo> data;
+			merge(&data, zoneInfo, zoneCount);
+
+			// code_post_gfx_mp
+			// ui_mp
+			// common_mp
+
+			if (fastfiles::exists("mod"))
+			{
+				data.push_back({ "mod", game::DB_ZONE_COMMON | game::DB_ZONE_CUSTOM, 0 });
+			}
+
+			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
+		}
+
+		void load_ui_zones(game::XZoneInfo* zoneInfo, unsigned int zoneCount, game::DBSyncMode syncMode)
+		{
+			std::vector<game::XZoneInfo> data;
+			merge(&data, zoneInfo, zoneCount);
+
+			// ui_mp
+
+			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
+		}
 	}
 
 	bool exists(const std::string& zone)
 	{
-		return game::DB_FileExists(zone.data(), 0);
+		auto is_localized = game::DB_IsLocalized(zone.data());
+		auto handle = game::Sys_CreateFile((is_localized ? game::SF_ZONE_LOC : game::SF_ZONE), utils::string::va("%s.ff", zone.data()));
+		if (handle != (HANDLE)-1)
+		{
+			CloseHandle(handle);
+			return true;
+		}
+		return false;
 	}
 
 	std::string get_current_fastfile()
@@ -171,6 +259,22 @@ namespace fastfiles
 				utils::hook::jump(0x398061_b, utils::hook::assemble(skip_extra_zones_stub), true);
 			}
 
+			if (!game::environment::is_sp())
+			{
+				// Add custom zone paths
+				sys_createfile_hook.create(game::Sys_CreateFile, sys_create_file_stub);
+
+				// load our custom pre_gfx zones
+				utils::hook::call(0x15C3FD_b, load_pre_gfx_zones);
+				utils::hook::call(0x15C75D_b, load_pre_gfx_zones);
+
+				// load our custom ui and common zones
+				utils::hook::call(0x686421_b, load_post_gfx_and_ui_and_common_zones);
+
+				// load our custom ui zones
+				utils::hook::call(0x17C6D2_b, load_ui_zones);
+			}
+
 			command::add("loadzone", [](const command::params& params)
 			{
 				if (params.size() < 2)
@@ -189,12 +293,12 @@ namespace fastfiles
 
 				game::XZoneInfo info;
 				info.name = name;
-				info.allocFlags = game::DB_ZONE_COMMON;
+				info.allocFlags = game::DB_ZONE_GAME;
 				info.freeFlags = 0;
 
 				info.allocFlags |= game::DB_ZONE_CUSTOM; // skip extra zones with this flag!
 
-				game::DB_LoadXAssets(&info, 1, game::DBSyncMode::DB_LOAD_SYNC);
+				game::DB_LoadXAssets(&info, 1, game::DBSyncMode::DB_LOAD_ASYNC);
 			});
 		}
 	};
