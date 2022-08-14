@@ -136,11 +136,6 @@ namespace scripting
 
 		void add_function(const std::string& file, unsigned int id, const char* pos)
 		{
-			if (file == "gsc/ye")
-			{
-				printf("add_function %i\n", id);
-			}
-
 			const auto function_names = scripting::find_token(id);
 			for (const auto& name : function_names)
 			{
