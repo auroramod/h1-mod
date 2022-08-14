@@ -32,13 +32,6 @@ namespace gsc
 		utils::memory::allocator script_allocator;
 
 		bool override_is_default_script = false;
-		
-		char* allocate_buffer(void* data, size_t size)
-		{
-			const auto buffer = script_allocator.allocate_array<char>(size);
-			std::memcpy(buffer, data, size);
-			return buffer;
-		}
 
 		game::ScriptFile* load_custom_script(const char* file_name, const std::string& real_name)
 		{
@@ -132,14 +125,16 @@ namespace gsc
 				}
 
 				const auto& script_table = scripting::script_function_table[base_name];
-				if (script_table.find("init") != script_table.end())
-				{
-					main_handles[base_name] = script_table.at("init");
-				}
-				
 				if (script_table.find("main") != script_table.end())
 				{
-					init_handles[base_name] = script_table.at("main");
+					console::info("Loaded '%s::main'\n", base_name.data());
+					main_handles[base_name] = script_table.at("main");
+				}
+
+				if (script_table.find("init") != script_table.end())
+				{
+					console::info("Loaded '%s::init'\n", base_name.data());
+					init_handles[base_name] = script_table.at("init");
 				}
 			}
 		}
