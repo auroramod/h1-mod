@@ -71,7 +71,7 @@ namespace gsc
 			const auto buffer_size = script.size() + compressed.size() + 1;
 			const auto script_size = script.size();
 
-			const auto buffer = utils::memory::get_allocator()->allocate_array<char>(buffer_size);
+			const auto buffer = script_allocator.allocate_array<char>(buffer_size);
 			std::memcpy(buffer, script.data(), script_size);
 			std::memcpy(&buffer[script_size], compressed.data(), compressed.size()); 
 
