@@ -42,6 +42,8 @@ namespace scripting
 		std::string current_file;
 		unsigned int current_file_id{};
 
+		std::unordered_map<unsigned int, std::string> canonical_string_table;
+
 		game::dvar_t* g_dump_scripts;
 
 		std::vector<std::function<void(bool)>> shutdown_callbacks;
@@ -94,6 +96,7 @@ namespace scripting
 			if (free_scripts)
 			{
 				script_function_table.clear();
+				canonical_string_table.clear();
 			}
 
 			for (const auto& callback : shutdown_callbacks)
@@ -134,9 +137,21 @@ namespace scripting
 			process_script_hook.invoke<void>(filename);
 		}
 
+		std::vector<std::string> get_token_names(unsigned int id)
+		{
+			auto result = scripting::find_token(id);
+
+			if (canonical_string_table.find(id) != canonical_string_table.end())
+			{
+				result.push_back(canonical_string_table[id]);
+			}
+
+			return result;
+		}
+
 		void add_function(const std::string& file, unsigned int id, const char* pos)
 		{
-			const auto function_names = scripting::find_token(id);
+			const auto function_names = get_token_names(id);
 			for (const auto& name : function_names)
 			{
 				script_function_table[file][name] = pos;
@@ -147,7 +162,7 @@ namespace scripting
 		{
 			if (current_file_id)
 			{
-				const auto names = scripting::find_token(current_file_id);
+				const auto names = get_token_names(current_file_id);
 				for (const auto& name : names)
 				{
 					add_function(name, thread_name, code_pos);
@@ -164,7 +179,7 @@ namespace scripting
 		unsigned int sl_get_canonical_string_stub(const char* str)
 		{
 			const auto result = sl_get_canonical_string_hook.invoke<unsigned int>(str);
-			scripting::token_map[str] = result;
+			canonical_string_table[result] = str;
 			return result;
 		}
 	}
