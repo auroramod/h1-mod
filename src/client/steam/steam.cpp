@@ -25,21 +25,22 @@ namespace steam
 				return;
 			}
 
+			const auto _ = gsl::finally([]()
+			{
+				CoUninitialize(); // uninitialize on any return so we can use this again
+			});
+
 			IFileOpenDialog* dialog;
 			GENERIC_RETURN_IF_FAIL(CoCreateInstance(CLSID_FileOpenDialog, 0, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog)));
 
 			FILEOPENDIALOGOPTIONS dw_options;
 			GENERIC_RETURN_IF_FAIL(dialog->GetOptions(&dw_options));
-
 			GENERIC_RETURN_IF_FAIL(dialog->SetOptions(dw_options | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST));
-
 			GENERIC_RETURN_IF_FAIL(dialog->SetTitle(L"Select a valid Steam install (contains libraries like 'steam_api64.dll')"));
 
 			if (dialog->Show(0) != S_OK) // doesn't returns S_OK when operation is cancelled
 			{
-				// uninitialize on error so we can use this function again
 				dialog->Release();
-				CoUninitialize();
 				return;
 			}
 
@@ -51,13 +52,8 @@ namespace steam
 
 			shell_item_result->Release();
 			dialog->Release();
-			CoUninitialize();
 
-			if (tmp == nullptr)
-			{
-				MSG_BOX_ERROR("Failed to get temporary path from GetDisplayName.");
-				return;
-			}
+			GENERIC_RETURN_IF_FAIL(tmp == nullptr);
 
 			std::size_t i;
 			wcstombs_s(&i, directory, MAX_PATH, tmp, MAX_PATH);
