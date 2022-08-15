@@ -4,7 +4,9 @@
 
 #include "component/console.hpp"
 
-namespace scripting::lua
+#include <utils/string.hpp>
+
+namespace scripting
 {
 	namespace
 	{
@@ -20,18 +22,24 @@ namespace scripting::lua
 		}
 	}
 
-	void handle_error(const sol::protected_function_result& result)
+	namespace lua
 	{
-		if (!result.valid())
+		void handle_error(const sol::protected_function_result& result)
 		{
-			console::error("************** Script execution error **************\n");
-
-			const sol::error err = result;
-			console::error("%s\n", err.what());
-
-			console::error("****************************************************\n");
-
-			notify_error();
+			if (!result.valid())
+			{
+				const sol::error err = result;
+				scripting::invoke_error(err.what());
+			}
 		}
+	}
+
+	void invoke_error(const char* reason)
+	{
+		console::error("************** Script execution error **************\n");
+		console::error("%s\n", reason);
+		console::error("****************************************************\n");
+
+		notify_error();
 	}
 }

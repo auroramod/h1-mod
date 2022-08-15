@@ -7,6 +7,7 @@
 
 #include "game/game.hpp"
 #include "game/scripting/execution.hpp"
+#include "game/scripting/lua/error.hpp"
 
 #include <xsk/gsc/types.hpp>
 #include <xsk/gsc/interfaces/compiler.hpp>
@@ -241,6 +242,11 @@ namespace gsc
 
 			return utils::hook::invoke<int>(0x3968C0_b, type, name);
 		}
+
+		void unknown_function_stub(void*, const char*)
+		{
+			scripting::invoke_error("unknown function (calling a function that doesn't exist?)");
+		}
 	}
 
 	class component final : public component_interface
@@ -248,17 +254,24 @@ namespace gsc
 	public:
 		void post_unpack() override
 		{
+			// hook xasset functions to return our own custom scripts
 			utils::hook::call(0x50E357_b, load_script);
 			utils::hook::call(0x50E367_b, db_is_xasset_default);
 
+			// load handles
 			utils::hook::call(0x18C325_b, load_gametype_script_stub);
 
 			// execute handles
 			utils::hook::call(0x420EA2_b, g_load_structs_stub);
 			utils::hook::call(0x420F19_b, save_registered_weapons_stub);
 
-			// replace builtin print function
+			// replace builtin print function (temporary?)
 			utils::hook::jump(0x437C40_b, gscr_print_stub);
+
+			// patch error to just print to console
+			utils::hook::call(0x50474F_b, unknown_function_stub); // Com_Error
+			utils::hook::call(0x504606_b, unknown_function_stub); // CompileError
+			utils::hook::call(0x504652_b, unknown_function_stub); // ^
 
 			scripting::on_shutdown([](int free_scripts)
 			{

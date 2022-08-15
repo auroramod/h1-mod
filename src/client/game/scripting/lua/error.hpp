@@ -2,7 +2,12 @@
 
 #include "context.hpp"
 
-namespace scripting::lua
+namespace scripting
 {
-	void handle_error(const sol::protected_function_result& result);
+	namespace lua
+	{
+		void handle_error(const sol::protected_function_result& result);
+	}
+
+	void invoke_error(const char* reason);
 }
