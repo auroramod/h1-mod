@@ -83,6 +83,9 @@ namespace filesystem
 			get_search_paths().insert(".");
 			get_search_paths().insert("h1-mod");
 			get_search_paths().insert("data");
+
+			// fs_game flags
+			utils::hook::set<uint32_t>(0x189275_b, 0);
 		}
 	};
 }

@@ -6,7 +6,7 @@ namespace party
 	void reset_connect_state();
 
 	void connect(const game::netadr_s& target);
-	void start_map(const std::string& mapname);
+	void start_map(const std::string& mapname, bool dev = false);
 
 	void clear_sv_motd();
 	game::netadr_s get_state_host();
