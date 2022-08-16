@@ -162,7 +162,6 @@ namespace auth
 
 			if (xuid != key.get_hash())
 			{
-				//MessageBoxA(nullptr, steam_id.data(), std::to_string(key.get_hash()).data(), 0);
 				network::send(*from, "error",
 					utils::string::va("XUID doesn't match the certificate: %llX != %llX", xuid, key.get_hash()), '\n');
 				return;

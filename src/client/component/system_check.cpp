@@ -103,9 +103,8 @@ namespace system_check
 
 			if (!is_valid())
 			{
-				MessageBoxA(nullptr, "Your game files are outdated or unsupported.\n"
-					"Please get the latest officially supported Call of Duty: Modern Warfare Remastered files, or you will get random crashes and issues.",
-					"Invalid game files!", MB_ICONINFORMATION);
+				MSG_BOX_INFO("Your game files are outdated or unsupported.\n"
+					"Please get the latest officially supported Call of Duty: Modern Warfare Remastered files, or you will get random crashes and issues.");
 			}
 		}
 	};

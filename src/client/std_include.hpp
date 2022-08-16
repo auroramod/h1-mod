@@ -59,6 +59,8 @@
 #undef min
 #endif
 
+#define MSG_BOX_INFO(message) MessageBoxA(nullptr, message, "H1-Mod: INFORMATION", MB_ICONINFORMATION);
+#define MSG_BOX_WARN(message) MessageBoxA(nullptr, message, "H1-Mod: WARNING", MB_ICONWARNING);
 #define MSG_BOX_ERROR(message) MessageBoxA(nullptr, message, "H1-Mod: ERROR", MB_ICONERROR);
 
 #include <map>

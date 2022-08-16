@@ -152,7 +152,7 @@ void loader::load_exception_table(const utils::nt::library& target, const utils:
 
 	if (!RtlAddFunctionTable(function_list, entry_count, DWORD64(target.get_ptr())))
 	{
-		MessageBoxA(nullptr, "Setting exception handlers failed.", "Error", MB_OK | MB_ICONERROR);
+		MSG_BOX_ERROR("Setting exception handlers failed.");
 	}
 
 	{
