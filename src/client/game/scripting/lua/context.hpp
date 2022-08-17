@@ -4,6 +4,7 @@
 
 #pragma warning(push)
 #pragma warning(disable: 4702)
+#pragma warning(disable: 5056)
 
 #define SOL_ALL_SAFETIES_ON 1
 #define SOL_PRINT_ERRORS 0
