@@ -665,7 +665,8 @@ namespace party
 				}
 
 				// unload our mod if the server doesn't have the mod
-				if (server_fs_game.empty() && game::fs_gameDirVal->current.string != "")
+				if ((server_fs_game.empty() 
+					|| utils::string::to_lower(game::fs_gameDirVal->current.string) != utils::string::to_lower(server_fs_game)))
 				{
 					const auto _ = gsl::finally([]()
 					{
