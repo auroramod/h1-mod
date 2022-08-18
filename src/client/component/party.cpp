@@ -8,6 +8,8 @@
 #include "scheduler.hpp"
 #include "server_list.hpp"
 
+#include "game/game.hpp"
+
 #include "steam/steam.hpp"
 
 #include <utils/string.hpp>
@@ -586,6 +588,7 @@ namespace party
 				info.set("playmode", utils::string::va("%i", game::Com_GetCurrentCoDPlayMode()));
 				info.set("sv_running", utils::string::va("%i", get_dvar_bool("sv_running") && !game::VirtualLobby_Loaded()));
 				info.set("dedicated", utils::string::va("%i", get_dvar_bool("dedicated")));
+				info.set("fs_game", get_dvar_string("fs_game"));
 
 				network::send(target, "infoResponse", info.build(), '\n');
 			});
@@ -650,6 +653,30 @@ namespace party
 					const auto str = "Invalid gametype.";
 					printf("%s\n", str);
 					menu_error(str);
+					return;
+				}
+
+				// download server's fastfile mods
+				const auto server_fs_game = info.get("fs_game");
+				if (!server_fs_game.empty()
+					&& utils::string::to_lower(game::fs_gameDirVal->current.string) != utils::string::to_lower(server_fs_game))
+				{
+					// download::initiate_client_download(server_fs_game, info.get("isPrivate") == "1"s);
+				}
+
+				// unload our mod if the server doesn't have the mod
+				if (server_fs_game.empty() && game::fs_gameDirVal->current.string != "")
+				{
+					const auto _ = gsl::finally([]()
+					{
+						// only execute this command when the function is done?
+						command::execute("reconnect");
+					});
+
+					game::fs_gameDirVal->current.string = "";
+
+					command::execute("vid_restart"); // reload UI and stuff
+
 					return;
 				}
 
