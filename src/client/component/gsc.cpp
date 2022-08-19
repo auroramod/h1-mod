@@ -83,7 +83,7 @@ namespace gsc
 			return script_file_ptr;
 		}
 
-		game::ScriptFile* load_script(int, const char* name, int)
+		game::ScriptFile* load_script(game::XAssetType type, const char* name, int)
 		{
 			std::string real_name = name;
 			const auto id = static_cast<std::uint16_t>(std::atoi(name));
@@ -95,6 +95,7 @@ namespace gsc
 			const auto script = load_custom_script(name, real_name);
 			if (script)
 			{
+				// TODO: mark the asset as inUse (using Mark_ScriptFilePtr and defining marScriptFilePtr to ScriptFile*) and see if that fixes GSC issues
 				return script;
 			}
 
