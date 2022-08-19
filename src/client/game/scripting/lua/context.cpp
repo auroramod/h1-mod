@@ -705,6 +705,8 @@ namespace scripting::lua
 								const auto& request_callbacks_ = http_requests[cur_task_id];
 								handle_error(request_callbacks_.on_progress(value));
 							}, ::scheduler::pipeline::server);
+
+							return 0;
 						});
 
 						::scheduler::once([cur_task_id, result]()

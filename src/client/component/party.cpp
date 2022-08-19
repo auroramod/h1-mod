@@ -7,6 +7,7 @@
 #include "network.hpp"
 #include "scheduler.hpp"
 #include "server_list.hpp"
+#include "download.hpp"
 
 #include "game/game.hpp"
 
@@ -16,6 +17,7 @@
 #include <utils/info_string.hpp>
 #include <utils/cryptography.hpp>
 #include <utils/hook.hpp>
+#include <utils/io.hpp>
 
 namespace party
 {
@@ -30,6 +32,8 @@ namespace party
 
 		std::string sv_motd;
 		int sv_maxclients;
+
+		std::optional<std::string> mod_hash{};
 
 		void perform_game_initialization()
 		{
@@ -150,6 +154,72 @@ namespace party
 		{
 			utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE");
 			utils::hook::set(0x2ED2F78_b, 1);
+		}
+
+		bool download_mod(const game::netadr_s& target, const utils::info_string& info)
+		{
+			const auto server_fs_game = utils::string::to_lower(info.get("fs_game"));
+
+			if (!server_fs_game.starts_with("mods/") || server_fs_game.contains('.'))
+			{
+				console::info("Invalid server fs_game value %s\n", server_fs_game.data());
+				return true;
+			}
+
+			const auto source_hash = info.get("modHash");
+
+			console::info("[Party] download_mod: %s %s\n", server_fs_game.data(), source_hash.data());
+
+			if (source_hash.empty())
+			{
+				return false;
+			}
+
+			static const auto fs_game = game::Dvar_FindVar("fs_game");
+			const auto client_fs_game = utils::string::to_lower(std::string(fs_game->current.string));
+
+			const auto mod_path = server_fs_game + "/mod.ff";
+			auto has_to_download = !utils::io::file_exists(mod_path);
+			if (!has_to_download)
+			{
+				const auto data = utils::io::read_file(mod_path);
+				const auto hash = utils::cryptography::sha1::compute(data, true);
+				has_to_download = source_hash != hash;
+
+				console::info("[Party] has_to_download %i (%s %s)\n", has_to_download, hash.data(), source_hash.data());
+			}
+			else
+			{
+				console::info("[Party] Mod file does not exist, downloading\n");
+			}
+
+			if (has_to_download)
+			{
+				console::info("[Party] Starting download of mod %s\n", server_fs_game.data());
+
+				download::stop_download();
+				download::start_download(target, info);
+				return true;
+			}
+			else if (client_fs_game != server_fs_game)
+			{
+				game::Dvar_SetFromStringByNameFromSource("fs_game", server_fs_game.data(), 
+					game::DVAR_SOURCE_INTERNAL);
+				command::execute("vid_restart");
+
+				scheduler::once([=]()
+				{
+					command::execute("lui_open_popup popup_acceptinginvite", false);
+					// connecting too soon after vid_restart causes a crash ingame (awesome game)
+					scheduler::once([=]()
+					{
+						connect(target);
+					}, scheduler::pipeline::main, 5s);
+				}, scheduler::pipeline::main);
+				return true;
+			}
+
+			return false;
 		}
 	}
 
@@ -588,7 +658,26 @@ namespace party
 				info.set("playmode", utils::string::va("%i", game::Com_GetCurrentCoDPlayMode()));
 				info.set("sv_running", utils::string::va("%i", get_dvar_bool("sv_running") && !game::VirtualLobby_Loaded()));
 				info.set("dedicated", utils::string::va("%i", get_dvar_bool("dedicated")));
-				info.set("fs_game", get_dvar_string("fs_game"));
+				info.set("sv_wwwBaseUrl", get_dvar_string("sv_wwwBaseUrl"));
+
+				const auto fs_game = get_dvar_string("fs_game");
+				info.set("fs_game", fs_game);
+
+				if (mod_hash.has_value())
+				{
+					info.set("modHash", mod_hash.value());
+				}
+				else
+				{
+					const auto mod_path = fs_game + "/mod.ff";
+					if (utils::io::file_exists(mod_path))
+					{
+						const auto mod_data = utils::io::read_file(mod_path);
+						const auto sha = utils::cryptography::sha1::compute(mod_data, true);
+						mod_hash = sha; // todo: clear this somewhere
+						info.set("modHash", sha);
+					}
+				}
 
 				network::send(target, "infoResponse", info.build(), '\n');
 			});
@@ -656,28 +745,8 @@ namespace party
 					return;
 				}
 
-				// download server's fastfile mods
-				const auto server_fs_game = info.get("fs_game");
-				if (!server_fs_game.empty()
-					&& utils::string::to_lower(game::fs_gameDirVal->current.string) != utils::string::to_lower(server_fs_game))
+				if (download_mod(target, info))
 				{
-					// download::initiate_client_download(server_fs_game, info.get("isPrivate") == "1"s);
-				}
-
-				// unload our mod if the server doesn't have the mod
-				if ((server_fs_game.empty() 
-					|| utils::string::to_lower(game::fs_gameDirVal->current.string) != utils::string::to_lower(server_fs_game)))
-				{
-					const auto _ = gsl::finally([]()
-					{
-						// only execute this command when the function is done?
-						command::execute("reconnect");
-					});
-
-					game::fs_gameDirVal->current.string = "";
-
-					command::execute("vid_restart"); // reload UI and stuff
-
 					return;
 				}
 
