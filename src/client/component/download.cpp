@@ -62,7 +62,7 @@ namespace download
 
 		int progress_callback(size_t progress)
 		{
-			console::info("[Download] Progress %lli\n", progress);
+			console::debug("[Download] Progress %lli\n", progress);
 			if (download_aborted())
 			{
 				return -1;
@@ -102,7 +102,7 @@ namespace download
 		const auto base = info.get("sv_wwwBaseUrl");
 		if (base.empty())
 		{
-			console::info("[Download] Download failed: server doesn't have 'sv_wwwBaseUrl' set\n");
+			console::debug("[Download] Download failed: server doesn't have 'sv_wwwBaseUrl' set\n");
 			set_download_status(true, false);
 			return;
 		}
@@ -110,7 +110,7 @@ namespace download
 		const auto mod = info.get("fs_game") + "/mod.ff";
 		const auto url = base + "/" + mod;
 
-		console::info("[Download] Downloading %s from %s: %s\n", mod.data(), base.data(), url.data());
+		console::debug("[Download] Downloading %s from %s: %s\n", mod.data(), base.data(), url.data());
 
 		scheduler::once([=]()
 		{
@@ -125,7 +125,7 @@ namespace download
 				const auto data = utils::http::get_data(url, {}, {}, &progress_callback);
 				if (!data.has_value())
 				{
-					console::info("[Download] Download failed with unknown error\n");
+					console::debug("[Download] Download failed with unknown error\n");
 					set_download_status(true, false);
 					return;
 				}
@@ -138,7 +138,7 @@ namespace download
 				const auto& result = data.value();
 				if (result.code != CURLE_OK)
 				{
-					console::info("[Download] Download failed with error %i %s\n", result.code, curl_easy_strerror(result.code));
+					console::debug("[Download] Download failed with error %i %s\n", result.code, curl_easy_strerror(result.code));
 					set_download_status(true, false);
 					return;
 				}
@@ -176,7 +176,7 @@ namespace download
 			return;
 		}
 
-		console::info("[Download] Download aborted\n");
+		console::debug("[Download] Download aborted\n");
 		globals.access([&](globals_t& globals_)
 		{
 			globals_.abort = true;

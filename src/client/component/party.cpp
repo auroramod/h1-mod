@@ -168,10 +168,11 @@ namespace party
 
 			const auto source_hash = info.get("modHash");
 
-			console::info("[Party] download_mod: %s %s\n", server_fs_game.data(), source_hash.data());
+			console::debug("[Party] download_mod:'%s' (%s)\n", server_fs_game.data(), (source_hash.data()));
 
 			if (source_hash.empty())
 			{
+				// is this suppose to return false? server has a valid mod but the hash is empty...?
 				return false;
 			}
 
@@ -184,21 +185,23 @@ namespace party
 			{
 				const auto data = utils::io::read_file(mod_path);
 				const auto hash = utils::cryptography::sha1::compute(data, true);
+
 				has_to_download = source_hash != hash;
 
-				console::info("[Party] has_to_download %i (%s %s)\n", has_to_download, hash.data(), source_hash.data());
+				console::debug("[Party] has_to_download? '%i'\n", has_to_download);
 			}
 			else
 			{
-				console::info("[Party] Mod file does not exist, downloading\n");
+				console::debug("[Party] Mod file does not exist, downloading\n");
 			}
 
 			if (has_to_download)
 			{
-				console::info("[Party] Starting download of mod %s\n", server_fs_game.data());
+				console::debug("[Party] Starting download of mod '%s'\n", server_fs_game.data());
 
 				download::stop_download();
 				download::start_download(target, info);
+
 				return true;
 			}
 			else if (client_fs_game != server_fs_game)
@@ -216,6 +219,7 @@ namespace party
 						connect(target);
 					}, scheduler::pipeline::main, 5s);
 				}, scheduler::pipeline::main);
+
 				return true;
 			}
 
