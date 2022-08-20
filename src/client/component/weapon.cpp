@@ -84,7 +84,13 @@ namespace weapon
 	public:
 		void post_unpack() override
 		{
-			g_setup_level_weapon_def_hook.create(0x462630_b, g_setup_level_weapon_def_stub);
+			if (!game::environment::is_sp())
+			{
+				g_setup_level_weapon_def_hook.create(0x462630_b, g_setup_level_weapon_def_stub);
+
+				// disable custom weapon index mismatch (fix for custom attachments) (NEEDS TESTING)
+				//utils::hook::set<uint8_t>(0x11B910_b, 0xC3); // CG_SetupCustomWeapon
+			}
 
 #ifdef DEBUG
 			command::add("setWeaponFieldFloat", [](const command::params& params)
