@@ -91,28 +91,56 @@ namespace fastfiles
 			return db_read_stream_file_hook.invoke<void>(a1, a2);
 		}
 
-		void skip_extra_zones_stub(utils::hook::assembler& a)
+		namespace mp
 		{
-			const auto skip = a.newLabel();
-			const auto original = a.newLabel();
+			void skip_extra_zones_stub(utils::hook::assembler& a)
+			{
+				const auto skip = a.newLabel();
+				const auto original = a.newLabel();
 
-			a.pushad64();
-			a.test(esi, game::DB_ZONE_CUSTOM); // allocFlags
-			a.jnz(skip);
+				a.pushad64();
+				a.test(esi, game::DB_ZONE_CUSTOM); // allocFlags
+				a.jnz(skip);
 
-			a.bind(original);
-			a.popad64();
-			a.mov(rdx, 0x8E2F80_b);
-			a.mov(rcx, rbp);
-			a.call(0x840A20_b);
-			a.jmp(0x398070_b);
+				a.bind(original);
+				a.popad64();
+				a.mov(rdx, 0x8E2F80_b);
+				a.mov(rcx, rbp);
+				a.call(0x840A20_b);
+				a.jmp(0x398070_b);
 
-			a.bind(skip);
-			a.popad64();
-			a.mov(r14d, game::DB_ZONE_CUSTOM);
-			a.not_(r14d);
-			a.and_(esi, r14d);
-			a.jmp(0x39814F_b);
+				a.bind(skip);
+				a.popad64();
+				a.mov(r14d, game::DB_ZONE_CUSTOM);
+				a.not_(r14d);
+				a.and_(esi, r14d);
+				a.jmp(0x39814F_b);
+			}
+		}
+		namespace sp
+		{
+			void skip_extra_zones_stub(utils::hook::assembler& a)
+			{
+				const auto skip = a.newLabel();
+				const auto original = a.newLabel();
+
+				a.pushad64();
+				a.test(ebp, game::DB_ZONE_CUSTOM); // allocFlags
+				a.jnz(skip);
+
+				a.bind(original);
+				a.popad64();
+				a.mov(r8d, 9);
+				a.mov(rdx, 0x782210_b);
+				a.jmp(0x1F4006_b);
+
+				a.bind(skip);
+				a.popad64();
+				a.mov(r15d, game::DB_ZONE_CUSTOM);
+				a.not_(r15d);
+				a.and_(ebp, r15d);
+				a.jmp(0x1F4023_b);
+			}
 		}
 
 		utils::hook::detour sys_createfile_hook;
@@ -164,7 +192,7 @@ namespace fastfiles
 			std::vector<game::XZoneInfo> data;
 			merge(&data, zoneInfo, zoneCount);
 
-			// code_pre_gfx_mp
+			// code_pre_gfx
 
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
 		}
@@ -174,9 +202,9 @@ namespace fastfiles
 			std::vector<game::XZoneInfo> data;
 			merge(&data, zoneInfo, zoneCount);
 
-			// code_post_gfx_mp
-			// ui_mp
-			// common_mp
+			// code_post_gfx
+			// ui
+			// common
 
 			if (fastfiles::exists("mod"))
 			{
@@ -191,7 +219,7 @@ namespace fastfiles
 			std::vector<game::XZoneInfo> data;
 			merge(&data, zoneInfo, zoneCount);
 
-			// ui_mp
+			// ui
 
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
 		}
@@ -251,28 +279,29 @@ namespace fastfiles
 			// Fix compressor type on streamed file load
 			db_read_stream_file_hook.create(SELECT_VALUE(0x1FB9D0_b, 0x3A1BF0_b), db_read_stream_file_stub);
 
+			// Add custom zone paths
+			sys_createfile_hook.create(game::Sys_CreateFile, sys_create_file_stub);
+
+			// load our custom pre_gfx zones
+			utils::hook::call(SELECT_VALUE(0x3862ED_b, 0x15C3FD_b), load_pre_gfx_zones);
+			utils::hook::call(SELECT_VALUE(0x3865E7_b, 0x15C75D_b), load_pre_gfx_zones);
+
+			// load our custom ui and common zones
+			utils::hook::call(SELECT_VALUE(0x5634AA_b, 0x686421_b), load_post_gfx_and_ui_and_common_zones);
+
+			// load our custom ui zones
+			utils::hook::call(SELECT_VALUE(0x3A5676_b, 0x17C6D2_b), load_ui_zones);
+
 			// Don't load extra zones with loadzone
-			if (!game::environment::is_sp())
+			if (game::environment::is_sp())
 			{
-				// TODO: SP?
-				utils::hook::nop(0x398061_b, 15);
-				utils::hook::jump(0x398061_b, utils::hook::assemble(skip_extra_zones_stub), true);
+				utils::hook::nop(0x1F3FF9_b, 13);
+				utils::hook::jump(0x1F3FF9_b, utils::hook::assemble(sp::skip_extra_zones_stub), true);
 			}
-
-			if (!game::environment::is_sp())
+			else
 			{
-				// Add custom zone paths
-				sys_createfile_hook.create(game::Sys_CreateFile, sys_create_file_stub);
-
-				// load our custom pre_gfx zones
-				utils::hook::call(0x15C3FD_b, load_pre_gfx_zones);
-				utils::hook::call(0x15C75D_b, load_pre_gfx_zones);
-
-				// load our custom ui and common zones
-				utils::hook::call(0x686421_b, load_post_gfx_and_ui_and_common_zones);
-
-				// load our custom ui zones
-				utils::hook::call(0x17C6D2_b, load_ui_zones);
+				utils::hook::nop(0x398061_b, 15);
+				utils::hook::jump(0x398061_b, utils::hook::assemble(mp::skip_extra_zones_stub), true);
 			}
 
 			command::add("loadzone", [](const command::params& params)

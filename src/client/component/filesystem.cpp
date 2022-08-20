@@ -85,7 +85,7 @@ namespace filesystem
 			get_search_paths().insert("data");
 
 			// fs_game flags
-			utils::hook::set<uint32_t>(0x189275_b, 0);
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x40D2A5_b, 0x189275_b), 0);
 		}
 	};
 }
