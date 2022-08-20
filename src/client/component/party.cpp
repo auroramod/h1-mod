@@ -10,6 +10,7 @@
 #include "download.hpp"
 
 #include "game/game.hpp"
+#include "game/ui_scripting/execution.hpp"
 
 #include "steam/steam.hpp"
 
@@ -198,6 +199,17 @@ namespace party
 			if (has_to_download)
 			{
 				console::debug("[Party] Starting download of mod '%s'\n", server_fs_game.data());
+
+				scheduler::once([=]()
+				{
+					const ui_scripting::table mod_data_table{};
+					mod_data_table.set("name", server_fs_game.data());
+
+					ui_scripting::notify("mod_download_init",
+					{
+						{"request", mod_data_table}
+					});
+				}, scheduler::pipeline::lui);
 
 				download::stop_download();
 				download::start_download(target, info);

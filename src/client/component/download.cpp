@@ -6,6 +6,8 @@
 #include "scheduler.hpp"
 #include "party.hpp"
 
+#include "game/ui_scripting/execution.hpp"
+
 #include <utils/concurrency.hpp>
 #include <utils/http.hpp>
 #include <utils/io.hpp>
@@ -145,6 +147,8 @@ namespace download
 
 				utils::io::write_file(mod, result.buffer, false);
 			}
+
+			ui_scripting::notify("mod_download_done", {});
 
 			scheduler::once([=]()
 			{
