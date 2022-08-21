@@ -46,11 +46,19 @@ namespace download
 			});
 		}
 
-		void mark_finished()
+		void mark_unactive()
 		{
 			globals.access([](globals_t& globals_)
 			{
 				globals_.active = false;
+			});
+		}
+
+		void mark_active()
+		{
+			globals.access([](globals_t& globals_)
+			{
+				globals_.active = true;
 			});
 		}
 
@@ -116,8 +124,21 @@ namespace download
 
 		scheduler::once([=]()
 		{
+			const ui_scripting::table mod_data_table{};
+			mod_data_table.set("name", mod.data());
+
+			ui_scripting::notify("mod_download_start",
 			{
-				const auto _0 = gsl::finally(&mark_finished);
+				{"request", mod_data_table}
+			});
+		}, scheduler::pipeline::lui);
+
+		scheduler::once([=]()
+		{
+			{
+				const auto _0 = gsl::finally(&mark_unactive);
+
+				mark_active();
 
 				if (download_aborted())
 				{
@@ -181,10 +202,13 @@ namespace download
 		}
 
 		console::debug("[Download] Download aborted\n");
+
 		globals.access([&](globals_t& globals_)
 		{
 			globals_.abort = true;
 		});
+
+		ui_scripting::notify("mod_download_done", {});
 	}
 
 	class component final : public component_interface
