@@ -79,7 +79,6 @@ namespace menus
 			game::XAssetHeader asset = load_script_menu_internal(menu);
 			if (asset.data)
 			{
-
 				game::UI_AddMenuList(ui_info_array, asset.data, 1);
 				return true;
 			}
@@ -149,7 +148,7 @@ namespace menus
 				ui_mouse_event(0, cursor.x, cursor.y);
 				return 0;
 			}
-			return utils::hook::invoke<bool>(0x1384C0_b, cx_, cy_, dx_, dy_);
+			return utils::hook::invoke<int>(0x1384C0_b, cx_, cy_, dx_, dy_);
 		}
 
 		bool open_script_main_menu()

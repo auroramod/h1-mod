@@ -85,9 +85,6 @@ namespace patches
 
 			game::Dvar_SetFromStringFromSource(dvar, value, game::DvarSetSource::DVAR_SOURCE_SERVERCMD);
 
-			const auto info = dvars::get_dvar_info_from_hash(hash);
-			printf("setclientdvarfromserver: %s : %s", info.has_value() ? info.value().name.data() : dvar_hash, value);
-
 			// original code
 			int index = 0;
 			auto result = utils::hook::invoke<bool>(0x4745E0_b, dvar, &index); // NetConstStrings_SV_GetNetworkDvarIndex
