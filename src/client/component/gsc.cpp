@@ -57,7 +57,16 @@ namespace gsc
 			}
 
 			auto assembly = compiler->output();
-			assembler->assemble(real_name, assembly);
+			try
+			{
+				assembler->assemble(real_name, assembly);
+			}
+			catch (const std::exception& e)
+			{
+				console::error("Failed to assemble '%s':\n%s", real_name.data(), e.what());
+				override_is_default_script = false;
+				return nullptr;
+			}
 
 			const auto script_file_ptr = script_allocator.allocate<game::ScriptFile>();
 			script_file_ptr->name = file_name;
@@ -243,11 +252,6 @@ namespace gsc
 
 			return utils::hook::invoke<int>(0x3968C0_b, type, name);
 		}
-
-		void unknown_function_stub(void*, const char*)
-		{
-			scripting::invoke_error("unknown function (calling a function that doesn't exist?)");
-		}
 	}
 
 	class component final : public component_interface
@@ -268,11 +272,6 @@ namespace gsc
 
 			// replace builtin print function (temporary?)
 			utils::hook::jump(0x437C40_b, gscr_print_stub);
-
-			// patch error to just print to console
-			utils::hook::call(0x50474F_b, unknown_function_stub); // Com_Error
-			utils::hook::call(0x504606_b, unknown_function_stub); // CompileError
-			utils::hook::call(0x504652_b, unknown_function_stub); // ^
 
 			scripting::on_shutdown([](int free_scripts)
 			{
