@@ -105,6 +105,21 @@ namespace scripting
 		return results;
 	}
 
+	std::string find_token_single(unsigned int id)
+	{
+		std::vector<std::string> results;
+
+		for (const auto& token : token_map)
+		{
+			if (token.second == id)
+			{
+				return token.first;
+			}
+		}
+
+		return utils::string::va("_id_%X", id);
+	}
+
 	unsigned int find_token_id(const std::string& name)
 	{
 		const auto result = token_map.find(name);

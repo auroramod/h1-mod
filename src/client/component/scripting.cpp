@@ -10,6 +10,7 @@
 #include "game/scripting/lua/engine.hpp"
 #include "game/scripting/execution.hpp"
 
+#include "gsc.hpp"
 #include "scheduler.hpp"
 #include "scripting.hpp"
 
@@ -21,7 +22,10 @@ namespace scripting
 {
 	std::unordered_map<int, std::unordered_map<std::string, int>> fields_table;
 	std::unordered_map<std::string, std::unordered_map<std::string, const char*>> script_function_table;
+	std::unordered_map<std::string, std::vector<std::pair<std::string, const char*>>> script_function_table_sort;
 	utils::concurrency::container<shared_table_t> shared_table;
+
+	std::string current_file;
 
 	namespace
 	{
@@ -39,7 +43,7 @@ namespace scripting
 
 		utils::hook::detour db_find_xasset_header_hook;
 
-		std::string current_file;
+		std::string current_scriptfile;
 		unsigned int current_file_id{};
 
 		std::unordered_map<unsigned int, std::string> canonical_string_table;
@@ -95,6 +99,7 @@ namespace scripting
 		{
 			if (free_scripts)
 			{
+				script_function_table_sort.clear();
 				script_function_table.clear();
 				canonical_string_table.clear();
 			}
@@ -123,6 +128,8 @@ namespace scripting
 
 		void process_script_stub(const char* filename)
 		{
+			current_scriptfile = filename;
+
 			const auto file_id = atoi(filename);
 			if (file_id)
 			{
@@ -147,6 +154,39 @@ namespace scripting
 			}
 
 			return result;
+		}
+
+		std::string get_token_single(unsigned int id)
+		{
+			if (canonical_string_table.find(id) != canonical_string_table.end())
+			{
+				return canonical_string_table[id];
+			}
+
+			return scripting::find_token_single(id);
+		}
+
+		void add_function_sort(unsigned int id, const char* pos)
+		{
+			std::string filename = current_file;
+			if (current_file_id)
+			{
+				filename = get_token_single(current_file_id);
+			}
+
+			if (script_function_table_sort.find(filename) == script_function_table_sort.end())
+			{
+				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_scriptfile.data(), false);
+				if (script)
+				{
+					const auto end = &script->bytecode[script->bytecodeLen];
+					script_function_table_sort[filename].emplace_back("__end__", end);
+				}
+			}
+
+			const auto name = get_token_single(id);
+			auto& itr = script_function_table_sort[filename];
+			itr.insert(itr.end() - 1, { name, pos });
 		}
 
 		void add_function(const std::string& file, unsigned int id, const char* pos)
