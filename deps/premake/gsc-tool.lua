@@ -3,7 +3,7 @@ gsc_tool = {
 }
 
 function gsc_tool.import()
-    links {"xsk-gsc", "xsk-gsc-utils"}
+    links {"xsk-gsc-h1", "xsk-gsc-utils"}
     gsc_tool.includes()
 end
 
