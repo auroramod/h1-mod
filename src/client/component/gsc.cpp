@@ -4,10 +4,12 @@
 #include "console.hpp"
 #include "gsc.hpp"
 #include "filesystem.hpp"
+#include "logfile.hpp"
 #include "scripting.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
+#include "game/scripting/functions.hpp"
 
 #include <xsk/gsc/types.hpp>
 #include <xsk/gsc/interfaces/compiler.hpp>
@@ -23,167 +25,11 @@
 
 namespace gsc
 {
+	void* func_table[0x1000]{};
+
 	namespace
 	{
 		game::dvar_t* developer_script = nullptr;
-
-		std::unordered_map<int, std::string> opcodes =
-		{
-			{0x17, "SET_NEW_LOCAL_VARIABLE_FIELD_CACHED0"},
-			{0x18, "EVAL_SELF_FIELD_VARIABLE"},
-			{0x19, "RETN"},
-			{0x1A, "CALL_BUILTIN_FUNC_0"},
-			{0x1B, "CALL_BUILTIN_FUNC_1"},
-			{0x1C, "CALL_BUILTIN_FUNC_2"},
-			{0x1D, "CALL_BUILTIN_FUNC_3"},
-			{0x1E, "CALL_BUILTIN_FUNC_4"},
-			{0x1F, "CALL_BUILTIN_FUNC_5"},
-			{0x20, "CALL_BUILTIN_FUNC"},
-			{0x21, "BOOL_NOT"},
-			{0x22, "CALL_FAR_METHOD_THEAD"},
-			{0x23, "JMP_EXPR_TRUE"},
-			{0x24, "SET_LEVEL_FIELD_VARIABLE_FIELD"},
-			{0x25, "CAST_BOOL"},
-			{0x26, "EVAL_NEW_LOCAL_ARRAY_REF_CACHED0"},
-			{0x27, "CALL_BUILTIN_FUNC_POINTER"},
-			{0x28, "INEQUALITY"},
-			{0x29, "GET_THISTHREAD"},
-			{0x2A, "CLEAR_FIELD_VARIABLE"},
-			{0x2B, "GET_FLOAT"},
-			{0x2C, "SAFE_CREATE_VARIABLE_FIELD_CACHED"},
-			{0x2D, "CALL_FAR_FUNC2"},
-			{0x2E, "CALL_FAR_FUNC"},
-			{0x2F, "CALL_FAR_FUNC_CHILD_THREAD"},
-			{0x30, "CLEAR_LOCAL_VARIABLE_FIELD_CACHED0"},
-			{0x31, "CLEAR_LOCAL_VARIABLE_FIELD_CACHED"},
-			{0x32, "CHECK_CLEAR_PARAMS"},
-			{0x33, "CAST_FIELD_OBJ"},
-			{0x34, "END"},
-			{0x35, "SIZE"},
-			{0x36, "EMPTY_ARRAY"},
-			{0x37, "BIT_AND"},
-			{0x38, "LESSEQUAL"},
-			{0x39, "VOIDCODEPOS"},
-			{0x3A, "CALL_METHOD_THREAD_POINTER"},
-			{0x3B, "ENDSWITCH"},
-			{0x3C, "CLEAR_VARIABLE_FIELD"},
-			{0x3D, "DIV"},
-			{0x3E, "CALL_FAR_METHOD_CHILD_THEAD"},
-			{0x3F, "GET_USHORT"},
-			{0x40, "JMP_TRUE"},
-			{0x41, "GET_SELF"},
-			{0x42, "CALL_FAR_FUNC_THREAD"},
-			{0x43, "CALL_LOCAL_FUNC_THREAD"},
-			{0x44, "SET_LOCAL_VARIABLE_FIELD_CACHED0"},
-			{0x45, "SET_LOCAL_VARIABLE_FIELD_CACHED"},
-			{0x46, "PLUS"},
-			{0x47, "BOOL_COMPLEMENT"},
-			{0x48, "CALL_METHOD_POINTER"},
-			{0x49, "INC"},
-			{0x4A, "REMOVE_LOCAL_VARIABLES"},
-			{0x4B, "JMP_EXPR_FALSE"},
-			{0x4C, "SWITCH"},
-			{0x4D, "CLEAR_PARAMS"},
-			{0x4E, "EVAL_LOCAL_VARIABLE_REF_CACHED0"},
-			{0x4F, "EVAL_LOCAL_VARIABLE_REF_CACHED"},
-			{0x50, "CALL_LOCAL_METHOD"},
-			{0x51, "EVAL_FIELD_VARIABLE"},
-			{0x52, "EVAL_FIELD_VARIABLE_REF"},
-			{0x53, "GET_STRING"},
-			{0x54, "CALL_FUNC_POINTER"},
-			{0x55, "EVAL_LEVEL_FIELD_VARIABLE"},
-			{0x56, "GET_VECTOR"},
-			{0x57, "ENDON"},
-			{0x58, "GREATEREQUAL"},
-			{0x59, "GET_SELF_OBJ"},
-			{0x5A, "SET_ANIM_FIELD_VARIABLE_FIELD"},
-			{0x5B, "SET_VARIABLE_FIELD"},
-			{0x5C, "CALL_LOCAL_FUNC2"},
-			{0x5D, "CALL_LOCAL_FUNC"},
-			{0x5E, "EVAL_LOCAL_ARRAY_REF_CACHED0"},
-			{0x5F, "EVAL_LOCAL_ARRAY_REF_CACHED"},
-			{0x60, "GET_FAR_FUNC"},
-			{0x61, "LESS"},
-			{0x62, "GET_GAME_REF"},
-			{0x63, "WAITFRAME"},
-			{0x64, "WAITTILLFRAMEEND"},
-			{0x65, "SAFE_SET_VARIABLE_FIELD_CACHED0"},
-			{0x66, "SAFE_SET_VARIABLE_FIELD_CACHED"},
-			{0x67, "CALL_METHOD_CHILD_THREAD_POINTER"},
-			{0x68, "GET_LEVEL"},
-			{0x69, "NOTIFY"},
-			{0x6A, "DEC_TOP"},
-			{0x6B, "SHIFT_LEFT"},
-			{0x6C, "CALL_LOCAL_METHOD_THREAD"},
-			{0x6D, "CALL_LOCAL_METHOD_CHILD_THREAD"},
-			{0x6E, "GREATER"},
-			{0x6F, "EVAL_LOCAL_VARIABLE_CACHED0"},
-			{0x70, "EVAL_LOCAL_VARIABLE_CACHED1"},
-			{0x71, "EVAL_LOCAL_VARIABLE_CACHED2"},
-			{0x72, "EVAL_LOCAL_VARIABLE_CACHED3"},
-			{0x73, "EVAL_LOCAL_VARIABLE_CACHED4"},
-			{0x74, "EVAL_LOCAL_VARIABLE_CACHED5"},
-			{0x75, "EVAL_LOCAL_VARIABLE_CACHED"},
-			{0x76, "SAFE_SET_WAITTILL_VARIABLE_FIELD_CACHED"},
-			{0x77, "JMP"},
-			{0x78, "CALL_FUNC_THREAD_POINTER"},
-			{0x79, "GET_ZERO"},
-			{0x7A, "WAIT"},
-			{0x7B, "MINUS"},
-			{0x7C, "SET_SELF_FIELD_VARIABLE_FIELD"},
-			{0x7D, "EVAL_NEW_LOCAL_VARIABLE_REF_CACHED0"},
-			{0x7E, "MULT"},
-			{0x7F, "CREATE_LOCAL_VARIABLE"},
-			{0x80, "CALL_LOCAL_FUNC_CHILD_THREAD"},
-			{0x81, "GET_INT"},
-			{0x82, "MOD"},
-			{0x83, "EVAL_ANIM_FIELD_VARIABLE_REF"},
-			{0x84, "GET_BUILTIN_FUNC"},
-			{0x85, "GET_GAME"},
-			{0x86, "WAITTILL"},
-			{0x87, "DEC"},
-			{0x88, "EVAL_LOCAL_VARIABLE_OBJECT_CACHED"},
-			{0x89, "PRE_CALL"},
-			{0x8A, "GET_ANIM"},
-			{0x8B, "GET_UNDEFINED"},
-			{0x8C, "EVAL_LEVEL_FIELD_VARIABLE_REF"},
-			{0x8D, "GET_ANIM_OBJ"},
-			{0x8E, "GET_LEVEL_OBJ"},
-			{0x8F, "BIT_EXOR"},
-			{0x90, "EQUALITY"},
-			{0x91, "CLEAR_ARRAY"},
-			{0x92, "JMP_BACK"},
-			{0x93, "GET_ANIMATION"},
-			{0x94, "EVAL_ANIM_FIELD_VARIABLE"},
-			{0x95, "GET_ANIMTREE"},
-			{0x96, "GET_ISTRING"},
-			{0x97, "EVAL_ARRAY_REF"},
-			{0x98, "EVAL_SELF_FIELD_VARIABLE_REF"},
-			{0x99, "GET_NBYTE"},
-			{0x9A, "GET_BUILTIN_METHOD"},
-			{0x9B, "CALL_BUILTIN_METHOD_POINTER"},
-			{0x9C, "EVAL_ARRAY"},
-			{0x9D, "VECTOR"},
-			{0x9E, "CALL_FAR_METHOD"},
-			{0x9F, "EVAL_LOCAL_ARRAY_CACHED"},
-			{0xA0, "GET_BYTE"},
-			{0xA1, "CALL_FUNC_CHILD_THREAD_POINTER"},
-			{0xA2, "BIT_OR"},
-			{0xA3, "ADD_ARRAY"},
-			{0xA4, "WAITTILLMATCH2"},
-			{0xA5, "WAITTILLMATCH"},
-			{0xA6, "GET_LOCAL_FUNC"},
-			{0xA7, "GET_NUSHORT"},
-			{0xA8, "SHIFT_RIGHT"},
-			{0xA9, "CALL_BUILTIN_METHOD_0"},
-			{0xAA, "CALL_BUILTIN_METHOD_1"},
-			{0xAB, "CALL_BUILTIN_METHOD_2"},
-			{0xAC, "CALL_BUILTIN_METHOD_3"},
-			{0xAD, "CALL_BUILTIN_METHOD_4"},
-			{0xAE, "CALL_BUILTIN_METHOD_5"},
-			{0xAF, "CALL_BUILTIN_METHOD"},
-			{0xB0, "JMP_FALSE"},
-		};
 
 		auto compiler = ::gsc::compiler();
 		auto assembler = ::gsc::assembler();
@@ -191,6 +37,10 @@ namespace gsc
 		std::unordered_map<std::string, unsigned int> main_handles;
 		std::unordered_map<std::string, unsigned int> init_handles;
 		std::unordered_map<std::string, game::ScriptFile*> loaded_scripts;
+		std::unordered_map<unsigned int, scripting::script_function> functions;
+		std::optional<std::string> gsc_error;
+
+		bool force_error_print = false;
 
 		char* allocate_buffer(size_t size)
 		{
@@ -429,22 +279,29 @@ namespace gsc
 
 		void* vm_error_stub(void* a1)
 		{
-			if (!developer_script->current.enabled)
+			if (!developer_script->current.enabled || force_error_print)
 			{
 				return utils::hook::invoke<void*>(0x59DDA0_b, a1);
 			}
+
+			force_error_print = false;
 
 			console::warn("*********** script runtime error *************\n");
 
 			const auto opcode_id = *reinterpret_cast<std::uint8_t*>(0x7B8968_b);
 			const auto opcode = get_opcode_name(opcode_id);
+			const std::string error_str = gsc_error.has_value()
+				? utils::string::va(": %s", gsc_error.value().data())
+				: "";
 			if (opcode.has_value())
 			{
-				console::warn("while processing instruction %s\n", opcode.value().data());
+				console::warn("while processing instruction %s%s\n",
+					opcode.value().data(), error_str.data());
 			}
 			else
 			{
-				console::warn("while processing instruction 0x%X\n", opcode_id);
+				console::warn("while processing instruction 0x%X%s\n",
+					opcode_id, error_str.data());
 			}
 
 			print_callstack();
@@ -457,6 +314,42 @@ namespace gsc
 			// TODO: maybe add the unknown function being referenced?
 			game::Com_Error(game::ERR_DROP, "LinkFile: unknown function in script '%s.gsc'", 
 				scripting::current_file.data());
+		}
+
+		void register_gsc_functions_stub(void* a1, void* a2)
+		{
+			utils::hook::invoke<void>(0x1CE120_b, a1, a2);
+			for (const auto& func : functions)
+			{
+				game::Scr_RegisterFunction(func.second, 0, func.first);
+			}
+		}
+
+		scripting::script_value get_argument(int index)
+		{
+			if (index >= static_cast<int>(game::scr_VmPub->outparamcount))
+			{
+				return {};
+			}
+
+			const auto value = &game::scr_VmPub->top[-index];
+
+			return scripting::script_value(*value);
+		}
+
+		auto function_id_start = 0x30A;
+		void add_function(const std::string& name, scripting::script_function function)
+		{
+			const auto id = ++function_id_start;
+			scripting::function_map[name] = id; // TODO: change to gsc-tool's function map add function
+			functions[id] = function;
+		}
+
+		void set_gsc_error(const std::string& error)
+		{
+			force_error_print = true;
+			gsc_error = error;
+			game::Scr_ErrorInternal();
 		}
 	}
 
@@ -504,6 +397,42 @@ namespace gsc
 			// patch error to drop + give more information
 			utils::hook::call(0x504606_b, unknown_function_stub); // CompileError
 			utils::hook::call(0x504652_b, unknown_function_stub); // ^
+
+			utils::hook::call(0x504C8B_b, register_gsc_functions_stub);
+			utils::hook::set<uint32_t>(0x50484C_b, 0x1000); // change builtin func count
+
+#define RVA(ptr) static_cast<uint32_t>(reinterpret_cast<size_t>(ptr) - 0x140000000)
+			std::memcpy(&func_table, reinterpret_cast<void*>(0xAC83820_b), sizeof(reinterpret_cast<void*>(0xAC83820_b)));
+			utils::hook::set<uint32_t>(0x504852_b + 4, RVA(&func_table));
+			utils::hook::inject(0x504C58_b + 3, &func_table);
+			utils::hook::set<uint32_t>(0x512778_b + 4, RVA(&func_table));
+
+			add_function("replacefunc", [](const game::scr_entref_t ref)
+			{
+				try
+				{
+					const auto what = get_argument(0).get_raw();
+					const auto with = get_argument(1).get_raw();
+
+					if (what.type != game::SCRIPT_FUNCTION)
+					{
+						set_gsc_error("replaceFunc: parameter 0 must be a function");
+						return;
+					}
+
+					if (with.type != game::SCRIPT_FUNCTION)
+					{
+						set_gsc_error("replaceFunc: parameter 0 must be a function");
+						return;
+					}
+
+					logfile::set_gsc_hook(what.u.codePosValue, with.u.codePosValue);
+				}
+				catch (const std::exception& e)
+				{
+					set_gsc_error(utils::string::va("replaceFunc: %s", e.what()));
+				}
+			});
 
 			scripting::on_shutdown([](int free_scripts)
 			{

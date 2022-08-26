@@ -1,6 +1,8 @@
 #include <std_include.hpp>
 #include "functions.hpp"
 
+#include "../../component/gsc.hpp"
+
 #include <utils/string.hpp>
 
 namespace scripting
@@ -59,7 +61,7 @@ namespace scripting
 
 		script_function get_function_by_index(const unsigned index)
 		{
-			static const auto function_table = SELECT_VALUE(0xB8CC510_b, 0xAC83820_b);
+			static const auto function_table = &gsc::func_table;
 			static const auto method_table = SELECT_VALUE(0xB8CDD60_b, 0xAC85070_b);
 
 			if (index < 0x30A)

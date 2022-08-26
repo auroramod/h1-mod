@@ -50,6 +50,8 @@ namespace scripting
 
 		std::vector<std::function<void(bool)>> shutdown_callbacks;
 
+		std::unordered_map<unsigned int, std::string> canonical_string_table;
+
 		void vm_notify_stub(const unsigned int notify_list_owner_id, const game::scr_string_t string_value,
 			game::VariableValue* top)
 		{
@@ -225,6 +227,16 @@ namespace scripting
 	void on_shutdown(const std::function<void(bool)>& callback)
 	{
 		shutdown_callbacks.push_back(callback);
+	}
+
+	std::optional<std::string> get_canonical_string(const unsigned int id)
+	{
+		if (canonical_string_table.find(id) == canonical_string_table.end())
+		{
+			return {};
+		}
+
+		return {canonical_string_table[id]};
 	}
 
 	class component final : public component_interface
