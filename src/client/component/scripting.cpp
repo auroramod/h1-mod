@@ -10,9 +10,14 @@
 #include "game/scripting/lua/engine.hpp"
 #include "game/scripting/execution.hpp"
 
+#include "console.hpp"
 #include "gsc.hpp"
 #include "scheduler.hpp"
 #include "scripting.hpp"
+
+#include <xsk/gsc/types.hpp>
+#include <xsk/resolver.hpp>
+#include <xsk/utils/compression.hpp>
 
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
@@ -133,7 +138,7 @@ namespace scripting
 			const auto file_id = atoi(filename);
 			if (file_id)
 			{
-				current_file_id = file_id;
+				current_file_id = static_cast<std::uint16_t>(file_id);
 			}
 			else
 			{
@@ -163,7 +168,7 @@ namespace scripting
 				return canonical_string_table[id];
 			}
 
-			return scripting::find_token_single(id);
+			return xsk::gsc::h1::resolver::token_name(static_cast<std::uint16_t>(id));
 		}
 
 		void add_function_sort(unsigned int id, const char* pos)
@@ -200,6 +205,8 @@ namespace scripting
 
 		void scr_set_thread_position_stub(unsigned int thread_name, const char* code_pos)
 		{
+			add_function_sort(thread_name, code_pos);
+
 			if (current_file_id)
 			{
 				const auto names = get_token_names(current_file_id);

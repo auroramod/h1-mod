@@ -341,7 +341,8 @@ namespace gsc
 		void add_function(const std::string& name, scripting::script_function function)
 		{
 			const auto id = ++function_id_start;
-			scripting::function_map[name] = id; // TODO: change to gsc-tool's function map add function
+			console::debug("adding new function '%s' with id '%d'\n", name.data(), id);
+			xsk::gsc::h1::resolver::add_function(name, static_cast<std::uint16_t>(id));
 			functions[id] = function;
 		}
 
