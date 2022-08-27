@@ -15,13 +15,11 @@
 #include <xsk/gsc/interfaces/compiler.hpp>
 #include <xsk/gsc/interfaces/assembler.hpp>
 #include <xsk/resolver.hpp>
-#include <xsk/utils/compression.hpp>
 #include <interface.hpp>
 
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
 #include <utils/string.hpp>
-#include <utils/compression.hpp>
 
 namespace gsc
 {
@@ -97,17 +95,16 @@ namespace gsc
 			const auto script = assembler->output_script();
 			script_file_ptr->bytecodeLen = static_cast<int>(script.size());
 
-			const auto compressed = xsk::utils::zlib::compress(stack);
-			const auto buffer_size = script.size() + compressed.size() + 1;
+			const auto buffer_size = script.size() + 1;
 			const auto script_size = script.size();
 
 			const auto buffer = allocate_buffer(buffer_size);
 			std::memcpy(buffer, script.data(), script_size);
-			std::memcpy(&buffer[script_size], compressed.data(), compressed.size()); 
+			std::memcpy(&buffer[script_size], stack.data(), stack.size());
 
 			script_file_ptr->bytecode = &buffer[0];
 			script_file_ptr->buffer = &buffer[script.size()];
-			script_file_ptr->compressedLen = static_cast<int>(compressed.size());
+			script_file_ptr->compressedLen = 0;
 
 			loaded_scripts[real_name] = script_file_ptr;
 
@@ -229,6 +226,18 @@ namespace gsc
 			}
 
 			return utils::hook::invoke<int>(0x3968C0_b, type, name);
+		}
+
+		void db_get_raw_buffer_stub(const game::RawFile* rawfile, char* buf, const int size)
+		{
+			if (rawfile->len > 0 && rawfile->compressedLen == 0)
+			{
+				std::memset(buf, 0, size);
+				std::memcpy(buf, rawfile->buffer, std::min(rawfile->len, size));
+				return;
+			}
+
+			utils::hook::invoke<void>(0x396080_b, rawfile, buf, size);
 		}
 
 		std::optional<std::pair<std::string, std::string>> find_function(const char* pos)
@@ -382,6 +391,9 @@ namespace gsc
 			// hook xasset functions to return our own custom scripts
 			utils::hook::call(0x50E357_b, find_script);
 			utils::hook::call(0x50E367_b, db_is_xasset_default);
+
+			// loads scripts with an uncompressed stack
+			utils::hook::call(0x50E3C0_b, db_get_raw_buffer_stub);
 
 			// load handles
 			utils::hook::call(0x18C325_b, load_gametype_script_stub);
