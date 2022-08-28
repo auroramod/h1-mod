@@ -36,6 +36,7 @@ namespace scripting
 	{
 		utils::hook::detour vm_notify_hook;
 		utils::hook::detour vm_execute_hook;
+		utils::hook::detour g_load_structs_hook;
 		utils::hook::detour scr_load_level_hook;
 		utils::hook::detour g_shutdown_game_hook;
 
@@ -91,13 +92,29 @@ namespace scripting
 			return vm_execute_hook.invoke<unsigned int>();
 		}
 
-		void scr_load_level_stub()
+		void g_load_structs_stub()
 		{
-			scr_load_level_hook.invoke<void>();
 			if (!game::VirtualLobby_Loaded())
 			{
+				// start lua engine
 				lua::engine::start();
+
+				// and then execute main handles
+				gsc::load_main_handles();
 			}
+
+			g_load_structs_hook.invoke<void>();
+		}
+
+		void scr_load_level_stub()
+		{
+			if (!game::VirtualLobby_Loaded())
+			{
+				// execute init handles
+				gsc::load_init_handles();
+			}
+
+			scr_load_level_hook.invoke<void>();
 		}
 
 		void g_shutdown_game_stub(const int free_scripts)
@@ -226,6 +243,7 @@ namespace scripting
 
 			if (!game::environment::is_sp())
 			{
+				g_load_structs_hook.create(0x458520_b, g_load_structs_stub);
 				scr_load_level_hook.create(0x450FC0_b, scr_load_level_stub);
 			}
 			else

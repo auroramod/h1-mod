@@ -226,48 +226,10 @@ namespace gsc
 
 			clear();
 
-			// TODO: look over this again? quak and I think that the game should handle loading the fully custom scripts that aren't overriding stock files and have the
-			// mod creator execute the handles they want themselves. also, does the game load the file/handle right as it's called? -mikey
-			
-			/*
-			fastfiles::enum_assets(game::ASSET_TYPE_RAWFILE, [](game::XAssetHeader header)
-			{
-				std::string name = header.scriptfile->name;
-
-				if (name.ends_with(".gsc") && name.starts_with("scripts/"))
-				{
-					const auto base_name = name.substr(0, name.size() - 4);
-					load_script(base_name);
-				}
-			}, true);
-			*/
-
 			for (const auto& path : filesystem::get_search_paths())
 			{
 				load_scripts(path);
 			}
-		}
-
-		void g_load_structs_stub()
-		{
-			for (auto& function_handle : main_handles)
-			{
-				console::info("Executing '%s::main'\n", function_handle.first.data());
-				game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
-			}
-
-			utils::hook::invoke<void>(0x458520_b);
-		}
-
-		void save_registered_weapons_stub()
-		{
-			for (auto& function_handle : init_handles)
-			{
-				console::info("Executing '%s::init'\n", function_handle.first.data());
-				game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
-			}
-
-			utils::hook::invoke<void>(0x41DBC0_b);
 		}
 
 		int db_is_xasset_default(game::XAssetType type, const char* name)
@@ -455,6 +417,24 @@ namespace gsc
 		return game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, name, 1).scriptfile;
 	}
 
+	void load_main_handles()
+	{
+		for (auto& function_handle : main_handles)
+		{
+			console::info("Executing '%s::main'\n", function_handle.first.data());
+			game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
+		}
+	}
+
+	void load_init_handles()
+	{
+		for (auto& function_handle : init_handles)
+		{
+			console::info("Executing '%s::init'\n", function_handle.first.data());
+			game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
+		}
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -469,12 +449,8 @@ namespace gsc
 			// loads scripts with an uncompressed stack
 			utils::hook::call(0x50E3C0_b, db_get_raw_buffer_stub);
 
-			// load handles
+			// load script handles
 			utils::hook::call(0x18C325_b, load_gametype_script_stub);
-
-			// execute handles
-			utils::hook::call(0x420EA2_b, g_load_structs_stub);
-			utils::hook::call(0x420F19_b, save_registered_weapons_stub);
 
 			// replace builtin print function (temporary?)
 			utils::hook::jump(0x437C40_b, gscr_print_stub);
