@@ -161,39 +161,6 @@ namespace scripting
 			return result;
 		}
 
-		std::string get_token_single(unsigned int id)
-		{
-			if (canonical_string_table.find(id) != canonical_string_table.end())
-			{
-				return canonical_string_table[id];
-			}
-
-			return xsk::gsc::h1::resolver::token_name(static_cast<std::uint16_t>(id));
-		}
-
-		void add_function_sort(unsigned int id, const char* pos)
-		{
-			std::string filename = current_file;
-			if (current_file_id)
-			{
-				filename = get_token_single(current_file_id);
-			}
-
-			if (script_function_table_sort.find(filename) == script_function_table_sort.end())
-			{
-				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_scriptfile.data(), false);
-				if (script)
-				{
-					const auto end = &script->bytecode[script->bytecodeLen];
-					script_function_table_sort[filename].emplace_back("__end__", end);
-				}
-			}
-
-			const auto name = get_token_single(id);
-			auto& itr = script_function_table_sort[filename];
-			itr.insert(itr.end() - 1, { name, pos });
-		}
-
 		void add_function(const std::string& file, unsigned int id, const char* pos)
 		{
 			const auto function_names = get_token_names(id);
@@ -205,8 +172,6 @@ namespace scripting
 
 		void scr_set_thread_position_stub(unsigned int thread_name, const char* code_pos)
 		{
-			add_function_sort(thread_name, code_pos);
-
 			if (current_file_id)
 			{
 				const auto names = get_token_names(current_file_id);

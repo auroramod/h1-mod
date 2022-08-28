@@ -2,6 +2,7 @@
 #include "loader/component_loader.hpp"
 
 #include "console.hpp"
+#include "fastfiles.hpp"
 #include "gsc.hpp"
 #include "filesystem.hpp"
 #include "logfile.hpp"
@@ -45,6 +46,38 @@ namespace gsc
 			return utils::hook::invoke<char*>(0x5A4DC0_b, size, 4, 1, 5);
 		}
 
+		bool read_scriptfile(const std::string& name, std::string* data)
+		{
+			if (filesystem::read_file(name, data))
+			{
+				return true;
+			}
+
+			// TODO: check back on this to see if there is a property we can distinguish compared to our rawfiles, like compressedLen?
+			// this will filter out the rawfile "gsc" the game zones actually have, this seems to get all of them
+			if (name.starts_with("maps/createfx") || name.starts_with("maps/createart")
+				|| (name.starts_with("maps/mp") && name.ends_with("_fx.gsc")))
+			{
+				return false;
+			}
+
+			const auto asset = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, name.data(), false);
+			if (asset.rawfile)
+			{
+				const auto len = game::DB_GetRawFileLen(asset.rawfile);
+				data->resize(len);
+				game::DB_GetRawBuffer(asset.rawfile, data->data(), len);
+				if (len > 0)
+				{
+					data->pop_back();
+				}
+
+				return true;
+			}
+
+			return false;
+		}
+
 		game::ScriptFile* load_custom_script(const char* file_name, const std::string& real_name)
 		{
 			if (loaded_scripts.find(real_name) != loaded_scripts.end())
@@ -53,7 +86,7 @@ namespace gsc
 			}
 
 			std::string source_buffer{};
-			if (!filesystem::read_file(real_name + ".gsc", &source_buffer))
+			if (!read_scriptfile(real_name + ".gsc", &source_buffer))
 			{
 				return nullptr;
 			}
@@ -111,6 +144,30 @@ namespace gsc
 			return script_file_ptr;
 		}
 
+		void load_script(const std::string& name)
+		{
+			if (!game::Scr_LoadScript(name.data()))
+			{
+				return;
+			}
+
+			const auto main_handle = game::Scr_GetFunctionHandle(name.data(),
+				xsk::gsc::h1::resolver::token_id("main"));
+			const auto init_handle = game::Scr_GetFunctionHandle(name.data(),
+				xsk::gsc::h1::resolver::token_id("init"));
+
+			if (main_handle)
+			{
+				console::info("Loaded '%s::main'\n", name.data());
+				main_handles[name] = main_handle;
+			}
+			else if (init_handle)
+			{
+				console::info("Loaded '%s::init'\n", name.data());
+				init_handles[name] = init_handle;
+			}
+		}
+
 		void load_scripts(const std::filesystem::path& root_dir)
 		{
 			std::filesystem::path script_dir = root_dir / "scripts";
@@ -131,26 +188,7 @@ namespace gsc
 				const auto relative = path.lexically_relative(root_dir).generic_string();
 				const auto base_name = relative.substr(0, relative.size() - 4);
 
-				if (!game::Scr_LoadScript(base_name.data()))
-				{
-					continue;
-				}
-
-				const auto main_handle = game::Scr_GetFunctionHandle(base_name.data(), 
-					xsk::gsc::h1::resolver::token_id("main"));
-				const auto init_handle = game::Scr_GetFunctionHandle(base_name.data(), 
-					xsk::gsc::h1::resolver::token_id("init"));
-
-				if (main_handle)
-				{
-					console::info("Loaded '%s::main'\n", base_name.data());
-					main_handles[base_name] = main_handle;
-				}
-				else if (init_handle)
-				{
-					console::info("Loaded '%s::init'\n", base_name.data());
-					init_handles[base_name] = init_handle;
-				}
+				load_script(base_name);
 			}
 		}
 
@@ -173,7 +211,7 @@ namespace gsc
 				buffer.append("\t");
 			}
 
-			printf("%s\n", buffer.data());
+			console::info("[SCRIPT] %s\n", buffer.data());
 		}
 
 		void load_gametype_script_stub()
@@ -187,6 +225,22 @@ namespace gsc
 
 			clear();
 
+			// TODO: look over this again? quak and I think that the game should handle loading the fully custom scripts that aren't overriding stock files and have the
+			// mod creator execute the handles they want themselves. also, does the game load the file/handle right as it's called? -mikey
+			
+			/*
+			fastfiles::enum_assets(game::ASSET_TYPE_RAWFILE, [](game::XAssetHeader header)
+			{
+				std::string name = header.scriptfile->name;
+
+				if (name.ends_with(".gsc") && name.starts_with("scripts/"))
+				{
+					const auto base_name = name.substr(0, name.size() - 4);
+					load_script(base_name);
+				}
+			}, true);
+			*/
+
 			for (const auto& path : filesystem::get_search_paths())
 			{
 				load_scripts(path);
@@ -198,34 +252,31 @@ namespace gsc
 			for (auto& function_handle : main_handles)
 			{
 				console::info("Executing '%s::main'\n", function_handle.first.data());
-				const auto thread = game::Scr_ExecThread(function_handle.second, 0);
-				game::RemoveRefToObject(thread);
+				game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
 			}
 
 			utils::hook::invoke<void>(0x458520_b);
 		}
 
-		// fed has his as scr_loadlevel, but this shouldn't be a problem
 		void save_registered_weapons_stub()
 		{
 			for (auto& function_handle : init_handles)
 			{
 				console::info("Executing '%s::init'\n", function_handle.first.data());
-				const auto thread = game::Scr_ExecThread(function_handle.second, 0);
-				game::RemoveRefToObject(thread);
+				game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
 			}
 
 			utils::hook::invoke<void>(0x41DBC0_b);
 		}
 
-		int db_is_xasset_default(int type, const char* name)
+		int db_is_xasset_default(game::XAssetType type, const char* name)
 		{
 			if (loaded_scripts.find(name) != loaded_scripts.end())
 			{
 				return 0;
 			}
 
-			return utils::hook::invoke<int>(0x3968C0_b, type, name);
+			return game::DB_IsXAssetDefault(type, name);
 		}
 
 		void db_get_raw_buffer_stub(const game::RawFile* rawfile, char* buf, const int size)
@@ -320,7 +371,7 @@ namespace gsc
 
 		void unknown_function_stub()
 		{
-			// TODO: maybe add the unknown function being referenced?
+			// maybe add the unknown function being referenced?
 			game::Com_Error(game::ERR_DROP, "LinkFile: unknown function in script '%s.gsc'", 
 				scripting::current_file.data());
 		}
@@ -350,7 +401,6 @@ namespace gsc
 		void add_function(const std::string& name, scripting::script_function function)
 		{
 			const auto id = ++function_id_start;
-			console::debug("adding new function '%s' with id '%d'\n", name.data(), id);
 			xsk::gsc::h1::resolver::add_function(name, static_cast<std::uint16_t>(id));
 			functions[id] = function;
 		}
@@ -365,6 +415,11 @@ namespace gsc
 
 	game::ScriptFile* find_script(game::XAssetType /*type*/, const char* name, int /*allow_create_default*/)
 	{
+		if (game::VirtualLobby_Loaded())
+		{
+			return game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, name, 1).scriptfile;
+		}
+
 		std::string real_name = name;
 		const auto id = static_cast<std::uint16_t>(std::atoi(name));
 		if (id)

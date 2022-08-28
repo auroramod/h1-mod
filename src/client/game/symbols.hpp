@@ -170,6 +170,12 @@ namespace game
 	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x0, 0x0};
 	WEAK symbol<XAssetHeader(XAssetType type, const char* name, 
 		int createDefault)> DB_FindXAssetHeader{0x1F1120, 0x3950C0};
+
+	WEAK symbol<int(XAssetType type, const char* name)> DB_IsXAssetDefault{0x0, 0x3968C0};
+
+	WEAK symbol<int(const RawFile* rawfile)> DB_GetRawFileLen{0x0, 0x3961B0};
+	WEAK symbol<int(const RawFile* rawfile, char* buf, int size)> DB_GetRawBuffer{0x0, 0x396080};
+
 	WEAK symbol<bool(const char* zone, int source)> DB_FileExists{0x1F0D50, 0x394DC0};
 	WEAK symbol<void(XZoneInfo* zoneInfo, unsigned int zoneCount, DBSyncMode syncMode)> DB_LoadXAssets{0x1F31E0, 0x397500};
 	WEAK symbol<bool(const char* zoneName)> DB_IsLocalized{0x1F23C0, 0x396790};
