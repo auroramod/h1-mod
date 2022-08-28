@@ -161,7 +161,8 @@ namespace gsc
 				console::info("Loaded '%s::main'\n", name.data());
 				main_handles[name] = main_handle;
 			}
-			else if (init_handle)
+
+			if (init_handle)
 			{
 				console::info("Loaded '%s::init'\n", name.data());
 				init_handles[name] = init_handle;
@@ -411,6 +412,24 @@ namespace gsc
 			gsc_error = error;
 			game::Scr_ErrorInternal();
 		}
+
+		void assert_cmd()
+		{
+			const auto expr = get_argument(0).as<int>();
+			if (!expr)
+			{
+				set_gsc_error("assert fail");
+			}
+		}
+
+		void assertex_cmd()
+		{
+			const auto expr = get_argument(0).as<int>();
+			if (!expr)
+			{
+				set_gsc_error(get_argument(1).as<std::string>());
+			}
+		}
 	}
 
 	game::ScriptFile* find_script(game::XAssetType /*type*/, const char* name, int /*allow_create_default*/)
@@ -460,6 +479,10 @@ namespace gsc
 			// replace builtin print function (temporary?)
 			utils::hook::jump(0x437C40_b, gscr_print_stub);
 
+			// restore assert
+			utils::hook::jump(0x439350_b, assert_cmd);
+			utils::hook::jump(0x439430_b, assertex_cmd);
+
 			utils::hook::call(0x513A53_b, vm_error_stub);
 
 			// patch error to drop + give more information
@@ -490,7 +513,7 @@ namespace gsc
 
 					if (with.type != game::SCRIPT_FUNCTION)
 					{
-						set_gsc_error("replaceFunc: parameter 0 must be a function");
+						set_gsc_error("replaceFunc: parameter 1 must be a function");
 						return;
 					}
 
