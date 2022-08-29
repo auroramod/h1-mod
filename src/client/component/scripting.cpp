@@ -241,9 +241,9 @@ namespace scripting
 			process_script_hook.create(SELECT_VALUE(0x3C7200_b, 0x50E340_b), process_script_stub);
 			sl_get_canonical_string_hook.create(game::SL_GetCanonicalString, sl_get_canonical_string_stub);
 
+			g_load_structs_hook.create(SELECT_VALUE(0x2E7970_b, 0x458520_b), g_load_structs_stub);
 			if (!game::environment::is_sp())
 			{
-				g_load_structs_hook.create(0x458520_b, g_load_structs_stub);
 				scr_load_level_hook.create(0x450FC0_b, scr_load_level_stub);
 			}
 			else
