@@ -221,6 +221,12 @@ namespace scripting::lua
 
 			for (const auto& func : xsk::gsc::h1::resolver::get_methods())
 			{
+				// refer to line 350-352 for comment
+				if (func.second > static_cast<std::uint16_t>(0x8586))
+				{
+					break;
+				}
+
 				const auto func_name = std::string(func.first);
 				const auto name = utils::string::to_lower(func_name);
 				entity_type[name.data()] = [name](const entity& entity, const sol::this_state s, sol::variadic_args va)
@@ -341,6 +347,16 @@ namespace scripting::lua
 
 			for (const auto& func : xsk::gsc::h1::resolver::get_functions())
 			{
+				/*
+				if the function table exceeds over the game's original function table count, then let's stop adding functions to the context. this is because 
+				we don't want any gsc functions we've uniquely added to exist in Lua when it most likely already has context specific for Lua. however, I don't mind if
+				stock functions we override get added to this because they most likely are being overrided to be reimplemented, or fixed.
+				*/
+				if (func.second > static_cast<std::uint16_t>(0x30A))
+				{
+					break;
+				}
+
 				const auto func_name = std::string(func.first);
 				const auto name = utils::string::to_lower(func_name);
 				game_type[name] = [name](const game&, const sol::this_state s, sol::variadic_args va)

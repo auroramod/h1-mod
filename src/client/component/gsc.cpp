@@ -25,6 +25,7 @@
 namespace gsc
 {
 	void* func_table[0x1000]{};
+	void* meth_table[0x1000]{};
 
 	namespace
 	{
@@ -36,10 +37,18 @@ namespace gsc
 		std::unordered_map<std::string, unsigned int> main_handles;
 		std::unordered_map<std::string, unsigned int> init_handles;
 		std::unordered_map<std::string, game::ScriptFile*> loaded_scripts;
-		std::unordered_map<scripting::script_function, unsigned int> functions;
+
+		std::unordered_map<builtin_function, unsigned int> functions;
+		std::unordered_map<builtin_method, unsigned int> methods;
+
 		std::optional<std::string> gsc_error;
 
 		bool force_error_print = false;
+
+		auto function_id_start = 0x30A;
+		auto method_id_start = 0x8586;
+
+		game::scr_entref_t saved_ent_ref;
 
 		char* allocate_buffer(size_t size)
 		{
@@ -336,10 +345,19 @@ namespace gsc
 
 		void register_gsc_functions_stub(void* a1, void* a2)
 		{
-			utils::hook::invoke<void>(SELECT_VALUE(0x2E0FB0_b, 0x1CE120_b), a1, a2);
-			for (const auto& func : functions)
+			utils::hook::invoke<void>(SELECT_VALUE(0x2E0F50_b, 0x1CE010_b), a1, a2);
+			for (const auto& function : functions)
 			{
-				game::Scr_RegisterFunction(func.first, 0, func.second);
+				game::Scr_RegisterFunction(function.first, 0, function.second);
+			}
+		}
+
+		void register_gsc_methods_stub(void* a1, void* a2)
+		{
+			utils::hook::invoke<void>(SELECT_VALUE(0x2E0FB0_b, 0x1CE120_b), a1, a2);
+			for (const auto& method : methods)
+			{
+				game::Scr_RegisterFunction(method.first, 0, method.second);
 			}
 		}
 
@@ -355,30 +373,13 @@ namespace gsc
 			return scripting::script_value(*value);
 		}
 
-		auto function_id_start = 0x30A;
-		void add_function(const std::string& name, scripting::script_function function)
-		{
-			const auto& function_map = xsk::gsc::h1::resolver::get_functions();
-			if (function_map.find(name) != function_map.end())
-			{
-				const auto id = function_map.at(name);
-				functions[function] = id;
-			}
-			else
-			{
-				const auto id = ++function_id_start;
-				xsk::gsc::h1::resolver::add_function(name, static_cast<std::uint16_t>(id));
-				functions[function] = id;
-			}
-		}
-
-		void execute_custom_function(scripting::script_function function)
+		void execute_custom_function(builtin_function function)
 		{
 			bool error = false;
 
 			try
 			{
-				function({});
+				function();
 			}
 			catch (const std::exception& e)
 			{
@@ -393,17 +394,59 @@ namespace gsc
 			}
 		}
 
-		void vm_call_builtin_stub(scripting::script_function function)
+		void execute_custom_method(builtin_method method, game::scr_entref_t ent_ref)
+		{
+			bool error = false;
+
+			try
+			{
+				method(ent_ref);
+			}
+			catch (const std::exception& e)
+			{
+				error = true;
+				force_error_print = true;
+				gsc_error = e.what();
+			}
+
+			if (error)
+			{
+				game::Scr_ErrorInternal();
+			}
+		}
+
+		void vm_call_builtin_function_stub(builtin_function function)
 		{
 			bool is_custom_function = functions.find(function) != functions.end();
 
 			if (!is_custom_function)
 			{
-				function({});
+				function();
 			}
 			else
 			{
 				execute_custom_function(function);
+			}
+		}
+
+		game::scr_entref_t get_entity_id_stub(unsigned int ent_id)
+		{
+			const auto ref = game::Scr_GetEntityIdRef(ent_id);
+			saved_ent_ref = ref;
+			return ref;
+		}
+
+		void vm_call_builtin_method_stub(builtin_method method)
+		{
+			bool is_custom_function = methods.find(method) != methods.end();
+
+			if (!is_custom_function)
+			{
+				method(saved_ent_ref);
+			}
+			else
+			{
+				execute_custom_method(method, saved_ent_ref);
 			}
 		}
 	}
@@ -449,6 +492,44 @@ namespace gsc
 		}
 	}
 
+	namespace function
+	{
+		void add(const std::string& name, builtin_function function)
+		{
+			const auto& function_map = xsk::gsc::h1::resolver::get_functions();
+			if (function_map.find(name) != function_map.end())
+			{
+				const auto id = function_map.at(name);
+				functions[function] = id;
+			}
+			else
+			{
+				const auto id = ++function_id_start;
+				xsk::gsc::h1::resolver::add_function(name, static_cast<std::uint16_t>(id));
+				functions[function] = id;
+			}
+		}
+	}
+
+	namespace method
+	{
+		void add(const std::string& name, builtin_method method)
+		{
+			const auto& method_map = xsk::gsc::h1::resolver::get_methods();
+			if (method_map.find(name) != method_map.end())
+			{
+				const auto id = method_map.at(name);
+				methods[method] = id;
+			}
+			else
+			{
+				const auto id = ++method_id_start;
+				xsk::gsc::h1::resolver::add_method(name, static_cast<std::uint16_t>(id));
+				methods[method] = id;
+			}
+		}
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -472,7 +553,9 @@ namespace gsc
 			utils::hook::call(SELECT_VALUE(0x3BD626_b, 0x504606_b), unknown_function_stub); // CompileError
 			utils::hook::call(SELECT_VALUE(0x3BD672_b, 0x504652_b), unknown_function_stub); // ^
 
-			utils::hook::call(SELECT_VALUE(0x3BDC5B_b, 0x504C8B_b), register_gsc_functions_stub);
+			utils::hook::call(SELECT_VALUE(0x3BDC4F_b, 0x504C7F_b), register_gsc_functions_stub);
+			utils::hook::call(SELECT_VALUE(0x3BDC5B_b, 0x504C8B_b), register_gsc_methods_stub);
+
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD86C_b, 0x50484C_b), 0x1000); // change builtin func count
 
 #define RVA(ptr) static_cast<uint32_t>(reinterpret_cast<size_t>(ptr) - 0x140000000)
@@ -481,10 +564,22 @@ namespace gsc
 			utils::hook::inject(SELECT_VALUE(0x3BDC28_b, 0x504C58_b) + 3, &func_table);
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3CB718_b, 0x512778_b) + 4, RVA(&func_table));
 
-			utils::hook::nop(SELECT_VALUE(0x3CB723_b, 0x512783_b), 8); // stop some random nullsub & the function from being called
-			utils::hook::call(SELECT_VALUE(0x3CB723_b, 0x512783_b), vm_call_builtin_stub); // replace nullsub with a function that let's us override functions
+			std::memcpy(&meth_table, reinterpret_cast<void*>(SELECT_VALUE(0xB8CDD60_b, 0xAC85070_b)), sizeof(reinterpret_cast<void*>(SELECT_VALUE(0xB8CDD60_b, 0xAC85070_b))));
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD882_b, 0x504862_b) + 4, RVA(&meth_table));
+			utils::hook::inject(SELECT_VALUE(0x3BDC36_b, 0x504C66_b) + 3, &meth_table);
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x3CBA3B_b, 0x512A9B_b) + 4, RVA(&meth_table));
 
-			add_function("print", [](const game::scr_entref_t ref)
+			// nop original code and handle calling builtin functions
+			utils::hook::nop(SELECT_VALUE(0x3CB723_b, 0x512783_b), 8);
+			utils::hook::call(SELECT_VALUE(0x3CB723_b, 0x512783_b), vm_call_builtin_function_stub);
+
+			// same as above, but for builtin methods (different method of doing it, is this overdone?)
+			utils::hook::call(SELECT_VALUE(0x3CBA12_b, 0x512A72_b), get_entity_id_stub);
+			utils::hook::nop(SELECT_VALUE(0x3CBA46_b, 0x512AA6_b), 6);
+			utils::hook::nop(SELECT_VALUE(0x3CBA4E_b, 0x512AAE_b), 2);
+			utils::hook::call(SELECT_VALUE(0x3CBA46_b, 0x512AA6_b), vm_call_builtin_method_stub);
+
+			function::add("print", []()
 			{
 				const auto num = game::Scr_GetNumParam();
 				std::string buffer{};
@@ -499,7 +594,7 @@ namespace gsc
 				console::info("[SCRIPT] %s\n", buffer.data());
 			});
 
-			add_function("assert", [](const game::scr_entref_t ref)
+			function::add("assert", []()
 			{
 				const auto expr = get_argument(0).as<int>();
 				if (!expr)
@@ -508,7 +603,7 @@ namespace gsc
 				}
 			});
 
-			add_function("assertex", [](const game::scr_entref_t ref)
+			function::add("assertex", []()
 			{
 				const auto expr = get_argument(0).as<int>();
 				if (!expr)
@@ -518,7 +613,7 @@ namespace gsc
 				}
 			});
 
-			add_function("replacefunc", [](const game::scr_entref_t ref)
+			function::add("replacefunc", []()
 			{
 				const auto what = get_argument(0).get_raw();
 				const auto with = get_argument(1).get_raw();
@@ -538,7 +633,7 @@ namespace gsc
 				logfile::set_gsc_hook(what.u.codePosValue, with.u.codePosValue);
 			});
 
-			add_function("toupper", [](const game::scr_entref_t ref)
+			function::add("toupper", []()
 			{
 				const auto string = get_argument(0).as<std::string>();
 				if (std::strlen(string.data()) >= 1024)
@@ -550,7 +645,7 @@ namespace gsc
 				game::Scr_AddString(utils::string::to_upper(string).data());
 			});
 
-			add_function("logprint", [](const game::scr_entref_t ref)
+			function::add("logprint", []()
 			{
 				char string[1024] = {0};
 				std::size_t i_string_len = 0;
