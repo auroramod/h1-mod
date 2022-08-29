@@ -636,7 +636,7 @@ namespace gsc
 			function::add("toupper", []()
 			{
 				const auto string = get_argument(0).as<std::string>();
-				if (std::strlen(string.data()) >= 1024)
+				if (string.size() >= 1024)
 				{
 					throw std::runtime_error("toupper: string too long");
 					return;
