@@ -96,10 +96,14 @@ namespace scripting
 		{
 			if (!game::VirtualLobby_Loaded())
 			{
+				// init game in game log
+				game::G_LogPrintf("------------------------------------------------------------\n");
+				game::G_LogPrintf("InitGame\n");
+
 				// start lua engine
 				lua::engine::start();
 
-				// and then execute main handles
+				// execute main handles
 				gsc::load_main_handles();
 			}
 
@@ -133,6 +137,10 @@ namespace scripting
 
 			scripting::notify(*game::levelEntityId, "shutdownGame_called", {1});
 			lua::engine::stop();
+
+			game::G_LogPrintf("ShutdownGame:\n");
+			game::G_LogPrintf("------------------------------------------------------------\n");
+
 			return g_shutdown_game_hook.invoke<void>(free_scripts);
 		}
 

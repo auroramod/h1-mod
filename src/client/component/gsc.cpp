@@ -540,33 +540,37 @@ namespace gsc
 
 			add_function("toupper", [](const game::scr_entref_t ref)
 			{
-				const auto* string = get_argument(0).as<const char*>();
-
-				char out[1024] = {0};
-
-				size_t i = 0;
-				while (i < sizeof(out))
-				{
-					const auto value = *string;
-					const auto result = static_cast<char>(std::toupper(static_cast<unsigned char>(value)));
-					out[i] = result;
-
-					if (result == '\0')
-					{
-						break;
-					}
-
-					++string;
-					++i;
-				}
-
-				if (i >= sizeof(out))
+				const auto string = get_argument(0).as<std::string>();
+				if (std::strlen(string.data()) >= 1024)
 				{
 					throw std::runtime_error("toupper: string too long");
 					return;
 				}
 
-				game::Scr_AddString(out);
+				game::Scr_AddString(utils::string::to_upper(string).data());
+			});
+
+			add_function("logprint", [](const game::scr_entref_t ref)
+			{
+				char string[1024] = {0};
+				std::size_t i_string_len = 0;
+
+				const auto i_num_params = game::Scr_GetNumParam();
+				for (int i = 0; i < i_num_params; ++i)
+				{
+					const auto* psz_token = get_argument(i).as<const char*>();
+					const auto i_token_len = std::strlen(psz_token);
+
+					i_string_len += i_token_len;
+					if (i_string_len >= sizeof(string))
+					{
+						break;
+					}
+
+					strncat_s(string, psz_token, _TRUNCATE);
+				}
+
+				game::G_LogPrintf("%s", string);
 			});
 
 			scripting::on_shutdown([](int free_scripts)

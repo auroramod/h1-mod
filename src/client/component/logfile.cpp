@@ -4,7 +4,10 @@
 #include "logfile.hpp"
 #include "scheduler.hpp"
 
+#include "game/dvars.hpp"
+
 #include <utils/hook.hpp>
+#include <utils/io.hpp>
 
 namespace logfile
 {
@@ -26,8 +29,13 @@ namespace logfile
 		utils::hook::detour client_command_hook;
 		utils::hook::detour g_shutdown_game_hook;
 
+		utils::hook::detour g_log_printf_hook;
+
 		std::vector<sol::protected_function> player_killed_callbacks;
 		std::vector<sol::protected_function> player_damage_callbacks;
+
+		game::dvar_t* logfile;
+		game::dvar_t* g_log;
 
 		utils::hook::detour vm_execute_hook;
 		char empty_function[2] = {0x32, 0x34}; // CHECK_CLEAR_PARAMS, END
@@ -233,6 +241,31 @@ namespace logfile
 			a.mov(r14, rax);
 			a.jmp(end);
 		}
+
+		void g_log_printf_stub(const char* fmt, ...)
+		{
+			if (!logfile->current.enabled)
+			{
+				return;
+			}
+
+			char va_buffer[0x400] = {0};
+
+			va_list ap;
+			va_start(ap, fmt);
+			vsprintf_s(va_buffer, fmt, ap);
+			va_end(ap);
+
+			const auto file = g_log->current.string;
+			const auto time = *game::level_time / 1000;
+
+			utils::io::write_file(file, utils::string::va("%3i:%i%i %s",
+				time / 60,
+				time % 60 / 10,
+				time % 60 % 10,
+				va_buffer
+			), true);
+		}
 	}
 
 	void add_player_damage_callback(const sol::protected_function& callback)
@@ -284,6 +317,13 @@ namespace logfile
 
 				scripting::notify(level, cmd, {player, message, hidden});
 				scripting::notify(player, cmd, {message, hidden});
+
+				game::G_LogPrintf("%s;%s;%i;%s;%s\n",
+					cmd,
+					player.call("getguid").as<const char*>(),
+					player.call("getentitynumber").as<int>(),
+					player.get("name").as<const char*>(),
+					message.data());
 			}, scheduler::pipeline::server);
 
 			if (hidden)
@@ -326,8 +366,7 @@ namespace logfile
 	public:
 		void post_unpack() override
 		{
-			const auto a = utils::hook::assemble(vm_execute_stub);
-			utils::hook::jump(SELECT_VALUE(0x3CA145_b, 0x5111A5_b), a, true);
+			utils::hook::jump(SELECT_VALUE(0x3CA145_b, 0x5111A5_b), utils::hook::assemble(vm_execute_stub), true);
 
 			if (game::environment::is_sp())
 			{
@@ -336,6 +375,14 @@ namespace logfile
 
 			scr_player_damage_hook.create(0x1CE780_b, scr_player_damage_stub);
 			scr_player_killed_hook.create(0x1CEA60_b, scr_player_killed_stub);
+
+			// Reimplement game log
+			scheduler::once([]()
+			{
+				logfile = dvars::register_bool("logfile", true, game::DVAR_FLAG_NONE, "Enable game logging");
+				g_log = dvars::register_string("g_log", "h1-mod\\logs\\games_mp.log", game::DVAR_FLAG_NONE, "Log file path");
+			}, scheduler::pipeline::main);
+			g_log_printf_hook.create(game::G_LogPrintf, g_log_printf_stub);
 		}
 	};
 }

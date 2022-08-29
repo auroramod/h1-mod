@@ -106,6 +106,7 @@ namespace game
 	WEAK symbol<int(playerState_s* ps, unsigned int weapon, int dualWield, 
 		int startInAltMode, int, int, int, char, ...)> G_GivePlayerWeapon{0x2F24F0, 0x461600};
 	WEAK symbol<void(playerState_s* ps, unsigned int weapon, int hadWeapon)> G_InitializeAmmo{0x29D9E0, 0x41C170};
+	WEAK symbol<void(const char* fmt, ...)> G_LogPrintf{0x5FEF0, 0x4215C0};
 	WEAK symbol<void(int clientNum, unsigned int weapon)> G_SelectWeapon{0x2F2EA0, 0x462560};
 	WEAK symbol<int(playerState_s* ps, unsigned int weapon)> G_TakePlayerWeapon{0x2F3050, 0x462770};
 
@@ -276,6 +277,8 @@ namespace game
 	WEAK symbol<SOCKET> query_socket{0xD64D3F8, 0xC9DCD38};
 
 	WEAK symbol<DWORD> threadIds{0xB896210, 0xAC80740};
+
+	WEAK symbol<int> level_time{0x56DBAA0, 0x7361F9C};
 
 	namespace mp
 	{
