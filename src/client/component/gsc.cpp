@@ -368,14 +368,12 @@ namespace gsc
 				return {};
 			}
 
-			const auto value = &game::scr_VmPub->top[-index];
-
-			return scripting::script_value(*value);
+			return game::scr_VmPub->top[-index];
 		}
 
 		void execute_custom_function(builtin_function function)
 		{
-			bool error = false;
+			auto error = false;
 
 			try
 			{
@@ -396,7 +394,7 @@ namespace gsc
 
 		void execute_custom_method(builtin_method method, game::scr_entref_t ent_ref)
 		{
-			bool error = false;
+			auto error = false;
 
 			try
 			{
@@ -417,7 +415,10 @@ namespace gsc
 
 		void vm_call_builtin_function_stub(builtin_function function)
 		{
-			bool is_custom_function = functions.find(function) != functions.end();
+			auto is_custom_function = false;
+			{
+				is_custom_function = functions.find(function) != functions.end();
+			}
 
 			if (!is_custom_function)
 			{
@@ -438,7 +439,10 @@ namespace gsc
 
 		void vm_call_builtin_method_stub(builtin_method method)
 		{
-			bool is_custom_function = methods.find(method) != methods.end();
+			auto is_custom_function = false;
+			{
+				is_custom_function = methods.find(method) != methods.end();
+			}
 
 			if (!is_custom_function)
 			{
@@ -636,36 +640,21 @@ namespace gsc
 			function::add("toupper", []()
 			{
 				const auto string = get_argument(0).as<std::string>();
-				if (string.size() >= 1024)
-				{
-					throw std::runtime_error("toupper: string too long");
-					return;
-				}
-
 				game::Scr_AddString(utils::string::to_upper(string).data());
 			});
 
 			function::add("logprint", []()
 			{
-				char string[1024] = {0};
-				std::size_t i_string_len = 0;
+				std::string buffer{};
 
-				const auto i_num_params = game::Scr_GetNumParam();
-				for (int i = 0; i < i_num_params; ++i)
+				const auto params = game::Scr_GetNumParam();
+				for (auto i = 0; i < params; i++)
 				{
-					const auto* psz_token = get_argument(i).as<const char*>();
-					const auto i_token_len = std::strlen(psz_token);
-
-					i_string_len += i_token_len;
-					if (i_string_len >= sizeof(string))
-					{
-						break;
-					}
-
-					strncat_s(string, psz_token, _TRUNCATE);
+					const auto string = game::Scr_GetString(i);
+					buffer.append(string);
 				}
 
-				game::G_LogPrintf("%s", string);
+				game::G_LogPrintf("%s", buffer.data());
 			});
 
 			scripting::on_shutdown([](int free_scripts)

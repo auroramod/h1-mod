@@ -17,35 +17,23 @@ namespace scripting
 		int find_function_index(const std::string& name, const bool prefer_global)
 		{
 			const auto target = utils::string::to_lower(name);
-
-			// could probably be cleaned up, but it works for now
-			if (prefer_global)
+			auto first = xsk::gsc::h1::resolver::function_id;
+			auto second = xsk::gsc::h1::resolver::method_id;
+			if (!prefer_global)
 			{
-				const auto function_entry = xsk::gsc::h1::resolver::function_id(target);
-				if (function_entry)
-				{
-					return function_entry;
-				}
-
-				const auto method_entry = xsk::gsc::h1::resolver::method_id(target);
-				if (method_entry)
-				{
-					return method_entry;
-				}
+				std::swap(first, second);
 			}
-			else
-			{
-				const auto method_entry = xsk::gsc::h1::resolver::method_id(target);
-				if (method_entry)
-				{
-					return method_entry;
-				}
 
-				const auto function_entry = xsk::gsc::h1::resolver::function_id(target);
-				if (function_entry)
-				{
-					return function_entry;
-				}
+			const auto first_res = first(target);
+			if (first_res)
+			{
+				return first_res;
+			}
+
+			const auto second_res = second(target);
+			if (second_res)
+			{
+				return second_res;
 			}
 
 			return -1;
@@ -53,15 +41,12 @@ namespace scripting
 
 		script_function get_function_by_index(const unsigned index)
 		{
-			static const auto function_table = &gsc::func_table;
-			static const auto method_table = SELECT_VALUE(0xB8CDD60_b, 0xAC85070_b);
-
-			if (index < 0x30A)
+			if (index < 0x1000)
 			{
-				return reinterpret_cast<script_function*>(function_table)[index - 1];
+				return reinterpret_cast<script_function*>(gsc::func_table)[index - 1];
 			}
 
-			return reinterpret_cast<script_function*>(method_table)[index - 0x8000];
+			return reinterpret_cast<script_function*>(gsc::meth_table)[index - 0x8000];
 		}
 
 		unsigned int parse_token_id(const std::string& name)
@@ -84,9 +69,7 @@ namespace scripting
 	{
 		std::vector<std::string> results;
 
-		results.push_back(utils::string::va("_ID%i", id)); // pretty sure fed told me this was here for old gsc-tool tokens or sum, can we just remove this? -mikey
-
-		const auto result = xsk::gsc::h1::resolver::token_name(static_cast<std::uint16_t>(id)); // will return _id_%04X version if not found
+		const auto result = xsk::gsc::h1::resolver::token_name(static_cast<std::uint16_t>(id));
 		results.push_back(result);
 
 		return results;
