@@ -279,15 +279,17 @@ namespace gsc
 
 		void print_callstack()
 		{
-			const auto current_pos = *reinterpret_cast<char**>(SELECT_VALUE(0xC4015C0_b, 0xB7B8940_b));
 			for (auto frame = game::scr_VmPub->function_frame; frame != game::scr_VmPub->function_frame_start; --frame)
 			{
-				const auto pos = frame == game::scr_VmPub->function_frame ? current_pos : frame->fs.pos;
+				const auto pos = frame == game::scr_VmPub->function_frame 
+					? game::scr_function_stack->pos 
+					: frame->fs.pos;
 				const auto function = find_function(pos);
+
 				if (function.has_value())
 				{
-					console::warn("\tat function \"%s\" in file \"%s.gsc\" %p", 
-						function.value().first.data(), function.value().second.data(), pos);
+					console::warn("\tat function \"%s\" in file \"%s.gsc\"", 
+						function.value().first.data(), function.value().second.data());
 				}
 				else
 				{
