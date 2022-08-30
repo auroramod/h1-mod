@@ -175,6 +175,7 @@ namespace game
 		int createDefault)> DB_FindXAssetHeader{0x1F1120, 0x3950C0};
 
 	WEAK symbol<int(XAssetType type, const char* name)> DB_IsXAssetDefault{0x1F25A0, 0x3968C0};
+	WEAK symbol<int(XAssetType type, const char* name)> DB_XAssetExists{0x1F6290, 0x39B7B0};
 
 	WEAK symbol<int(const RawFile* rawfile)> DB_GetRawFileLen{0x1F1F40, 0x3961B0};
 	WEAK symbol<int(const RawFile* rawfile, char* buf, int size)> DB_GetRawBuffer{0x1F1E00, 0x396080};

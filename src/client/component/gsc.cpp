@@ -71,9 +71,12 @@ namespace gsc
 				return false;
 			}
 
-			const auto asset = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, name.data(), false);
-			if (asset.rawfile)
+			const auto name_str = name.data();
+
+			if (game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, name_str) &&
+				!game::DB_IsXAssetDefault(game::ASSET_TYPE_RAWFILE, name_str))
 			{
+				const auto asset = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, name_str, false);
 				const auto len = game::DB_GetRawFileLen(asset.rawfile);
 				data->resize(len);
 				game::DB_GetRawBuffer(asset.rawfile, data->data(), len);
@@ -210,9 +213,9 @@ namespace gsc
 			loaded_scripts.clear();
 		}
 
-		void load_gametype_script_stub()
+		void load_gametype_script_stub(void* a1, void* a2)
 		{
-			utils::hook::invoke<void>(SELECT_VALUE(0x2B9DA0_b, 0x18BC00_b));
+			utils::hook::invoke<void>(SELECT_VALUE(0x2B9DA0_b, 0x18BC00_b), a1, a2);
 
 			if (game::VirtualLobby_Loaded())
 			{
@@ -259,7 +262,7 @@ namespace gsc
 
 		std::optional<std::pair<std::string, std::string>> find_function(const char* pos)
 		{
-			for (const auto& file : scripting::script_function_table)
+			for (const auto& file : scripting::script_function_table_sort)
 			{
 				for (auto i = file.second.begin(); i != file.second.end() && std::next(i) != file.second.end(); ++i)
 				{
@@ -276,17 +279,19 @@ namespace gsc
 
 		void print_callstack()
 		{
+			const auto current_pos = *reinterpret_cast<char**>(SELECT_VALUE(0xC4015C0_b, 0xB7B8940_b));
 			for (auto frame = game::scr_VmPub->function_frame; frame != game::scr_VmPub->function_frame_start; --frame)
 			{
-				const auto function = find_function(frame->fs.pos);
+				const auto pos = frame == game::scr_VmPub->function_frame ? current_pos : frame->fs.pos;
+				const auto function = find_function(pos);
 				if (function.has_value())
 				{
-					console::warn("\tat function \"%s\" in file \"%s.gsc\"", 
-						function.value().first.data(), function.value().second.data(), frame->fs.pos);
+					console::warn("\tat function \"%s\" in file \"%s.gsc\" %p", 
+						function.value().first.data(), function.value().second.data(), pos);
 				}
 				else
 				{
-					console::warn("\tat unknown location", frame->fs.pos);
+					console::warn("\tat unknown location %p", pos);
 				}
 			}
 		}
@@ -336,11 +341,70 @@ namespace gsc
 			return utils::hook::invoke<void*>(SELECT_VALUE(0x415C90_b, 0x59DDA0_b), a1);
 		}
 
-		void unknown_function_stub()
+		std::string unknown_function_error{};
+		void get_unknown_function_error(const char* code_pos)
 		{
-			// maybe add the unknown function being referenced?
-			game::Com_Error(game::ERR_DROP, "LinkFile: unknown function in script '%s.gsc'", 
-				scripting::current_file.data());
+			const auto function = find_function(code_pos);
+			if (function.has_value())
+			{
+				const auto& pos = function.value();
+				unknown_function_error = utils::string::va(
+					"while processing function '%s' in script '%s':\nunknown script '%s'",
+					pos.first.data(), pos.second.data(), scripting::current_file.data()
+				);
+			}
+			else
+			{
+				unknown_function_error = utils::string::va(
+					"unknown script '%s'",
+					scripting::current_file.data()
+				);
+			}
+		}
+
+		unsigned int current_filename{};
+		std::string get_filename_name()
+		{
+			const auto filename_str = game::SL_ConvertToString(
+				static_cast<game::scr_string_t>(current_filename));
+			const auto id = std::atoi(filename_str);
+			if (id == 0)
+			{
+				return filename_str;
+			}
+
+			return scripting::get_token(id);
+		}
+
+
+		void get_unknown_function_error(unsigned int thread_name)
+		{
+			const auto filename = get_filename_name();
+			const auto name = scripting::get_token(thread_name);
+
+			unknown_function_error = utils::string::va(
+				"while processing script '%s':\nunknown function '%s::%s'",
+				scripting::current_file.data(), filename.data(), name.data()
+			);
+		}
+
+		void unknown_function_stub(const char* code_pos)
+		{
+			get_unknown_function_error(code_pos);
+			game::Com_Error(game::ERR_DROP, "script link error\n%s",
+				unknown_function_error.data());
+		}
+
+		unsigned int find_variable_stub(unsigned int parent_id, unsigned int thread_name)
+		{
+			const auto res = game::FindVariable(parent_id, thread_name);
+			if (!res)
+			{
+				get_unknown_function_error(thread_name);
+				game::Com_Error(game::ERR_DROP, "script link error\n%s",
+					unknown_function_error.data());
+			}
+			return res;
 		}
 
 		void register_gsc_functions_stub(void* a1, void* a2)
@@ -453,6 +517,13 @@ namespace gsc
 				execute_custom_method(method, saved_ent_ref);
 			}
 		}
+
+		utils::hook::detour scr_emit_function_hook;
+		void scr_emit_function_stub(unsigned int filename, unsigned int thread_name, char* code_pos)
+		{
+			current_filename = filename;
+			scr_emit_function_hook.invoke<void>(filename, thread_name, code_pos);
+		}
 	}
 
 	game::ScriptFile* find_script(game::XAssetType /*type*/, const char* name, int /*allow_create_default*/)
@@ -556,6 +627,8 @@ namespace gsc
 			// patch error to drop + give more information
 			utils::hook::call(SELECT_VALUE(0x3BD626_b, 0x504606_b), unknown_function_stub); // CompileError
 			utils::hook::call(SELECT_VALUE(0x3BD672_b, 0x504652_b), unknown_function_stub); // ^
+			utils::hook::call(SELECT_VALUE(0x3BD75A_b, 0x50473A_b), find_variable_stub);
+			scr_emit_function_hook.create(SELECT_VALUE(0x3BD680_b, 0x504660_b), scr_emit_function_stub);
 
 			utils::hook::call(SELECT_VALUE(0x3BDC4F_b, 0x504C7F_b), register_gsc_functions_stub);
 			utils::hook::call(SELECT_VALUE(0x3BDC5B_b, 0x504C8B_b), register_gsc_methods_stub);
@@ -563,12 +636,17 @@ namespace gsc
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD86C_b, 0x50484C_b), 0x1000); // change builtin func count
 
 #define RVA(ptr) static_cast<uint32_t>(reinterpret_cast<size_t>(ptr) - 0x140000000)
-			std::memcpy(&func_table, reinterpret_cast<void*>(SELECT_VALUE(0xB8CC510_b, 0xAC83820_b)), sizeof(reinterpret_cast<void*>(SELECT_VALUE(0xB8CC510_b, 0xAC83820_b))));
+
+			std::memcpy(&func_table, reinterpret_cast<void*>(SELECT_VALUE(0xB8CC510_b, 0xAC83820_b)), 
+				sizeof(reinterpret_cast<void*>(SELECT_VALUE(0xB8CC510_b, 0xAC83820_b))));
+
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD872_b, 0x504852_b) + 4, RVA(&func_table));
 			utils::hook::inject(SELECT_VALUE(0x3BDC28_b, 0x504C58_b) + 3, &func_table);
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3CB718_b, 0x512778_b) + 4, RVA(&func_table));
 
-			std::memcpy(&meth_table, reinterpret_cast<void*>(SELECT_VALUE(0xB8CDD60_b, 0xAC85070_b)), sizeof(reinterpret_cast<void*>(SELECT_VALUE(0xB8CDD60_b, 0xAC85070_b))));
+			std::memcpy(&meth_table, reinterpret_cast<void*>(SELECT_VALUE(0xB8CDD60_b, 0xAC85070_b)), 
+				sizeof(reinterpret_cast<void*>(SELECT_VALUE(0xB8CDD60_b, 0xAC85070_b))));
+
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD882_b, 0x504862_b) + 4, RVA(&meth_table));
 			utils::hook::inject(SELECT_VALUE(0x3BDC36_b, 0x504C66_b) + 3, &meth_table);
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3CBA3B_b, 0x512A9B_b) + 4, RVA(&meth_table));

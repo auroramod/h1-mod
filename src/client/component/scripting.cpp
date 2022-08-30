@@ -174,36 +174,43 @@ namespace scripting
 			process_script_hook.invoke<void>(filename);
 		}
 
-		std::vector<std::string> get_token_names(unsigned int id)
+		void add_function_sort(unsigned int id, const char* pos)
 		{
-			auto result = scripting::find_token(id);
-
-			if (canonical_string_table.find(id) != canonical_string_table.end())
+			std::string filename = current_file;
+			if (current_file_id)
 			{
-				result.push_back(canonical_string_table[id]);
+				filename = scripting::get_token(current_file_id);
 			}
 
-			return result;
+			if (script_function_table_sort.find(filename) == script_function_table_sort.end())
+			{
+				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_scriptfile.data(), false);
+				if (script)
+				{
+					const auto end = &script->bytecode[script->bytecodeLen];
+					script_function_table_sort[filename].emplace_back("__end__", end);
+				}
+			}
+
+			const auto name = scripting::get_token(id);
+			auto& itr = script_function_table_sort[filename];
+			itr.insert(itr.end() - 1, {name, pos});
 		}
 
 		void add_function(const std::string& file, unsigned int id, const char* pos)
 		{
-			const auto function_names = get_token_names(id);
-			for (const auto& name : function_names)
-			{
-				script_function_table[file][name] = pos;
-			}
+			const auto name = get_token(id);
+			script_function_table[file][name] = pos;
 		}
 
 		void scr_set_thread_position_stub(unsigned int thread_name, const char* code_pos)
 		{
+			add_function_sort(thread_name, code_pos);
+
 			if (current_file_id)
 			{
-				const auto names = get_token_names(current_file_id);
-				for (const auto& name : names)
-				{
-					add_function(name, thread_name, code_pos);
-				}
+				const auto name = get_token(current_file_id);
+				add_function(name, thread_name, code_pos);
 			}
 			else
 			{
@@ -219,6 +226,16 @@ namespace scripting
 			canonical_string_table[result] = str;
 			return result;
 		}
+	}
+
+	std::string get_token(unsigned int id)
+	{
+		if (canonical_string_table.find(id) != canonical_string_table.end())
+		{
+			return canonical_string_table[id];
+		}
+
+		return scripting::find_token(id);
 	}
 
 	void on_shutdown(const std::function<void(bool)>& callback)
@@ -250,11 +267,8 @@ namespace scripting
 			sl_get_canonical_string_hook.create(game::SL_GetCanonicalString, sl_get_canonical_string_stub);
 
 			g_load_structs_hook.create(SELECT_VALUE(0x2E7970_b, 0x458520_b), g_load_structs_stub);
-			if (!game::environment::is_sp())
-			{
-				scr_load_level_hook.create(0x450FC0_b, scr_load_level_stub);
-			}
-			else
+			scr_load_level_hook.create(SELECT_VALUE(0x2D4CD0_b, 0x450FC0_b), scr_load_level_stub);
+			if (game::environment::is_sp())
 			{
 				vm_execute_hook.create(0x3CA080_b, vm_execute_stub);
 			}

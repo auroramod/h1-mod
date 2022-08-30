@@ -65,14 +65,9 @@ namespace scripting
 		}
 	}
 
-	std::vector<std::string> find_token(unsigned int id)
+	std::string find_token(unsigned int id)
 	{
-		std::vector<std::string> results;
-
-		const auto result = xsk::gsc::h1::resolver::token_name(static_cast<std::uint16_t>(id));
-		results.push_back(result);
-
-		return results;
+		return xsk::gsc::h1::resolver::token_name(static_cast<std::uint16_t>(id));
 	}
 
 	unsigned int find_token_id(const std::string& name)
