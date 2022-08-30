@@ -121,26 +121,28 @@ namespace fastfiles
 			auto* fs_basepath = game::Dvar_FindVar("fs_basepath");
 			auto* fs_game = game::Dvar_FindVar("fs_game");
 
-			std::string dir = fs_basepath ? fs_basepath->current.string : "";
-			std::string mod_dir = fs_game ? fs_game->current.string : "";
+			const std::string dir = fs_basepath ? fs_basepath->current.string : "";
+			const std::string mod_dir = fs_game ? fs_game->current.string : "";
 
 			if (base_filename == "mod.ff"s)
 			{
 				if (!mod_dir.empty())
 				{
-					auto path = utils::string::va("%s\\%s\\%s", dir.data(), mod_dir.data(), base_filename);
+					const auto path = utils::string::va("%s\\%s\\%s", dir.data(), mod_dir.data(), base_filename);
 					if (utils::io::file_exists(path))
 					{
 						return CreateFileA(path, 0x80000000, 1u, 0, 3u, 0x60000000u, 0);
 					}
 				}
-				return (HANDLE)-1;
+
+				return reinterpret_cast<HANDLE>(-1);
 			}
 
 			return sys_createfile_hook.invoke<HANDLE>(folder, base_filename);
 		}
 
-		template <typename T> inline void merge(std::vector<T>* target, T* source, size_t length)
+		template <typename T> 
+		inline void merge(std::vector<T>* target, T* source, size_t length)
 		{
 			if (source)
 			{
@@ -151,7 +153,8 @@ namespace fastfiles
 			}
 		}
 
-		template <typename T> inline void merge(std::vector<T>* target, std::vector<T> source)
+		template <typename T> 
+		inline void merge(std::vector<T>* target, std::vector<T> source)
 		{
 			for (auto& entry : source)
 			{
@@ -180,7 +183,7 @@ namespace fastfiles
 
 			if (fastfiles::exists("mod"))
 			{
-				data.push_back({ "mod", game::DB_ZONE_COMMON | game::DB_ZONE_CUSTOM, 0 });
+				data.emplace_back("mod", game::DB_ZONE_COMMON | game::DB_ZONE_CUSTOM, 0);
 			}
 
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
@@ -195,17 +198,32 @@ namespace fastfiles
 
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
 		}
+
+		void load_lua_file_asset_stub(void* a1)
+		{
+			const auto fastfile = fastfiles::get_current_fastfile();
+			if (fastfile == "mod")
+			{
+				console::error("Mod tried to load a lua file!\n");
+				return;
+			}
+
+			utils::hook::invoke<void>(0x39CA90_b, a1);
+		}
 	}
 
 	bool exists(const std::string& zone)
 	{
-		auto is_localized = game::DB_IsLocalized(zone.data());
-		auto handle = game::Sys_CreateFile((is_localized ? game::SF_ZONE_LOC : game::SF_ZONE), utils::string::va("%s.ff", zone.data()));
-		if (handle != (HANDLE)-1)
+		const auto is_localized = game::DB_IsLocalized(zone.data());
+		const auto handle = game::Sys_CreateFile((is_localized ? 
+			game::SF_ZONE_LOC : game::SF_ZONE), utils::string::va("%s.ff", zone.data()));
+
+		if (handle != reinterpret_cast<HANDLE>(-1))
 		{
 			CloseHandle(handle);
 			return true;
 		}
+
 		return false;
 	}
 
@@ -273,6 +291,12 @@ namespace fastfiles
 
 				// load our custom ui zones
 				utils::hook::call(0x17C6D2_b, load_ui_zones);
+			}
+
+			// prevent mod.ff from loading lua files
+			if (game::environment::is_mp())
+			{
+				utils::hook::call(0x3757B4_b, load_lua_file_asset_stub);
 			}
 
 			command::add("loadzone", [](const command::params& params)
