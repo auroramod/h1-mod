@@ -1411,6 +1411,11 @@ namespace game
 		const char* name;
 	};
 
+	struct XModel
+	{
+		const char* name;
+	};
+
 	struct WeaponDef
 	{
 		const char* name;
@@ -1427,6 +1432,7 @@ namespace game
 		LuaFile* luaFile;
 		GfxImage* image;
 		TTF* ttf;
+		XModel* model;
 		WeaponDef* weapon;
 	};
 
