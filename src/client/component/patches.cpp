@@ -83,7 +83,20 @@ namespace patches
 				menus::set_script_main_menu(value);
 			}
 
-			game::Dvar_SetFromStringFromSource(dvar, value, game::DvarSetSource::DVAR_SOURCE_SERVERCMD);
+			// register new dvar
+			if (!dvar)
+			{
+				game::Dvar_RegisterString(hash, "", value, game::DVAR_FLAG_EXTERNAL);
+				return;
+			}
+
+			// only set if dvar has no flags or has cheat flag or has external flag
+			if (dvar->flags == game::DVAR_FLAG_NONE || 
+				(dvar->flags & game::DVAR_FLAG_CHEAT) != 0 || 
+				(dvar->flags & game::DVAR_FLAG_EXTERNAL) != 0)
+			{
+				game::Dvar_SetFromStringFromSource(dvar, value, game::DvarSetSource::DVAR_SOURCE_EXTERNAL);
+			}
 
 			// original code
 			int index = 0;
@@ -95,7 +108,19 @@ namespace patches
 			}
 		}
 
-		bool get_dvar_hash(game::dvar_t* dvar, int* hash)
+		game::dvar_t* get_client_dvar(const char* name)
+		{
+			game::dvar_t* dvar = game::Dvar_FindVar(name);
+			if (!dvar)
+			{
+				static game::dvar_t dummy{0};
+				dummy.hash = game::generateHashValue(name);
+				return &dummy;
+			}
+			return dvar;
+		}
+
+		bool get_client_dvar_hash(game::dvar_t* dvar, int* hash)
 		{
 			*hash = dvar->hash;
 			return true;
@@ -417,8 +442,10 @@ namespace patches
 
 			// make setclientdvar behave like older games
 			cg_set_client_dvar_from_server_hook.create(0x11AA90_b, cg_set_client_dvar_from_server_stub);
-			utils::hook::call(0x407EC5_b, get_dvar_hash); // setclientdvar
-			utils::hook::call(0x4087C1_b, get_dvar_hash); // setclientdvars
+			utils::hook::call(0x407EC5_b, get_client_dvar_hash); // setclientdvar
+			utils::hook::call(0x4087C1_b, get_client_dvar_hash); // setclientdvars
+			utils::hook::call(0x407E8E_b, get_client_dvar); // setclientdvar
+			utils::hook::call(0x40878A_b, get_client_dvar); // setclientdvars
 			utils::hook::set<uint8_t>(0x407EB6_b, 0xEB); // setclientdvar
 			utils::hook::set<uint8_t>(0x4087B2_b, 0xEB); // setclientdvars
 
