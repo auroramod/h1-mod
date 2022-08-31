@@ -50,6 +50,9 @@ namespace gsc
 
 		game::scr_entref_t saved_ent_ref;
 
+		std::string unknown_function_error{};
+		unsigned int current_filename{};
+
 		char* allocate_buffer(size_t size)
 		{
 			// PMem_AllocFromSource_NoDebug
@@ -343,7 +346,6 @@ namespace gsc
 			return utils::hook::invoke<void*>(SELECT_VALUE(0x415C90_b, 0x59DDA0_b), a1);
 		}
 
-		std::string unknown_function_error{};
 		void get_unknown_function_error(const char* code_pos)
 		{
 			const auto function = find_function(code_pos);
@@ -364,7 +366,6 @@ namespace gsc
 			}
 		}
 
-		unsigned int current_filename{};
 		std::string get_filename_name()
 		{
 			const auto filename_str = game::SL_ConvertToString(
@@ -377,7 +378,6 @@ namespace gsc
 
 			return scripting::get_token(id);
 		}
-
 
 		void get_unknown_function_error(unsigned int thread_name)
 		{
