@@ -144,8 +144,8 @@ namespace gsc
 			const auto script = assembler->output_script();
 			script_file_ptr->bytecodeLen = static_cast<int>(script.size());
 
-			const auto buffer_size = script.size() + 1;
 			const auto script_size = script.size();
+			const auto buffer_size = script_size + stack.size() + 2;
 
 			const auto buffer = allocate_buffer(buffer_size);
 			std::memcpy(buffer, script.data(), script_size);
@@ -526,6 +526,18 @@ namespace gsc
 			current_filename = filename;
 			scr_emit_function_hook.invoke<void>(filename, thread_name, code_pos);
 		}
+
+		void replace(std::string& str, const std::string& from, const std::string& to)
+		{
+			const auto start_pos = str.find(from);
+
+			if (start_pos == std::string::npos)
+			{
+				return;
+			}
+
+			str.replace(start_pos, from.length(), to);
+		}
 	}
 
 	game::ScriptFile* find_script(game::XAssetType /*type*/, const char* name, int /*allow_create_default*/)
@@ -735,6 +747,20 @@ namespace gsc
 				}
 
 				game::G_LogPrintf("%s", buffer.data());
+			});
+
+			function::add("va", []()
+			{
+				auto fmt = get_argument(0).as<std::string>();
+
+				const auto params = game::Scr_GetNumParam();
+				for (auto i = 1; i < params; i++)
+				{
+					const auto arg = get_argument(i).to_string();
+					replace(fmt, "%s", arg);
+				}
+
+				game::Scr_AddString(fmt.data());
 			});
 
 			scripting::on_shutdown([](int free_scripts)
