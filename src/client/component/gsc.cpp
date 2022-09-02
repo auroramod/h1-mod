@@ -50,6 +50,9 @@ namespace gsc
 
 		game::scr_entref_t saved_ent_ref;
 
+		std::string unknown_function_error{};
+		unsigned int current_filename{};
+
 		char* allocate_buffer(size_t size)
 		{
 			// PMem_AllocFromSource_NoDebug
@@ -141,8 +144,8 @@ namespace gsc
 			const auto script = assembler->output_script();
 			script_file_ptr->bytecodeLen = static_cast<int>(script.size());
 
-			const auto buffer_size = script.size() + 1;
 			const auto script_size = script.size();
+			const auto buffer_size = script_size + stack.size() + 2;
 
 			const auto buffer = allocate_buffer(buffer_size);
 			std::memcpy(buffer, script.data(), script_size);
@@ -368,7 +371,6 @@ namespace gsc
 			return utils::hook::invoke<void*>(SELECT_VALUE(0x415C90_b, 0x59DDA0_b), a1);
 		}
 
-		std::string unknown_function_error{};
 		void get_unknown_function_error(const char* code_pos)
 		{
 			const auto function = find_function(code_pos);
@@ -389,7 +391,6 @@ namespace gsc
 			}
 		}
 
-		unsigned int current_filename{};
 		std::string get_filename_name()
 		{
 			const auto filename_str = game::SL_ConvertToString(
@@ -402,7 +403,6 @@ namespace gsc
 
 			return scripting::get_token(id);
 		}
-
 
 		void get_unknown_function_error(unsigned int thread_name)
 		{
@@ -551,6 +551,18 @@ namespace gsc
 			current_filename = filename;
 			scr_emit_function_hook.invoke<void>(filename, thread_name, code_pos);
 		}
+
+		void replace(std::string& str, const std::string& from, const std::string& to)
+		{
+			const auto start_pos = str.find(from);
+
+			if (start_pos == std::string::npos)
+			{
+				return;
+			}
+
+			str.replace(start_pos, from.length(), to);
+		}
 	}
 
 	game::ScriptFile* find_script(game::XAssetType /*type*/, const char* name, int /*allow_create_default*/)
@@ -598,10 +610,9 @@ namespace gsc
 	{
 		void add(const std::string& name, builtin_function function)
 		{
-			const auto& function_map = xsk::gsc::h1::resolver::get_functions();
-			if (function_map.find(name) != function_map.end())
+			if (xsk::gsc::h1::resolver::find_function(name))
 			{
-				const auto id = function_map.at(name);
+				const auto id = xsk::gsc::h1::resolver::function_id(name);
 				functions[function] = id;
 			}
 			else
@@ -617,10 +628,9 @@ namespace gsc
 	{
 		void add(const std::string& name, builtin_method method)
 		{
-			const auto& method_map = xsk::gsc::h1::resolver::get_methods();
-			if (method_map.find(name) != method_map.end())
+			if (xsk::gsc::h1::resolver::find_method(name))
 			{
-				const auto id = method_map.at(name);
+				const auto id = xsk::gsc::h1::resolver::method_id(name);
 				methods[method] = id;
 			}
 			else
@@ -760,6 +770,20 @@ namespace gsc
 				}
 
 				game::G_LogPrintf("%s", buffer.data());
+			});
+
+			function::add("va", []()
+			{
+				auto fmt = get_argument(0).as<std::string>();
+
+				const auto params = game::Scr_GetNumParam();
+				for (auto i = 1; i < params; i++)
+				{
+					const auto arg = get_argument(i).to_string();
+					replace(fmt, "%s", arg);
+				}
+
+				game::Scr_AddString(fmt.data());
 			});
 
 			scripting::on_shutdown([](int free_scripts)
