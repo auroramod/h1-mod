@@ -585,10 +585,9 @@ namespace gsc
 	{
 		void add(const std::string& name, builtin_function function)
 		{
-			const auto& function_map = xsk::gsc::h1::resolver::get_functions();
-			if (function_map.find(name) != function_map.end())
+			if (xsk::gsc::h1::resolver::find_function(name))
 			{
-				const auto id = function_map.at(name);
+				const auto id = xsk::gsc::h1::resolver::function_id(name);
 				functions[function] = id;
 			}
 			else
@@ -604,10 +603,9 @@ namespace gsc
 	{
 		void add(const std::string& name, builtin_method method)
 		{
-			const auto& method_map = xsk::gsc::h1::resolver::get_methods();
-			if (method_map.find(name) != method_map.end())
+			if (xsk::gsc::h1::resolver::find_method(name))
 			{
-				const auto id = method_map.at(name);
+				const auto id = xsk::gsc::h1::resolver::method_id(name);
 				methods[method] = id;
 			}
 			else
