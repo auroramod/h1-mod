@@ -1,8 +1,6 @@
 local Lobby = luiglobals.Lobby
 local MPLobbyOnline = LUI.mp_menus.MPLobbyOnline
 
-game:addlocalizedstring("LUA_MENU_SERVERLIST", "SERVER LIST")
-
 function LeaveLobby(f5_arg0)
     LeaveXboxLive()
     if Lobby.IsInPrivateParty() == false or Lobby.IsPrivatePartyHost() then

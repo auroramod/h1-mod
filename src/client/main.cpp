@@ -6,9 +6,10 @@
 
 #include "component/arxan.hpp"
 
-#include <utils/string.hpp>
 #include <utils/flags.hpp>
 #include <utils/io.hpp>
+#include <utils/string.hpp>
+#include <utils/properties.hpp>
 
 DECLSPEC_NORETURN void WINAPI exit_hook(const int code)
 {
@@ -62,7 +63,7 @@ void apply_aslr_patch(std::string* data)
 
 void get_aslr_patched_binary(std::string* binary, std::string* data)
 {
-	const auto patched_binary = "h1-mod\\"s + *binary;
+	const auto patched_binary = (utils::properties::get_appdata_path() / "bin/h1_mp64_ship.exe"s).generic_string();
 
 	try
 	{
@@ -159,6 +160,7 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 void remove_crash_file()
 {
 	utils::io::remove_file("__h1Exe");
+	utils::io::remove_file("h1-mod\\h1_mp64_ship.exe"); // remove this at some point
 }
 
 void enable_dpi_awareness()

@@ -4,12 +4,14 @@
 #include "console.hpp"
 #include "filesystem.hpp"
 #include "localized_strings.hpp"
+#include "updater.hpp"
 
 #include "game/game.hpp"
 
 #include <utils/io.hpp>
-#include <utils/hook.hpp>
 #include <utils/flags.hpp>
+#include <utils/hook.hpp>
+#include <utils/properties.hpp>
 
 namespace filesystem
 {
@@ -39,9 +41,9 @@ namespace filesystem
 			initialized = true;
 
 			// hardcoded paths
+			filesystem::register_path(utils::properties::get_appdata_path() / CLIENT_DATA_FOLDER);
 			filesystem::register_path(L".");
 			filesystem::register_path(L"h1-mod");
-			filesystem::register_path(L"data");
 
 			// while this clears localizations, it also calls a function to load them again
 			localized_strings::clear();
