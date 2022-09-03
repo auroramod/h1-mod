@@ -417,6 +417,24 @@ namespace command
 					? "^2on"
 					: "^1off"));
 		}
+
+		void monitor_fs_game_values()
+		{
+			dvars::callback::on_register("fs_game", []()
+			{
+				register_fs_game_path();
+			});
+
+			// it might be overdone to change the filesystem path on every new value change, but to be fair,
+			// for the mods that don't need full restarts, this is good because it'll adjust and work like so
+			// in my opinion, this is fine. if a user tries to modify the dvar themselves, they'll have problems
+			// but i seriously doubt it'll be bad.
+			dvars::callback::on_new_value("fs_game", []()
+			{
+				console::warn("fs_game value changed, filesystem paths will be adjusted to new dvar value.");
+				register_fs_game_path();
+			});
+		}
 	}
 
 	void read_startup_variable(const std::string& dvar)
@@ -585,16 +603,7 @@ namespace command
 		void post_unpack() override
 		{
 			// monitor fs_game register and new value changes to adjust our paths for searching
-			dvars::callback::on_register("fs_game", []()
-			{
-				register_fs_game_path();
-			});
-
-			dvars::callback::on_new_value("fs_game", []()
-			{
-				console::warn("fs_game value changed, filesystem paths will be adjusted to new dvar value.");
-				register_fs_game_path();
-			});
+			monitor_fs_game_values();
 
 			if (game::environment::is_sp())
 			{

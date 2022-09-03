@@ -45,9 +45,6 @@ namespace filesystem
 			filesystem::register_path(L".");
 			filesystem::register_path(L"h1-mod");
 
-			// while this clears localizations, it also calls a function to load them again
-			localized_strings::clear();
-
 			fs_startup_hook.invoke<void>(name);
 		}
 

@@ -148,9 +148,7 @@ namespace fastfiles
 			if (localized)
 			{
 				const auto language = game::SEH_GetCurrentLanguageCode();
-				try_load_zone(language + "_"s + name, false);
-
-				if (language != "eng"s)
+				if (!try_load_zone(language + "_"s + name, false) && language != "eng"s)
 				{
 					try_load_zone("eng_" + name, false);
 				}
@@ -158,6 +156,7 @@ namespace fastfiles
 
 			if (!fastfiles::exists(name))
 			{
+				console::debug("fastfile %s doesn't exist\n", name.data());
 				return false;
 			}
 
@@ -232,12 +231,10 @@ namespace fastfiles
 			// ui
 			// common
 
-			//try_load_zone("h1_mod_common", true);
+			try_load_zone("h1_mod_common", true);
 
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
 
-			// H2-mod has the try_load_zone for mod right here but before, we had it before the load assets call. guess quaK can let me know
-			// what to do about this
 			try_load_zone("mod", true);
 		}
 
@@ -261,6 +258,7 @@ namespace fastfiles
 			CloseHandle(handle);
 			return true;
 		}
+
 		return false;
 	}
 
@@ -339,7 +337,7 @@ namespace fastfiles
 				}
 
 				const auto name = params.get(1);
-				if (!try_load_zone(name, false, true))
+				if (!try_load_zone(name, false))
 				{
 					console::warn("loadzone: zone \"%s\" could not be found!\n", name);
 				}

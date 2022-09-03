@@ -219,7 +219,7 @@ namespace ui_scripting
 			game_type["addlocalizedstring"] = [](const game&, const std::string& string,
 				const std::string& value)
 			{
-				localized_strings::override(string, value, true);
+				localized_strings::override(string, value);
 			};
 
 			game_type["sharedset"] = [](const game&, const std::string& key, const std::string& value)

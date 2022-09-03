@@ -32,8 +32,6 @@ namespace mods
 				fonts::clear();
 			}
 
-			localized_strings::clear();
-
 			db_release_xassets_hook.invoke<void>();
 		}
 
@@ -88,7 +86,7 @@ namespace mods
 				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
 				{
 					console::info("Cannot load mod while in-game!\n");
-					game::CG_GameMessage(0, "^1Cannot unload mod while in-game!");
+					game::CG_GameMessage(0, "^1Cannot load mod while in-game!");
 					return;
 				}
 
@@ -103,8 +101,6 @@ namespace mods
 
 				if (mod_requires_restart(mod_path) || mod_requires_restart(path))
 				{
-					// vid_restart is still broken :(
-					// TODO: above was fed's comment for H2, can we actually use it just fine?
 					console::info("Restarting...\n");
 					full_restart("+set fs_game \""s + path + "\"");
 				}
