@@ -227,15 +227,18 @@ namespace party
 		// print error to console
 		console::error("%s\n", error.data());
 
-		// check if popup_acceptinginvite is open and close if so
-		if (game::Menu_IsMenuOpenAndVisible(0, "popup_acceptinginvite"))
+		scheduler::once([&]()
 		{
-			utils::hook::invoke<void>(0x26BE80_b, 0, "popup_acceptinginvite", 0, *game::hks::lua_state); // LUI_LeaveMenuByName
-		}
+			// check if popup_acceptinginvite is open and close if so
+			if (game::Menu_IsMenuOpenAndVisible(0, "popup_acceptinginvite"))
+			{
+				utils::hook::invoke<void>(0x26BE80_b, 0, "popup_acceptinginvite", 0, *game::hks::lua_state); // LUI_LeaveMenuByName
+			}
 
-		// set ui error information
-		utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE"); // Com_SetLocalizedErrorMessage
-		utils::hook::set(0x2ED2F78_b, 1);
+			// set ui error information
+			utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE"); // Com_SetLocalizedErrorMessage
+			utils::hook::set(0x2ED2F78_b, 1);
+		}, scheduler::pipeline::lui);
 	}
 
 	void clear_sv_motd()

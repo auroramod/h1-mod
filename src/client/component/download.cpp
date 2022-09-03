@@ -148,7 +148,10 @@ namespace download
 				utils::io::write_file(mod, result.buffer, false);
 			}
 
-			ui_scripting::notify("mod_download_done", {});
+			scheduler::once([]()
+			{
+				ui_scripting::notify("mod_download_done", {});
+			}, scheduler::pipeline::lui);
 
 			// reconnect back to target after download of mod is finished
 			scheduler::once([=]()
@@ -170,7 +173,10 @@ namespace download
 			globals_.abort = true;
 		});
 
-		ui_scripting::notify("mod_download_done", {});
+		scheduler::once([]()
+		{
+			ui_scripting::notify("mod_download_done", {});
+		}, scheduler::pipeline::lui);
 
 		party::menu_error("Download for server mod aborted.");
 	}
