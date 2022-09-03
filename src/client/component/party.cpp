@@ -162,11 +162,9 @@ namespace party
 
 			const auto source_hash = info.get("modHash");
 
-			console::debug("[Party] download_mod:'%s' (%s)\n", server_fs_game.data(), (source_hash.data()));
-
 			if (source_hash.empty())
 			{
-				menu_error("The server mod hash is empty. (a invalid mod may be selected, contact the server administrator)");
+				menu_error("Connection failed: Server mod hash is empty.");
 				return true;
 			}
 
@@ -181,17 +179,15 @@ namespace party
 				const auto hash = utils::cryptography::sha1::compute(data, true);
 
 				has_to_download = source_hash != hash;
-
-				console::debug("[Party] has_to_download? '%i'\n", has_to_download);
 			}
 			else
 			{
-				console::debug("[Party] Mod file does not exist, downloading\n");
+				console::debug("Failed to find mod, downloading\n");
 			}
 
 			if (has_to_download)
 			{
-				console::debug("[Party] Starting download of mod '%s'\n", server_fs_game.data());
+				console::debug("Starting download of mod '%s'\n", server_fs_game.data());
 
 				download::stop_download();
 				download::start_download(target, info);
@@ -712,42 +708,42 @@ namespace party
 
 				if (info.get("challenge") != connect_state.challenge)
 				{
-					menu_error("Invalid challenge.");
+					menu_error("Connection failed: Invalid challenge.");
 					return;
 				}
 
 				const auto gamename = info.get("gamename");
 				if (gamename != "H1"s)
 				{
-					menu_error("Invalid gamename.");
+					menu_error("Connection failed: Invalid gamename.");
 					return;
 				}
 
 				const auto playmode = info.get("playmode");
 				if (game::CodPlayMode(std::atoi(playmode.data())) != game::Com_GetCurrentCoDPlayMode())
 				{
-					menu_error("Invalid playmode.");
+					menu_error("Connection failed: Invalid playmode.");
 					return;
 				}
 
 				const auto sv_running = info.get("sv_running");
 				if (!std::atoi(sv_running.data()))
 				{
-					menu_error("Server not running.");
+					menu_error("Connection failed: Server not running.");
 					return;
 				}
 
 				const auto mapname = info.get("mapname");
 				if (mapname.empty())
 				{
-					menu_error("Invalid map.");
+					menu_error("Connection failed: Invalid map.");
 					return;
 				}
 
 				const auto gametype = info.get("gametype");
 				if (gametype.empty())
 				{
-					menu_error("Invalid gametype.");
+					menu_error("Connection failed: Invalid gametype.");
 					return;
 				}
 

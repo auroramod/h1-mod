@@ -58,7 +58,7 @@ namespace download
 
 		int progress_callback(size_t progress)
 		{
-			console::debug("[Download] Progress %lli\n", progress);
+			console::debug("Download progress: %lli\n", progress);
 			if (download_aborted())
 			{
 				return -1;
@@ -94,14 +94,14 @@ namespace download
 		const auto base = info.get("sv_wwwBaseUrl");
 		if (base.empty())
 		{
-			party::menu_error("Download failed: server doesn't have 'sv_wwwBaseUrl' set.");
+			party::menu_error("Download failed: Server doesn't have 'sv_wwwBaseUrl' dvar set.");
 			return;
 		}
 
 		const auto mod = info.get("fs_game") + "/mod.ff";
 		const auto url = base + "/" + mod;
 
-		console::debug("[Download] Downloading %s from %s: %s\n", mod.data(), base.data(), url.data());
+		console::debug("Downloading %s from %s: %s\n", mod.data(), base.data(), url.data());
 
 		scheduler::once([=]()
 		{
@@ -129,7 +129,7 @@ namespace download
 				const auto data = utils::http::get_data(url, {}, {}, &progress_callback);
 				if (!data.has_value())
 				{
-					party::menu_error("Download failed with unknown error, please try again.");
+					party::menu_error("Download failed: An unknown error occurred, please try again.");
 					return;
 				}
 
@@ -141,7 +141,7 @@ namespace download
 				const auto& result = data.value();
 				if (result.code != CURLE_OK)
 				{
-					party::menu_error(utils::string::va("Download failed with error %i (%s)\n", result.code, curl_easy_strerror(result.code)));
+					party::menu_error(utils::string::va("Download failed: %s (%i)\n", result.code, curl_easy_strerror(result.code)));
 					return;
 				}
 
@@ -178,7 +178,7 @@ namespace download
 			ui_scripting::notify("mod_download_done", {});
 		}, scheduler::pipeline::lui);
 
-		party::menu_error("Download for server mod aborted.");
+		party::menu_error("Download for server mod has been cancelled.");
 	}
 
 	class component final : public component_interface
