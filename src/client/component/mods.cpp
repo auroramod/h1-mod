@@ -149,7 +149,7 @@ namespace mods
 
 			command::add("com_restart", []()
 			{
-				if (!game::Com_InFrontend())
+				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
 				{
 					return;
 				}

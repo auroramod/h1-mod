@@ -172,8 +172,8 @@ namespace fastfiles
 		utils::hook::detour sys_createfile_hook;
 		HANDLE sys_create_file_stub(game::Sys_Folder folder, const char* base_filename)
 		{
-			auto* fs_basepath = game::Dvar_FindVar("fs_basepath");
-			auto* fs_game = game::Dvar_FindVar("fs_game");
+			static const auto* fs_basepath = game::Dvar_FindVar("fs_basepath");
+			static const auto* fs_game = game::Dvar_FindVar("fs_game");
 
 			std::string dir = fs_basepath ? fs_basepath->current.string : "";
 			std::string mod_dir = fs_game ? fs_game->current.string : "";
@@ -232,8 +232,12 @@ namespace fastfiles
 			// ui
 			// common
 
+			//try_load_zone("h1_mod_common", true);
+
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
 
+			// H2-mod has the try_load_zone for mod right here but before, we had it before the load assets call. guess quaK can let me know
+			// what to do about this
 			try_load_zone("mod", true);
 		}
 
@@ -335,7 +339,7 @@ namespace fastfiles
 				}
 
 				const auto name = params.get(1);
-				if (!try_load_zone(name, false))
+				if (!try_load_zone(name, false, true))
 				{
 					console::warn("loadzone: zone \"%s\" could not be found!\n", name);
 				}

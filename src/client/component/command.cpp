@@ -110,10 +110,8 @@ namespace command
 
 		void register_fs_game_path()
 		{
-			console::debug("[FS] " __FUNCTION__ " called\n");
-
 			static const auto* fs_game = game::Dvar_FindVar("fs_game");
-			const auto* new_mod_path = fs_game->current.string;
+			const auto new_mod_path = fs_game->current.string;
 
 			// check if the last saved fs_game value isn't empty and if it doesn't equal the new fs_game
 			if (!saved_fs_game.empty() && saved_fs_game != new_mod_path)
@@ -124,11 +122,8 @@ namespace command
 
 			if (new_mod_path && !new_mod_path[0])
 			{
-				console::debug("[FS] " __FUNCTION__ " returning because new mod path is blank\n");
 				return;
 			}
-
-			console::debug("[FS] " __FUNCTION__ " registering new mod path\n");
 
 			// register fs_game value as a fs directory used for many things
 			filesystem::register_path(new_mod_path);
@@ -597,6 +592,7 @@ namespace command
 
 			dvars::callback::on_new_value("fs_game", []()
 			{
+				console::warn("fs_game value changed, filesystem paths will be adjusted to new dvar value.");
 				register_fs_game_path();
 			});
 
