@@ -4,6 +4,8 @@
 #include "loader/component_loader.hpp"
 #include "game/game.hpp"
 
+#include "component/arxan.hpp"
+
 #include <utils/string.hpp>
 #include <utils/flags.hpp>
 #include <utils/io.hpp>
@@ -202,11 +204,16 @@ int main()
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
 
 	FARPROC entry_point;
-	enable_dpi_awareness();
 
-	// This requires admin privilege, but I suppose many
-	// people will start with admin rights if it crashes.
-	limit_parallel_dll_loading();
+	// leaving these for Windows only for now, need to test to see if we can have for Wine -mikey
+	if (!arxan::is_wine())
+	{
+		enable_dpi_awareness();
+	
+		// This requires admin privilege, but I suppose many
+		// people will start with admin rights if it crashes.
+		limit_parallel_dll_loading();
+	}
 
 	srand(uint32_t(time(nullptr)));
 	remove_crash_file();
