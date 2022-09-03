@@ -85,7 +85,7 @@ namespace mods
 					return;
 				}
 
-				if (!game::Com_InFrontend())
+				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
 				{
 					console::info("Cannot load mod while in-game!\n");
 					game::CG_GameMessage(0, "^1Cannot unload mod while in-game!");
@@ -125,7 +125,7 @@ namespace mods
 					return;
 				}
 
-				if (!game::Com_InFrontend())
+				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
 				{
 					console::info("Cannot unload mod while in-game!\n");
 					game::CG_GameMessage(0, "^1Cannot unload mod while in-game!");

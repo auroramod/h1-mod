@@ -28,6 +28,12 @@ function menu_xboxlive(f16_arg0, f16_arg1)
         menu:AddBarracksButton()
         menu:AddPersonalizationButton()
         menu:AddDepotButton()
+
+        -- kinda a weird place to do this, but it's whatever
+        -- add "MODS" button below depot button
+        local modsButton = menu:AddButton("@MENU_MODS", function(a1, a2)
+            LUI.FlowManager.RequestAddMenu(a1, "mods_menu", true, nil)
+        end)
     end
 
     local privateMatchButton = menu:AddButton("@MENU_PRIVATE_MATCH", MPLobbyOnline.OnPrivateMatch,
