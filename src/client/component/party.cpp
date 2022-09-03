@@ -150,12 +150,6 @@ namespace party
 			cl_disconnect_hook.invoke<void>(showMainMenu);
 		}
 
-		void menu_error(const std::string& error)
-		{
-			utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE");
-			utils::hook::set(0x2ED2F78_b, 1);
-		}
-
 		bool download_mod(const game::netadr_s& target, const utils::info_string& info)
 		{
 			const auto server_fs_game = utils::string::to_lower(info.get("fs_game"));
@@ -172,12 +166,12 @@ namespace party
 
 			if (source_hash.empty())
 			{
-				// is this suppose to return false? server has a valid mod but the hash is empty...?
-				return false;
+				menu_error("The server mod hash is empty. (a invalid mod may be selected, contact the server administrator)");
+				return true;
 			}
 
 			static const auto fs_game = game::Dvar_FindVar("fs_game");
-			const auto client_fs_game = utils::string::to_lower(std::string(fs_game->current.string));
+			const auto client_fs_game = utils::string::to_lower(fs_game->current.string);
 
 			const auto mod_path = server_fs_game + "/mod.ff";
 			auto has_to_download = !utils::io::file_exists(mod_path);
@@ -210,6 +204,7 @@ namespace party
 					game::DVAR_SOURCE_INTERNAL);
 				command::execute("vid_restart");
 
+				// set fs_game to the mod the server is on, "restart" game, and then (hopefully) reconnect
 				scheduler::once([=]()
 				{
 					command::execute("lui_open_popup popup_acceptinginvite", false);
@@ -225,6 +220,22 @@ namespace party
 
 			return false;
 		}
+	}
+
+	void menu_error(const std::string& error)
+	{
+		// print error to console
+		console::error("%s\n", error.data());
+
+		// check if popup_acceptinginvite is open and close if so
+		if (game::Menu_IsMenuOpenAndVisible(0, "popup_acceptinginvite"))
+		{
+			utils::hook::invoke<void>(0x26BE80_b, 0, "popup_acceptinginvite", 0, *game::hks::lua_state); // LUI_LeaveMenuByName
+		}
+
+		// set ui error information
+		utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE"); // Com_SetLocalizedErrorMessage
+		utils::hook::set(0x2ED2F78_b, 1);
 	}
 
 	void clear_sv_motd()
@@ -664,7 +675,7 @@ namespace party
 				info.set("dedicated", utils::string::va("%i", get_dvar_bool("dedicated")));
 				info.set("sv_wwwBaseUrl", get_dvar_string("sv_wwwBaseUrl"));
 
-				const auto fs_game = get_dvar_string("fs_game");
+				const auto fs_game = std::string("mods/iw6_honeybadger");
 				info.set("fs_game", fs_game);
 
 				if (mod_hash.has_value())
@@ -698,57 +709,47 @@ namespace party
 
 				if (info.get("challenge") != connect_state.challenge)
 				{
-					const auto str = "Invalid challenge.";
-					printf("%s\n", str);
-					menu_error(str);
+					menu_error("Invalid challenge.");
 					return;
 				}
 
 				const auto gamename = info.get("gamename");
 				if (gamename != "H1"s)
 				{
-					const auto str = "Invalid gamename.";
-					printf("%s\n", str);
-					menu_error(str);
+					menu_error("Invalid gamename.");
 					return;
 				}
 
 				const auto playmode = info.get("playmode");
 				if (game::CodPlayMode(std::atoi(playmode.data())) != game::Com_GetCurrentCoDPlayMode())
 				{
-					const auto str = "Invalid playmode.";
-					printf("%s\n", str);
-					menu_error(str);
+					menu_error("Invalid playmode.");
 					return;
 				}
 
 				const auto sv_running = info.get("sv_running");
 				if (!std::atoi(sv_running.data()))
 				{
-					const auto str = "Server not running.";
-					printf("%s\n", str);
-					menu_error(str);
+					menu_error("Server not running.");
 					return;
 				}
 
 				const auto mapname = info.get("mapname");
 				if (mapname.empty())
 				{
-					const auto str = "Invalid map.";
-					printf("%s\n", str);
-					menu_error(str);
+					menu_error("Invalid map.");
 					return;
 				}
 
 				const auto gametype = info.get("gametype");
 				if (gametype.empty())
 				{
-					const auto str = "Invalid gametype.";
-					printf("%s\n", str);
-					menu_error(str);
+					menu_error("Invalid gametype.");
 					return;
 				}
 
+				// returning true doesn't exactly mean there is a error, but more or less means that we are cancelling the connection for more than one different reason.
+				// if there is a genuine error that occurs, menu_error is called within the function.
 				if (download_mod(target, info))
 				{
 					return;

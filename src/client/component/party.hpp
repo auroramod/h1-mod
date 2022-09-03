@@ -3,6 +3,8 @@
 
 namespace party
 {
+	void menu_error(const std::string& error);
+
 	void reset_connect_state();
 
 	void connect(const game::netadr_s& target);

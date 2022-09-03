@@ -18,25 +18,11 @@ namespace download
 	{
 		struct globals_t
 		{
-			bool is_downloading{};
-			bool download_successful{};
-			size_t num_files{};
-			std::string current_file{};
-			size_t current_progress{};
 			bool abort{};
 			bool active{};
 		};
 
 		utils::concurrency::container<globals_t> globals;
-		void set_download_status(bool downloading, bool download_status)
-		{
-			globals.access([&](globals_t& globals_)
-			{
-				globals_ = {};
-				globals_.is_downloading = downloading;
-				globals_.download_successful = download_status;
-			});
-		}
 
 		bool download_aborted()
 		{
@@ -80,14 +66,6 @@ namespace download
 
 			return 0;
 		}
-
-		void set_current_file(const std::string& name)
-		{
-			globals.access([&](globals_t& globals_)
-			{
-				globals_.current_file = name;
-			});
-		}
 	}
 
 	void start_download(const game::netadr_s& target, const utils::info_string& info)
@@ -104,16 +82,19 @@ namespace download
 
 				return scheduler::cond_continue;
 			});
+
 			return;
 		}
 
-		set_download_status(true, false);
+		globals.access([&](globals_t& globals_)
+		{
+			globals_ = {};
+		});
 
 		const auto base = info.get("sv_wwwBaseUrl");
 		if (base.empty())
 		{
-			console::debug("[Download] Download failed: server doesn't have 'sv_wwwBaseUrl' set\n");
-			set_download_status(true, false);
+			party::menu_error("Download failed: server doesn't have 'sv_wwwBaseUrl' set.");
 			return;
 		}
 
@@ -148,8 +129,7 @@ namespace download
 				const auto data = utils::http::get_data(url, {}, {}, &progress_callback);
 				if (!data.has_value())
 				{
-					console::debug("[Download] Download failed with unknown error\n");
-					set_download_status(true, false);
+					party::menu_error("Download failed with unknown error, please try again.");
 					return;
 				}
 
@@ -161,8 +141,7 @@ namespace download
 				const auto& result = data.value();
 				if (result.code != CURLE_OK)
 				{
-					console::debug("[Download] Download failed with error %i %s\n", result.code, curl_easy_strerror(result.code));
-					set_download_status(true, false);
+					party::menu_error(utils::string::va("Download failed with error %i (%s)\n", result.code, curl_easy_strerror(result.code)));
 					return;
 				}
 
@@ -171,27 +150,12 @@ namespace download
 
 			ui_scripting::notify("mod_download_done", {});
 
+			// reconnect back to target after download of mod is finished
 			scheduler::once([=]()
 			{
 				party::connect(target);
 			}, scheduler::pipeline::main);
 		}, scheduler::pipeline::async);
-	}
-
-	bool is_downloading_mod()
-	{
-		return globals.access<bool>([](globals_t& globals_)
-		{
-			return globals_.is_downloading;
-		});
-	}
-
-	bool is_download_successful()
-	{
-		return globals.access<bool>([](globals_t& globals_)
-		{
-			return globals_.download_successful;
-		});
 	}
 
 	void stop_download()
@@ -201,14 +165,14 @@ namespace download
 			return;
 		}
 
-		console::debug("[Download] Download aborted\n");
-
 		globals.access([&](globals_t& globals_)
 		{
 			globals_.abort = true;
 		});
 
 		ui_scripting::notify("mod_download_done", {});
+
+		party::menu_error("Download for server mod aborted.");
 	}
 
 	class component final : public component_interface
