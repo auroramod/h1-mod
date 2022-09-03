@@ -28,6 +28,8 @@ namespace command
 		std::unordered_map<std::string, std::function<void(params&)>> handlers;
 		std::unordered_map<std::string, std::function<void(int, params_sv&)>> handlers_sv;
 
+		std::string saved_fs_game;
+
 		void main_handler()
 		{
 			params params = {};
@@ -106,6 +108,33 @@ namespace command
 			parsed = true;
 		}
 
+		void register_fs_game_path()
+		{
+			console::debug("[FS] " __FUNCTION__ " called\n");
+
+			static const auto* fs_game = game::Dvar_FindVar("fs_game");
+			const auto* new_mod_path = fs_game->current.string;
+
+			// check if the last saved fs_game value isn't empty and if it doesn't equal the new fs_game
+			if (!saved_fs_game.empty() && saved_fs_game != new_mod_path)
+			{
+				// unregister path to be used as a fs directory
+				filesystem::unregister_path(saved_fs_game);
+			}
+
+			if (new_mod_path && !new_mod_path[0])
+			{
+				console::debug("[FS] " __FUNCTION__ " returning because new mod path is blank\n");
+				return;
+			}
+
+			console::debug("[FS] " __FUNCTION__ " registering new mod path\n");
+
+			// register fs_game value as a fs directory used for many things
+			filesystem::register_path(new_mod_path);
+			saved_fs_game = new_mod_path;
+		}
+
 		void parse_startup_variables()
 		{
 			auto& com_num_console_lines = *reinterpret_cast<int*>(0x35634B8_b);
@@ -128,14 +157,9 @@ namespace command
 					}
 					else
 					{
-						dvars::on_register(dvar_name, [dvar_name, value]()
+						dvars::callback::on_register(dvar_name, [dvar_name, value]()
 						{
 							game::Dvar_SetCommand(game::generateHashValue(dvar_name.data()), "", value.data());
-
-							if (dvar_name == "fs_game")
-							{
-								filesystem::register_path(value);
-							}
 						});
 					}
 				}
@@ -565,6 +589,17 @@ namespace command
 	public:
 		void post_unpack() override
 		{
+			// monitor fs_game register and new value changes to adjust our paths for searching
+			dvars::callback::on_register("fs_game", []()
+			{
+				register_fs_game_path();
+			});
+
+			dvars::callback::on_new_value("fs_game", []()
+			{
+				register_fs_game_path();
+			});
+
 			if (game::environment::is_sp())
 			{
 				add_commands_sp();

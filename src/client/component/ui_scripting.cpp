@@ -390,7 +390,7 @@ namespace ui_scripting
 			load_script("lui_updater", lui_updater);
 			load_script("lua_json", lua_json);
 
-			for (const auto& path : filesystem::get_search_paths())
+			for (const auto& path : filesystem::get_search_paths_rev())
 			{
 				load_scripts(path + "/ui_scripts/");
 				if (game::environment::is_sp())

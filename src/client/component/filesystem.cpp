@@ -15,6 +15,8 @@ namespace filesystem
 {
 	namespace
 	{
+		utils::hook::detour fs_startup_hook;
+
 		bool initialized = false;
 
 		std::deque<std::filesystem::path>& get_search_paths_internal()
@@ -32,17 +34,19 @@ namespace filesystem
 
 		void fs_startup_stub(const char* name)
 		{
-			console::info("[FS] Startup\n");
+			console::debug("[FS] Startup\n");
 
 			initialized = true;
 
+			// hardcoded paths
 			filesystem::register_path(L".");
 			filesystem::register_path(L"h1-mod");
 			filesystem::register_path(L"data");
 
+			// while this clears localizations, it also calls a function to load them again
 			localized_strings::clear();
 
-			utils::hook::invoke<void>(SELECT_VALUE(0x40D890_b, 0x189A40_b), name);
+			fs_startup_hook.invoke<void>(name);
 		}
 
 		std::vector<std::filesystem::path> get_paths(const std::filesystem::path& path)
@@ -157,7 +161,7 @@ namespace filesystem
 		{
 			if (can_insert_path(path_))
 			{
-				console::info("[FS] Registering path '%s'\n", path_.generic_string().data());
+				console::debug("[FS] Registering path '%s'\n", path_.generic_string().data());
 				get_search_paths_internal().push_front(path_);
 			}
 		}
@@ -178,7 +182,7 @@ namespace filesystem
 			{
 				if (*i == path_)
 				{
-					console::info("[FS] Unregistering path '%s'\n", path_.generic_string().data());
+					console::debug("[FS] Unregistering path '%s'\n", path_.generic_string().data());
 					i = search_paths.erase(i);
 				}
 				else
@@ -219,7 +223,8 @@ namespace filesystem
 	public:
 		void post_unpack() override
 		{
-			utils::hook::call(SELECT_VALUE(0x40C992_b, 0x18939F_b), fs_startup_stub);
+			fs_startup_hook.create(SELECT_VALUE(0x40D890_b, 0x189A40_b), fs_startup_stub);
+
 			utils::hook::jump(SELECT_VALUE(0x42CE00_b, 0x5B3440_b), sys_default_install_path_stub);
 
 			// fs_game flags

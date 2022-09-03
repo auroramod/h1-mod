@@ -50,7 +50,7 @@ namespace scripting::lua::engine
 	{
 		stop();
 		running = true;
-		for (const auto& path : filesystem::get_search_paths())
+		for (const auto& path : filesystem::get_search_paths_rev())
 		{
 			load_scripts(path + "/scripts/");
 			if (game::environment::is_sp())
