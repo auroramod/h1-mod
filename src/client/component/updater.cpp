@@ -263,9 +263,7 @@ namespace updater
 
 				if (!found)
 				{
-#ifdef DEBUG
-					console::info("[Updater] Found extra file %s\n", file.data());
-#endif
+					console::debug("[Updater] Found extra file %s\n", file.data());
 					if (file.ends_with(".ff"))
 					{
 						update_data.access([](update_data_t& data_)
