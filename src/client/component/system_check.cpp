@@ -71,14 +71,14 @@ namespace system_check
 
 			if (arxan::is_wine())
 			{
-				if (value != 0xFFB81262 && value != 0xFFB81143)
+				if (value == 0xFFB81262 || value == 0xFFB81143)
 				{
 					return;
 				}
 			}
 			else
 			{
-				if (value != 0x60202B6A && value != 0xBC0E9FE)
+				if (value == 0x60202B6A || value == 0xBC0E9FE)
 				{
 					return;
 				}
