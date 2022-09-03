@@ -84,10 +84,10 @@ namespace patches
 				file_name.append(".cfg");
 			}
 
-			const auto file = filesystem::file(file_name);
-			if (file.exists())
+			std::string buffer{};
+			if (filesystem::read_file(file_name, &buffer))
 			{
-				snprintf(buf, size, "%s\n", file.get_buffer().data());
+				snprintf(buf, size, "%s\n", buffer.data());
 				return buf;
 			}
 

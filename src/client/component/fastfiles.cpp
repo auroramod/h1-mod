@@ -143,6 +143,32 @@ namespace fastfiles
 			}
 		}
 
+		bool try_load_zone(std::string name, bool localized, bool game = false)
+		{
+			if (localized)
+			{
+				const auto language = game::SEH_GetCurrentLanguageCode();
+				try_load_zone(language + "_"s + name, false);
+
+				if (language != "eng"s)
+				{
+					try_load_zone("eng_" + name, false);
+				}
+			}
+
+			if (!fastfiles::exists(name))
+			{
+				return false;
+			}
+
+			game::XZoneInfo info{};
+			info.name = name.data();
+			info.allocFlags = (game ? game::DB_ZONE_GAME : game::DB_ZONE_COMMON) | game::DB_ZONE_CUSTOM;
+			info.freeFlags = 0;
+			game::DB_LoadXAssets(&info, 1u, game::DBSyncMode::DB_LOAD_ASYNC);
+			return true;
+		}
+
 		utils::hook::detour sys_createfile_hook;
 		HANDLE sys_create_file_stub(game::Sys_Folder folder, const char* base_filename)
 		{
@@ -206,12 +232,9 @@ namespace fastfiles
 			// ui
 			// common
 
-			if (fastfiles::exists("mod"))
-			{
-				data.push_back({ "mod", game::DB_ZONE_COMMON | game::DB_ZONE_CUSTOM, 0 });
-			}
-
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
+
+			try_load_zone("mod", true);
 		}
 
 		void load_ui_zones(game::XZoneInfo* zoneInfo, unsigned int zoneCount, game::DBSyncMode syncMode)
@@ -227,8 +250,8 @@ namespace fastfiles
 
 	bool exists(const std::string& zone)
 	{
-		auto is_localized = game::DB_IsLocalized(zone.data());
-		auto handle = game::Sys_CreateFile((is_localized ? game::SF_ZONE_LOC : game::SF_ZONE), utils::string::va("%s.ff", zone.data()));
+		const auto is_localized = game::DB_IsLocalized(zone.data());
+		const auto handle = game::Sys_CreateFile((is_localized ? game::SF_ZONE_LOC : game::SF_ZONE), utils::string::va("%s.ff", zone.data()));
 		if (handle != (HANDLE)-1)
 		{
 			CloseHandle(handle);
@@ -262,7 +285,6 @@ namespace fastfiles
 		{
 			db_try_load_x_file_internal_hook.create(
 				SELECT_VALUE(0x1F5700_b, 0x39A620_b), &db_try_load_x_file_internal);
-
 			db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
 
 			g_dump_scripts = dvars::register_bool("g_dumpScripts", false, game::DVAR_FLAG_NONE, "Dump GSC scripts");
@@ -312,22 +334,11 @@ namespace fastfiles
 					return;
 				}
 
-				const char* name = params.get(1);
-
-				if (!fastfiles::exists(name))
+				const auto name = params.get(1);
+				if (!try_load_zone(name, false))
 				{
 					console::warn("loadzone: zone \"%s\" could not be found!\n", name);
-					return;
 				}
-
-				game::XZoneInfo info;
-				info.name = name;
-				info.allocFlags = game::DB_ZONE_GAME;
-				info.freeFlags = 0;
-
-				info.allocFlags |= game::DB_ZONE_CUSTOM; // skip extra zones with this flag!
-
-				game::DB_LoadXAssets(&info, 1, game::DBSyncMode::DB_LOAD_ASYNC);
 			});
 		}
 	};

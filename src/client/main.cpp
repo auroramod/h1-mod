@@ -202,6 +202,7 @@ void limit_parallel_dll_loading()
 int main()
 {
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
+	ShowWindow(GetConsoleWindow(), SW_SHOW);
 
 	FARPROC entry_point;
 

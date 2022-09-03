@@ -105,6 +105,6 @@ namespace utils::nt
 	__declspec(noreturn) void raise_hard_exception();
 	std::string load_resource(int id);
 
-	void relaunch_self();
+	void relaunch_self(const std::string& extra_command_line = "", bool override_command_line = false);
 	__declspec(noreturn) void terminate(uint32_t code = 0);
 }

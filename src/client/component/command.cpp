@@ -9,6 +9,7 @@
 #include "console.hpp"
 #include "game_console.hpp"
 #include "fastfiles.hpp"
+#include "filesystem.hpp"
 #include "scheduler.hpp"
 #include "logfile.hpp"
 #include "dvars.hpp"
@@ -130,6 +131,11 @@ namespace command
 						dvars::on_register(dvar_name, [dvar_name, value]()
 						{
 							game::Dvar_SetCommand(game::generateHashValue(dvar_name.data()), "", value.data());
+
+							if (dvar_name == "fs_game")
+							{
+								filesystem::register_path(value);
+							}
 						});
 					}
 				}

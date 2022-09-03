@@ -1421,6 +1421,12 @@ namespace game
 		const char* name;
 	};
 
+	struct LocalizeEntry
+	{
+		const char* value;
+		const char* name;
+	};
+
 	union XAssetHeader
 	{
 		void* data;
@@ -1434,6 +1440,7 @@ namespace game
 		TTF* ttf;
 		XModel* model;
 		WeaponDef* weapon;
+		LocalizeEntry* localize;
 	};
 
 	struct XAsset
