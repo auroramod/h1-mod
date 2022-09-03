@@ -63,7 +63,7 @@ void apply_aslr_patch(std::string* data)
 
 void get_aslr_patched_binary(std::string* binary, std::string* data)
 {
-	const auto patched_binary = (utils::properties::get_appdata_path() / "bin/h1_mp64_ship.exe"s).generic_string();
+	const auto patched_binary = (utils::properties::get_appdata_path() / "bin" / *binary).generic_string();
 
 	try
 	{
