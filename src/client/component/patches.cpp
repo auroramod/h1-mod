@@ -9,6 +9,7 @@
 #include "network.hpp"
 #include "scheduler.hpp"
 #include "filesystem.hpp"
+#include "menus.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -63,17 +64,66 @@ namespace patches
 			return com_register_dvars_hook.invoke<void>();
 		}
 
-		utils::hook::detour set_client_dvar_from_server_hook;
+		utils::hook::detour cg_set_client_dvar_from_server_hook;
 
-		void set_client_dvar_from_server_stub(void* clientNum, void* cgameGlob, const char* dvar, const char* value)
+		void cg_set_client_dvar_from_server_stub(void* clientNum, void* cgameGlob, const char* dvar_hash, const char* value)
 		{
-			const auto dvar_lowercase = utils::string::to_lower(dvar);
-			if (dvar_lowercase == "cg_fov"s || dvar_lowercase == "cg_fovMin"s)
+			int hash = atoi(dvar_hash);
+			auto* dvar = game::Dvar_FindMalleableVar(hash);
+
+			if (hash == game::generateHashValue("cg_fov") || 
+				hash == game::generateHashValue("cg_fovMin") || 
+				hash == game::generateHashValue("cg_fovScale"))
 			{
 				return;
 			}
 
-			set_client_dvar_from_server_hook.invoke<void>(0x11AA90_b, clientNum, cgameGlob, dvar, value);
+			if (hash == game::generateHashValue("g_scriptMainMenu"))
+			{
+				menus::set_script_main_menu(value);
+			}
+
+			// register new dvar
+			if (!dvar)
+			{
+				game::Dvar_RegisterString(hash, "", value, game::DVAR_FLAG_EXTERNAL);
+				return;
+			}
+
+			// only set if dvar has no flags or has cheat flag or has external flag
+			if (dvar->flags == game::DVAR_FLAG_NONE || 
+				(dvar->flags & game::DVAR_FLAG_CHEAT) != 0 || 
+				(dvar->flags & game::DVAR_FLAG_EXTERNAL) != 0)
+			{
+				game::Dvar_SetFromStringFromSource(dvar, value, game::DvarSetSource::DVAR_SOURCE_EXTERNAL);
+			}
+
+			// original code
+			int index = 0;
+			auto result = utils::hook::invoke<bool>(0x4745E0_b, dvar, &index); // NetConstStrings_SV_GetNetworkDvarIndex
+			if (result)
+			{
+				std::string index_str = std::to_string(index);
+				return cg_set_client_dvar_from_server_hook.invoke<void>(clientNum, cgameGlob, index_str.data(), value);
+			}
+		}
+
+		game::dvar_t* get_client_dvar(const char* name)
+		{
+			game::dvar_t* dvar = game::Dvar_FindVar(name);
+			if (!dvar)
+			{
+				static game::dvar_t dummy{0};
+				dummy.hash = game::generateHashValue(name);
+				return &dummy;
+			}
+			return dvar;
+		}
+
+		bool get_client_dvar_hash(game::dvar_t* dvar, int* hash)
+		{
+			*hash = dvar->hash;
+			return true;
 		}
 
 		const char* db_read_raw_file_stub(const char* filename, char* buf, const int size)
@@ -386,10 +436,18 @@ namespace patches
 			utils::hook::inject(0x54DCE5_b, VERSION);
 
 			// prevent servers overriding our fov
-			set_client_dvar_from_server_hook.create(0x11AA90_b, set_client_dvar_from_server_stub);
 			utils::hook::nop(0x17DA96_b, 0x16);
 			utils::hook::nop(0xE00BE_b, 0x17);
 			utils::hook::set<uint8_t>(0x307F39_b, 0xEB);
+
+			// make setclientdvar behave like older games
+			cg_set_client_dvar_from_server_hook.create(0x11AA90_b, cg_set_client_dvar_from_server_stub);
+			utils::hook::call(0x407EC5_b, get_client_dvar_hash); // setclientdvar
+			utils::hook::call(0x4087C1_b, get_client_dvar_hash); // setclientdvars
+			utils::hook::call(0x407E8E_b, get_client_dvar); // setclientdvar
+			utils::hook::call(0x40878A_b, get_client_dvar); // setclientdvars
+			utils::hook::set<uint8_t>(0x407EB6_b, 0xEB); // setclientdvar
+			utils::hook::set<uint8_t>(0x4087B2_b, 0xEB); // setclientdvars
 
 			// some [data validation] anti tamper thing that kills performance
 			dvars::override::register_int("dvl", 0, 0, 0, game::DVAR_FLAG_READ);
