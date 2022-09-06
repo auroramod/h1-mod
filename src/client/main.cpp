@@ -94,7 +94,7 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 			&& function != "SteamAPI_GetSteamInstallPath") // Arxan requires one valid steam api import - maybe SteamAPI_Shutdown is better?
 		{
 			static bool check_for_steam_install = false;
-			if (!check_for_steam_install)
+			if (!check_for_steam_install && !arxan::is_wine())
 			{
 				HKEY key;
 				if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Valve\\Steam", 0, KEY_ALL_ACCESS, &key) == ERROR_SUCCESS)
