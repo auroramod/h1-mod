@@ -68,22 +68,15 @@ namespace system_check
 		void verify_binary_version()
 		{
 			const auto value = *reinterpret_cast<DWORD*>(0x1337_b);
-			if (arxan::is_wine())
-			{
-				if (value == 0xFFB81262 || value == 0xFFB81143)
-				{
-					return;
-				}
-			}
-			else
+			if (!arxan::is_wine())
 			{
 				if (value == 0x60202B6A || value == 0xBC0E9FE)
 				{
 					return;
 				}
+				
+				throw std::runtime_error("Unsupported Call of Duty: Modern Warfare Remastered version (1.15)");
 			}
-
-			throw std::runtime_error("Unsupported Call of Duty: Modern Warfare Remastered version (1.15)");
 		}
 	}
 
