@@ -3,15 +3,21 @@
 
 namespace demonware
 {
-	bool byte_buffer::read_byte(unsigned char* output)
-	{
-		if (!this->read_data_type(3)) return false;
-		return this->read(1, output);
-	}
-
 	bool byte_buffer::read_bool(bool* output)
 	{
 		if (!this->read_data_type(1)) return false;
+		return this->read(1, output);
+	}
+
+	bool byte_buffer::read_byte(char* output)
+	{
+		if (!this->read_data_type(2)) return false;
+		return this->read(1, output);
+	}
+
+	bool byte_buffer::read_ubyte(unsigned char* output)
+	{
+		if (!this->read_data_type(3)) return false;
 		return this->read(1, output);
 	}
 
@@ -152,15 +158,21 @@ namespace demonware
 		return true;
 	}
 
-	bool byte_buffer::write_byte(char data)
-	{
-		this->write_data_type(3);
-		return this->write(1, &data);
-	}
-
 	bool byte_buffer::write_bool(bool data)
 	{
 		this->write_data_type(1);
+		return this->write(1, &data);
+	}
+
+	bool byte_buffer::write_byte(char data)
+	{
+		this->write_data_type(2);
+		return this->write(1, &data);
+	}
+
+	bool byte_buffer::write_ubyte(unsigned char data)
+	{
+		this->write_data_type(3);
 		return this->write(1, &data);
 	}
 
@@ -242,7 +254,7 @@ namespace demonware
 		const auto using_types = this->is_using_data_types();
 		this->set_use_data_types(false);
 
-		auto result = this->write_byte(type + 100);
+		auto result = this->write_ubyte(type + 100);
 
 		this->set_use_data_types(true);
 		result &= this->write_uint32(element_count * element_size);

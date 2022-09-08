@@ -38,7 +38,7 @@ namespace demonware
 	{
 		if (packet.starts_with("POST /auth/"))
 		{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 			printf("[DW]: [auth]: user requested authentication.\n");
 #endif
 			return;
@@ -81,7 +81,7 @@ namespace demonware
 			}
 		}
 
-#ifdef DEBUG
+#ifdef DW_DEBUG
 		printf("[DW]: [auth]: authenticating user %s\n", token.data() + 64);
 #endif
 
@@ -161,7 +161,7 @@ namespace demonware
 
 		this->send_reply(&reply);
 
-#ifdef DEBUG
+#ifdef DW_DEBUG
 		printf("[DW]: [auth]: user successfully authenticated.\n");
 #endif
 	}

@@ -58,7 +58,7 @@ namespace demonware
 				}
 				else if (size == 0xC8)
 				{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 					printf("[DW]: [lobby]: received client_header_ack.\n");
 #endif
 
@@ -74,7 +74,7 @@ namespace demonware
 
 					raw_reply reply(packet_2);
 					this->send_reply(&reply);
-#ifdef DEBUG
+#ifdef DW_DEBUG
 					printf("[DW]: [lobby]: sending server_header_ack.\n");
 #endif
 					return;
@@ -83,15 +83,15 @@ namespace demonware
 				if (buffer.size() < size_t(size)) return;
 
 				uint8_t check_ab;
-				buffer.read_byte(&check_ab);
+				buffer.read_ubyte(&check_ab);
 				if (check_ab == 0xAB)
 				{
 					uint8_t type;
-					buffer.read_byte(&type);
+					buffer.read_ubyte(&type);
 
 					if (type == 0x82)
 					{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 						printf("[DW]: [lobby]: received client_auth.\n");
 #endif
 						std::string packet_3(packet.data(), packet.size() - 8); // this 8 are client hash check?
@@ -106,7 +106,7 @@ namespace demonware
 						raw_reply reply(response);
 						this->send_reply(&reply);
 
-#ifdef DEBUG
+#ifdef DW_DEBUG
 						printf("[DW]: [lobby]: sending server_auth_done.\n");
 #endif
 						return;
@@ -135,10 +135,10 @@ namespace demonware
 						serv.read_uint32(&serv_size);
 
 						uint8_t magic; // 0x86
-						serv.read_byte(&magic);
+						serv.read_ubyte(&magic);
 
 						uint8_t service_id;
-						serv.read_byte(&service_id);
+						serv.read_ubyte(&service_id);
 
 						this->call_service(service_id, serv.get_remaining());
 
@@ -170,7 +170,7 @@ namespace demonware
 			// return no error
 			byte_buffer buffer(data);
 			uint8_t task_id;
-			buffer.read_byte(&task_id);
+			buffer.read_ubyte(&task_id);
 
 			this->create_reply(task_id)->send();
 		}

@@ -14,7 +14,7 @@ namespace demonware
 
 		result.write_int32(static_cast<int>(this->buffer_.size()) + 2);
 		result.write_bool(false);
-		result.write_byte(this->type());
+		result.write_ubyte(this->type());
 		result.write(this->buffer_);
 
 		return result.get_buffer();
@@ -29,7 +29,7 @@ namespace demonware
 		enc_buffer.set_use_data_types(false);
 
 		enc_buffer.write_uint32(static_cast<unsigned int>(this->buffer_.size())); // service data size CHECKTHIS!!
-		enc_buffer.write_byte(this->type()); // TASK_REPLY type
+		enc_buffer.write_ubyte(this->type()); // TASK_REPLY type
 		enc_buffer.write(this->buffer_); // service data
 
 		auto aligned_data = enc_buffer.get_buffer();
@@ -51,8 +51,8 @@ namespace demonware
 		response.set_use_data_types(false);
 
 		response.write_int32(30 + static_cast<int>(enc_data.size()));
-		response.write_byte(static_cast<char>(0xAB));
-		response.write_byte(static_cast<char>(0x85));
+		response.write_ubyte(static_cast<unsigned char>(0xAB));
+		response.write_ubyte(static_cast<unsigned char>(0x85));
 		response.write_int32(msg_count);
 		response.write(16, seed.data());
 		response.write(enc_data);
