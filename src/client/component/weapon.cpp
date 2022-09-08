@@ -43,15 +43,15 @@ namespace weapon
 		}
 
 		utils::hook::detour xmodel_get_bone_index_hook;
-		bool xmodel_get_bone_index_stub(game::XModel* model, game::scr_string_t name, unsigned int offset, char* index)
+		__int64 xmodel_get_bone_index_stub(game::XModel* model, game::scr_string_t name, unsigned int offset, char* index)
 		{
-			auto result = xmodel_get_bone_index_hook.invoke<bool>(model, name, offset, index);
+			auto result = xmodel_get_bone_index_hook.invoke<__int64>(model, name, offset, index);
 			if (!result)
 			{
 				if (name == game::SL_GetString("tag_weapon_right", 0) ||
 					name == game::SL_GetString("tag_knife_attach", 0))
 				{
-					result = xmodel_get_bone_index_hook.invoke<bool>(model, game::SL_GetString("tag_weapon", 0), offset, index);
+					result = xmodel_get_bone_index_hook.invoke<__int64>(model, game::SL_GetString("tag_weapon", 0), offset, index);
 					if (result)
 					{
 						console::debug("using tag_weapon instead of %s (%s, %d)\n", game::SL_ConvertToString(name), model->name, offset);
