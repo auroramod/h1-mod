@@ -13,9 +13,10 @@ namespace demonware
 		this->register_service<bdAnticheat>();
 		this->register_service<bdBandwidthTest>();
 		this->register_service<bdContentStreaming>();
+		this->register_service<bdCounter>();
 		this->register_service<bdDML>();
 		this->register_service<bdEventLog>();
-		this->register_service<bdGroups>();
+		this->register_service<bdGroup>();
 		this->register_service<bdTeams>();
 		this->register_service<bdStats>();
 		this->register_service<bdStorage>();

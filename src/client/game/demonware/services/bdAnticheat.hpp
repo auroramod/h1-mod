@@ -8,7 +8,9 @@ namespace demonware
 		bdAnticheat();
 
 	private:
-		void unk2(service_server* server, byte_buffer* buffer) const;
-		void report_console_details(service_server* server, byte_buffer* buffer) const;
+		void answerChallenges(service_server* server, byte_buffer* buffer) const;
+		void reportConsoleID(service_server* server, byte_buffer* buffer) const;
+		void reportConsoleDetails(service_server* server, byte_buffer* buffer) const;
+		void answerTOTPChallenge(service_server* server, byte_buffer* buffer) const;
 	};
 }
