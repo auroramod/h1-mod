@@ -16,6 +16,7 @@ namespace demonware
 		this->register_service<bdDML>();
 		this->register_service<bdEventLog>();
 		this->register_service<bdGroups>();
+		this->register_service<bdTeams>();
 		this->register_service<bdStats>();
 		this->register_service<bdStorage>();
 		this->register_service<bdTitleUtilities>();
@@ -23,11 +24,14 @@ namespace demonware
 		this->register_service<bdRichPresence>();
 		this->register_service<bdFacebook>();
 		this->register_service<bdUNK63>();
-		this->register_service<bdUNK80>();
-		this->register_service<bdUNK95>();
+		this->register_service<bdUserGroups>();
+		this->register_service<bdMarketplace>();
+		this->register_service<bdLeague>();
+		this->register_service<bdLeague2>();
+		this->register_service<bdPublisherVariables>();
 		this->register_service<bdPresence>();
 		this->register_service<bdMarketingComms>();
-		this->register_service<bdMatchMaking2>();
+		this->register_service<bdMatchMaking>();
 		this->register_service<bdMarketing>();
 	};
 
