@@ -32,7 +32,7 @@ namespace demonware
 		this->register_service<bdPresence>();
 		this->register_service<bdMarketingComms>();
 		this->register_service<bdMatchMaking>();
-		this->register_service<bdMarketing>();
+		this->register_service<bdReward>();
 	};
 
 	void lobby_server::send_reply(reply* data)
