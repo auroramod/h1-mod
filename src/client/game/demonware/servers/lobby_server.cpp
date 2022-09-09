@@ -19,6 +19,8 @@ namespace demonware
 		this->register_service<bdGroup>();
 		this->register_service<bdTeams>();
 		this->register_service<bdStats>();
+		this->register_service<bdStats2>();
+		this->register_service<bdStats3>();
 		this->register_service<bdStorage>();
 		this->register_service<bdTitleUtilities>();
 		this->register_service<bdProfiles>();

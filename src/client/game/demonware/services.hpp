@@ -14,6 +14,7 @@
 #include "services/bdStorage.hpp"           // 10
 #include "services/bdTitleUtilities.hpp"    // 12
 #include "services/bdBandwidthTest.hpp"     // 18
+#include "services/bdStats2.hpp"            // 19
 #include "services/bdCounter.hpp"           // 23
 #include "services/bdDML.hpp"               // 27
 #include "services/bdGroup.hpp"             // 28
@@ -31,6 +32,7 @@
 #include "services/bdMarketplace.hpp"       // 80
 #include "services/bdLeague.hpp"		    // 81
 #include "services/bdLeague2.hpp"			// 82
+#include "services/bdStats3.hpp"            // 91
 #include "services/bdPublisherVariables.hpp"// 95
 // AccountLinking                           // 86
 #include "services/bdPresence.hpp"          //103
