@@ -112,18 +112,15 @@ namespace arxan
 
 	bool is_wine()
 	{
-		static bool is_wine = false;
-		static bool is_wine_set = false;
+		static std::optional<bool> is_wine = {};
 
-		if (!is_wine_set)
+		if (!is_wine.has_value())
 		{
 			const utils::nt::library ntdll("ntdll.dll");
 			is_wine = ntdll.get_proc<void*>("wine_get_version") != nullptr;
-
-			is_wine_set = true;
 		}
 
-		return is_wine;
+		return is_wine.value();
 	}
 
 	class component final : public component_interface

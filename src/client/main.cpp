@@ -95,7 +95,7 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 			&& function != "SteamAPI_GetSteamInstallPath") // Arxan requires one valid steam api import - maybe SteamAPI_Shutdown is better?
 		{
 			static bool check_for_steam_install = false;
-			if (!check_for_steam_install)
+			if (!check_for_steam_install && !arxan::is_wine())
 			{
 				HKEY key;
 				if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Valve\\Steam", 0, KEY_ALL_ACCESS, &key) == ERROR_SUCCESS)
@@ -104,7 +104,7 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 				}
 				else
 				{
-					MSG_BOX_WARN("Could not find Steam in the registry. If Steam is not installed, you must install it for H1-Mod to work.");
+					throw std::runtime_error("Could not find Steam in the registry. If Steam is not installed, you must install it for H1-Mod to work.");
 				}
 
 				check_for_steam_install = true;

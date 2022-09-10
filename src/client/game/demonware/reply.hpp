@@ -119,7 +119,7 @@ namespace demonware
 			byte_buffer buffer;
 			buffer.write_uint64(transaction_id);
 			buffer.write_uint32(this->error_);
-			buffer.write_byte(this->type_);
+			buffer.write_ubyte(this->type_);
 
 			if (!this->error_)
 			{

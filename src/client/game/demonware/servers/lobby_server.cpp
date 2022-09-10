@@ -13,22 +13,29 @@ namespace demonware
 		this->register_service<bdAnticheat>();
 		this->register_service<bdBandwidthTest>();
 		this->register_service<bdContentStreaming>();
+		this->register_service<bdCounter>();
 		this->register_service<bdDML>();
 		this->register_service<bdEventLog>();
-		this->register_service<bdGroups>();
+		this->register_service<bdGroup>();
+		this->register_service<bdTeams>();
 		this->register_service<bdStats>();
+		this->register_service<bdStats2>();
+		this->register_service<bdStats3>();
 		this->register_service<bdStorage>();
 		this->register_service<bdTitleUtilities>();
 		this->register_service<bdProfiles>();
 		this->register_service<bdRichPresence>();
 		this->register_service<bdFacebook>();
 		this->register_service<bdUNK63>();
-		this->register_service<bdUNK80>();
-		this->register_service<bdUNK95>();
+		this->register_service<bdUserGroups>();
+		this->register_service<bdMarketplace>();
+		this->register_service<bdLeague>();
+		this->register_service<bdLeague2>();
+		this->register_service<bdPublisherVariables>();
 		this->register_service<bdPresence>();
 		this->register_service<bdMarketingComms>();
-		this->register_service<bdMatchMaking2>();
-		this->register_service<bdMarketing>();
+		this->register_service<bdMatchMaking>();
+		this->register_service<bdReward>();
 	};
 
 	void lobby_server::send_reply(reply* data)
@@ -58,7 +65,7 @@ namespace demonware
 				}
 				else if (size == 0xC8)
 				{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 					printf("[DW]: [lobby]: received client_header_ack.\n");
 #endif
 
@@ -74,7 +81,7 @@ namespace demonware
 
 					raw_reply reply(packet_2);
 					this->send_reply(&reply);
-#ifdef DEBUG
+#ifdef DW_DEBUG
 					printf("[DW]: [lobby]: sending server_header_ack.\n");
 #endif
 					return;
@@ -83,15 +90,15 @@ namespace demonware
 				if (buffer.size() < size_t(size)) return;
 
 				uint8_t check_ab;
-				buffer.read_byte(&check_ab);
+				buffer.read_ubyte(&check_ab);
 				if (check_ab == 0xAB)
 				{
 					uint8_t type;
-					buffer.read_byte(&type);
+					buffer.read_ubyte(&type);
 
 					if (type == 0x82)
 					{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 						printf("[DW]: [lobby]: received client_auth.\n");
 #endif
 						std::string packet_3(packet.data(), packet.size() - 8); // this 8 are client hash check?
@@ -106,7 +113,7 @@ namespace demonware
 						raw_reply reply(response);
 						this->send_reply(&reply);
 
-#ifdef DEBUG
+#ifdef DW_DEBUG
 						printf("[DW]: [lobby]: sending server_auth_done.\n");
 #endif
 						return;
@@ -135,10 +142,10 @@ namespace demonware
 						serv.read_uint32(&serv_size);
 
 						uint8_t magic; // 0x86
-						serv.read_byte(&magic);
+						serv.read_ubyte(&magic);
 
 						uint8_t service_id;
-						serv.read_byte(&service_id);
+						serv.read_ubyte(&service_id);
 
 						this->call_service(service_id, serv.get_remaining());
 
@@ -170,7 +177,7 @@ namespace demonware
 			// return no error
 			byte_buffer buffer(data);
 			uint8_t task_id;
-			buffer.read_byte(&task_id);
+			buffer.read_ubyte(&task_id);
 
 			this->create_reply(task_id)->send();
 		}
