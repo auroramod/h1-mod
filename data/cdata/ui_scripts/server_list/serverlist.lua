@@ -5,11 +5,6 @@ if (not SystemLinkJoinMenu) then
 	return
 end
 
-game:addlocalizedstring("MENU_NUMPLAYERS", "Players")
-game:addlocalizedstring("MENU_PING", "Ping")
-game:addlocalizedstring("SERVERLIST_PLAYER_COUNT", "&&1 Players")
-game:addlocalizedstring("SERVERLIST_SERVER_COUNT", "&&1 Servers")
-
 local columns = {
 	{
 		offset = 40,

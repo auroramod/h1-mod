@@ -6,6 +6,7 @@
 #include "fastfiles.hpp"
 #include "command.hpp"
 #include "console.hpp"
+#include "filesystem.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/concurrency.hpp>
@@ -143,32 +144,94 @@ namespace fastfiles
 			}
 		}
 
+		bool try_load_zone(std::string name, bool localized, bool game = false)
+		{
+			if (localized)
+			{
+				const auto language = game::SEH_GetCurrentLanguageCode();
+				try_load_zone(language + "_"s + name, false);
+			}
+
+			if (!fastfiles::exists(name))
+			{
+				return false;
+			}
+
+			game::XZoneInfo info{};
+			info.name = name.data();
+			info.allocFlags = (game ? game::DB_ZONE_GAME : game::DB_ZONE_COMMON) | game::DB_ZONE_CUSTOM;
+			info.freeFlags = 0;
+			game::DB_LoadXAssets(&info, 1u, game::DBSyncMode::DB_LOAD_ASYNC);
+			return true;
+		}
+
+		HANDLE find_fastfile(const std::string& filename, bool check_loc_folder)
+		{
+			std::string path{};
+			std::string loc_folder{};
+
+			if (check_loc_folder && game::DB_IsLocalized(filename.data()))
+			{
+				const auto handle = find_fastfile(filename, false);
+				if (handle != reinterpret_cast<HANDLE>(-1))
+				{
+					return handle;
+				}
+
+				loc_folder = game::SEH_GetCurrentLanguageName() + "/"s;
+			}
+
+			if (!filesystem::find_file(loc_folder + filename, &path))
+			{
+				if (!filesystem::find_file("zone/"s + loc_folder + filename, &path))
+				{
+					return reinterpret_cast<HANDLE>(-1);
+				}
+			}
+
+			return CreateFileA(path.data(), 0x80000000, 1u, 0, 3u, 0x60000000u, 0);
+		}
+
 		utils::hook::detour sys_createfile_hook;
 		HANDLE sys_create_file_stub(game::Sys_Folder folder, const char* base_filename)
 		{
-			auto* fs_basepath = game::Dvar_FindVar("fs_basepath");
-			auto* fs_game = game::Dvar_FindVar("fs_game");
+			const auto* fs_basepath = game::Dvar_FindVar("fs_basepath");
+			const auto* fs_game = game::Dvar_FindVar("fs_game");
 
-			std::string dir = fs_basepath ? fs_basepath->current.string : "";
-			std::string mod_dir = fs_game ? fs_game->current.string : "";
+			const std::string dir = fs_basepath ? fs_basepath->current.string : "";
+			const std::string mod_dir = fs_game ? fs_game->current.string : "";
+			const std::string name = base_filename;
 
-			if (base_filename == "mod.ff"s)
+			if (name == "mod.ff")
 			{
 				if (!mod_dir.empty())
 				{
-					auto path = utils::string::va("%s\\%s\\%s", dir.data(), mod_dir.data(), base_filename);
+					const auto path = utils::string::va("%s\\%s\\%s", 
+						dir.data(), mod_dir.data(), base_filename);
+
 					if (utils::io::file_exists(path))
 					{
 						return CreateFileA(path, 0x80000000, 1u, 0, 3u, 0x60000000u, 0);
 					}
 				}
-				return (HANDLE)-1;
+
+				return reinterpret_cast<HANDLE>(-1);
+			}
+
+			if (name.ends_with(".ff"))
+			{
+				const auto handle = find_fastfile(name, true);
+				if (handle != reinterpret_cast<HANDLE>(-1))
+				{
+					return handle;
+				}
 			}
 
 			return sys_createfile_hook.invoke<HANDLE>(folder, base_filename);
 		}
 
-		template <typename T> inline void merge(std::vector<T>* target, T* source, size_t length)
+		template <typename T> 
+		inline void merge(std::vector<T>* target, T* source, size_t length)
 		{
 			if (source)
 			{
@@ -179,7 +242,8 @@ namespace fastfiles
 			}
 		}
 
-		template <typename T> inline void merge(std::vector<T>* target, std::vector<T> source)
+		template <typename T> 
+		inline void merge(std::vector<T>* target, std::vector<T> source)
 		{
 			for (auto& entry : source)
 			{
@@ -206,12 +270,11 @@ namespace fastfiles
 			// ui
 			// common
 
-			if (fastfiles::exists("mod"))
-			{
-				data.push_back({ "mod", game::DB_ZONE_COMMON | game::DB_ZONE_CUSTOM, 0 });
-			}
+			try_load_zone("h1_mod_common", true);
 
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
+
+			try_load_zone("mod", true);
 		}
 
 		void load_ui_zones(game::XZoneInfo* zoneInfo, unsigned int zoneCount, game::DBSyncMode syncMode)
@@ -227,13 +290,16 @@ namespace fastfiles
 
 	bool exists(const std::string& zone)
 	{
-		auto is_localized = game::DB_IsLocalized(zone.data());
-		auto handle = game::Sys_CreateFile((is_localized ? game::SF_ZONE_LOC : game::SF_ZONE), utils::string::va("%s.ff", zone.data()));
-		if (handle != (HANDLE)-1)
+		const auto is_localized = game::DB_IsLocalized(zone.data());
+		const auto handle = game::Sys_CreateFile((is_localized ? game::SF_ZONE_LOC : game::SF_ZONE), 
+			utils::string::va("%s.ff", zone.data()));
+
+		if (handle != reinterpret_cast<HANDLE>(-1))
 		{
 			CloseHandle(handle);
 			return true;
 		}
+
 		return false;
 	}
 
@@ -262,7 +328,6 @@ namespace fastfiles
 		{
 			db_try_load_x_file_internal_hook.create(
 				SELECT_VALUE(0x1F5700_b, 0x39A620_b), &db_try_load_x_file_internal);
-
 			db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
 
 			g_dump_scripts = dvars::register_bool("g_dumpScripts", false, game::DVAR_FLAG_NONE, "Dump GSC scripts");
@@ -312,22 +377,11 @@ namespace fastfiles
 					return;
 				}
 
-				const char* name = params.get(1);
-
-				if (!fastfiles::exists(name))
+				const auto name = params.get(1);
+				if (!try_load_zone(name, false))
 				{
 					console::warn("loadzone: zone \"%s\" could not be found!\n", name);
-					return;
 				}
-
-				game::XZoneInfo info;
-				info.name = name;
-				info.allocFlags = game::DB_ZONE_GAME;
-				info.freeFlags = 0;
-
-				info.allocFlags |= game::DB_ZONE_CUSTOM; // skip extra zones with this flag!
-
-				game::DB_LoadXAssets(&info, 1, game::DBSyncMode::DB_LOAD_ASYNC);
 			});
 		}
 	};

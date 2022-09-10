@@ -2,32 +2,6 @@ if (game:issingleplayer() or not Engine.InFrontend()) then
 	return
 end
 
-game:addlocalizedstring("LUA_MENU_STATS", "Stats")
-game:addlocalizedstring("LUA_MENU_STATS_DESC", "Edit player stats settings.")
-
-game:addlocalizedstring("LUA_MENU_UNLOCKALL_ITEMS", "Unlock all items")
-game:addlocalizedstring("LUA_MENU_UNLOCKALL_ITEMS_DESC",
-	"Whether items should be locked based on the player's stats or always unlocked.")
-
-game:addlocalizedstring("LUA_MENU_UNLOCKALL_LOOT", "Unlock all loot")
-game:addlocalizedstring("LUA_MENU_UNLOCKALL_LOOT_DESC",
-		"Whether loot should be locked based on the player's stats or always unlocked.")
-
-game:addlocalizedstring("LUA_MENU_UNLOCKALL_CLASSES", "Unlock all classes")
-game:addlocalizedstring("LUA_MENU_UNLOCKALL_CLASSES_DESC",
-	"Whether classes should be locked based on the player's stats or always unlocked.")
-
-game:addlocalizedstring("LUA_MENU_PRESTIGE", "Prestige")
-game:addlocalizedstring("LUA_MENU_PRESTIGE_DESC", "Edit prestige level.")
-game:addlocalizedstring("LUA_MENU_RANK", "Rank")
-game:addlocalizedstring("LUA_MENU_RANK_DESC", "Edit rank.")
-
-game:addlocalizedstring("LUA_MENU_UNSAVED_CHANGES", "You have unsaved changes, are you sure you want to exit?")
-game:addlocalizedstring("LUA_MENU_SAVE", "Save changes")
-game:addlocalizedstring("LUA_MENU_SAVE_DESC", "Save changes.")
-game:addlocalizedstring("LUA_MENU_SETTINGS", "Settings")
-game:addlocalizedstring("LUA_MENU_EDIT_STATS", "Edit Stats")
-
 function createdivider(menu, text)
 	local element = LUI.UIElement.new({
 		leftAnchor = true,

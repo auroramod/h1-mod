@@ -1,12 +1,3 @@
-game:addlocalizedstring("MENU_MODS", "MODS")
-game:addlocalizedstring("MENU_MODS_DESC", "Load installed mods.")
-game:addlocalizedstring("LUA_MENU_MOD_DESC_DEFAULT", "Load &&1.")
-game:addlocalizedstring("LUA_MENU_MOD_DESC", "&&1\nAuthor: &&2\nVersion: &&3")
-game:addlocalizedstring("LUA_MENU_LOADED_MOD", "Loaded mod: ^2&&1")
-game:addlocalizedstring("LUA_MENU_AVAILABLE_MODS", "Available mods")
-game:addlocalizedstring("LUA_MENU_UNLOAD", "Unload")
-game:addlocalizedstring("LUA_MENU_UNLOAD_DESC", "Unload the currently loaded mod.")
-
 function createdivider(menu, text)
 	local element = LUI.UIElement.new({
 		leftAnchor = true,
@@ -38,19 +29,20 @@ function string:truncate(length)
 	return self:sub(1, length - 3) .. "..."
 end
 
-LUI.addmenubutton("main_campaign", {
-	index = 6,
-	text = "@MENU_MODS",
-	description = Engine.Localize("@MENU_MODS_DESC"),
-	callback = function()
-		LUI.FlowManager.RequestAddMenu(nil, "mods_menu")
-	end
-})
+if (game:issingleplayer()) then
+    LUI.addmenubutton("main_campaign", {
+        index = 6,
+        text = "@MENU_MODS",
+        description = Engine.Localize("@MENU_MODS_DESC"),
+        callback = function()
+            LUI.FlowManager.RequestAddMenu(nil, "mods_menu")
+        end
+    })
+end
 
 function getmodname(path)
 	local name = path
 	game:addlocalizedstring(name, name)
-	game:addlocalizedstring("LUA_MENU_MOD_DESC_DEFAULT", "Load &&1.")
 	local desc = Engine.Localize("LUA_MENU_MOD_DESC_DEFAULT", name)
 	local infofile = path .. "/info.json"
 

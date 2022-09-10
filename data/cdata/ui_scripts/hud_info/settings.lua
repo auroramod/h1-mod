@@ -1,16 +1,5 @@
 local pcdisplay = luiglobals.require("LUI.PCDisplay")
 
-game:addlocalizedstring("LUA_MENU_FPS", "FPS Counter")
-game:addlocalizedstring("LUA_MENU_FPS_DESC", "Show FPS Counter.")
-
-game:addlocalizedstring("LUA_MENU_LATENCY", "Server Latency")
-game:addlocalizedstring("LUA_MENU_LATENCY_DESC", "Show server latency.")
-
-game:addlocalizedstring("LUA_MENU_RED_DOT_BRIGHTNESS", "Red dot Brightness")
-game:addlocalizedstring("LUA_MENU_RED_DOT_BRIGHTNESS_DESC", "Adjust the brightness of red dot reticles.")
-
-game:addlocalizedstring("MENU_SYSINFO_CUSTOMER_SUPPORT_URL", "https://h1.gg/")
-
 function createdivider(menu, text)
 	local element = LUI.UIElement.new({
 		leftAnchor = true,

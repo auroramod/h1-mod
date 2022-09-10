@@ -49,4 +49,6 @@ namespace command
 	void add_sv(const char* name, std::function<void(int, const params_sv&)> callback);
 
 	void execute(std::string command, bool sync = false);
+
+	void register_fs_game_path();
 }

@@ -1,8 +1,5 @@
 LUI.MenuBuilder.registerPopupType("ShaderCacheDialog_original", LUI.ShaderCacheDialog.new)
 
-game:addlocalizedstring("PLATFORM_SHADER_PRECACHE_ASK", "Would you like to populate the shader cache? It may cause crashes with certain GPUs (e.g. RTX cards) but will improve performance if successful.")
-game:addlocalizedstring("MENU_NO_DONT_ASK", "No, don't ask me again")
-
 local function dialog(...)
 	if (game:sharedget("has_accepted_shader_caching") == "1") then
 		return LUI.ShaderCacheDialog.new(...)

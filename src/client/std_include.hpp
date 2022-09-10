@@ -89,6 +89,9 @@
 #include <MinHook.h>
 #include <tomcrypt.h>
 
+#define RAPIDJSON_NOEXCEPT
+#define RAPIDJSON_ASSERT(cond) if(cond); else throw std::runtime_error("rapidjson assert fail");
+
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>

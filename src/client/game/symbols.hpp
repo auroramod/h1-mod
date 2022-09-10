@@ -221,6 +221,9 @@ namespace game
 	WEAK symbol<bool(const char* path)> Sys_FileExists{0x0, 0x0};
 	WEAK symbol<HANDLE(Sys_Folder, const char* baseFilename)> Sys_CreateFile{0x42C430, 0x5B2860};
 
+	WEAK symbol<const char*()> SEH_GetCurrentLanguageCode{0x3E5FB0, 0x585090};
+	WEAK symbol<const char*()> SEH_GetCurrentLanguageName{0x3E6030, 0x5850F0};
+
 	WEAK symbol<const char*(const char*)> UI_GetMapDisplayName{0x0, 0x4DDEE0};
 	WEAK symbol<const char*(const char*)> UI_GetGameTypeDisplayName{0x0, 0x4DD8C0};
 	WEAK symbol<void(unsigned int localClientNum, const char** args)> UI_RunMenuScript{0x3F3AA0, 0x1E35B0};
