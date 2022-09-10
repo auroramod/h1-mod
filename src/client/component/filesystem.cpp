@@ -1,6 +1,7 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
+#include "command.hpp"
 #include "console.hpp"
 #include "filesystem.hpp"
 #include "localized_strings.hpp"
@@ -46,6 +47,8 @@ namespace filesystem
 			filesystem::register_path(L"h1-mod");
 
 			fs_startup_hook.invoke<void>(name);
+
+			command::register_fs_game_path();
 		}
 
 		std::vector<std::filesystem::path> get_paths(const std::filesystem::path& path)

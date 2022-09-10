@@ -171,8 +171,8 @@ namespace fastfiles
 		utils::hook::detour sys_createfile_hook;
 		HANDLE sys_create_file_stub(game::Sys_Folder folder, const char* base_filename)
 		{
-			static const auto* fs_basepath = game::Dvar_FindVar("fs_basepath");
-			static const auto* fs_game = game::Dvar_FindVar("fs_game");
+			const auto* fs_basepath = game::Dvar_FindVar("fs_basepath");
+			const auto* fs_game = game::Dvar_FindVar("fs_game");
 
 			std::string dir = fs_basepath ? fs_basepath->current.string : "";
 			std::string mod_dir = fs_game ? fs_game->current.string : "";

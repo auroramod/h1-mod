@@ -108,28 +108,6 @@ namespace command
 			parsed = true;
 		}
 
-		void register_fs_game_path()
-		{
-			static const auto* fs_game = game::Dvar_FindVar("fs_game");
-			const auto new_mod_path = fs_game->current.string;
-
-			// check if the last saved fs_game value isn't empty and if it doesn't equal the new fs_game
-			if (!saved_fs_game.empty() && saved_fs_game != new_mod_path)
-			{
-				// unregister path to be used as a fs directory
-				filesystem::unregister_path(saved_fs_game);
-			}
-
-			if (new_mod_path && !new_mod_path[0])
-			{
-				return;
-			}
-
-			// register fs_game value as a fs directory used for many things
-			filesystem::register_path(new_mod_path);
-			saved_fs_game = new_mod_path;
-		}
-
 		void parse_startup_variables()
 		{
 			auto& com_num_console_lines = *reinterpret_cast<int*>(0x35634B8_b);
@@ -417,24 +395,6 @@ namespace command
 					? "^2on"
 					: "^1off"));
 		}
-
-		void monitor_fs_game_values()
-		{
-			dvars::callback::on_register("fs_game", []()
-			{
-				register_fs_game_path();
-			});
-
-			// it might be overdone to change the filesystem path on every new value change, but to be fair,
-			// for the mods that don't need full restarts, this is good because it'll adjust and work like so
-			// in my opinion, this is fine. if a user tries to modify the dvar themselves, they'll have problems
-			// but i seriously doubt it'll be bad.
-			dvars::callback::on_new_value("fs_game", []()
-			{
-				console::warn("fs_game value changed, filesystem paths will be adjusted to new dvar value.");
-				register_fs_game_path();
-			});
-		}
 	}
 
 	void read_startup_variable(const std::string& dvar)
@@ -597,13 +557,42 @@ namespace command
 		}
 	}
 
+	void register_fs_game_path()
+	{
+		const auto* fs_game = game::Dvar_FindVar("fs_game");
+		const auto new_mod_path = fs_game->current.string;
+
+		// check if the last saved fs_game value isn't empty and if it doesn't equal the new fs_game
+		if (!saved_fs_game.empty() && saved_fs_game != new_mod_path)
+		{
+			// unregister path to be used as a fs directory
+			filesystem::unregister_path(saved_fs_game);
+		}
+
+		if (new_mod_path && !new_mod_path[0])
+		{
+			return;
+		}
+
+		// register fs_game value as a fs directory used for many things
+		filesystem::register_path(new_mod_path);
+		saved_fs_game = new_mod_path;
+	}
+
 	class component final : public component_interface
 	{
 	public:
 		void post_unpack() override
 		{
-			// monitor fs_game register and new value changes to adjust our paths for searching
-			monitor_fs_game_values();
+			// it might be overdone to change the filesystem path on every new value change, but to be fair,
+			// for the mods that don't need full restarts, this is good because it'll adjust and work like so
+			// in my opinion, this is fine. if a user tries to modify the dvar themselves, they'll have problems
+			// but i seriously doubt it'll be bad.
+			dvars::callback::on_new_value("fs_game", []()
+			{
+				console::warn("fs_game value changed, filesystem paths will be adjusted to new dvar value.");
+				register_fs_game_path();
+			});
 
 			if (game::environment::is_sp())
 			{
