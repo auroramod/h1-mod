@@ -254,6 +254,9 @@ namespace game
 
 	WEAK symbol<int> connectionState{0x0, 0x2EC82C8};
 
+	// TODO: move to dvars.cpp when done
+	WEAK symbol<dvar_t> fs_gameDirVal{0x0, 0x2EC86B8};
+
 	WEAK symbol<int> g_poolSize{0x0, 0x0};
 	WEAK symbol<int> g_compressor{0x2574804, 0x3962804};
 

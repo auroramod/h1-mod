@@ -9,6 +9,7 @@
 
 #include "localized_strings.hpp"
 #include "console.hpp"
+#include "download.hpp"
 #include "game_module.hpp"
 #include "fps.hpp"
 #include "server_list.hpp"
@@ -371,6 +372,11 @@ namespace ui_scripting
 
 			updater_table["getlasterror"] = updater::get_last_error;
 			updater_table["getcurrentfile"] = updater::get_current_file;
+
+			auto download_table = table();
+			lua["download"] = download_table;
+
+			download_table["abort"] = download::stop_download;
 		}
 
 		void start()

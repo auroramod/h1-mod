@@ -296,6 +296,18 @@ namespace fastfiles
 
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
 		}
+
+		void load_lua_file_asset_stub(void* a1)
+		{
+			const auto fastfile = fastfiles::get_current_fastfile();
+			if (fastfile == "mod")
+			{
+				console::error("Mod tried to load a lua file!\n");
+				return;
+			}
+
+			utils::hook::invoke<void>(0x39CA90_b, a1);
+		}
 	}
 
 	bool exists(const std::string& zone)
@@ -385,6 +397,12 @@ namespace fastfiles
 			{
 				utils::hook::nop(0x398061_b, 15);
 				utils::hook::jump(0x398061_b, utils::hook::assemble(mp::skip_extra_zones_stub), true);
+			}
+
+			// prevent mod.ff from loading lua files
+			if (game::environment::is_mp())
+			{
+				utils::hook::call(0x3757B4_b, load_lua_file_asset_stub);
 			}
 
 			command::add("loadzone", [](const command::params& params)
