@@ -882,6 +882,7 @@ namespace game
 		DVAR_FLAG_SAVED = 0x1,
 		DVAR_FLAG_LATCHED = 0x2,
 		DVAR_FLAG_CHEAT = 0x4,
+		DVAR_FLAG_EXTERNAL = 0x100,
 		DVAR_FLAG_REPLICATED = 0x8,
 		DVAR_FLAG_WRITE = 0x800,
 		DVAR_FLAG_READ = 0x2000,
@@ -1411,8 +1412,19 @@ namespace game
 		const char* name;
 	};
 
+	struct XModel
+	{
+		const char* name;
+	};
+
 	struct WeaponDef
 	{
+		const char* name;
+	};
+
+	struct LocalizeEntry
+	{
+		const char* value;
 		const char* name;
 	};
 
@@ -1427,7 +1439,9 @@ namespace game
 		LuaFile* luaFile;
 		GfxImage* image;
 		TTF* ttf;
+		XModel* model;
 		WeaponDef* weapon;
+		LocalizeEntry* localize;
 	};
 
 	struct XAsset

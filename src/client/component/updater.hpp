@@ -1,5 +1,7 @@
 #pragma once
 
+#define CLIENT_DATA_FOLDER "cdata"
+
 namespace updater
 {
 	void relaunch();

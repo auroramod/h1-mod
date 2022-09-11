@@ -3,6 +3,8 @@
 #include "scheduler.hpp"
 #include "game/game.hpp"
 
+#include "arxan.hpp"
+
 #include <utils/hook.hpp>
 
 namespace arxan
@@ -108,6 +110,19 @@ namespace arxan
 		}
 	}
 
+	bool is_wine()
+	{
+		static std::optional<bool> is_wine = {};
+
+		if (!is_wine.has_value())
+		{
+			const utils::nt::library ntdll("ntdll.dll");
+			is_wine = ntdll.get_proc<void*>("wine_get_version") != nullptr;
+		}
+
+		return is_wine.value();
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -137,7 +152,10 @@ namespace arxan
 		void post_unpack() override
 		{
 			// cba to implement sp, not sure if it's even needed
-			if (game::environment::is_sp()) return;
+			if (game::environment::is_sp())
+			{
+				return;
+			}
 		}
 	};
 }

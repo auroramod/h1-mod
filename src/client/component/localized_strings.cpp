@@ -1,10 +1,16 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+
+#include "console.hpp"
+#include "filesystem.hpp"
 #include "localized_strings.hpp"
+
+#include "game/game.hpp"
+
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 #include <utils/concurrency.hpp>
-#include "game/game.hpp"
+#include <utils/io.hpp>
 
 namespace localized_strings
 {

@@ -3,6 +3,8 @@
 #include "steam_proxy.hpp"
 #include "scheduler.hpp"
 
+#include "arxan.hpp"
+
 #include <utils/nt.hpp>
 #include <utils/flags.hpp>
 #include <utils/string.hpp>
@@ -102,7 +104,10 @@ namespace steam_proxy
 		void load_client()
 		{
 			const std::filesystem::path steam_path = steam::SteamAPI_GetSteamInstallPath();
-			if (steam_path.empty()) return;
+			if (steam_path.empty()) 
+			{
+				return;
+			}
 
 			utils::nt::library::load(steam_path / "tier0_s64.dll");
 			utils::nt::library::load(steam_path / "vstdlib_s64.dll");

@@ -2,15 +2,15 @@
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
-#include "game/dvars.hpp"
 
 #include "command.hpp"
 #include "console.hpp"
-#include "scheduler.hpp"
 #include "filesystem.hpp"
-#include "materials.hpp"
 #include "fonts.hpp"
+#include "localized_strings.hpp"
+#include "materials.hpp"
 #include "mods.hpp"
+#include "scheduler.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
@@ -40,10 +40,27 @@ namespace mods
 			scheduler::once([]()
 			{
 				release_assets = true;
+				const auto _0 = gsl::finally([]()
+				{
+					release_assets = false;
+				});
+
 				game::Com_Shutdown("");
-				release_assets = false;
 			}, scheduler::pipeline::main);
 		}
+
+		void full_restart(const std::string& arg)
+		{
+			auto mode = game::environment::is_mp() ? " -multiplayer "s : " -singleplayer "s;
+
+			utils::nt::relaunch_self(mode.append(arg), true);
+			utils::nt::terminate();
+		}
+	}
+
+	bool mod_requires_restart(const std::string& path)
+	{
+		return utils::io::file_exists(path + "/mod.ff") || utils::io::file_exists(path + "/zone/mod.ff");
 	}
 
 	class component final : public component_interface
@@ -51,11 +68,6 @@ namespace mods
 	public:
 		void post_unpack() override
 		{
-			if (!game::environment::is_sp())
-			{
-				return;
-			}
-
 			if (!utils::io::directory_exists("mods"))
 			{
 				utils::io::create_directory("mods");
@@ -71,10 +83,10 @@ namespace mods
 					return;
 				}
 
-				if (!game::Com_InFrontend())
+				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
 				{
 					console::info("Cannot load mod while in-game!\n");
-					game::CG_GameMessage(0, "^1Cannot unload mod while in-game!");
+					game::CG_GameMessage(0, "^1Cannot load mod while in-game!");
 					return;
 				}
 
@@ -86,10 +98,19 @@ namespace mods
 				}
 
 				console::info("Loading mod %s\n", path);
-				filesystem::get_search_paths().erase(mod_path);
-				filesystem::get_search_paths().insert(path);
-				mod_path = path;
-				restart();
+
+				if (mod_requires_restart(mod_path) || mod_requires_restart(path))
+				{
+					console::info("Restarting...\n");
+					full_restart("+set fs_game \""s + path + "\"");
+				}
+				else
+				{
+					filesystem::unregister_path(mod_path);
+					filesystem::register_path(path);
+					mod_path = path;
+					restart();
+				}
 			});
 
 			command::add("unloadmod", [](const command::params& params)
@@ -100,7 +121,7 @@ namespace mods
 					return;
 				}
 
-				if (!game::Com_InFrontend())
+				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
 				{
 					console::info("Cannot unload mod while in-game!\n");
 					game::CG_GameMessage(0, "^1Cannot unload mod while in-game!");
@@ -108,8 +129,27 @@ namespace mods
 				}
 
 				console::info("Unloading mod %s\n", mod_path.data());
-				filesystem::get_search_paths().erase(mod_path);
-				mod_path.clear();
+
+				if (mod_requires_restart(mod_path))
+				{
+					console::info("Restarting...\n");
+					full_restart("");
+				}
+				else
+				{
+					filesystem::unregister_path(mod_path);
+					mod_path.clear();
+					restart();
+				}
+			});
+
+			command::add("com_restart", []()
+			{
+				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
+				{
+					return;
+				}
+
 				restart();
 			});
 		}

@@ -4,9 +4,12 @@
 #include "loader/component_loader.hpp"
 #include "game/game.hpp"
 
-#include <utils/string.hpp>
+#include "component/arxan.hpp"
+
 #include <utils/flags.hpp>
 #include <utils/io.hpp>
+#include <utils/string.hpp>
+#include <utils/properties.hpp>
 
 DECLSPEC_NORETURN void WINAPI exit_hook(const int code)
 {
@@ -60,7 +63,7 @@ void apply_aslr_patch(std::string* data)
 
 void get_aslr_patched_binary(std::string* binary, std::string* data)
 {
-	const auto patched_binary = "h1-mod\\"s + *binary;
+	const auto patched_binary = (utils::properties::get_appdata_path() / "bin" / *binary).generic_string();
 
 	try
 	{
@@ -92,7 +95,7 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 			&& function != "SteamAPI_GetSteamInstallPath") // Arxan requires one valid steam api import - maybe SteamAPI_Shutdown is better?
 		{
 			static bool check_for_steam_install = false;
-			if (!check_for_steam_install)
+			if (!check_for_steam_install && !arxan::is_wine())
 			{
 				HKEY key;
 				if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Valve\\Steam", 0, KEY_ALL_ACCESS, &key) == ERROR_SUCCESS)
@@ -101,7 +104,7 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 				}
 				else
 				{
-					MSG_BOX_WARN("Could not find Steam in the registry. If Steam is not installed, you must install it for H1-Mod to work.");
+					throw std::runtime_error("Could not find Steam in the registry. If Steam is not installed, you must install it for H1-Mod to work.");
 				}
 
 				check_for_steam_install = true;
@@ -157,6 +160,7 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 void remove_crash_file()
 {
 	utils::io::remove_file("__h1Exe");
+	utils::io::remove_file("h1-mod\\h1_mp64_ship.exe"); // remove this at some point
 }
 
 void enable_dpi_awareness()
@@ -202,11 +206,16 @@ int main()
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
 
 	FARPROC entry_point;
-	enable_dpi_awareness();
 
-	// This requires admin privilege, but I suppose many
-	// people will start with admin rights if it crashes.
-	limit_parallel_dll_loading();
+	// leaving these for Windows only for now, need to test to see if we can have for Wine -mikey
+	if (!arxan::is_wine())
+	{
+		enable_dpi_awareness();
+	
+		// This requires admin privilege, but I suppose many
+		// people will start with admin rights if it crashes.
+		limit_parallel_dll_loading();
+	}
 
 	srand(uint32_t(time(nullptr)));
 	remove_crash_file();

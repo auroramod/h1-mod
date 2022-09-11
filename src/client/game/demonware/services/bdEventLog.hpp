@@ -8,6 +8,10 @@ namespace demonware
 		bdEventLog();
 
 	private:
-		void unk6(service_server* server, byte_buffer* buffer) const;
+		void recordEvent(service_server* server, byte_buffer* buffer) const;
+		void recordEventBin(service_server* server, byte_buffer* buffer) const;
+		void recordEvents(service_server* server, byte_buffer* buffer) const;
+		void recordEventsBin(service_server* server, byte_buffer* buffer) const;
+		void initializeFiltering(service_server* server, byte_buffer* buffer) const;
 	};
 }
