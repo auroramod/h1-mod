@@ -228,16 +228,18 @@ namespace fastfiles
 				return INVALID_HANDLE_VALUE;
 			}
 
-			if (name.ends_with(".ff"))
+			auto handle = sys_createfile_hook.invoke<HANDLE>(folder, base_filename);
+			if (handle != INVALID_HANDLE_VALUE)
 			{
-				const auto handle = find_fastfile(name, true);
-				if (handle != INVALID_HANDLE_VALUE)
-				{
-					return handle;
-				}
+				return handle;
 			}
 
-			return sys_createfile_hook.invoke<HANDLE>(folder, base_filename);
+			if (name.ends_with(".ff"))
+			{
+				handle = find_fastfile(name, true);
+			}
+
+			return handle;
 		}
 
 		template <typename T> 
