@@ -196,7 +196,7 @@ namespace game
 	WEAK symbol<void()> LUI_EnterCriticalSection{0xF19A0, 0x2669B0};
 	WEAK symbol<void()> LUI_LeaveCriticalSection{0xF6C40, 0x26BDC0};
 
-	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0x4F43C0, 0x389F70};
+	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0x4F43C0, 0x1DA4C0};
 	WEAK symbol<void(int clientNum, const char* menu)> Menus_OpenByName{0x0, 0x1E1270};
 	WEAK symbol<void(int clientNum, const char* menu)> Menus_CloseByName{0x0, 0x1DA4C0};
 
