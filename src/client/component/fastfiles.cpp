@@ -220,17 +220,18 @@ namespace fastfiles
 
 					if (utils::io::file_exists(path))
 					{
-						return CreateFileA(path, 0x80000000, 1u, 0, 3u, 0x60000000u, 0);
+						return CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+							FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING, nullptr);
 					}
 				}
 
-				return reinterpret_cast<HANDLE>(-1);
+				return INVALID_HANDLE_VALUE;
 			}
 
 			if (name.ends_with(".ff"))
 			{
 				const auto handle = find_fastfile(name, true);
-				if (handle != reinterpret_cast<HANDLE>(-1))
+				if (handle != INVALID_HANDLE_VALUE)
 				{
 					return handle;
 				}
@@ -303,7 +304,7 @@ namespace fastfiles
 		const auto handle = game::Sys_CreateFile((is_localized ? game::SF_ZONE_LOC : game::SF_ZONE), 
 			utils::string::va("%s.ff", zone.data()));
 
-		if (handle != reinterpret_cast<HANDLE>(-1))
+		if (handle != INVALID_HANDLE_VALUE)
 		{
 			CloseHandle(handle);
 			return true;
