@@ -153,7 +153,6 @@ namespace party
 		bool download_mod(const game::netadr_s& target, const utils::info_string& info)
 		{
 			const auto server_fs_game = utils::string::to_lower(info.get("fs_game"));
-
 			if (!server_fs_game.starts_with("mods/") || server_fs_game.contains('.'))
 			{
 				console::info("Invalid server fs_game value %s\n", server_fs_game.data());
@@ -161,7 +160,6 @@ namespace party
 			}
 
 			const auto source_hash = info.get("modHash");
-
 			if (source_hash.empty())
 			{
 				menu_error("Connection failed: Server mod hash is empty.");
@@ -674,7 +672,7 @@ namespace party
 				info.set("dedicated", utils::string::va("%i", get_dvar_bool("dedicated")));
 				info.set("sv_wwwBaseUrl", get_dvar_string("sv_wwwBaseUrl"));
 
-				const auto fs_game = std::string("mods/iw6_honeybadger");
+				const auto fs_game = get_dvar_string("fs_game");
 				info.set("fs_game", fs_game);
 
 				if (mod_hash.has_value())
