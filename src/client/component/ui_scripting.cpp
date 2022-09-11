@@ -485,24 +485,27 @@ namespace ui_scripting
 			}
 		}
 
+		std::string current_error;
 		int main_handler(game::hks::lua_State* state)
 		{
-			const auto value = state->m_apistack.base[-1];
-			if (value.t != game::hks::TCFUNCTION)
-			{
-				return 0;
-			}
-
-			const auto closure = value.v.cClosure;
-			if (converted_functions.find(closure) == converted_functions.end())
-			{
-				return 0;
-			}
-
-			const auto& function = converted_functions[closure];
+			bool error = false;
 
 			try
 			{
+				const auto value = state->m_apistack.base[-1];
+				if (value.t != game::hks::TCFUNCTION)
+				{
+					return 0;
+				}
+
+				const auto closure = value.v.cClosure;
+				if (converted_functions.find(closure) == converted_functions.end())
+				{
+					return 0;
+				}
+
+				const auto& function = converted_functions[closure];
+
 				const auto args = get_return_values();
 				const auto results = function(args);
 
@@ -515,7 +518,13 @@ namespace ui_scripting
 			}
 			catch (const std::exception& e)
 			{
-				game::hks::hksi_luaL_error(state, e.what());
+				current_error = e.what();
+				error = true;
+			}
+
+			if (error)
+			{
+				game::hks::hksi_luaL_error(state, current_error.data());
 			}
 
 			return 0;

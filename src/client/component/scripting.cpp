@@ -10,8 +10,14 @@
 #include "game/scripting/lua/engine.hpp"
 #include "game/scripting/execution.hpp"
 
+#include "console.hpp"
+#include "gsc.hpp"
 #include "scheduler.hpp"
 #include "scripting.hpp"
+
+#include <xsk/gsc/types.hpp>
+#include <xsk/resolver.hpp>
+#include <xsk/utils/compression.hpp>
 
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
@@ -21,12 +27,16 @@ namespace scripting
 {
 	std::unordered_map<int, std::unordered_map<std::string, int>> fields_table;
 	std::unordered_map<std::string, std::unordered_map<std::string, const char*>> script_function_table;
+	std::unordered_map<std::string, std::vector<std::pair<std::string, const char*>>> script_function_table_sort;
 	utils::concurrency::container<shared_table_t> shared_table;
+
+	std::string current_file;
 
 	namespace
 	{
 		utils::hook::detour vm_notify_hook;
 		utils::hook::detour vm_execute_hook;
+		utils::hook::detour g_load_structs_hook;
 		utils::hook::detour scr_load_level_hook;
 		utils::hook::detour g_shutdown_game_hook;
 
@@ -39,12 +49,14 @@ namespace scripting
 
 		utils::hook::detour db_find_xasset_header_hook;
 
-		std::string current_file;
+		std::string current_scriptfile;
 		unsigned int current_file_id{};
 
 		game::dvar_t* g_dump_scripts;
 
-		std::vector<std::function<void()>> shutdown_callbacks;
+		std::vector<std::function<void(bool)>> shutdown_callbacks;
+
+		std::unordered_map<unsigned int, std::string> canonical_string_table;
 
 		void vm_notify_stub(const unsigned int notify_list_owner_id, const game::scr_string_t string_value,
 			game::VariableValue* top)
@@ -80,29 +92,55 @@ namespace scripting
 			return vm_execute_hook.invoke<unsigned int>();
 		}
 
-		void scr_load_level_stub()
+		void g_load_structs_stub()
 		{
-			scr_load_level_hook.invoke<void>();
 			if (!game::VirtualLobby_Loaded())
 			{
+				// init game in game log
+				game::G_LogPrintf("------------------------------------------------------------\n");
+				game::G_LogPrintf("InitGame\n");
+
+				// start lua engine
 				lua::engine::start();
+
+				// execute main handles
+				gsc::load_main_handles();
 			}
+
+			g_load_structs_hook.invoke<void>();
+		}
+
+		void scr_load_level_stub()
+		{
+			if (!game::VirtualLobby_Loaded())
+			{
+				// execute init handles
+				gsc::load_init_handles();
+			}
+
+			scr_load_level_hook.invoke<void>();
 		}
 
 		void g_shutdown_game_stub(const int free_scripts)
 		{
 			if (free_scripts)
 			{
+				script_function_table_sort.clear();
 				script_function_table.clear();
+				canonical_string_table.clear();
 			}
 
 			for (const auto& callback : shutdown_callbacks)
 			{
-				callback();
+				callback(free_scripts);
 			}
 
 			scripting::notify(*game::levelEntityId, "shutdownGame_called", {1});
 			lua::engine::stop();
+
+			game::G_LogPrintf("ShutdownGame:\n");
+			game::G_LogPrintf("------------------------------------------------------------\n");
+
 			return g_shutdown_game_hook.invoke<void>(free_scripts);
 		}
 
@@ -120,10 +158,12 @@ namespace scripting
 
 		void process_script_stub(const char* filename)
 		{
+			current_scriptfile = filename;
+			
 			const auto file_id = atoi(filename);
 			if (file_id)
 			{
-				current_file_id = file_id;
+				current_file_id = static_cast<std::uint16_t>(file_id);
 			}
 			else
 			{
@@ -134,24 +174,43 @@ namespace scripting
 			process_script_hook.invoke<void>(filename);
 		}
 
+		void add_function_sort(unsigned int id, const char* pos)
+		{
+			std::string filename = current_file;
+			if (current_file_id)
+			{
+				filename = scripting::get_token(current_file_id);
+			}
+
+			if (script_function_table_sort.find(filename) == script_function_table_sort.end())
+			{
+				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_scriptfile.data(), false);
+				if (script)
+				{
+					const auto end = &script->bytecode[script->bytecodeLen];
+					script_function_table_sort[filename].emplace_back("__end__", end);
+				}
+			}
+
+			const auto name = scripting::get_token(id);
+			auto& itr = script_function_table_sort[filename];
+			itr.insert(itr.end() - 1, {name, pos});
+		}
+
 		void add_function(const std::string& file, unsigned int id, const char* pos)
 		{
-			const auto function_names = scripting::find_token(id);
-			for (const auto& name : function_names)
-			{
-				script_function_table[file][name] = pos;
-			}
+			const auto name = get_token(id);
+			script_function_table[file][name] = pos;
 		}
 
 		void scr_set_thread_position_stub(unsigned int thread_name, const char* code_pos)
 		{
+			add_function_sort(thread_name, code_pos);
+
 			if (current_file_id)
 			{
-				const auto names = scripting::find_token(current_file_id);
-				for (const auto& name : names)
-				{
-					add_function(name, thread_name, code_pos);
-				}
+				const auto name = get_token(current_file_id);
+				add_function(name, thread_name, code_pos);
 			}
 			else
 			{
@@ -164,14 +223,34 @@ namespace scripting
 		unsigned int sl_get_canonical_string_stub(const char* str)
 		{
 			const auto result = sl_get_canonical_string_hook.invoke<unsigned int>(str);
-			scripting::token_map[str] = result;
+			canonical_string_table[result] = str;
 			return result;
 		}
 	}
 
-	void on_shutdown(const std::function<void()>& callback)
+	std::string get_token(unsigned int id)
+	{
+		if (canonical_string_table.find(id) != canonical_string_table.end())
+		{
+			return canonical_string_table[id];
+		}
+
+		return scripting::find_token(id);
+	}
+
+	void on_shutdown(const std::function<void(bool)>& callback)
 	{
 		shutdown_callbacks.push_back(callback);
+	}
+
+	std::optional<std::string> get_canonical_string(const unsigned int id)
+	{
+		if (canonical_string_table.find(id) == canonical_string_table.end())
+		{
+			return {};
+		}
+
+		return {canonical_string_table[id]};
 	}
 
 	class component final : public component_interface
@@ -187,11 +266,9 @@ namespace scripting
 			process_script_hook.create(SELECT_VALUE(0x3C7200_b, 0x50E340_b), process_script_stub);
 			sl_get_canonical_string_hook.create(game::SL_GetCanonicalString, sl_get_canonical_string_stub);
 
-			if (!game::environment::is_sp())
-			{
-				scr_load_level_hook.create(0x450FC0_b, scr_load_level_stub);
-			}
-			else
+			g_load_structs_hook.create(SELECT_VALUE(0x2E7970_b, 0x458520_b), g_load_structs_stub);
+			scr_load_level_hook.create(SELECT_VALUE(0x2D4CD0_b, 0x450FC0_b), scr_load_level_stub);
+			if (game::environment::is_sp())
 			{
 				vm_execute_hook.create(0x3CA080_b, vm_execute_stub);
 			}

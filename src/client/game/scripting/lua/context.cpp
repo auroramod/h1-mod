@@ -12,6 +12,10 @@
 #include "../../../component/fastfiles.hpp"
 #include "../../../component/scheduler.hpp"
 
+#include <xsk/gsc/types.hpp>
+#include <xsk/resolver.hpp>
+#include <xsk/utils/compression.hpp>
+
 #include <utils/string.hpp>
 #include <utils/io.hpp>
 #include <utils/http.hpp>
@@ -215,9 +219,10 @@ namespace scripting::lua
 
 			auto entity_type = state.new_usertype<entity>("entity");
 
-			for (const auto& func : method_map)
+			for (const auto& func : xsk::gsc::h1::resolver::get_methods())
 			{
-				const auto name = utils::string::to_lower(func.first);
+				const auto func_name = std::string(func.first);
+				const auto name = utils::string::to_lower(func_name);
 				entity_type[name.data()] = [name](const entity& entity, const sol::this_state s, sol::variadic_args va)
 				{
 					std::vector<script_value> arguments{};
@@ -334,9 +339,10 @@ namespace scripting::lua
 			auto game_type = state.new_usertype<game>("game_");
 			state["game"] = game();
 
-			for (const auto& func : function_map)
+			for (const auto& func : xsk::gsc::h1::resolver::get_functions())
 			{
-				const auto name = utils::string::to_lower(func.first);
+				const auto func_name = std::string(func.first);
+				const auto name = utils::string::to_lower(func_name);
 				game_type[name] = [name](const game&, const sol::this_state s, sol::variadic_args va)
 				{
 					std::vector<script_value> arguments{};
@@ -467,18 +473,18 @@ namespace scripting::lua
 				const std::string function_name, const sol::protected_function& function)
 			{
 				const auto pos = get_function_pos(filename, function_name);
-				logfile::vm_execute_hooks[pos] = function;
+				logfile::set_lua_hook(pos, function);
 
 				auto detour = sol::table::create(function.lua_state());
 
 				detour["disable"] = [pos]()
 				{
-					logfile::vm_execute_hooks.erase(pos);
+					logfile::clear_hook(pos);
 				};
 
-				detour["enable"] = [pos, function]()
+				detour["enable"] = [&]()
 				{
-					logfile::vm_execute_hooks[pos] = function;
+					logfile::set_lua_hook(pos, function);
 				};
 
 				detour["invoke"] = sol::overload(
