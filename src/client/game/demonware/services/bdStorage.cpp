@@ -57,7 +57,7 @@ namespace demonware
 			}
 		}
 
-#ifdef DEBUG
+#ifdef DW_DEBUG
 		printf("[DW]: [bdStorage]: missing publisher file: %s\n", name.data());
 #endif
 
@@ -66,10 +66,6 @@ namespace demonware
 
 	void bdStorage::list_publisher_files(service_server* server, byte_buffer* buffer)
 	{
-#ifdef DEBUG
-		utils::io::write_file("demonware/bdStorage/list_publisher_files", buffer->get_buffer());
-#endif
-
 		uint32_t date;
 		uint16_t num_results, offset;
 		std::string unk, filename, data;
@@ -80,7 +76,7 @@ namespace demonware
 		buffer->read_uint16(&offset);
 		buffer->read_string(&filename);
 
-#ifdef DEBUG
+#ifdef DW_DEBUG
 		printf("[DW]: [bdStorage]: list publisher files: %s\n", filename.data());
 #endif
 
@@ -106,15 +102,11 @@ namespace demonware
 
 	void bdStorage::get_publisher_file(service_server* server, byte_buffer* buffer)
 	{
-#ifdef DEBUG
-		utils::io::write_file("demonware/bdStorage/get_publisher_file", buffer->get_buffer());
-#endif
-
 		std::string unk, filename;
 		buffer->read_string(&unk);
 		buffer->read_string(&filename);
 
-#ifdef DEBUG
+#ifdef DW_DEBUG
 		printf("[DW]: [bdStorage]: loading publisher file: %s\n", filename.data());
 #endif
 
@@ -122,7 +114,7 @@ namespace demonware
 
 		if (this->load_publisher_resource(filename, data))
 		{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 			printf("[DW]: [bdStorage]: sending publisher file: %s, size: %lld\n", filename.data(), data.size());
 #endif
 
@@ -143,10 +135,6 @@ namespace demonware
 
 	void bdStorage::set_user_file(service_server* server, byte_buffer* buffer) const
 	{
-#ifdef DEBUG
-		utils::io::write_file("demonware/bdStorage/set_user_file", buffer->get_buffer());
-#endif
-
 		uint64_t owner;
 		uint32_t numfiles;
 		std::string game, platform;
@@ -183,7 +171,7 @@ namespace demonware
 			info->filename = filename;
 			info->data = data;
 
-#ifdef DEBUG
+#ifdef DW_DEBUG
 			printf("[DW]: [bdStorage]: set user file: %s\n", filename.data());
 #endif
 
@@ -195,10 +183,6 @@ namespace demonware
 
 	void bdStorage::get_user_file(service_server* server, byte_buffer* buffer) const
 	{
-#ifdef DEBUG
-		utils::io::write_file("demonware/bdStorage/get_user_file", buffer->get_buffer());
-#endif
-
 		uint32_t unk32_0;
 		uint32_t numfiles, count = 0;
 		uint64_t owner;
@@ -222,7 +206,7 @@ namespace demonware
 			const auto path = get_user_file_path(filename);
 			if (!utils::io::read_file(path, &data))
 			{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 				printf("[DW]: [bdStorage]: get user file: missing file: %s, %s, %s\n", game.data(), filename.data(), platform.data());
 #endif
 				continue;
@@ -238,7 +222,7 @@ namespace demonware
 			reply->add(response);
 			++count;
 
-#ifdef DEBUG
+#ifdef DW_DEBUG
 			printf("[DW]: [bdStorage]: get user file: %s, %s, %s\n", game.data(), filename.data(), platform.data());
 #endif
 		}
@@ -255,10 +239,6 @@ namespace demonware
 
 	void bdStorage::unk12(service_server* server, byte_buffer* buffer) const
 	{
-#ifdef DEBUG
-		utils::io::write_file("demonware/bdStorage/unk12", buffer->get_buffer());
-#endif
-
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply->send();

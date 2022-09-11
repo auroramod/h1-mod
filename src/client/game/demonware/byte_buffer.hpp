@@ -11,8 +11,9 @@ namespace demonware
 		{
 		}
 
-		bool read_byte(unsigned char* output);
 		bool read_bool(bool* output);
+		bool read_byte(char* output);
+		bool read_ubyte(unsigned char* output);
 		bool read_int16(short* output);
 		bool read_uint16(unsigned short* output);
 		bool read_int32(int* output);
@@ -30,8 +31,9 @@ namespace demonware
 		bool read_array_header(unsigned char expected, unsigned int* element_count,
 		                       unsigned int* element_size = nullptr);
 
-		bool write_byte(char data);
 		bool write_bool(bool data);
+		bool write_byte(char data);
+		bool write_ubyte(unsigned char data);
 		bool write_int16(short data);
 		bool write_uint16(unsigned short data);
 		bool write_int32(int data);

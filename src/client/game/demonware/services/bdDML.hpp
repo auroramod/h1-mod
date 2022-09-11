@@ -8,6 +8,9 @@ namespace demonware
 		bdDML();
 
 	private:
-		void get_user_raw_data(service_server* server, byte_buffer* buffer) const;
+		void recordIP(service_server* server, byte_buffer* buffer) const;
+		void getUserData(service_server* server, byte_buffer* buffer) const;
+		void getUserHierarchicalData(service_server* server, byte_buffer* buffer) const;
+		void getUsersLastLogonData(service_server* server, byte_buffer* buffer) const;
 	};
 }

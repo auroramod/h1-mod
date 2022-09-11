@@ -119,7 +119,7 @@ namespace demonware
 			int getaddrinfo_stub(const char* name, const char* service,
 				const addrinfo* hints, addrinfo** res)
 			{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 				printf("[ network ]: [getaddrinfo]: \"%s\" \"%s\"\n", name, service);
 #endif
 
@@ -202,7 +202,7 @@ namespace demonware
 
 			hostent* gethostbyname_stub(const char* name)
 			{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 				printf("[ network ]: [gethostbyname]: \"%s\"\n", name);
 #endif
 
@@ -430,7 +430,7 @@ namespace demonware
 			//printf("logged\n");
 		}
 
-#ifdef DEBUG
+#ifdef DW_DEBUG
 		void a(unsigned int n)
 		{
 			printf("bdAuth: Auth task failed with HTTP code [%u]\n", n);

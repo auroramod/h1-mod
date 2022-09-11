@@ -45,13 +45,13 @@ namespace demonware
 
 			byte_buffer buffer(data);
 
-			buffer.read_byte(&this->task_id_);
+			buffer.read_ubyte(&this->task_id_);
 
 			const auto& it = this->tasks_.find(this->task_id_);
 
 			if (it != this->tasks_.end())
 			{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 				printf("[DW] %s: executing task '%d'\n", name_.data(), this->task_id_);
 #endif
 

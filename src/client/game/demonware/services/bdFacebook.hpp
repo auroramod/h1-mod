@@ -8,9 +8,18 @@ namespace demonware
 		bdFacebook();
 
 	private:
-		void unk1(service_server* server, byte_buffer* buffer) const;
-		void unk3(service_server* server, byte_buffer* buffer) const;
-		void unk7(service_server* server, byte_buffer* buffer) const;
-		void unk8(service_server* server, byte_buffer* buffer) const;
+		void registerAccount(service_server* server, byte_buffer* buffer) const;
+		void post(service_server* server, byte_buffer* buffer) const;
+		void unregisterAccount(service_server* server, byte_buffer* buffer) const;
+		void isRegistered(service_server* server, byte_buffer* buffer) const;
+		void getInfo(service_server* server, byte_buffer* buffer) const;
+		void getRegisteredAccounts(service_server* server, byte_buffer* buffer) const;
+		void getFriends(service_server* server, byte_buffer* buffer) const;
+		void getProfilePictures(service_server* server, byte_buffer* buffer) const;
+		void uploadPhoto(service_server* server, byte_buffer* buffer) const;
+		void registerToken(service_server* server, byte_buffer* buffer) const;
+		void uploadVideo(service_server* server, byte_buffer* buffer) const;
+		void getFriendsByID(service_server* server, byte_buffer* buffer) const;
+		void setLikeStatus(service_server* server, byte_buffer* buffer) const;
 	};
 }

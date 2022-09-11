@@ -1,6 +1,7 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 #include "system_check.hpp"
+#include "arxan.hpp"
 
 #include "game/game.hpp"
 
@@ -64,12 +65,16 @@ namespace system_check
 			return verify_hashes(mp_zone_hashes) && (game::environment::is_dedi() || verify_hashes(sp_zone_hashes));
 		}
 
-		// need to update these values 
 		void verify_binary_version()
 		{
 			const auto value = *reinterpret_cast<DWORD*>(0x1337_b);
-			if (value != 0x60202B6A && value != 0xBC0E9FE)
+			if (!arxan::is_wine())
 			{
+				if (value == 0x60202B6A || value == 0xBC0E9FE)
+				{
+					return;
+				}
+				
 				throw std::runtime_error("Unsupported Call of Duty: Modern Warfare Remastered version (1.15)");
 			}
 		}

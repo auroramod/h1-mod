@@ -121,6 +121,18 @@ namespace utils::io
 		return files;
 	}
 
+	std::vector<std::string> list_files_recursively(const std::string& directory)
+	{
+		std::vector<std::string> files;
+
+		for (auto& file : std::filesystem::recursive_directory_iterator(directory))
+		{
+			files.push_back(file.path().generic_string());
+		}
+
+		return files;
+	}
+
 	void copy_folder(const std::filesystem::path& src, const std::filesystem::path& target)
 	{
 		std::filesystem::copy(src, target,

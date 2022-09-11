@@ -42,6 +42,25 @@ namespace weapon
 			}
 		}
 
+		utils::hook::detour xmodel_get_bone_index_hook;
+		__int64 xmodel_get_bone_index_stub(game::XModel* model, game::scr_string_t name, unsigned int offset, char* index)
+		{
+			auto result = xmodel_get_bone_index_hook.invoke<__int64>(model, name, offset, index);
+			if (!result)
+			{
+				if (name == game::SL_GetString("tag_weapon_right", 0) ||
+					name == game::SL_GetString("tag_knife_attach", 0))
+				{
+					result = xmodel_get_bone_index_hook.invoke<__int64>(model, game::SL_GetString("tag_weapon", 0), offset, index);
+					if (result)
+					{
+						console::debug("using tag_weapon instead of %s (%s, %d)\n", game::SL_ConvertToString(name), model->name, offset);
+					}
+				}
+			}
+			return result;
+		}
+
 		template <typename T>
 		void set_weapon_field(const std::string& weapon_name, unsigned int field, T value)
 		{
@@ -84,7 +103,17 @@ namespace weapon
 	public:
 		void post_unpack() override
 		{
-			g_setup_level_weapon_def_hook.create(0x462630_b, g_setup_level_weapon_def_stub);
+			if (!game::environment::is_sp())
+			{
+				// precache all weapons that are loaded in zones
+				g_setup_level_weapon_def_hook.create(0x462630_b, g_setup_level_weapon_def_stub);
+
+				// use tag_weapon if tag_weapon_right or tag_knife_attach are not found on model
+				xmodel_get_bone_index_hook.create(0x5C82B0_b, xmodel_get_bone_index_stub);
+
+				// disable custom weapon index mismatch (fix for custom attachments) (NEEDS TESTING)
+				//utils::hook::set<uint8_t>(0x11B910_b, 0xC3); // CG_SetupCustomWeapon
+			}
 
 #ifdef DEBUG
 			command::add("setWeaponFieldFloat", [](const command::params& params)
