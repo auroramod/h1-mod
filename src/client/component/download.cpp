@@ -180,15 +180,5 @@ namespace download
 
 		party::menu_error("Download for server mod has been cancelled.");
 	}
-
-	class component final : public component_interface
-	{
-	public:
-		void post_unpack() override
-		{
-
-		}
-	};
 }
 
-REGISTER_COMPONENT(download::component)
