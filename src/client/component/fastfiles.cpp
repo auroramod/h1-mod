@@ -23,6 +23,8 @@ namespace fastfiles
 		utils::hook::detour db_find_xasset_header_hook;
 		game::dvar_t* g_dump_scripts;
 
+		std::vector<HANDLE> fastfile_handles;
+
 		void db_try_load_x_file_internal(const char* zone_name, const int flags)
 		{
 			console::info("Loading fastfile %s\n", zone_name);
@@ -189,7 +191,13 @@ namespace fastfiles
 				}
 			}
 
-			return CreateFileA(path.data(), 0x80000000, 1u, 0, 3u, 0x60000000u, 0);
+			const auto handle = CreateFileA(path.data(), 0x80000000, 1u, 0, 3u, 0x60000000u, 0);
+			if (handle != reinterpret_cast<HANDLE>(-1))
+			{
+				fastfile_handles.push_back(handle);
+			}
+
+			return handle;
 		}
 
 		utils::hook::detour sys_createfile_hook;
@@ -319,6 +327,14 @@ namespace fastfiles
 			const auto& cb = *static_cast<const std::function<void(game::XAssetHeader)>*>(data);
 			cb(header);
 		}), &callback, includeOverride);
+	}
+
+	void close_fastfile_handles()
+	{
+		for (const auto& handle : fastfile_handles)
+		{
+			CloseHandle(handle);
+		}
 	}
 
 	class component final : public component_interface

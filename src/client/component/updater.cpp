@@ -5,6 +5,7 @@
 #include "scheduler.hpp"
 #include "dvars.hpp"
 #include "updater.hpp"
+#include "fastfiles.hpp"
 #include "game/ui_scripting/execution.hpp"
 
 #include "version.h"
@@ -506,6 +507,14 @@ namespace updater
 		const auto garbage_files = update_data.access<std::vector<std::string>>([](update_data_t& data_)
 		{
 			return data_.garbage_files;
+		});
+
+		update_data.access([](update_data_t& data_)
+		{
+			if (data_.restart_required)
+			{
+				fastfiles::close_fastfile_handles();
+			}
 		});
 
 		for (const auto& file : garbage_files)

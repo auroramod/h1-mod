@@ -3,7 +3,7 @@ if (game:issingleplayer()) then
 end
 
 if (Engine.InFrontend()) then
-	require("shaderdialog")
+	require("shader_dialog")
 	require("gamemodes")
 	require("no_mode_switch")
 	require("disable_useless_things")
