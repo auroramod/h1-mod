@@ -153,6 +153,11 @@ namespace party
 		bool download_mod(const game::netadr_s& target, const utils::info_string& info)
 		{
 			const auto server_fs_game = utils::string::to_lower(info.get("fs_game"));
+			if (server_fs_game.empty())
+			{
+				return false;
+			}
+
 			if (!server_fs_game.starts_with("mods/") || server_fs_game.contains('.'))
 			{
 				menu_error(utils::string::va("Invalid server fs_game value %s\n", server_fs_game.data()));
