@@ -155,7 +155,7 @@ namespace party
 			const auto server_fs_game = utils::string::to_lower(info.get("fs_game"));
 			if (!server_fs_game.starts_with("mods/") || server_fs_game.contains('.'))
 			{
-				console::info("Invalid server fs_game value %s\n", server_fs_game.data());
+				menu_error(utils::string::va("Invalid server fs_game value %s\n", server_fs_game.data()));
 				return true;
 			}
 
@@ -218,21 +218,14 @@ namespace party
 
 	void menu_error(const std::string& error)
 	{
-		// print error to console
 		console::error("%s\n", error.data());
-
-		scheduler::once([&]()
+		if (game::Menu_IsMenuOpenAndVisible(0, "popup_acceptinginvite"))
 		{
-			// check if popup_acceptinginvite is open and close if so
-			if (game::Menu_IsMenuOpenAndVisible(0, "popup_acceptinginvite"))
-			{
-				utils::hook::invoke<void>(0x26BE80_b, 0, "popup_acceptinginvite", 0, *game::hks::lua_state); // LUI_LeaveMenuByName
-			}
+			utils::hook::invoke<void>(0x26BE80_b, 0, "popup_acceptinginvite", 0, *game::hks::lua_state); // LUI_LeaveMenuByName
+		}
 
-			// set ui error information
-			utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE"); // Com_SetLocalizedErrorMessage
-			utils::hook::set(0x2ED2F78_b, 1);
-		}, scheduler::pipeline::lui);
+		utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE"); // Com_SetLocalizedErrorMessage
+		*reinterpret_cast<int*>(0x2ED2F78_b) = 1;
 	}
 
 	void clear_sv_motd()
@@ -745,8 +738,6 @@ namespace party
 					return;
 				}
 
-				// returning true doesn't exactly mean there is a error, but more or less means that we are cancelling the connection for more than one different reason.
-				// if there is a genuine error that occurs, menu_error is called within the function.
 				if (download_mod(target, info))
 				{
 					return;

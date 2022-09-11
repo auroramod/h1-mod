@@ -66,6 +66,14 @@ namespace download
 
 			return 0;
 		}
+
+		void menu_error(const std::string& error)
+		{
+			scheduler::once([=]()
+			{
+				party::menu_error(error);
+			}, scheduler::pipeline::lui);
+		}
 	}
 
 	void start_download(const game::netadr_s& target, const utils::info_string& info)
@@ -81,7 +89,7 @@ namespace download
 				}
 
 				return scheduler::cond_continue;
-			});
+			}, scheduler::pipeline::main);
 
 			return;
 		}
@@ -94,7 +102,7 @@ namespace download
 		const auto base = info.get("sv_wwwBaseUrl");
 		if (base.empty())
 		{
-			party::menu_error("Download failed: Server doesn't have 'sv_wwwBaseUrl' dvar set.");
+			menu_error("Download failed: Server doesn't have 'sv_wwwBaseUrl' dvar set.");
 			return;
 		}
 
@@ -129,7 +137,7 @@ namespace download
 				const auto data = utils::http::get_data(url, {}, {}, &progress_callback);
 				if (!data.has_value())
 				{
-					party::menu_error("Download failed: An unknown error occurred, please try again.");
+					menu_error("Download failed: An unknown error occurred, please try again.");
 					return;
 				}
 
@@ -141,7 +149,7 @@ namespace download
 				const auto& result = data.value();
 				if (result.code != CURLE_OK)
 				{
-					party::menu_error(utils::string::va("Download failed: %s (%i)\n", result.code, curl_easy_strerror(result.code)));
+					menu_error(utils::string::va("Download failed: %s (%i)\n", result.code, curl_easy_strerror(result.code)));
 					return;
 				}
 
@@ -153,7 +161,6 @@ namespace download
 				ui_scripting::notify("mod_download_done", {});
 			}, scheduler::pipeline::lui);
 
-			// reconnect back to target after download of mod is finished
 			scheduler::once([=]()
 			{
 				party::connect(target);
@@ -176,9 +183,8 @@ namespace download
 		scheduler::once([]()
 		{
 			ui_scripting::notify("mod_download_done", {});
+			party::menu_error("Download for server mod has been cancelled.");
 		}, scheduler::pipeline::lui);
-
-		party::menu_error("Download for server mod has been cancelled.");
 	}
 }
 
