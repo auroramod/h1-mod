@@ -328,7 +328,7 @@ namespace updater
 	{
 		return update_data.access<bool>([](update_data_t& data_)
 		{
-			return data_.check.done && game::Sys_IsDatabaseReady2();
+			return data_.check.done;
 		});
 	}
 
