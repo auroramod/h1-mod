@@ -175,7 +175,7 @@ namespace fastfiles
 			if (check_loc_folder && game::DB_IsLocalized(filename.data()))
 			{
 				const auto handle = find_fastfile(filename, false);
-				if (handle != reinterpret_cast<HANDLE>(-1))
+				if (handle != INVALID_HANDLE_VALUE)
 				{
 					return handle;
 				}
@@ -187,12 +187,13 @@ namespace fastfiles
 			{
 				if (!filesystem::find_file("zone/"s + loc_folder + filename, &path))
 				{
-					return reinterpret_cast<HANDLE>(-1);
+					return INVALID_HANDLE_VALUE;
 				}
 			}
 
-			const auto handle = CreateFileA(path.data(), 0x80000000, 1u, 0, 3u, 0x60000000u, 0);
-			if (handle != reinterpret_cast<HANDLE>(-1))
+			const auto handle = CreateFileA(path.data(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+					FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING, nullptr);
+			if (handle != INVALID_HANDLE_VALUE)
 			{
 				fastfile_handles.push_back(handle);
 			}
