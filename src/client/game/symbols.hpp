@@ -194,7 +194,7 @@ namespace game
 	WEAK symbol<bool(const char* zoneName)> DB_IsLocalized{0x1F23C0, 0x396790};
 
 	WEAK symbol<void(int client_num, const char* menu, 
-		int is_popup, int client_num, unsigned int is_exclusive)> LUI_OpenMenu{0x3F20A0, 0x1E1210};
+		int is_popup, int is_modal, unsigned int is_exclusive)> LUI_OpenMenu{0x3F20A0, 0x1E1210};
 	WEAK symbol<void(int clientNum, const char* menu, int immediate,
 		hks::lua_State* state)> LUI_LeaveMenuByName{0xF6D00, 0x26BE80};
 	WEAK symbol<void()> LUI_EnterCriticalSection{0xF19A0, 0x2669B0};
