@@ -101,7 +101,7 @@ pcdisplay.CreateOptions = function(menu)
 		end
 	)
 		
-	createdivider(menu, "TELEMETRY")
+	createdivider(menu, Engine.Localize("@LUA_MENU_TELEMETRY"))
 
 	LUI.Options.CreateOptionButton(menu, "cg_infobar_ping", "@LUA_MENU_LATENCY", "@LUA_MENU_LATENCY_DESC", {{
 		text = "@LUA_MENU_ENABLED",

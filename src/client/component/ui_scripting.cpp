@@ -9,6 +9,7 @@
 
 #include "localized_strings.hpp"
 #include "console.hpp"
+#include "language.hpp"
 #include "download.hpp"
 #include "game_module.hpp"
 #include "fps.hpp"
@@ -221,6 +222,17 @@ namespace ui_scripting
 				const std::string& value)
 			{
 				localized_strings::override(string, value);
+			};
+			
+			game_type["setlanguage"] = [](const game&, const std::string& language)
+			{
+				language::set(language);
+			};
+
+			lua["Engine"]["SetLanguage"] = [](const int index)
+			{
+				language::set_from_index(index);
+				updater::relaunch();
 			};
 
 			game_type["sharedset"] = [](const game&, const std::string& key, const std::string& value)

@@ -1,3 +1,5 @@
+require("language")
+
 if (game:issingleplayer()) then
 	return
 end

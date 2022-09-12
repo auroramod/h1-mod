@@ -317,6 +317,8 @@ namespace game
 		WEAK symbol<gentity_s> g_entities{0x56E74D0, 0x0};
 	}
 
+	WEAK symbol<language_values> languages{0x140BF9740};
+
 	namespace hks
 	{
 		WEAK symbol<lua_State*> lua_state{0x1F0E408, 0x36647F8};

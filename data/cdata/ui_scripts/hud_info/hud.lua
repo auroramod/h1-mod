@@ -78,7 +78,7 @@ function populateinfobar(infobar)
 
 	if (Engine.GetDvarBool("cg_infobar_fps")) then
 		infobar:addElement(infoelement({
-			label = "FPS: ",
+			label = Engine.Localize("@MPHUD_FPS"),
 			getvalue = function()
 				return game:getfps()
 			end,
@@ -89,9 +89,9 @@ function populateinfobar(infobar)
 
 	if (Engine.GetDvarBool("cg_infobar_ping")) then
 		infobar:addElement(infoelement({
-			label = "Latency: ",
+			label = Engine.Localize("@MPHUD_LATENCY"),
 			getvalue = function()
-				return game:getping() .. " ms"
+				return game:getping() .. Engine.Localize("@MPHUD_LATENCY_MS")
 			end,
 			width = 115,
 			interval = 100

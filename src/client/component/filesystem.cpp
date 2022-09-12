@@ -32,7 +32,7 @@ namespace filesystem
 		{
 			static const auto* loc_language = game::Dvar_FindVar("loc_language");
 			const auto id = loc_language->current.integer;
-			return id == 5 || id == 6 || id == 8 || id == 9 || id == 10 || id == 11 || id == 12 || id == 13 || id == 15;
+			return id == 5 || id == 6 || id == 8 || id == 9 || id == 10 || id == 11 || id == 13 || id == 15;
 		}
 
 		void fs_startup_stub(const char* name)

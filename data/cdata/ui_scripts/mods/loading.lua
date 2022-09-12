@@ -67,7 +67,8 @@ LUI.MenuBuilder.registerType("mods_menu", function(a1)
 		exclusiveController = 0,
 		menu_width = 400,
 		menu_top_indent = LUI.MenuTemplate.spMenuOffset,
-		showTopRightSmallBar = true
+		showTopRightSmallBar = true,
+		uppercase_title = true
 	})
 
 	local modfolder = game:getloadedmod()
