@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/game.hpp"
+#include "game/scripting/script_value.hpp"
 
 namespace gsc
 {
@@ -14,6 +14,8 @@ namespace gsc
 
 	void load_main_handles();
 	void load_init_handles();
+
+	scripting::script_value get_argument(int index);
 
 	namespace function
 	{
