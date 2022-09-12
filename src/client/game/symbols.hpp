@@ -193,6 +193,8 @@ namespace game
 
 	WEAK symbol<void(int clientNum, const char* menu, 
 		int a3, int a4, unsigned int a5)> LUI_OpenMenu{0x3F20A0, 0x1E1210};
+	WEAK symbol<void(int clientNum, const char* menu, int a3,
+		hks::lua_State* a4)> LUI_LeaveMenuByName{0xF6D00, 0x26BE80};
 	WEAK symbol<void()> LUI_EnterCriticalSection{0xF19A0, 0x2669B0};
 	WEAK symbol<void()> LUI_LeaveCriticalSection{0xF6C40, 0x26BDC0};
 
