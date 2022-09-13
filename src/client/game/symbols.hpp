@@ -317,7 +317,7 @@ namespace game
 		WEAK symbol<gentity_s> g_entities{0x56E74D0, 0x0};
 	}
 
-	WEAK symbol<language_values> languages{0x140BF9740};
+	WEAK symbol<language_values> languages{0x115C020, 0x12D8E10};
 
 	namespace hks
 	{
