@@ -51,7 +51,8 @@ namespace language
 	public:
 		void post_unpack() override
 		{
-			utils::hook::call(0x14060AFFB, get_loc_language_string);
+			// 0x14060AFFB on h2, cannot find on h1
+			// utils::hook::call(SELECT_VALUE(0x0_b, 0x0_b), get_loc_language_string);
 		}
 	};
 }
