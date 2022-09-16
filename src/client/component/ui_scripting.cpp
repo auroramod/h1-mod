@@ -9,7 +9,6 @@
 
 #include "localized_strings.hpp"
 #include "console.hpp"
-#include "language.hpp"
 #include "download.hpp"
 #include "game_module.hpp"
 #include "fps.hpp"
@@ -30,6 +29,8 @@
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
 #include <utils/binary_resource.hpp>
+
+#include "steam/steam.hpp"
 
 namespace ui_scripting
 {
@@ -224,17 +225,6 @@ namespace ui_scripting
 				localized_strings::override(string, value);
 			};
 			
-			game_type["setlanguage"] = [](const game&, const std::string& language)
-			{
-				language::set(language);
-			};
-
-			lua["Engine"]["SetLanguage"] = [](const int index)
-			{
-				language::set_from_index(index);
-				updater::relaunch();
-			};
-
 			game_type["sharedset"] = [](const game&, const std::string& key, const std::string& value)
 			{
 				scripting::shared_table.access([key, value](scripting::shared_table_t& table)
@@ -354,6 +344,11 @@ namespace ui_scripting
 			game_type["virtuallobbypresentable"] = [](const game&)
 			{
 				::game::Dvar_SetFromStringByNameFromSource("virtualLobbyPresentable", "1", ::game::DvarSetSource::DVAR_SOURCE_INTERNAL);
+			};
+
+			game_type["getcurrentgamelanguage"] = [](const game&)
+			{
+				return steam::SteamApps()->GetCurrentGameLanguage();
 			};
 
 			auto server_list_table = table();
