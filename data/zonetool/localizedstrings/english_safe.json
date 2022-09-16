@@ -88,5 +88,8 @@
     "LOCALE_RUSSIAN": "Russian",
     "LOCALE_SIMPLIFIED_CHINESE": "Simplified Chinese",
     "LOCALE_SPANISH": "Spanish",
-    "LOCALE_TRADITIONAL_CHINESE": "Traditional Chinese"
+    "LOCALE_TRADITIONAL_CHINESE": "Traditional Chinese",
+
+    "LUA_MENU_CHOOSE_LANGUAGE": "Choose your language",
+    "MENU_APPLY_LANGUAGE_SETTINGS": "Apply language settings?"
 }
