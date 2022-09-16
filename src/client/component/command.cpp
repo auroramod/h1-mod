@@ -8,6 +8,7 @@
 #include "command.hpp"
 #include "console.hpp"
 #include "game_console.hpp"
+#include "gsc.hpp"
 #include "fastfiles.hpp"
 #include "filesystem.hpp"
 #include "scheduler.hpp"
@@ -607,6 +608,12 @@ namespace command
 			utils::hook::jump(SELECT_VALUE(0x3A7C80_b, 0x4E9F40_b), dvar_command_stub, true);
 
 			add_commands_generic();
+
+			gsc::function::add("executecommand", []()
+			{
+				const auto cmd = gsc::get_argument(0).as<std::string>();
+				command::execute(cmd, true);
+			});
 		}
 
 	private:

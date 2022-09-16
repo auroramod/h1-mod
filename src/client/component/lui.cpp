@@ -95,6 +95,17 @@ namespace lui
 				game::LUI_OpenMenu(0, params[1], 0, 0, 0);
 			});
 
+			command::add("lui_close", [](const command::params& params)
+			{
+				if (params.size() <= 1)
+				{
+					console::info("usage: lui_close <name>\n");
+					return;
+				}
+
+				game::LUI_LeaveMenuByName(0, params[1], 0, *game::hks::lua_state);
+			});
+
 			command::add("lui_open_popup", [](const command::params& params)
 			{
 				if (params.size() <= 1)

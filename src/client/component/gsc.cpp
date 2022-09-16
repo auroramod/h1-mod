@@ -3,12 +3,10 @@
 
 #include "console.hpp"
 #include "fastfiles.hpp"
-#include "gsc.hpp"
 #include "filesystem.hpp"
-#include "logfile.hpp"
+#include "gsc.hpp"
 #include "scripting.hpp"
 
-#include "game/game.hpp"
 #include "game/dvars.hpp"
 #include "game/scripting/functions.hpp"
 
@@ -452,16 +450,6 @@ namespace gsc
 			}
 		}
 
-		scripting::script_value get_argument(int index)
-		{
-			if (index >= static_cast<int>(game::scr_VmPub->outparamcount))
-			{
-				return {};
-			}
-
-			return game::scr_VmPub->top[-index];
-		}
-
 		void execute_custom_function(builtin_function function)
 		{
 			auto error = false;
@@ -551,18 +539,6 @@ namespace gsc
 			current_filename = filename;
 			scr_emit_function_hook.invoke<void>(filename, thread_name, code_pos);
 		}
-
-		void replace(std::string& str, const std::string& from, const std::string& to)
-		{
-			const auto start_pos = str.find(from);
-
-			if (start_pos == std::string::npos)
-			{
-				return;
-			}
-
-			str.replace(start_pos, from.length(), to);
-		}
 	}
 
 	game::ScriptFile* find_script(game::XAssetType /*type*/, const char* name, int /*allow_create_default*/)
@@ -604,6 +580,16 @@ namespace gsc
 			console::info("Executing '%s::init'\n", function_handle.first.data());
 			game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
 		}
+	}
+
+	scripting::script_value get_argument(int index)
+	{
+		if (index >= static_cast<int>(game::scr_VmPub->outparamcount))
+		{
+			return {};
+		}
+
+		return game::scr_VmPub->top[-index];
 	}
 
 	namespace function
@@ -714,94 +700,6 @@ namespace gsc
 			utils::hook::nop(SELECT_VALUE(0x3CBA46_b, 0x512AA6_b), 6);
 			utils::hook::nop(SELECT_VALUE(0x3CBA4E_b, 0x512AAE_b), 2);
 			utils::hook::call(SELECT_VALUE(0x3CBA46_b, 0x512AA6_b), vm_call_builtin_method_stub);
-
-			function::add("print", []()
-			{
-				const auto num = game::Scr_GetNumParam();
-				std::string buffer{};
-
-				for (auto i = 0; i < num; i++)
-				{
-					const auto str = game::Scr_GetString(i);
-					buffer.append(str);
-					buffer.append("\t");
-				}
-
-				console::info("[SCRIPT] %s\n", buffer.data());
-			});
-
-			function::add("assert", []()
-			{
-				const auto expr = get_argument(0).as<int>();
-				if (!expr)
-				{
-					throw std::runtime_error("assert fail");
-				}
-			});
-
-			function::add("assertex", []()
-			{
-				const auto expr = get_argument(0).as<int>();
-				if (!expr)
-				{
-					const auto error = get_argument(1).as<std::string>();
-					throw std::runtime_error(error);
-				}
-			});
-
-			function::add("replacefunc", []()
-			{
-				const auto what = get_argument(0).get_raw();
-				const auto with = get_argument(1).get_raw();
-
-				if (what.type != game::SCRIPT_FUNCTION)
-				{
-					throw std::runtime_error("replaceFunc: parameter 1 must be a function");
-					return;
-				}
-
-				if (with.type != game::SCRIPT_FUNCTION)
-				{
-					throw std::runtime_error("replaceFunc: parameter 2 must be a function");
-					return;
-				}
-
-				logfile::set_gsc_hook(what.u.codePosValue, with.u.codePosValue);
-			});
-
-			function::add("toupper", []()
-			{
-				const auto string = get_argument(0).as<std::string>();
-				game::Scr_AddString(utils::string::to_upper(string).data());
-			});
-
-			function::add("logprint", []()
-			{
-				std::string buffer{};
-
-				const auto params = game::Scr_GetNumParam();
-				for (auto i = 0; i < params; i++)
-				{
-					const auto string = game::Scr_GetString(i);
-					buffer.append(string);
-				}
-
-				game::G_LogPrintf("%s", buffer.data());
-			});
-
-			function::add("va", []()
-			{
-				auto fmt = get_argument(0).as<std::string>();
-
-				const auto params = game::Scr_GetNumParam();
-				for (auto i = 1; i < params; i++)
-				{
-					const auto arg = get_argument(i).to_string();
-					replace(fmt, "%s", arg);
-				}
-
-				game::Scr_AddString(fmt.data());
-			});
 
 			scripting::on_shutdown([](int free_scripts)
 			{

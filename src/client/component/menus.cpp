@@ -36,6 +36,11 @@ namespace menus
 		return false;
 	}
 
+	int UI_SetActiveMenu(int local_client_num, int menu)
+	{
+		return utils::hook::invoke<int>(0x1E4D80_b, local_client_num, menu);
+	}
+
 	void CL_ShowSystemCursor(int a1)
 	{
 		return utils::hook::invoke<void>(0x5BAA60_b, a1);
@@ -117,7 +122,7 @@ namespace menus
 			auto vY = y / (game::ScrPlace_HiResGetScaleY() * scrPlaceFull->scaleVirtualToFull[1]);
 			*reinterpret_cast<float*>(0x352E590_b) = vX; // cursorX
 			*reinterpret_cast<float*>(0x352E594_b) = vY; // cursorY
-			int isCursorVisible = vX >= 0.0 && vX <= 640.0 && vY >= 0.0 && vY <= 480.0;
+			auto isCursorVisible = vX >= 0.0 && vX <= 640.0 && vY >= 0.0 && vY <= 480.0;
 			
 			if (isCursorVisible)
 			{
@@ -165,14 +170,25 @@ namespace menus
 			return false;
 		}
 
-		void ui_set_active_menu_stub(int client_num, int idx)
+		void lui_toggle_menu_stub(int controller_index, void* context)
 		{
-			if (open_script_main_menu())
+			if (!game::VirtualLobby_Loaded())
 			{
-				*game::keyCatchers = *game::keyCatchers & 1 | 0x10;
-				return;
+				if (!script_main_menu.empty())
+				{
+					if (game::Menu_IsMenuOpenAndVisible(0, script_main_menu.data()))
+					{
+						UI_SetActiveMenu(0, 0);
+						return;
+					}
+					else if (open_script_main_menu())
+					{
+						*game::keyCatchers = *game::keyCatchers & 1 | 0x10;
+						return;
+					}
+				}
 			}
-			return utils::hook::invoke<void>(0x1E4D80_b, client_num, idx); // UI_SetActiveMenu
+			return utils::hook::invoke<void>(0x270A90_b, controller_index, context); // LUI_ToggleMenu
 		}
 	}
 
@@ -199,8 +215,9 @@ namespace menus
 			// add legacy menu mouse fix
 			utils::hook::call(0x5BA535_b, ui_mouse_fix);
 
-			// add script main menu (ESC)
-			utils::hook::call(0x135C82_b, ui_set_active_menu_stub);
+			// add script main menu
+			utils::hook::call(0x1E5143_b, lui_toggle_menu_stub); // (CL_ExecBinding)
+			utils::hook::call(0x131377_b, lui_toggle_menu_stub); // (UI_SetActiveMenu)
 
 			command::add("openmenu", [](const command::params& params)
 			{

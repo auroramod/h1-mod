@@ -152,6 +152,8 @@ namespace game
 		unsigned int paramcount)> VM_Execute{0x3C9E50, 0x510EB0};
 
 	WEAK symbol<void(const char* value)> Scr_AddString{0x3C7B20, 0x50EC50};
+	WEAK symbol<void(int value)> Scr_AddInt{0x3C7A40, 0x50EB70};
+	WEAK symbol<void(int value)> Scr_AddBool{0x3C77C0, 0x50E8F0};
 
 	WEAK symbol<void(unsigned int id, scr_string_t stringValue, 
 		unsigned int paramcount)> Scr_NotifyId{0x3C92E0, 0x510340};
@@ -191,8 +193,10 @@ namespace game
 	WEAK symbol<void(XZoneInfo* zoneInfo, unsigned int zoneCount, DBSyncMode syncMode)> DB_LoadXAssets{0x1F31E0, 0x397500};
 	WEAK symbol<bool(const char* zoneName)> DB_IsLocalized{0x1F23C0, 0x396790};
 
-	WEAK symbol<void(int clientNum, const char* menu, 
-		int a3, int a4, unsigned int a5)> LUI_OpenMenu{0x3F20A0, 0x1E1210};
+	WEAK symbol<void(int client_num, const char* menu, 
+		int is_popup, int is_modal, unsigned int is_exclusive)> LUI_OpenMenu{0x3F20A0, 0x1E1210};
+	WEAK symbol<void(int clientNum, const char* menu, int immediate,
+		hks::lua_State* state)> LUI_LeaveMenuByName{0xF6D00, 0x26BE80};
 	WEAK symbol<void()> LUI_EnterCriticalSection{0xF19A0, 0x2669B0};
 	WEAK symbol<void()> LUI_LeaveCriticalSection{0xF6C40, 0x26BDC0};
 
