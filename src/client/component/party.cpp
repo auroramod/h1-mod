@@ -226,7 +226,7 @@ namespace party
 		console::error("%s\n", error.data());
 		if (game::Menu_IsMenuOpenAndVisible(0, "popup_acceptinginvite"))
 		{
-			utils::hook::invoke<void>(0x26BE80_b, 0, "popup_acceptinginvite", 0, *game::hks::lua_state); // LUI_LeaveMenuByName
+			command::execute("lui_close popup_acceptinginvite", false);
 		}
 
 		utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE"); // Com_SetLocalizedErrorMessage

@@ -61,6 +61,26 @@ namespace weapon
 			return result;
 		}
 
+		void cw_mismatch_error_stub(int, const char* msg, ...)
+		{
+			char buffer[0x100];
+
+			va_list ap;
+			va_start(ap, msg);
+
+			vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, msg, ap);
+
+			va_end(ap);
+
+			console::error(buffer);
+		}
+
+		int g_find_config_string_index_stub(const char* string, int start, int max, int create, const char* errormsg)
+		{
+			create = 1;
+			return utils::hook::invoke<int>(0x8B530_b, string, start, max, create, errormsg); // G_FindConfigstringIndex
+		}
+
 		template <typename T>
 		void set_weapon_field(const std::string& weapon_name, unsigned int field, T value)
 		{
@@ -111,8 +131,11 @@ namespace weapon
 				// use tag_weapon if tag_weapon_right or tag_knife_attach are not found on model
 				xmodel_get_bone_index_hook.create(0x5C82B0_b, xmodel_get_bone_index_stub);
 
-				// disable custom weapon index mismatch (fix for custom attachments) (NEEDS TESTING)
-				//utils::hook::set<uint8_t>(0x11B910_b, 0xC3); // CG_SetupCustomWeapon
+				// make custom weapon index mismatch not drop in CG_SetupCustomWeapon
+				utils::hook::call(0x11B9AF_b, cw_mismatch_error_stub);
+
+				// patch attachment configstring so it will create if not found
+				utils::hook::call(0x41C595_b, g_find_config_string_index_stub);
 			}
 
 #ifdef DEBUG
