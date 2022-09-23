@@ -4,6 +4,7 @@
 #include "console.hpp"
 #include "fastfiles.hpp"
 #include "filesystem.hpp"
+#include "logfile.hpp"
 #include "gsc.hpp"
 #include "scripting.hpp"
 
@@ -45,8 +46,6 @@ namespace gsc
 
 		auto function_id_start = 0x30A;
 		auto method_id_start = 0x8586;
-
-		game::scr_entref_t saved_ent_ref;
 
 		std::string unknown_function_error{};
 		unsigned int current_filename{};
@@ -311,7 +310,7 @@ namespace gsc
 			}
 		}
 
-		void builtin_call_error()
+		void builtin_call_error(const std::string& error_str)
 		{
 			const auto pos = game::scr_function_stack->pos;
 			const auto function_id = *reinterpret_cast<std::uint16_t*>(
@@ -319,13 +318,13 @@ namespace gsc
 
 			if (function_id > 0x1000)
 			{
-				console::warn("in call to builtin method \"%s\"",
-					xsk::gsc::h1::resolver::method_name(function_id).data());
+				console::warn("in call to builtin method \"%s\"%s",
+					xsk::gsc::h1::resolver::method_name(function_id).data(), error_str.data());
 			}
 			else
 			{
-				console::warn("in call to builtin function \"%s\"",
-					xsk::gsc::h1::resolver::function_name(function_id).data());
+				console::warn("in call to builtin function \"%s\"%s",
+					xsk::gsc::h1::resolver::function_name(function_id).data(), error_str.data());
 			}
 		}
 
@@ -339,16 +338,17 @@ namespace gsc
 			console::warn("*********** script runtime error *************\n");
 
 			const auto opcode_id = *reinterpret_cast<std::uint8_t*>(SELECT_VALUE(0xC4015E8_b, 0xB7B8968_b));
+			const std::string error_str = gsc_error.has_value()
+				? utils::string::va(": %s", gsc_error.value().data())
+				: "";
+
 			if ((opcode_id >= 0x1A && opcode_id <= 0x20) || (opcode_id >= 0xA9 && opcode_id <= 0xAF))
 			{
-				builtin_call_error();
+				builtin_call_error(error_str);
 			}
 			else
 			{
 				const auto opcode = get_opcode_name(opcode_id);
-				const std::string error_str = gsc_error.has_value()
-					? utils::string::va(": %s", gsc_error.value().data())
-					: "";
 				if (opcode.has_value())
 				{
 					console::warn("while processing instruction %s%s\n",
@@ -471,7 +471,7 @@ namespace gsc
 			}
 		}
 
-		void execute_custom_method(builtin_method method, game::scr_entref_t ent_ref)
+		void execute_custom_method(scripting::script_function method, game::scr_entref_t ent_ref)
 		{
 			auto error = false;
 
@@ -506,30 +506,6 @@ namespace gsc
 			else
 			{
 				execute_custom_function(function);
-			}
-		}
-
-		game::scr_entref_t get_entity_id_stub(unsigned int ent_id)
-		{
-			const auto ref = game::Scr_GetEntityIdRef(ent_id);
-			saved_ent_ref = ref;
-			return ref;
-		}
-
-		void vm_call_builtin_method_stub(builtin_method method)
-		{
-			auto is_custom_function = false;
-			{
-				is_custom_function = methods.find(method) != methods.end();
-			}
-
-			if (!is_custom_function)
-			{
-				method(saved_ent_ref);
-			}
-			else
-			{
-				execute_custom_method(method, saved_ent_ref);
 			}
 		}
 
@@ -675,31 +651,94 @@ namespace gsc
 
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD86C_b, 0x50484C_b), 0x1000); // change builtin func count
 
-#define RVA(ptr) static_cast<uint32_t>(reinterpret_cast<size_t>(ptr) - 0x140000000)
-
-			std::memcpy(&func_table, reinterpret_cast<void*>(SELECT_VALUE(0xB8CC510_b, 0xAC83820_b)), 
-				sizeof(reinterpret_cast<void*>(SELECT_VALUE(0xB8CC510_b, 0xAC83820_b))));
-
-			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD872_b, 0x504852_b) + 4, RVA(&func_table));
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD872_b, 0x504852_b) + 4,
+				static_cast<uint32_t>(reverse_b((&func_table))));
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x3CB718_b, 0x512778_b) + 4,
+				static_cast<uint32_t>(reverse_b((&func_table))));
 			utils::hook::inject(SELECT_VALUE(0x3BDC28_b, 0x504C58_b) + 3, &func_table);
-			utils::hook::set<uint32_t>(SELECT_VALUE(0x3CB718_b, 0x512778_b) + 4, RVA(&func_table));
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BDC1E_b, 0x504C4E_b), sizeof(func_table));
 
-			std::memcpy(&meth_table, reinterpret_cast<void*>(SELECT_VALUE(0xB8CDD60_b, 0xAC85070_b)), 
-				sizeof(reinterpret_cast<void*>(SELECT_VALUE(0xB8CDD60_b, 0xAC85070_b))));
-
-			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD882_b, 0x504862_b) + 4, RVA(&meth_table));
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD882_b, 0x504862_b) + 4, 
+				static_cast<uint32_t>(reverse_b((&meth_table))));
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x3CBA3B_b, 0x512A9B_b) + 4,
+				static_cast<uint32_t>(reverse_b(&meth_table)));
 			utils::hook::inject(SELECT_VALUE(0x3BDC36_b, 0x504C66_b) + 3, &meth_table);
-			utils::hook::set<uint32_t>(SELECT_VALUE(0x3CBA3B_b, 0x512A9B_b) + 4, RVA(&meth_table));
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BDC3F_b, 0x504C6F_b), sizeof(meth_table));
 
-			// nop original code and handle calling builtin functions
 			utils::hook::nop(SELECT_VALUE(0x3CB723_b, 0x512783_b), 8);
 			utils::hook::call(SELECT_VALUE(0x3CB723_b, 0x512783_b), vm_call_builtin_function_stub);
 
-			// same as above, but for builtin methods (different method of doing it, is this overdone?)
-			utils::hook::call(SELECT_VALUE(0x3CBA12_b, 0x512A72_b), get_entity_id_stub);
-			utils::hook::nop(SELECT_VALUE(0x3CBA46_b, 0x512AA6_b), 6);
-			utils::hook::nop(SELECT_VALUE(0x3CBA4E_b, 0x512AAE_b), 2);
-			utils::hook::call(SELECT_VALUE(0x3CBA46_b, 0x512AA6_b), vm_call_builtin_method_stub);
+			gsc::function::add("print", []()
+			{
+				const auto num = game::Scr_GetNumParam();
+				std::string buffer{};
+
+				for (auto i = 0; i < num; i++)
+				{
+					const auto str = game::Scr_GetString(i);
+					buffer.append(str);
+					buffer.append("\t");
+				}
+
+				console::info("%s\n", buffer.data());
+			});
+
+			gsc::function::add("assert", []()
+			{
+				const auto expr = get_argument(0).as<int>();
+				if (!expr)
+				{
+					throw std::runtime_error("assert fail");
+				}
+			});
+
+			gsc::function::add("assertex", []()
+			{
+				const auto expr = get_argument(0).as<int>();
+				if (!expr)
+				{
+					const auto error = get_argument(1).as<std::string>();
+					throw std::runtime_error(error);
+				}
+			});
+
+			gsc::function::add("replacefunc", []()
+			{
+				const auto what = get_argument(0).get_raw();
+				const auto with = get_argument(1).get_raw();
+
+				if (what.type != game::SCRIPT_FUNCTION)
+				{
+					throw std::runtime_error("replaceFunc: parameter 1 must be a function");
+				}
+
+				if (with.type != game::SCRIPT_FUNCTION)
+				{
+					throw std::runtime_error("replaceFunc: parameter 2 must be a function");
+				}
+
+				logfile::set_gsc_hook(what.u.codePosValue, with.u.codePosValue);
+			});
+
+			function::add("toupper", []()
+			{
+				const auto string = get_argument(0).as<std::string>();
+				game::Scr_AddString(utils::string::to_upper(string).data());
+			});
+
+			function::add("logprint", []()
+			{
+				std::string buffer{};
+
+				const auto params = game::Scr_GetNumParam();
+				for (auto i = 0; i < params; i++)
+				{
+					const auto string = game::Scr_GetString(i);
+					buffer.append(string);
+				}
+
+				game::G_LogPrintf("%s", buffer.data());
+			});
 
 			scripting::on_shutdown([](int free_scripts)
 			{

@@ -244,14 +244,11 @@ int main()
 
 			game::environment::set_mode(mode);
 
-			uint64_t base_address{};
-			entry_point = load_binary(mode, &base_address);
+			entry_point = load_binary(mode, &game::base_address);
 			if (!entry_point)
 			{
 				throw std::runtime_error("Unable to load binary into memory");
 			}
-
-			game::base_address = base_address;
 
 			if (!component_loader::post_load()) return 0;
 
