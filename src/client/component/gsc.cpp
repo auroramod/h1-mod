@@ -588,7 +588,7 @@ namespace gsc
 
 	namespace method
 	{
-		void add(const std::string& name, scripting::script_function method)
+		void add(const std::string& name, builtin_method method)
 		{
 			if (xsk::gsc::h1::resolver::find_method(name))
 			{
