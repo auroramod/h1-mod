@@ -49,5 +49,47 @@
     "LUA_MENU_SAVE": "Save changes",
     "LUA_MENU_SAVE_DESC": "Save changes.",
     "LUA_MENU_SETTINGS": "Settings",
-    "LUA_MENU_EDIT_STATS": "Edit Stats"
+    "LUA_MENU_EDIT_STATS": "Edit Stats",
+
+    "UPDATER_POPUP_NO_UPDATES_AVAILABLE": "No updates available",
+    "UPDATER_POPUP_AVAILABLE_UPDATE_TEXT": "An update is available, proceed with installation?",
+    "UPDATER_POPUP_SUCCESSFUL": "Update successful",
+    "UPDATER_POPUP_RESTART_POPUP_TEXT": "Update requires restart",
+    "UPDATER_POPUP_CHECKING_FOR_UPDATES": "Checking for updates...",
+
+    "MPHUD_FPS": "FPS: ",
+    "MPHUD_LATENCY": "Latency: ",
+    "MPHUD_LATENCY_MS": " ms",
+    "LUA_MENU_TELEMETRY": "TELEMETRY",
+
+    "MENU_ENGLISH": "English",
+    "MENU_ENGLISH_SAFE": "English (Safe)",
+    "MENU_FRENCH": "Français",
+    "MENU_GERMAN": "Deutsch",
+    "MENU_ITALIAN": "Italiano",
+    "MENU_JAPANESE_PARTIAL": "日本語(一部)",
+    "MENU_KOREAN": "한국어",
+    "MENU_POLISH": "Polski",
+    "MENU_PORTUGUESE": "Português",
+    "MENU_RUSSIAN": "Русский",
+    "MENU_SIMPLIFIED_CHINESE": "简体中文",
+    "MENU_SPANISH": "Español",
+    "MENU_TRADITIONAL_CHINESE": "繁體中文",
+
+    "LOCALE_ENGLISH": "English",
+    "LOCALE_ENGLISH_SAFE": "English (Safe)",
+    "LOCALE_FRENCH": "French",
+    "LOCALE_GERMAN": "German",
+    "LOCALE_ITALIAN": "Italian",
+    "LOCALE_JAPANESE_PARTIAL": "Japanese (Partial)",
+    "LOCALE_KOREAN": "Korean",
+    "LOCALE_POLISH": "Polish",
+    "LOCALE_PORTUGUESE": "Portuguese",
+    "LOCALE_RUSSIAN": "Russian",
+    "LOCALE_SIMPLIFIED_CHINESE": "Simplified Chinese",
+    "LOCALE_SPANISH": "Spanish",
+    "LOCALE_TRADITIONAL_CHINESE": "Traditional Chinese",
+
+    "LUA_MENU_CHOOSE_LANGUAGE": "Choose your language",
+    "MENU_APPLY_LANGUAGE_SETTINGS": "Apply language settings?"
 }

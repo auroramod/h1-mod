@@ -1,0 +1,15 @@
+{
+    "LOCALE_ENGLISH": "英文",
+    "LOCALE_ENGLISH_SAFE": "英文 (審查制度)",
+    "LOCALE_FRENCH": "法文",
+    "LOCALE_GERMAN": "德文",
+    "LOCALE_ITALIAN": "義大利文",
+    "LOCALE_JAPANESE_PARTIAL": "日文（部份)",
+    "LOCALE_KOREAN": "韓文",
+    "LOCALE_POLISH": "波蘭文",
+    "LOCALE_PORTUGUESE": "葡萄牙文",
+    "LOCALE_RUSSIAN": "俄文",
+    "LOCALE_SIMPLIFIED_CHINESE": "簡體中文",
+    "LOCALE_SPANISH": "西班牙文",
+    "LOCALE_TRADITIONAL_CHINESE": "繁體中文"
+}

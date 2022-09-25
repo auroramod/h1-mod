@@ -1,0 +1,15 @@
+{
+    "LOCALE_ENGLISH": "Angielski",
+    "LOCALE_ENGLISH_SAFE": "Angielski (cenzuralny)",
+    "LOCALE_FRENCH": "Francuski",
+    "LOCALE_GERMAN": "Niemiecki",
+    "LOCALE_ITALIAN": "Włoski",
+    "LOCALE_JAPANESE_PARTIAL": "Japoński (częściowy)",
+    "LOCALE_KOREAN": "Koreański",
+    "LOCALE_POLISH": "Polski",
+    "LOCALE_PORTUGUESE": "Portugalski",
+    "LOCALE_RUSSIAN": "Rosyjski",
+    "LOCALE_SIMPLIFIED_CHINESE": "Chiński uproszczony",
+    "LOCALE_SPANISH": "Hiszpański",
+    "LOCALE_TRADITIONAL_CHINESE": "Chiński tradycyjny"
+}
