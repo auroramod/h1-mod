@@ -588,7 +588,7 @@ namespace gsc
 
 	namespace method
 	{
-		void add(const std::string& name, builtin_method method)
+		void add(const std::string& name, scripting::script_function method)
 		{
 			if (xsk::gsc::h1::resolver::find_method(name))
 			{
@@ -668,7 +668,7 @@ namespace gsc
 			utils::hook::nop(SELECT_VALUE(0x3CB723_b, 0x512783_b), 8);
 			utils::hook::call(SELECT_VALUE(0x3CB723_b, 0x512783_b), vm_call_builtin_function_stub);
 
-			gsc::function::add("print", []()
+			function::add("print", []()
 			{
 				const auto num = game::Scr_GetNumParam();
 				std::string buffer{};
@@ -683,7 +683,7 @@ namespace gsc
 				console::info("%s\n", buffer.data());
 			});
 
-			gsc::function::add("assert", []()
+			function::add("assert", []()
 			{
 				const auto expr = get_argument(0).as<int>();
 				if (!expr)
@@ -692,7 +692,7 @@ namespace gsc
 				}
 			});
 
-			gsc::function::add("assertex", []()
+			function::add("assertex", []()
 			{
 				const auto expr = get_argument(0).as<int>();
 				if (!expr)
@@ -702,7 +702,7 @@ namespace gsc
 				}
 			});
 
-			gsc::function::add("replacefunc", []()
+			function::add("replacefunc", []()
 			{
 				const auto what = get_argument(0).get_raw();
 				const auto with = get_argument(1).get_raw();

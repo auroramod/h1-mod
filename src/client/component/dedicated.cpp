@@ -8,6 +8,7 @@
 #include "game/dvars.hpp"
 #include "dvars.hpp"
 #include "console.hpp"
+#include "gsc.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
@@ -80,12 +81,11 @@ namespace dedicated
 			return console_command_queue;
 		}
 
-		void execute_console_command(const int client, const char* command)
+		void execute_console_command([[maybe_unused]] const int local_client_num, const char* command)
 		{
 			if (game::Live_SyncOnlineDataFlags(0) == 0)
 			{
-				game::Cbuf_AddText(client, 0, command);
-				game::Cbuf_AddText(client, 0, "\n");
+				command::execute(command);
 			}
 			else
 			{
@@ -100,29 +100,13 @@ namespace dedicated
 
 			for (const auto& command : queue)
 			{
-				game::Cbuf_AddText(0, 0, command.data());
-				game::Cbuf_AddText(0, 0, "\n");
+				command::execute(command);
 			}
 		}
 
 		void sync_gpu_stub()
 		{
 			std::this_thread::sleep_for(1ms);
-		}
-
-		game::dvar_t* gscr_set_dynamic_dvar()
-		{
-			/*
-			auto s = game::Scr_GetString(0);
-			auto* dvar = game::Dvar_FindVar(s);
-
-			if (dvar && !strncmp("scr_", dvar->name, 4))
-			{
-				return dvar;
-			}
-			*/
-
-			return gscr_set_dynamic_dvar_hook.invoke<game::dvar_t*>();
 		}
 
 		void kill_server()
@@ -237,14 +221,17 @@ namespace dedicated
 				a.popad64();
 
 				a.jmp(0x157DDF_b);
-			}), true);//
+			}), true);
+
+			// return 0 so the game doesn't override the cfg
+			gsc::function::add("isusingmatchrulesdata", []()
+			{
+				game::Scr_AddInt(0);
+			});
 
 			// delay console commands until the initialization is done // COULDN'T FOUND
 			// utils::hook::call(0x1400D808C, execute_console_command);
 			// utils::hook::nop(0x1400D80A4, 5);
-
-			// patch GScr_SetDynamicDvar to behave better
-			gscr_set_dynamic_dvar_hook.create(0x43CF60_b, &gscr_set_dynamic_dvar);
 
 			utils::hook::nop(0x189514_b, 248); // don't load config file
 			utils::hook::nop(0x156C46_b, 5); // ^

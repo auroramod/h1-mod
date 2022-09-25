@@ -22,12 +22,12 @@ namespace slowmotion
 
 			if (game::Scr_GetNumParam() >= 2)
 			{
-				end = game::Scr_GetFloat(1u);
+				end = game::Scr_GetFloat(1);
 			}
 
 			if (game::Scr_GetNumParam() >= 3)
 			{
-				duration = static_cast<int>(game::Scr_GetFloat(2u) * 1000.0f);
+				duration = static_cast<int>(game::Scr_GetFloat(2) * 1000.0f);
 			}
 
 			game::SV_SetConfigstring(10, utils::string::va("%i %i %g %g", *game::mp::gameTime, duration, start, end));
