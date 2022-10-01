@@ -151,7 +151,10 @@ namespace fastfiles
 			if (localized)
 			{
 				const auto language = game::SEH_GetCurrentLanguageCode();
-				try_load_zone(language + "_"s + name, false);
+				if (!try_load_zone(language + "_"s + name, false) && language != "eng"s)
+				{
+					try_load_zone("eng_" + name, false);
+				}
 			}
 
 			if (!fastfiles::exists(name))
