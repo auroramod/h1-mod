@@ -15,6 +15,12 @@ namespace scripting
 	{
 	}
 
+	script_value::script_value(const value_wrap& value)
+		: value_(value.get_raw())
+	{
+	}
+
+
 	script_value::script_value(const int value)
 	{
 		game::VariableValue variable{};
@@ -290,6 +296,12 @@ namespace scripting
 	const game::VariableValue& script_value::get_raw() const
 	{
 		return this->value_.get();
+	}
+
+	value_wrap::value_wrap(const scripting::script_value& value, int argument_index)
+		: value_(value)
+		, argument_index_(argument_index)
+	{
 	}
 
 	std::string script_value::to_string() const

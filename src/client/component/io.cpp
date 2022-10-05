@@ -47,6 +47,7 @@ namespace io
 	public:
 		void post_unpack() override
 		{
+			/*
 			gsc::function::add("fileexists", []()
 			{
 				const auto path = convert_path(gsc::get_argument(0).as<std::string>());
@@ -124,6 +125,7 @@ namespace io
 				const auto path = convert_path(gsc::get_argument(0).as<std::string>());
 				game::Scr_AddBool(utils::io::remove_file(path));
 			});
+			*/
 		}
 	};
 }

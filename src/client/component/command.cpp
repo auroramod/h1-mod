@@ -609,11 +609,13 @@ namespace command
 
 			add_commands_generic();
 
+			/*
 			gsc::function::add("executecommand", []()
 			{
 				const auto cmd = gsc::get_argument(0).as<std::string>();
 				command::execute(cmd, true);
 			});
+			*/
 		}
 
 	private:
