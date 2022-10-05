@@ -16,14 +16,6 @@ namespace scripting
 			return value_ptr;
 		}
 
-		void push_value(const script_value& value)
-		{
-			auto* value_ptr = allocate_argument();
-			*value_ptr = value.get_raw();
-
-			game::AddRefToValue(value_ptr->type, value_ptr->u);
-		}
-
 		int get_field_id(const int classnum, const std::string& field)
 		{
 			if (scripting::fields_table[classnum].find(field) != scripting::fields_table[classnum].end())
@@ -47,6 +39,14 @@ namespace scripting
 
 			return script_value(game::scr_VmPub->top[1 - game::scr_VmPub->outparamcount]);
 		}
+	}
+
+	void push_value(const script_value& value)
+	{
+		auto* value_ptr = allocate_argument();
+		*value_ptr = value.get_raw();
+
+		game::AddRefToValue(value_ptr->type, value_ptr->u);
 	}
 
 	void notify(const entity& entity, const std::string& event, const std::vector<script_value>& arguments)
@@ -110,7 +110,7 @@ namespace scripting
 		stack_isolation _;
 		for (auto i = arguments.rbegin(); i != arguments.rend(); ++i)
 		{
-			scripting::push_value(*i);
+			push_value(*i);
 		}
 
 		game::AddRefToObject(id);
