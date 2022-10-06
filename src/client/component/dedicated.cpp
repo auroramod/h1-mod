@@ -223,13 +223,11 @@ namespace dedicated
 				a.jmp(0x157DDF_b);
 			}), true);
 
-			/*
 			// return 0 so the game doesn't override the cfg
-			gsc::function::add("isusingmatchrulesdata", []()
+			gsc::function::add("isusingmatchrulesdata", [](const gsc::function_args& args)
 			{
-				game::Scr_AddInt(0);
+				return 0;
 			});
-			*/
 
 			// delay console commands until the initialization is done // COULDN'T FOUND
 			// utils::hook::call(0x1400D808C, execute_console_command);

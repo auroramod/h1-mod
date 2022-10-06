@@ -35,8 +35,6 @@ namespace gsc
 	void load_main_handles();
 	void load_init_handles();
 
-	scripting::script_value get_argument(int index);
-
 	namespace function
 	{
 		void add(const std::string& name, script_function function);

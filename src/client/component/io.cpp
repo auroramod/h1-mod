@@ -47,61 +47,61 @@ namespace io
 	public:
 		void post_unpack() override
 		{
-			/*
-			gsc::function::add("fileexists", []()
+			gsc::function::add("fileexists", [](const gsc::function_args& args)
 			{
-				const auto path = convert_path(gsc::get_argument(0).as<std::string>());
-				game::Scr_AddBool(utils::io::file_exists(path));
+				const auto path = convert_path(args[0].as<std::string>());
+				return utils::io::file_exists(path);
 			});
 
-			gsc::function::add("writefile", []()
+			gsc::function::add("writefile", [](const gsc::function_args& args)
 			{
-				const auto path = convert_path(gsc::get_argument(0).as<std::string>());
-				const auto data = gsc::get_argument(1).as<std::string>();
-				const auto params = game::Scr_GetNumParam();
+				const auto path = convert_path(args[0].as<std::string>());
+				const auto data = args[1].as<std::string>();
 
 				auto append = false;
-				if (params > 2)
+				if (static_cast<int>(args.size()) > 2)
 				{
-					append = gsc::get_argument(2).as<bool>();
+					append = args[2].as<bool>();
 				}
 
-				game::Scr_AddBool(utils::io::write_file(path, data, append));
+				return utils::io::write_file(path, data, append);
 			});
 
-			gsc::function::add("readfile", []()
+			gsc::function::add("readfile", [](const gsc::function_args& args)
 			{
-				const auto path = convert_path(gsc::get_argument(0).as<std::string>());
-				game::Scr_AddString(utils::io::read_file(path).data());
+				const auto path = convert_path(args[0].as<std::string>());
+				return utils::io::read_file(path);
 			});
 			
-			gsc::function::add("filesize", []()
+			gsc::function::add("filesize", [](const gsc::function_args& args)
 			{
-				const auto path = convert_path(gsc::get_argument(0).as<std::string>());
-				game::Scr_AddInt(static_cast<uint32_t>(utils::io::file_size(path)));
+				const auto path = convert_path(args[0].as<std::string>());
+				return static_cast<uint32_t>(utils::io::file_size(path));
 			});
 
-			gsc::function::add("createdirectory", []()
+			gsc::function::add("createdirectory", [](const gsc::function_args& args)
 			{
-				const auto path = convert_path(gsc::get_argument(0).as<std::string>());
-				game::Scr_AddBool(utils::io::create_directory(path));
+				printf("createdirectory called\n");
+
+				const auto path = convert_path(args[0].as<std::string>());
+				return utils::io::create_directory(path);
 			});
 
-			gsc::function::add("directoryexists", []()
+			gsc::function::add("directoryexists", [](const gsc::function_args& args)
 			{
-				const auto path = convert_path(gsc::get_argument(0).as<std::string>());
-				game::Scr_AddBool(utils::io::directory_exists(path));
+				const auto path = convert_path(args[0].as<std::string>());
+				return utils::io::directory_exists(path);
 			});
 
-			gsc::function::add("directoryisempty", []()
+			gsc::function::add("directoryisempty", [](const gsc::function_args& args)
 			{
-				const auto path = convert_path(gsc::get_argument(0).as<std::string>());
-				game::Scr_AddBool(utils::io::directory_is_empty(path));
+				const auto path = convert_path(args[0].as<std::string>());
+				return utils::io::directory_is_empty(path);
 			});
 
-			gsc::function::add("listfiles", []()
+			gsc::function::add("listfiles", [](const gsc::function_args& args)
 			{
-				const auto path = convert_path(gsc::get_argument(0).as<std::string>());
+				const auto path = convert_path(args[0].as<std::string>());
 				const auto files = utils::io::list_files(path);
 
 				scripting::array array{};
@@ -110,22 +110,23 @@ namespace io
 					array.push(file);
 				}
 
-				scripting::push_value(array);
+				return array;
 			});
 
-			gsc::function::add("copyfolder", []()
+			gsc::function::add("copyfolder", [](const gsc::function_args& args)
 			{
-				const auto source = convert_path(gsc::get_argument(0).as<std::string>());
-				const auto target = convert_path(gsc::get_argument(1).as<std::string>());
+				const auto source = convert_path(args[0].as<std::string>());
+				const auto target = convert_path(args[1].as<std::string>());
 				utils::io::copy_folder(source, target);
+
+				return scripting::script_value{};
 			});
 
-			gsc::function::add("removefile", []()
+			gsc::function::add("removefile", [](const gsc::function_args& args)
 			{
-				const auto path = convert_path(gsc::get_argument(0).as<std::string>());
-				game::Scr_AddBool(utils::io::remove_file(path));
+				const auto path = convert_path(args[0].as<std::string>());
+				return utils::io::remove_file(path);
 			});
-			*/
 		}
 	};
 }

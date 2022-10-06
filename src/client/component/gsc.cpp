@@ -358,11 +358,12 @@ namespace gsc
 			}
 		}
 
-		void* vm_error_stub(void* a1)
+		void vm_error_stub(void* a1)
 		{
 			if (!developer_script->current.enabled && !force_error_print)
 			{
-				return utils::hook::invoke<void*>(SELECT_VALUE(0x415C90_b, 0x59DDA0_b), a1);
+				utils::hook::invoke<void>(SELECT_VALUE(0x415C90_b, 0x59DDA0_b), a1);
+				return;
 			}
 
 			console::warn("*********** script runtime error *************\n");
@@ -396,7 +397,7 @@ namespace gsc
 
 			print_callstack();
 			console::warn("**********************************************\n");
-			return utils::hook::invoke<void*>(SELECT_VALUE(0x415C90_b, 0x59DDA0_b), a1);
+			utils::hook::invoke<void*>(SELECT_VALUE(0x415C90_b, 0x59DDA0_b), a1);
 		}
 
 		void get_unknown_function_error(const char* code_pos)
@@ -508,7 +509,7 @@ namespace gsc
 		{
 			std::vector<scripting::script_value> args;
 
-			for (auto i = 0; i < game::scr_VmPub->outparamcount; i++)
+			for (auto i = 0; i < static_cast<int>(game::scr_VmPub->outparamcount); ++i)
 			{
 				const auto value = game::scr_VmPub->top[-i];
 				args.push_back(value);
@@ -541,16 +542,22 @@ namespace gsc
 
 			try
 			{
+				console::debug("executing \"%s\" function\n", function_name(id).data());
+
 				const auto result = function(get_arguments());
 				const auto type = result.get_raw().type;
 
 				if (type)
 				{
+					console::debug("returning type of \"%s\" function\n", function_name(id).data());
+
 					return_value(result);
 				}
 			}
 			catch (const std::exception& e)
 			{
+				console::debug("\"%s\" errored: %s\n", function_name(id).data(), e.what());
+
 				error = true;
 				force_error_print = true;
 				gsc_error = e.what();
@@ -621,16 +628,6 @@ namespace gsc
 		}
 	}
 
-	scripting::script_value get_argument(int index)
-	{
-		if (index >= static_cast<int>(game::scr_VmPub->outparamcount))
-		{
-			return {};
-		}
-
-		return game::scr_VmPub->top[-index];
-	}
-
 	namespace function
 	{
 		void add(const std::string& name, script_function function)
@@ -674,7 +671,7 @@ namespace gsc
 
 	unsigned int function_args::size() const
 	{
-		return this->values_.size();
+		return static_cast<unsigned int>(this->values_.size());
 	}
 
 	std::vector<scripting::script_value> function_args::get_raw() const
@@ -754,45 +751,46 @@ namespace gsc
 
 			function::add("print", [](const gsc::function_args& args)
 			{
-				const auto num = game::Scr_GetNumParam();
 				std::string buffer{};
 
-				for (auto i = 0; i < num; i++)
+				for (auto i = 0; i < static_cast<int>(args.size()); ++i)
 				{
-					const auto str = game::Scr_GetString(i);
+					const auto str = args[i].as<std::string>();
 					buffer.append(str);
 					buffer.append("\t");
 				}
-
 				console::info("%s\n", buffer.data());
 
-				return false;
+				return scripting::script_value{};
 			});
 
-			/*
-			function::add("assert", []()
+			function::add("assert", [](const gsc::function_args& args)
 			{
-				const auto expr = get_argument(0).as<int>();
+				const auto expr = args[0].as<int>();
 				if (!expr)
 				{
 					throw std::runtime_error("assert fail");
 				}
+
+				return scripting::script_value{};
 			});
 
-			function::add("assertex", []()
+			function::add("assertex", [](const gsc::function_args& args)
 			{
-				const auto expr = get_argument(0).as<int>();
+				const auto expr = args[0].as<int>();
 				if (!expr)
 				{
-					const auto error = get_argument(1).as<std::string>();
+					const auto error = args[1].as<std::string>();
 					throw std::runtime_error(error);
 				}
+
+				return scripting::script_value{};
 			});
 
-			function::add("replacefunc", []()
+			function::add("replacefunc", [](const gsc::function_args& args)
 			{
-				const auto what = get_argument(0).get_raw();
-				const auto with = get_argument(1).get_raw();
+				const auto what = args[0].get_raw();
+				const auto with = args[1].get_raw();
 
 				if (what.type != game::SCRIPT_FUNCTION)
 				{
@@ -805,28 +803,30 @@ namespace gsc
 				}
 
 				logfile::set_gsc_hook(what.u.codePosValue, with.u.codePosValue);
+
+				return scripting::script_value{};
 			});
 
-			function::add("toupper", []()
+			function::add("toupper", [](const gsc::function_args& args)
 			{
-				const auto string = get_argument(0).as<std::string>();
-				game::Scr_AddString(utils::string::to_upper(string).data());
+				const auto string = args[0].as<std::string>();
+				return utils::string::to_upper(string);
 			});
 
-			function::add("logprint", []()
+			function::add("logprint", [](const gsc::function_args& args)
 			{
 				std::string buffer{};
 
-				const auto params = game::Scr_GetNumParam();
-				for (auto i = 0; i < params; i++)
+				for (auto i = 0; i < static_cast<int>(args.size()); ++i)
 				{
-					const auto string = game::Scr_GetString(i);
+					const auto string = args[i].as<std::string>();
 					buffer.append(string);
 				}
 
 				game::G_LogPrintf("%s", buffer.data());
+
+				return scripting::script_value{};
 			});
-			*/
 
 			scripting::on_shutdown([](int free_scripts)
 			{
