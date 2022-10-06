@@ -59,7 +59,7 @@ namespace io
 				const auto data = args[1].as<std::string>();
 
 				auto append = false;
-				if (static_cast<int>(args.size()) > 2)
+				if (args.size() > 2u)
 				{
 					append = args[2].as<bool>();
 				}

@@ -509,9 +509,9 @@ namespace gsc
 		{
 			std::vector<scripting::script_value> args;
 
-			for (auto i = 0; i < static_cast<int>(game::scr_VmPub->outparamcount); ++i)
+			for (auto i = 0u; i < game::scr_VmPub->outparamcount; ++i)
 			{
-				const auto value = game::scr_VmPub->top[-i];
+				const auto value = game::scr_VmPub->top[-static_cast<int>(i)];
 				args.push_back(value);
 			}
 
@@ -753,7 +753,7 @@ namespace gsc
 			{
 				std::string buffer{};
 
-				for (auto i = 0; i < static_cast<int>(args.size()); ++i)
+				for (auto i = 0u; i < args.size(); ++i)
 				{
 					const auto str = args[i].as<std::string>();
 					buffer.append(str);
@@ -817,7 +817,7 @@ namespace gsc
 			{
 				std::string buffer{};
 
-				for (auto i = 0; i < static_cast<int>(args.size()); ++i)
+				for (auto i = 0u; i < args.size(); ++i)
 				{
 					const auto string = args[i].as<std::string>();
 					buffer.append(string);
