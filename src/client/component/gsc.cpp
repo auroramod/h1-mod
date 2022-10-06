@@ -531,31 +531,32 @@ namespace gsc
 		{
 			if (functions.find(id) == functions.end())
 			{
-				const auto function = func_table[id - 1];
+				builtin_function function = nullptr;
 				{
-					function();
+					function = func_table[id - 1];
 				}
+				execute_custom_function(function);
 
 				return;
 			}
 
-			const auto function = functions[id];
+			auto error = false;
+			const auto& function = functions[id];
 
 			try
 			{
-				const auto result = function(get_arguments());
-				const auto type = result.get_raw().type;
-
-				if (type)
-				{
-					return_value(result);
-				}
+				function(get_arguments());
 			}
 			catch (const std::exception& e)
 			{
-				console::error("************** script execution error **************\n");
-				console::error("in call to builtin function \"%s\": %s\n", function_name(id).data(), e.what());
-				console::error("****************************************************\n");
+				error = true;
+				force_error_print = true;
+				gsc_error = e.what();
+			}
+
+			if (error)
+			{
+				game::Scr_ErrorInternal();
 			}
 		}
 
