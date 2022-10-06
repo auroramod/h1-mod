@@ -509,9 +509,9 @@ namespace gsc
 		{
 			std::vector<scripting::script_value> args;
 
-			for (auto i = 0u; i < game::scr_VmPub->outparamcount; ++i)
+			for (auto i = 0; static_cast<unsigned int>(i) < game::scr_VmPub->outparamcount; ++i)
 			{
-				const auto value = game::scr_VmPub->top[-static_cast<int>(i)];
+				const auto value = game::scr_VmPub->top[-i];
 				args.push_back(value);
 			}
 
