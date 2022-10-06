@@ -531,12 +531,8 @@ namespace gsc
 		{
 			if (functions.find(id) == functions.end())
 			{
-				builtin_function function = nullptr;
-				{
-					function = func_table[id - 1];
-				}
+				const auto function = func_table[id - 1];
 				execute_custom_function(function);
-
 				return;
 			}
 
@@ -545,7 +541,13 @@ namespace gsc
 
 			try
 			{
-				function(get_arguments());
+				const auto result = function(get_arguments());
+				const auto type = result.get_raw().type;
+
+				if (type)
+				{
+					return_value(result);
+				}
 			}
 			catch (const std::exception& e)
 			{
