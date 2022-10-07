@@ -535,9 +535,7 @@ namespace gsc
 
 			if (error)
 			{
-				//game::Scr_ErrorInternal(); // this doesn't reach the setjmp for our error stub in VM_Execute
-				game::Com_Error(game::ERR_DROP, "an error occured while calling function \"%s\"\nerror: %s", 
-					xsk::gsc::h1::resolver::function_name(id).data(), gsc_error);
+				game::Scr_ErrorInternal(); // this doesn't reach the setjmp in VM_Execute
 			}
 		}
 
