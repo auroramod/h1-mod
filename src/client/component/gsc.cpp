@@ -538,25 +538,23 @@ namespace gsc
 			}
 
 			auto error = false;
-			const auto& function = functions[id];
 
 			try
 			{
 				console::debug("executing \"%s\" function\n", function_name(id).data());
-
+				const auto& function = functions[id];
 				const auto result = function(get_arguments());
 				const auto type = result.get_raw().type;
 
 				if (type)
 				{
 					console::debug("returning type of \"%s\" function\n", function_name(id).data());
-
 					return_value(result);
 				}
 			}
 			catch (const std::exception& e)
 			{
-				console::debug("\"%s\" errored: %s\n", function_name(id).data(), e.what());
+				console::debug("\"%s\" catched error: %s\n", function_name(id).data(), e.what());
 
 				error = true;
 				force_error_print = true;
@@ -565,7 +563,9 @@ namespace gsc
 
 			if (error)
 			{
-				game::Scr_ErrorInternal();
+				game::Scr_ErrorInternal(); // this doesn't reach the setjmp for our error stub in VM_Execute
+				//game::Com_Error(game::ERR_DROP, "an error occured while calling function \"%s\"\n%s", function_name(id).data(),
+				//	gsc_error);
 			}
 		}
 
@@ -576,7 +576,7 @@ namespace gsc
 			a.call_aligned(call_function);
 			a.popad64();
 
-			a.jmp(0x512AB4_b);
+			a.jmp(0x51278B_b);
 		}
 
 		utils::hook::detour scr_emit_function_hook;
@@ -584,6 +584,16 @@ namespace gsc
 		{
 			current_filename = filename;
 			scr_emit_function_hook.invoke<void>(filename, thread_name, code_pos);
+		}
+
+		utils::hook::detour error_internal_hook;
+		void error_internal_stub()
+		{
+			console::debug("value of evaluate is '%d'\n", *reinterpret_cast<bool*>(0xB110098_b));
+			console::debug("value of script loading is '%d'\n", *reinterpret_cast<bool*>(0xAC83812_b));
+			console::debug("value of function count is '%d'\n", *reinterpret_cast<int*>(0xB7AE3D0_b));
+
+			error_internal_hook.invoke<void>();
 		}
 	}
 
@@ -748,6 +758,9 @@ namespace gsc
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BDC3F_b, 0x504C6F_b), sizeof(meth_table));
 
 			utils::hook::jump(0x512778_b, utils::hook::assemble(vm_call_builtin_function_stub), true);
+
+			// REMOVE LATER
+			error_internal_hook.create(game::Scr_ErrorInternal, error_internal_stub);
 
 			function::add("print", [](const gsc::function_args& args)
 			{
