@@ -313,6 +313,29 @@ namespace fastfiles
 
 			utils::hook::invoke<void>(0x39CA90_b, a1);
 		}
+
+		void db_level_load_add_zone_stub(void* load, const char* name, const unsigned int alloc_flags,
+			const size_t size_est)
+		{
+			auto is_builtin_map = false;
+			for (auto map = &game::maps[0]; map->unk; ++map)
+			{
+				if (!std::strcmp(map->name, name))
+				{
+					is_builtin_map = true;
+					break;
+				}
+			}
+
+			if (is_builtin_map)
+			{
+				game::DB_LevelLoadAddZone(load, name, alloc_flags, size_est);
+			}
+			else
+			{
+				game::DB_LevelLoadAddZone(load, name, alloc_flags | game::DB_ZONE_CUSTOM, size_est);
+			}
+		}
 	}
 
 	bool exists(const std::string& zone)
@@ -402,6 +425,9 @@ namespace fastfiles
 			{
 				utils::hook::nop(0x398061_b, 15);
 				utils::hook::jump(0x398061_b, utils::hook::assemble(mp::skip_extra_zones_stub), true);
+
+				// dont load localized zone for custom maps
+				utils::hook::call(0x394A99_b, db_level_load_add_zone_stub);
 			}
 
 			// prevent mod.ff from loading lua files

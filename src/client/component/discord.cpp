@@ -57,8 +57,17 @@ namespace discord
 			{
 				static char details[0x80] = {0};
 				const auto map = game::Dvar_FindVar("mapname")->current.string;
-				const auto mapname = game::UI_SafeTranslateString(
-					utils::string::va("PRESENCE_%s%s", SELECT_VALUE("SP_", ""), map));
+				const auto key = utils::string::va("PRESENCE_%s%s", SELECT_VALUE("SP_", ""), map);
+				const char* mapname = nullptr;
+
+				if (game::DB_XAssetExists(game::ASSET_TYPE_LOCALIZE, key) && !game::DB_IsXAssetDefault(game::ASSET_TYPE_LOCALIZE, key))
+				{
+					mapname = game::UI_SafeTranslateString(key);
+				}
+				else
+				{
+					mapname = map;
+				}
 
 				if (game::environment::is_mp())
 				{

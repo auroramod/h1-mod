@@ -182,6 +182,8 @@ namespace game
 	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x0, 0x0};
 	WEAK symbol<XAssetHeader(XAssetType type, const char* name, 
 		int createDefault)> DB_FindXAssetHeader{0x1F1120, 0x3950C0};
+	WEAK symbol<void(void* levelLoad, const char* name, 
+		const unsigned int allocFlags, const unsigned __int64 sizeEst)> DB_LevelLoadAddZone{0x0, 0x396B50};
 
 	WEAK symbol<int(XAssetType type, const char* name)> DB_IsXAssetDefault{0x1F25A0, 0x3968C0};
 	WEAK symbol<int(XAssetType type, const char* name)> DB_XAssetExists{0x1F6290, 0x39B7B0};
@@ -277,7 +279,7 @@ namespace game
 	// TODO: move to dvars.cpp when done
 	WEAK symbol<dvar_t> fs_gameDirVal{0x0, 0x2EC86B8};
 
-	WEAK symbol<int> g_poolSize{0x0, 0x0};
+	WEAK symbol<int> g_poolSize{0x0, 0x10B3C80};
 	WEAK symbol<int> g_compressor{0x2574804, 0x3962804};
 
 	WEAK symbol<scrVarGlob_t> scr_VarGlob{0xBD80E00, 0xB138180};
@@ -300,6 +302,8 @@ namespace game
 	WEAK symbol<DWORD> threadIds{0xB896210, 0xAC80740};
 
 	WEAK symbol<int> level_time{0x56DBAA0, 0x7361F9C};
+
+	WEAK symbol<map_t> maps{0x7CE5A0, 0x926C80};
 
 	namespace mp
 	{
