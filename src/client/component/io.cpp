@@ -81,8 +81,6 @@ namespace io
 
 			gsc::function::add("createdirectory", [](const gsc::function_args& args)
 			{
-				printf("createdirectory called\n");
-
 				const auto path = convert_path(args[0].as<std::string>());
 				return utils::io::create_directory(path);
 			});
