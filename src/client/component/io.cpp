@@ -23,7 +23,7 @@ namespace io
 		{
 			if (path.generic_string().find("..") != std::string::npos)
 			{
-				throw std::runtime_error("io: directory traversal is not allowed");
+				throw std::runtime_error("directory traversal is not allowed");
 			}
 		}
 
@@ -38,7 +38,7 @@ namespace io
 				return (fs_game_path / path).generic_string();
 			}
 
-			throw std::runtime_error("io: fs_game is not properly defined");
+			throw std::runtime_error("fs_game is not properly defined");
 		}
 	}
 

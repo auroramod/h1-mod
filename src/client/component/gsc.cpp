@@ -32,6 +32,8 @@ namespace gsc
 
 	namespace
 	{
+		utils::hook::detour scr_emit_function_hook;
+
 		game::dvar_t* developer_script = nullptr;
 
 		auto compiler = ::gsc::compiler();
@@ -314,11 +316,16 @@ namespace gsc
 			}
 		}
 
-		void builtin_call_error(const std::string& error_str)
+		std::uint16_t get_function_id()
 		{
 			const auto pos = game::scr_function_stack->pos;
-			const auto function_id = *reinterpret_cast<std::uint16_t*>(
+			return *reinterpret_cast<std::uint16_t*>(
 				reinterpret_cast<size_t>(pos - 2));
+		}
+
+		void builtin_call_error(const std::string& error_str)
+		{
+			const auto function_id = get_function_id();
 
 			if (function_id > 0x1000)
 			{
@@ -437,46 +444,10 @@ namespace gsc
 			return res;
 		}
 
-		void execute_custom_function(builtin_function function)
+		void scr_emit_function_stub(unsigned int filename, unsigned int thread_name, char* code_pos)
 		{
-			auto error = false;
-
-			try
-			{
-				function();
-			}
-			catch (const std::exception& e)
-			{
-				error = true;
-				force_error_print = true;
-				gsc_error = e.what();
-			}
-
-			if (error)
-			{
-				game::Scr_ErrorInternal();
-			}
-		}
-
-		void execute_custom_method(scripting::script_function method, game::scr_entref_t ent_ref)
-		{
-			auto error = false;
-
-			try
-			{
-				method(ent_ref);
-			}
-			catch (const std::exception& e)
-			{
-				error = true;
-				force_error_print = true;
-				gsc_error = e.what();
-			}
-
-			if (error)
-			{
-				game::Scr_ErrorInternal();
-			}
+			current_filename = filename;
+			scr_emit_function_hook.invoke<void>(filename, thread_name, code_pos);
 		}
 
 		function_args get_arguments()
@@ -502,15 +473,8 @@ namespace gsc
 			scripting::push_value(value);
 		}
 
-		void call_function(int id)
+		void call_custom_function(const uint16_t id)
 		{
-			if (functions.find(id) == functions.end())
-			{
-				const auto function = func_table[id - 1];
-				execute_custom_function(function);
-				return;
-			}
-
 			auto error = false;
 
 			try
@@ -526,8 +490,6 @@ namespace gsc
 			}
 			catch (const std::exception& e)
 			{
-				console::debug("\"%s\" catched error: %s\n", xsk::gsc::h1::resolver::function_name(id).data(), e.what());
-
 				error = true;
 				force_error_print = true;
 				gsc_error = e.what();
@@ -535,25 +497,23 @@ namespace gsc
 
 			if (error)
 			{
-				game::Scr_ErrorInternal(); // this doesn't reach the setjmp in VM_Execute
+				game::Scr_ErrorInternal();
 			}
 		}
 
-		void vm_call_builtin_function_stub(utils::hook::assembler& a)
+		void vm_call_builtin_function_stub(builtin_function function)
 		{
-			a.pushad64();
-			// id is already in register
-			a.call_aligned(call_function);
-			a.popad64();
+			const auto function_id = get_function_id();
+			const auto is_custom_function = functions.find(function_id) != functions.end();
 
-			a.jmp(0x51278B_b);
-		}
-
-		utils::hook::detour scr_emit_function_hook;
-		void scr_emit_function_stub(unsigned int filename, unsigned int thread_name, char* code_pos)
-		{
-			current_filename = filename;
-			scr_emit_function_hook.invoke<void>(filename, thread_name, code_pos);
+			if (!is_custom_function)
+			{
+				function();
+			}
+			else
+			{
+				call_custom_function(function_id);
+			}
 		}
 	}
 
@@ -717,7 +677,8 @@ namespace gsc
 			utils::hook::inject(SELECT_VALUE(0x3BDC36_b, 0x504C66_b) + 3, &meth_table);
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BDC3F_b, 0x504C6F_b), sizeof(meth_table));
 
-			utils::hook::jump(0x512778_b, utils::hook::assemble(vm_call_builtin_function_stub), true);
+			utils::hook::nop(SELECT_VALUE(0x3CB723_b, 0x512783_b), 8);
+			utils::hook::call(SELECT_VALUE(0x3CB723_b, 0x512783_b), vm_call_builtin_function_stub);
 
 			function::add("print", [](const gsc::function_args& args)
 			{
