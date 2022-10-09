@@ -743,12 +743,6 @@ namespace gsc
 			utils::hook::nop(SELECT_VALUE(0x3CBA4E_b, 0x512AAE_b), 2);
 			utils::hook::call(SELECT_VALUE(0x3CBA46_b, 0x512AA6_b), vm_call_builtin_method_stub);
 
-			method::add("error_test", [](const game::scr_entref_t ent_ref, const function_args& args)
-			{
-				throw std::runtime_error("runtime error test for custom methods");
-				return scripting::script_value{};
-			});
-
 			function::add("print", [](const function_args& args)
 			{
 				std::string buffer{};
