@@ -53,6 +53,8 @@ namespace gsc
 		auto function_id_start = 0x30A;
 		auto method_id_start = 0x8586;
 
+		game::scr_entref_t saved_ent_ref;
+
 		std::string unknown_function_error{};
 		unsigned int current_filename{};
 
@@ -501,6 +503,34 @@ namespace gsc
 			}
 		}
 
+		void call_custom_method(const uint16_t id)
+		{
+			auto error = false;
+
+			try
+			{
+				const auto& method = methods[id];
+				const auto result = method(saved_ent_ref, get_arguments());
+				const auto type = result.get_raw().type;
+
+				if (type)
+				{
+					return_value(result);
+				}
+			}
+			catch (const std::exception& e)
+			{
+				error = true;
+				force_error_print = true;
+				gsc_error = e.what();
+			}
+
+			if (error)
+			{
+				game::Scr_ErrorInternal();
+			}
+		}
+
 		void vm_call_builtin_function_stub(builtin_function function)
 		{
 			const auto function_id = get_function_id();
@@ -513,6 +543,28 @@ namespace gsc
 			else
 			{
 				call_custom_function(function_id);
+			}
+		}
+
+		game::scr_entref_t get_entity_id_stub(unsigned int ent_id)
+		{
+			const auto ref = game::Scr_GetEntityIdRef(ent_id);
+			saved_ent_ref = ref;
+			return ref;
+		}
+
+		void vm_call_builtin_method_stub(builtin_method method)
+		{
+			const auto function_id = get_function_id();
+			const auto is_custom_function = methods.find(function_id) != methods.end();
+
+			if (!is_custom_function)
+			{
+				method(saved_ent_ref);
+			}
+			else
+			{
+				call_custom_method(function_id);
 			}
 		}
 	}
@@ -677,10 +729,27 @@ namespace gsc
 			utils::hook::inject(SELECT_VALUE(0x3BDC36_b, 0x504C66_b) + 3, &meth_table);
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BDC3F_b, 0x504C6F_b), sizeof(meth_table));
 
+			/*
+				trying to do a jump hook to push the ent reference (if it exists) and the builtin function/methods works, but
+				if longjmp is called because of a runtime error in our custom functions/methods, then the game just kinda dies
+				or gets incredibly slow but will eventually load. for functions, the workaround is easy but for methods, we still
+				have to remember the entity that called the method so the workaround is just hooking the Scr_GetEntityIdRef call
+			*/
 			utils::hook::nop(SELECT_VALUE(0x3CB723_b, 0x512783_b), 8);
 			utils::hook::call(SELECT_VALUE(0x3CB723_b, 0x512783_b), vm_call_builtin_function_stub);
 
-			function::add("print", [](const gsc::function_args& args)
+			utils::hook::call(SELECT_VALUE(0x3CBA12_b, 0x512A72_b), get_entity_id_stub);
+			utils::hook::nop(SELECT_VALUE(0x3CBA46_b, 0x512AA6_b), 6);
+			utils::hook::nop(SELECT_VALUE(0x3CBA4E_b, 0x512AAE_b), 2);
+			utils::hook::call(SELECT_VALUE(0x3CBA46_b, 0x512AA6_b), vm_call_builtin_method_stub);
+
+			method::add("error_test", [](const game::scr_entref_t ent_ref, const function_args& args)
+			{
+				throw std::runtime_error("runtime error test for custom methods");
+				return scripting::script_value{};
+			});
+
+			function::add("print", [](const function_args& args)
 			{
 				std::string buffer{};
 
@@ -695,7 +764,7 @@ namespace gsc
 				return scripting::script_value{};
 			});
 
-			function::add("assert", [](const gsc::function_args& args)
+			function::add("assert", [](const function_args& args)
 			{
 				const auto expr = args[0].as<int>();
 				if (!expr)
@@ -706,7 +775,7 @@ namespace gsc
 				return scripting::script_value{};
 			});
 
-			function::add("assertex", [](const gsc::function_args& args)
+			function::add("assertex", [](const function_args& args)
 			{
 				const auto expr = args[0].as<int>();
 				if (!expr)
@@ -718,7 +787,7 @@ namespace gsc
 				return scripting::script_value{};
 			});
 
-			function::add("replacefunc", [](const gsc::function_args& args)
+			function::add("replacefunc", [](const function_args& args)
 			{
 				const auto what = args[0].get_raw();
 				const auto with = args[1].get_raw();
@@ -738,13 +807,13 @@ namespace gsc
 				return scripting::script_value{};
 			});
 
-			function::add("toupper", [](const gsc::function_args& args)
+			function::add("toupper", [](const function_args& args)
 			{
 				const auto string = args[0].as<std::string>();
 				return utils::string::to_upper(string);
 			});
 
-			function::add("logprint", [](const gsc::function_args& args)
+			function::add("logprint", [](const function_args& args)
 			{
 				std::string buffer{};
 
