@@ -76,8 +76,11 @@ namespace party
 
 			perform_game_initialization();
 
-			// exit from virtuallobby
-			utils::hook::invoke<void>(0x13C9C0_b, 1);
+			if (game::VirtualLobby_Loaded())
+			{
+				// exit from virtuallobby
+				utils::hook::invoke<void>(0x13C9C0_b, 1);
+			}
 
 			// CL_ConnectFromParty
 			char session_info[0x100] = {};
@@ -203,15 +206,11 @@ namespace party
 					game::DVAR_SOURCE_INTERNAL);
 				command::execute("vid_restart");
 
-				// set fs_game to the mod the server is on, "restart" game, and then (hopefully) reconnect
+				// set fs_game to the mod the server is on, "restart" game, and then reconnect
 				scheduler::once([=]()
 				{
 					command::execute("lui_open_popup popup_acceptinginvite", false);
-					// connecting too soon after vid_restart causes a crash ingame (awesome game)
-					scheduler::once([=]()
-					{
-						connect(target);
-					}, scheduler::pipeline::main, 5s);
+					connect(target);
 				}, scheduler::pipeline::main);
 
 				return true;
