@@ -1536,6 +1536,13 @@ namespace game
 		unsigned int data;
 	};
 
+	struct map_t
+	{
+		const char* name;
+		int id;
+		int unk;
+	};
+
 	namespace mp
 	{
 		struct cachedSnapshot_t

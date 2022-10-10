@@ -20,6 +20,8 @@ namespace dedicated
 		utils::hook::detour gscr_set_dynamic_dvar_hook;
 		utils::hook::detour com_quit_f_hook;
 
+		const game::dvar_t* sv_lanOnly;
+
 		void init_dedicated_server()
 		{
 			static bool initialized = false;
@@ -32,8 +34,7 @@ namespace dedicated
 
 		void send_heartbeat()
 		{
-			auto* const dvar = game::Dvar_FindVar("sv_lanOnly");
-			if (dvar && dvar->current.enabled)
+			if (sv_lanOnly->current.enabled)
 			{
 				return;
 			}
@@ -194,7 +195,7 @@ namespace dedicated
 			dvars::register_bool("dedicated", true, game::DVAR_FLAG_READ, "Dedicated server");
 
 			// Add lanonly mode
-			dvars::register_bool("sv_lanOnly", false, game::DVAR_FLAG_NONE, "Don't send heartbeat");
+			sv_lanOnly = dvars::register_bool("sv_lanOnly", false, game::DVAR_FLAG_NONE, "Don't send heartbeat");
 
 			// Disable VirtualLobby
 			dvars::override::register_bool("virtualLobbyEnabled", false, game::DVAR_FLAG_READ);
