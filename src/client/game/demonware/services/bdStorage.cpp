@@ -13,9 +13,9 @@ namespace demonware
 	{
 		this->register_task(20, &bdStorage::list_publisher_files);
 		this->register_task(21, &bdStorage::get_publisher_file);
-		this->register_task(24, &bdStorage::set_user_file);
-		this->register_task(16, &bdStorage::get_user_file);
-		this->register_task(12, &bdStorage::unk12);
+		this->register_task(24, &bdStorage::upload_and_validate_files);
+		this->register_task(16, &bdStorage::get_user_files);
+		this->register_task(12, &bdStorage::get_user_file);
 
 		this->map_publisher_resource("motd-.*\\.txt", DW_MOTD);
 		// this->map_publisher_resource("ffotd-.*\\.ff", DW_FASTFILE);
@@ -133,7 +133,7 @@ namespace demonware
 		return "players2/user/" + name;
 	}
 
-	void bdStorage::set_user_file(service_server* server, byte_buffer* buffer) const
+	void bdStorage::upload_and_validate_files(service_server* server, byte_buffer* buffer) const
 	{
 		uint64_t owner;
 		uint32_t numfiles;
@@ -145,6 +145,10 @@ namespace demonware
 		buffer->read_uint32(&numfiles);
 
 		auto reply = server->create_reply(this->task_id());
+
+#ifdef DW_DEBUG
+		printf("[DW]: [bdStorage]: upload_and_validate_files has %d files\n", numfiles);
+#endif
 
 		for (uint32_t i = 0; i < numfiles; i++)
 		{
@@ -172,62 +176,88 @@ namespace demonware
 			info->data = data;
 
 #ifdef DW_DEBUG
-			printf("[DW]: [bdStorage]: set user file: %s\n", filename.data());
+			printf("[DW]: [bdStorage]: adding \"%s\" to reply\n", filename.data());
 #endif
 
 			reply->add(info);
 		}
 
+#ifdef DW_DEBUG
+		printf("[DW]: [bdStorage]: sending reply for upload_and_validate_files\n");
+#endif
+
 		reply->send();
 	}
 
-	void bdStorage::get_user_file(service_server* server, byte_buffer* buffer) const
+	void bdStorage::get_user_files(service_server* server, byte_buffer* buffer) const
 	{
-		uint32_t unk32_0;
-		uint32_t numfiles, count = 0;
-		uint64_t owner;
-		std::string game, platform;
+		std::string context;
+		buffer->read_string(&context);
 
-		buffer->read_string(&game);
-		buffer->read_uint32(&unk32_0);
-		buffer->read_uint64(&owner);
-		buffer->read_string(&platform);
-		buffer->read_uint64(&owner);
-		buffer->read_string(&platform);
-		buffer->read_uint32(&numfiles);
+#ifdef DW_DEBUG
+		printf("[DW]: [bdStorage]: context is '%s'\n", context.data());
+#endif
 
-		auto reply = server->create_reply(this->task_id());
+		uint32_t count;
+		buffer->read_uint32(&count);
 
-		for (uint32_t i = 0; i < numfiles; i++)
+		std::vector<std::pair<uint64_t, std::string>> user_ctxs;
+
+		for (auto i = 0u; i < count; i++)
 		{
-			std::string filename, data;
-			buffer->read_string(&filename);
-
-			const auto path = get_user_file_path(filename);
-			if (!utils::io::read_file(path, &data))
-			{
-#ifdef DW_DEBUG
-				printf("[DW]: [bdStorage]: get user file: missing file: %s, %s, %s\n", game.data(), filename.data(), platform.data());
-#endif
-				continue;
-			}
-
-			auto response = new bdFile;
-			response->owner_id = owner;
-			response->unk = 0;
-			response->platform = platform;
-			response->filename = filename;
-			response->data = data;
-
-			reply->add(response);
-			++count;
-
-#ifdef DW_DEBUG
-			printf("[DW]: [bdStorage]: get user file: %s, %s, %s\n", game.data(), filename.data(), platform.data());
-#endif
+			uint64_t user_id;
+			std::string acc_type;
+			buffer->read_uint64(&user_id);
+			buffer->read_string(&acc_type);
+			user_ctxs.emplace_back(user_id, acc_type);
 		}
 
-		if (count == numfiles)
+		buffer->read_uint32(&count);
+
+		std::vector<std::string> filenames;
+
+		for (auto i = 0u; i < count; i++)
+		{
+			std::string filename;
+			buffer->read_string(&filename);
+
+			filenames.push_back(std::move(filename));
+		}
+
+		auto reply = server->create_reply(this->task_id());
+		uint32_t available = 0;
+
+		for (size_t i = 0u; i < filenames.size(); i++)
+		{
+			auto& name = filenames.at(i);
+			std::string data;
+
+			if (utils::io::read_file(get_user_file_path(name), &data))
+			{
+				auto entry = new bdFileQueryResult;
+				entry->owner_id = user_ctxs.at(i).first;
+				entry->platform = user_ctxs.at(i).second;
+				entry->filename = filenames.at(i);
+				entry->errorcode = 0;
+				entry->data = data;
+
+				reply->add(entry);
+
+				++available;
+
+#ifdef DW_DEBUG
+				printf("[DW]: [bdStorage]: user file \"%s\" dispatched\n", name.data());
+#endif
+			}
+			else
+			{
+#ifdef DW_DEBUG
+				printf("[DW]: [bdStorage]: user file \"%s\" not found\n", name.data());
+#endif
+			}
+		}
+
+		if (available == count)
 		{
 			reply->send();
 		}
@@ -237,7 +267,7 @@ namespace demonware
 		}
 	}
 
-	void bdStorage::unk12(service_server* server, byte_buffer* buffer) const
+	void bdStorage::get_user_file(service_server* server, byte_buffer* buffer) const
 	{
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
