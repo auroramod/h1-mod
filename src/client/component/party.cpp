@@ -172,19 +172,27 @@ namespace party
 		void check_download_map(const utils::info_string& info, std::vector<download::file_t>& files)
 		{
 			const auto mapname = info.get("mapname");
-			const auto usermap_hash = info.get("usermaphash");
-			const auto usermap_load_hash = info.get("usermaploadhash");
-
-			const auto check_file = [&](const std::string& key, const std::string& filename)
+			if (fastfiles::is_stock_map(mapname))
 			{
-				if (mapname.contains('.') || mapname.contains("::"))
-				{
-					throw std::runtime_error(utils::string::va("Invalid server mapname value %s\n", mapname.data()));
-				}
+				return;
+			}
 
+			if (mapname.contains('.') || mapname.contains("::"))
+			{
+				throw std::runtime_error(utils::string::va("Invalid server mapname value %s\n", mapname.data()));
+			}
+
+			const auto check_file = [&](const std::string& key, const std::string& ext, bool optional)
+			{
+				const auto filename = utils::string::va("usermaps/%s/%s%s", mapname.data(), mapname.data(), ext.data());
 				const auto source_hash = info.get(key);
 				if (source_hash.empty())
 				{
+					if (!optional)
+					{
+						throw std::runtime_error(utils::string::va("Server %s is empty", key.data()));
+					}
+
 					return;
 				}
 
@@ -196,8 +204,8 @@ namespace party
 				}
 			};
 
-			check_file("usermaphash", utils::string::va("usermaps/%s/%s.ff", mapname.data(), mapname.data()));
-			check_file("usermaploadhash", utils::string::va("usermaps/%s/%s_load.ff", mapname.data(), mapname.data()));
+			check_file("usermaphash", ".ff", false);
+			check_file("usermaploadhash", "_load.ff", true);
 		}
 
 		bool check_download_mod(const utils::info_string& info, std::vector<download::file_t>& files)
@@ -295,7 +303,7 @@ namespace party
 
 			if (!fastfiles::is_stock_map(mapname))
 			{
-				const auto filename = utils::string::va("usermaps/%s/%s.ff", mapname, mapname);
+				const auto filename = utils::string::va("usermaps\\%s\\%s.ff", mapname, mapname);
 				const auto hash = get_file_hash(filename);
 				if (!hash.has_value() || hash.value() != usermap_hash)
 				{
@@ -338,7 +346,7 @@ namespace party
 		utils::hook::detour net_out_of_band_print_hook;
 		void net_out_of_band_print_stub(game::netsrc_t sock, game::netadr_s* addr, const char* data)
 		{
-			if (!strstr(data, "loadingnewmap"))
+			if (!std::strstr(data, "loadingnewmap"))
 			{
 				return net_out_of_band_print_hook.invoke<void>(sock, addr, data);
 			}

@@ -64,8 +64,13 @@ namespace download
 			if (now - last_update > 20ms)
 			{
 				last_update = std::chrono::high_resolution_clock::now();
-				const auto fraction = static_cast<float>(static_cast<double>(progress) / 
-					static_cast<double>(std::max(size_t(1), total)));
+				auto fraction = 0.f;
+				if (total > 0)
+				{
+					fraction = static_cast<float>(static_cast<double>(progress) /
+						static_cast<double>(total));
+				}
+
 				scheduler::once([=]()
 				{
 					ui_scripting::notify("mod_download_progress",
