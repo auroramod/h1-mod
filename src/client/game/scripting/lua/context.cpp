@@ -699,7 +699,7 @@ namespace scripting::lua
 							return;
 						}
 
-						const auto result = utils::http::get_data(url, fields_string, headers_map, [cur_task_id](size_t value)
+						const auto result = utils::http::get_data(url, fields_string, headers_map, [cur_task_id](size_t total, size_t value)
 						{
 							::scheduler::once([cur_task_id, value]()
 							{

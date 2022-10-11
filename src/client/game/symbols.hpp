@@ -120,6 +120,8 @@ namespace game
 
 	WEAK symbol<Material*(const char* material)> Material_RegisterHandle{0x56EA20, 0x692360};
 
+	WEAK symbol<char*(msg_t* msg, char* buffer, unsigned int max_chars)> MSG_ReadStringLine{0x0, 0x4EB9D0};
+
 	WEAK symbol<void(netadr_s*, sockaddr*)> NetadrToSockadr{0x416580, 0x59E580};
 	WEAK symbol<void(netsrc_t, netadr_s*, const char*)> NET_OutOfBandPrint{0x3AA550, 0x4F1EB0};
 	WEAK symbol<void(netsrc_t sock, int length, const void* data, const netadr_s* to)> NET_SendLoopPacket{0x0, 0x4F2070};

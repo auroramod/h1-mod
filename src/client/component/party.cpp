@@ -8,6 +8,7 @@
 #include "scheduler.hpp"
 #include "server_list.hpp"
 #include "download.hpp"
+#include "fastfiles.hpp"
 
 #include "game/game.hpp"
 
@@ -32,8 +33,6 @@ namespace party
 
 		std::string sv_motd;
 		int sv_maxclients;
-
-		std::optional<std::string> mod_hash{};
 
 		void perform_game_initialization()
 		{
@@ -80,6 +79,11 @@ namespace party
 			{
 				// exit from virtuallobby
 				utils::hook::invoke<void>(0x13C9C0_b, 1);
+			}
+
+			if (!fastfiles::is_stock_map(mapname))
+			{
+				fastfiles::set_usermap(mapname);
 			}
 
 			// CL_ConnectFromParty
@@ -153,7 +157,50 @@ namespace party
 			cl_disconnect_hook.invoke<void>(showMainMenu);
 		}
 
-		bool download_mod(const game::netadr_s& target, const utils::info_string& info)
+		std::optional<std::string> get_file_hash(const std::string& file)
+		{
+			if (!utils::io::file_exists(file))
+			{
+				return {};
+			}
+
+			const auto data = utils::io::read_file(file);
+			const auto sha = utils::cryptography::sha1::compute(data, true);
+			return {sha};
+		}
+
+		void check_download_map(const utils::info_string& info, std::vector<download::file_t>& files)
+		{
+			const auto mapname = info.get("mapname");
+			const auto usermap_hash = info.get("usermaphash");
+			const auto usermap_load_hash = info.get("usermaploadhash");
+
+			const auto check_file = [&](const std::string& key, const std::string& filename)
+			{
+				if (mapname.contains('.') || mapname.contains("::"))
+				{
+					throw std::runtime_error(utils::string::va("Invalid server mapname value %s\n", mapname.data()));
+				}
+
+				const auto source_hash = info.get(key);
+				if (source_hash.empty())
+				{
+					return;
+				}
+
+				const auto hash = get_file_hash(filename);
+				if (!hash.has_value() || hash.value() != source_hash)
+				{
+					files.emplace_back(filename, source_hash);
+					return;
+				}
+			};
+
+			check_file("usermaphash", utils::string::va("usermaps/%s/%s.ff", mapname.data(), mapname.data()));
+			check_file("usermaploadhash", utils::string::va("usermaps/%s/%s_load.ff", mapname.data(), mapname.data()));
+		}
+
+		bool check_download_mod(const utils::info_string& info, std::vector<download::file_t>& files)
 		{
 			const auto server_fs_game = utils::string::to_lower(info.get("fs_game"));
 			if (server_fs_game.empty())
@@ -161,17 +208,15 @@ namespace party
 				return false;
 			}
 
-			if (!server_fs_game.starts_with("mods/") || server_fs_game.contains('.'))
+			if (!server_fs_game.starts_with("mods/") || server_fs_game.contains('.') || server_fs_game.contains("::"))
 			{
-				menu_error(utils::string::va("Invalid server fs_game value %s\n", server_fs_game.data()));
-				return true;
+				throw std::runtime_error(utils::string::va("Invalid server fs_game value %s\n", server_fs_game.data()));
 			}
 
 			const auto source_hash = info.get("modHash");
 			if (source_hash.empty())
 			{
-				menu_error("Connection failed: Server mod hash is empty.");
-				return true;
+				throw std::runtime_error("Connection failed: Server mod hash is empty.");
 			}
 
 			static const auto fs_game = game::Dvar_FindVar("fs_game");
@@ -179,6 +224,7 @@ namespace party
 
 			const auto mod_path = server_fs_game + "/mod.ff";
 			auto has_to_download = !utils::io::file_exists(mod_path);
+
 			if (!has_to_download)
 			{
 				const auto data = utils::io::read_file(mod_path);
@@ -186,37 +232,137 @@ namespace party
 
 				has_to_download = source_hash != hash;
 			}
-			else
-			{
-				console::debug("Failed to find mod, downloading\n");
-			}
 
 			if (has_to_download)
 			{
-				console::debug("Starting download of mod '%s'\n", server_fs_game.data());
-
-				download::stop_download();
-				download::start_download(target, info);
-
-				return true;
+				files.emplace_back(mod_path, source_hash);
+				return false;
 			}
 			else if (client_fs_game != server_fs_game)
 			{
-				game::Dvar_SetFromStringByNameFromSource("fs_game", server_fs_game.data(), 
+				game::Dvar_SetFromStringByNameFromSource("fs_game", server_fs_game.data(),
 					game::DVAR_SOURCE_INTERNAL);
-				command::execute("vid_restart");
-
-				// set fs_game to the mod the server is on, "restart" game, and then reconnect
-				scheduler::once([=]()
-				{
-					command::execute("lui_open_popup popup_acceptinginvite", false);
-					connect(target);
-				}, scheduler::pipeline::main);
-
 				return true;
 			}
 
 			return false;
+		}
+
+		bool needs_vid_restart = false;
+
+		bool download_files(const game::netadr_s& target, const utils::info_string& info)
+		{
+			try
+			{
+				std::vector<download::file_t> files{};
+
+				const auto needs_restart = check_download_mod(info, files);
+				needs_vid_restart = needs_vid_restart || needs_restart;
+				check_download_map(info, files);
+
+				if (files.size() > 0)
+				{
+					download::stop_download();
+					download::start_download(target, info, files);
+					return true;
+				}
+				else if (needs_restart || needs_vid_restart)
+				{
+					command::execute("vid_restart");
+					needs_vid_restart = false;
+					scheduler::once([=]()
+					{
+						connect(target);
+					}, scheduler::pipeline::main);
+					return true;
+				}
+			}
+			catch (const std::exception& e)
+			{
+				menu_error(e.what());
+				return false;
+			}
+
+			return false;
+		}
+
+		void set_new_map(const char* mapname, const char* gametype, game::msg_t* msg)
+		{
+			char buffer[0x400] = {0};
+			// dont bother disconnecting just to update the usermap loadscreen
+			const std::string usermap_hash = game::MSG_ReadStringLine(msg,
+				buffer, static_cast<unsigned int>(sizeof(buffer)));
+
+			if (!fastfiles::is_stock_map(mapname))
+			{
+				const auto filename = utils::string::va("usermaps/%s/%s.ff", mapname, mapname);
+				const auto hash = get_file_hash(filename);
+				if (!hash.has_value() || hash.value() != usermap_hash)
+				{
+					command::execute("disconnect");
+					scheduler::once([]
+					{
+						connect(connect_state.host);
+					}, scheduler::pipeline::main);
+					return;
+				}
+			}
+
+			utils::hook::invoke<void>(0x13AAD0_b, mapname, gametype);
+		}
+
+		void loading_new_map_cl_stub(utils::hook::assembler& a)
+		{
+			a.pushad64();
+			a.mov(r8, rdi);
+			a.call_aligned(set_new_map);
+			a.popad64();
+
+			a.mov(al, 1);
+			a.jmp(0x12FCAA_b);
+		}
+
+		std::string current_sv_mapname;
+
+		void sv_spawn_server_stub(const char* map, void* a2, void* a3, void* a4, void* a5)
+		{
+			if (!fastfiles::is_stock_map(map))
+			{
+				fastfiles::set_usermap(map);
+			}
+
+			current_sv_mapname = map;
+			utils::hook::invoke<void>(0x54BBB0_b, map, a2, a3, a4, a5);
+		}
+
+		utils::hook::detour net_out_of_band_print_hook;
+		void net_out_of_band_print_stub(game::netsrc_t sock, game::netadr_s* addr, const char* data)
+		{
+			if (!strstr(data, "loadingnewmap"))
+			{
+				return net_out_of_band_print_hook.invoke<void>(sock, addr, data);
+			}
+
+			char buffer[0x400] = {0};
+			const auto is_usermap = fastfiles::usermap_exists(current_sv_mapname);
+			std::string hash{};
+			if (is_usermap)
+			{
+				const auto filename = utils::string::va("usermaps\\%s\\%s.ff",
+					current_sv_mapname.data(), current_sv_mapname.data());
+				const auto hash_value = get_file_hash(filename);
+				if (hash_value.has_value())
+				{
+					hash = hash_value.value();
+				}
+			}
+
+			auto* sv_gametype = game::Dvar_FindVar("g_gametype");
+
+			sprintf_s(buffer, sizeof(buffer),
+				"loadingnewmap\n%s\n%s\n%s", current_sv_mapname.data(), sv_gametype->current.string, hash.data());
+
+			net_out_of_band_print_hook.invoke<void>(sock, addr, buffer);
 		}
 	}
 
@@ -226,6 +372,11 @@ namespace party
 		if (game::Menu_IsMenuOpenAndVisible(0, "popup_acceptinginvite"))
 		{
 			command::execute("lui_close popup_acceptinginvite", false);
+		}
+
+		if (game::Menu_IsMenuOpenAndVisible(0, "generic_waiting_popup_"))
+		{
+			command::execute("lui_close generic_waiting_popup_", false);
 		}
 
 		utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE"); // Com_SetLocalizedErrorMessage
@@ -424,6 +575,11 @@ namespace party
 
 			// allow custom didyouknow based on sv_motd
 			utils::hook::call(0x1A8A3A_b, get_didyouknow_stub);
+
+			// add usermaphash to loadingnewmap command
+			utils::hook::jump(0x12FA68_b, utils::hook::assemble(loading_new_map_cl_stub), true);
+			utils::hook::call(0x54CC98_b, sv_spawn_server_stub);
+			net_out_of_band_print_hook.create(game::NET_OutOfBandPrint, net_out_of_band_print_stub);
 
 			command::add("map", [](const command::params& argument)
 			{
@@ -651,6 +807,8 @@ namespace party
 
 			network::on("getInfo", [](const game::netadr_s& target, const std::string_view& data)
 			{
+				const auto mapname = get_dvar_string("mapname");
+
 				utils::info_string info{};
 				info.set("challenge", std::string{data});
 				info.set("gamename", "H1");
@@ -658,7 +816,7 @@ namespace party
 				info.set("gametype", get_dvar_string("g_gametype"));
 				info.set("sv_motd", get_dvar_string("sv_motd"));
 				info.set("xuid", utils::string::va("%llX", steam::SteamUser()->GetSteamID().bits));
-				info.set("mapname", get_dvar_string("mapname"));
+				info.set("mapname", mapname);
 				info.set("isPrivate", get_dvar_string("g_password").empty() ? "0" : "1");
 				info.set("clients", utils::string::va("%i", get_client_count()));
 				info.set("bots", utils::string::va("%i", get_bot_count()));
@@ -669,22 +827,30 @@ namespace party
 				info.set("dedicated", utils::string::va("%i", get_dvar_bool("dedicated")));
 				info.set("sv_wwwBaseUrl", get_dvar_string("sv_wwwBaseUrl"));
 
+				if (!fastfiles::is_stock_map(mapname))
+				{
+					const auto hash = get_file_hash(utils::string::va("usermaps/%s/%s.ff", mapname.data(), mapname.data()));
+					if (hash.has_value())
+					{
+						info.set("usermaphash", hash.value());
+					}
+
+					const auto load_file_hash = get_file_hash(utils::string::va("usermaps/%s/%s_load.ff", mapname.data(), mapname.data()));
+					if (load_file_hash.has_value())
+					{
+						info.set("usermaploadhash", load_file_hash.value());
+					}
+				}
+
 				const auto fs_game = get_dvar_string("fs_game");
 				info.set("fs_game", fs_game);
 
-				if (mod_hash.has_value())
+				if (!fs_game.empty())
 				{
-					info.set("modHash", mod_hash.value());
-				}
-				else
-				{
-					const auto mod_path = fs_game + "/mod.ff";
-					if (utils::io::file_exists(mod_path))
+					const auto hash = get_file_hash(utils::string::va("%s/mod.ff", fs_game.data()));
+					if (hash.has_value())
 					{
-						const auto mod_data = utils::io::read_file(mod_path);
-						const auto sha = utils::cryptography::sha1::compute(mod_data, true);
-						mod_hash = sha; // todo: clear this somewhere
-						info.set("modHash", sha);
+						info.set("modHash", hash.value());
 					}
 				}
 
@@ -742,7 +908,7 @@ namespace party
 					return;
 				}
 
-				if (download_mod(target, info))
+				if (download_files(target, info))
 				{
 					return;
 				}

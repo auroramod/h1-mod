@@ -11,6 +11,7 @@
 #include <utils/concurrency.hpp>
 #include <utils/http.hpp>
 #include <utils/io.hpp>
+#include <utils/cryptography.hpp>
 
 namespace download
 {
@@ -56,9 +57,25 @@ namespace download
 			});
 		}
 
-		int progress_callback(size_t progress)
+		auto last_update = std::chrono::high_resolution_clock::now();
+		int progress_callback(size_t total, size_t progress)
 		{
-			console::debug("Download progress: %lli\n", progress);
+			const auto now = std::chrono::high_resolution_clock::now();
+			if (now - last_update > 20ms)
+			{
+				last_update = std::chrono::high_resolution_clock::now();
+				const auto fraction = static_cast<float>(static_cast<double>(progress) / 
+					static_cast<double>(std::max(size_t(1), total)));
+				scheduler::once([=]()
+				{
+					ui_scripting::notify("mod_download_progress",
+					{
+						{"fraction", fraction},
+					});
+				}, scheduler::pipeline::lui);
+			}
+
+			console::debug("Download progress: %lli/%lli\n", progress, total);
 			if (download_aborted())
 			{
 				return -1;
@@ -76,7 +93,7 @@ namespace download
 		}
 	}
 
-	void start_download(const game::netadr_s& target, const utils::info_string& info)
+	void start_download(const game::netadr_s& target, const utils::info_string& info, const std::vector<file_t>& files)
 	{
 		if (download_active())
 		{
@@ -84,7 +101,7 @@ namespace download
 			{
 				if (!download_active())
 				{
-					start_download(target, info);
+					start_download(target, info, files);
 					return scheduler::cond_end;
 				}
 
@@ -106,27 +123,17 @@ namespace download
 			return;
 		}
 
-		const auto mod = info.get("fs_game") + "/mod.ff";
-		const auto url = base + "/" + mod;
-
-		console::debug("Downloading %s from %s: %s\n", mod.data(), base.data(), url.data());
-
 		scheduler::once([=]()
 		{
 			const ui_scripting::table mod_data_table{};
-			mod_data_table.set("name", mod.data());
 
-			ui_scripting::notify("mod_download_start",
-			{
-				{"request", mod_data_table}
-			});
+			ui_scripting::notify("mod_download_start", {});
 		}, scheduler::pipeline::lui);
 
 		scheduler::once([=]()
 		{
 			{
 				const auto _0 = gsl::finally(&mark_unactive);
-
 				mark_active();
 
 				if (download_aborted())
@@ -134,26 +141,50 @@ namespace download
 					return;
 				}
 
-				const auto data = utils::http::get_data(url, {}, {}, &progress_callback);
-				if (!data.has_value())
+				for (const auto& file : files)
 				{
-					menu_error("Download failed: An unknown error occurred, please try again.");
-					return;
-				}
+					scheduler::once([=]()
+					{
+						const ui_scripting::table data_table{};
+						data_table.set("name", file.name.data());
 
-				if (download_aborted())
-				{
-					return;
-				}
+						ui_scripting::notify("mod_download_set_file",
+						{
+							{"request", data_table}
+						});
+					}, scheduler::pipeline::lui);
 
-				const auto& result = data.value();
-				if (result.code != CURLE_OK)
-				{
-					menu_error(utils::string::va("Download failed: %s (%i)\n", result.code, curl_easy_strerror(result.code)));
-					return;
-				}
+					const auto url = utils::string::va("%s/%s", base.data(), file.name.data());
+					console::debug("Downloading %s from %s: %s\n", file.name.data(), base.data(), url);
+					const auto data = utils::http::get_data(url, {}, {}, &progress_callback);
+					if (!data.has_value())
+					{
+						menu_error("Download failed: An unknown error occurred, please try again.");
+						return;
+					}
 
-				utils::io::write_file(mod, result.buffer, false);
+					if (download_aborted())
+					{
+						return;
+					}
+
+					const auto& result = data.value();
+					if (result.code != CURLE_OK)
+					{
+						menu_error(utils::string::va("Download failed: %s (%i)\n", result.code, curl_easy_strerror(result.code)));
+						return;
+					}
+
+					const auto hash = utils::cryptography::sha1::compute(result.buffer, true);
+					if (hash != file.hash)
+					{
+						menu_error(utils::string::va("Download failed: file hash doesn't match the server's (%s: %s != %s)\n", 
+							file.name.data(), hash.data(), file.hash.data()));
+						return;
+					}
+
+					utils::io::write_file(file.name, result.buffer, false);
+				}
 			}
 
 			scheduler::once([]()
