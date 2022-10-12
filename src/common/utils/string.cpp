@@ -180,4 +180,9 @@ namespace utils::string
 		if (!exact && text.find(input) != std::string::npos) return true;
 		return false;
 	}
+
+	bool is_numeric(const std::string& text)
+	{
+		return std::to_string(atoi(text.data())) == text;
+	}
 }

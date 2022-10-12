@@ -151,10 +151,14 @@ namespace party
 
 		utils::hook::detour cl_disconnect_hook;
 
-		void cl_disconnect_stub(int showMainMenu) // possibly bool
+		void cl_disconnect_stub(int show_main_menu) // possibly bool
 		{
 			party::clear_sv_motd();
-			cl_disconnect_hook.invoke<void>(showMainMenu);
+			if (!game::VirtualLobby_Loaded())
+			{
+				fastfiles::clear_usermap();
+			}
+			cl_disconnect_hook.invoke<void>(show_main_menu);
 		}
 
 		std::optional<std::string> get_file_hash(const std::string& file)
@@ -288,7 +292,7 @@ namespace party
 			catch (const std::exception& e)
 			{
 				menu_error(e.what());
-				return false;
+				return true;
 			}
 
 			return false;
@@ -301,11 +305,11 @@ namespace party
 			const std::string usermap_hash = game::MSG_ReadStringLine(msg,
 				buffer, static_cast<unsigned int>(sizeof(buffer)));
 
-			if (!fastfiles::is_stock_map(mapname))
+			if (!game::SV_Loaded() && !fastfiles::is_stock_map(mapname))
 			{
 				const auto filename = utils::string::va("usermaps\\%s\\%s.ff", mapname, mapname);
 				const auto hash = get_file_hash(filename);
-				if (!hash.has_value() || hash.value() != usermap_hash)
+				if (!hash.has_value() || (usermap_hash.empty() || hash.value() != usermap_hash))
 				{
 					command::execute("disconnect");
 					scheduler::once([]
@@ -837,13 +841,15 @@ namespace party
 
 				if (!fastfiles::is_stock_map(mapname))
 				{
-					const auto hash = get_file_hash(utils::string::va("usermaps/%s/%s.ff", mapname.data(), mapname.data()));
+					const auto hash = get_file_hash(
+						utils::string::va("usermaps\\%s\\%s.ff", mapname.data(), mapname.data()));
 					if (hash.has_value())
 					{
 						info.set("usermaphash", hash.value());
 					}
 
-					const auto load_file_hash = get_file_hash(utils::string::va("usermaps/%s/%s_load.ff", mapname.data(), mapname.data()));
+					const auto load_file_hash = get_file_hash(
+						utils::string::va("usermaps\\%s\\%s_load.ff", mapname.data(), mapname.data()));
 					if (load_file_hash.has_value())
 					{
 						info.set("usermaploadhash", load_file_hash.value());

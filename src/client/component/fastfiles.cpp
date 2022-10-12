@@ -232,7 +232,7 @@ namespace fastfiles
 		}
 
 		utils::hook::detour sys_createfile_hook;
-		HANDLE sys_create_file_stub(game::Sys_Folder folder, const char* base_filename)
+		HANDLE sys_create_file(game::Sys_Folder folder, const char* base_filename, bool ignore_usermap)
 		{
 			const auto* fs_basepath = game::Dvar_FindVar("fs_basepath");
 			const auto* fs_game = game::Dvar_FindVar("fs_game");
@@ -264,10 +264,13 @@ namespace fastfiles
 				return handle;
 			}
 
-			const auto usermap = find_usermap(name);
-			if (usermap != INVALID_HANDLE_VALUE)
+			if (!ignore_usermap)
 			{
-				return usermap;
+				const auto usermap = find_usermap(name);
+				if (usermap != INVALID_HANDLE_VALUE)
+				{
+					return usermap;
+				}
 			}
 
 			if (name.ends_with(".ff"))
@@ -276,6 +279,11 @@ namespace fastfiles
 			}
 
 			return handle;
+		}
+
+		HANDLE sys_create_file_stub(game::Sys_Folder folder, const char* base_filename)
+		{
+			return sys_create_file(folder, base_filename, false);
 		}
 
 		utils::hook::detour db_file_exists_hook;
@@ -396,11 +404,11 @@ namespace fastfiles
 		}
 	}
 
-	bool exists(const std::string& zone)
+	bool exists(const std::string& zone, bool ignore_usermap)
 	{
 		const auto is_localized = game::DB_IsLocalized(zone.data());
-		const auto handle = game::Sys_CreateFile((is_localized ? game::SF_ZONE_LOC : game::SF_ZONE), 
-			utils::string::va("%s.ff", zone.data()));
+		const auto handle = sys_create_file((is_localized ? game::SF_ZONE_LOC : game::SF_ZONE),
+			utils::string::va("%s.ff", zone.data()), ignore_usermap);
 
 		if (handle != INVALID_HANDLE_VALUE)
 		{
@@ -474,15 +482,7 @@ namespace fastfiles
 
 	bool is_stock_map(const std::string& name)
 	{
-		for (auto map = &game::maps[0]; map->unk; ++map)
-		{
-			if (map->name == name)
-			{
-				return true;
-			}
-		}
-
-		return false;
+		return fastfiles::exists(name, true);
 	}
 
 	class component final : public component_interface

@@ -4,7 +4,7 @@
 
 namespace fastfiles
 {
-	bool exists(const std::string& zone);
+	bool exists(const std::string& zone, bool ignore_usermap = false);
 
 	std::string get_current_fastfile();
 
