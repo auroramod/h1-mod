@@ -13,12 +13,15 @@
 
 #include <utils/hook.hpp>
 #include <utils/http.hpp>
+#include <utils/flags.hpp>
 #include <utils/io.hpp>
 
 namespace io
 {
 	namespace
 	{
+		bool use_root_folder = false;
+
 		void check_path(const std::filesystem::path& path)
 		{
 			if (path.generic_string().find("..") != std::string::npos)
@@ -30,8 +33,15 @@ namespace io
 		std::string convert_path(const std::filesystem::path& path)
 		{
 			check_path(path);
-			static const auto fs_game = game::Dvar_FindVar("fs_game");
 
+			if (use_root_folder)
+			{
+				static const auto fs_base_game = game::Dvar_FindVar("fs_basepath");
+				const std::filesystem::path fs_base_game_path(fs_base_game->current.string);
+				return (fs_base_game_path / path).generic_string();
+			}
+
+			static const auto fs_game = game::Dvar_FindVar("fs_game");
 			if (fs_game->current.string && fs_game->current.string != ""s)
 			{
 				const std::filesystem::path fs_game_path(fs_game->current.string);
@@ -47,6 +57,12 @@ namespace io
 	public:
 		void post_unpack() override
 		{
+			use_root_folder = utils::flags::has_flag("io_game_dir");
+			if (use_root_folder)
+			{
+				console::warn("WARNING: GSC has access to your game folder. To prevent possible malicious code, remove this flag.");
+			}
+
 			gsc::function::add("fileexists", [](const gsc::function_args& args)
 			{
 				const auto path = convert_path(args[0].as<std::string>());
