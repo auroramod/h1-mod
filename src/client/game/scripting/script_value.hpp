@@ -9,12 +9,14 @@ namespace scripting
 {
 	class entity;
 	class array;
+	class value_wrap;
 
 	class script_value
 	{
 	public:
 		script_value() = default;
 		script_value(const game::VariableValue& value);
+		script_value(const value_wrap& value);
 
 		script_value(int value);
 		script_value(unsigned int value);
@@ -53,6 +55,20 @@ namespace scripting
 			return get<T>();
 		}
 
+		template <typename T, typename I = int>
+		T* as_ptr()
+		{
+
+			const auto value = this->as<I>();
+
+			if (!value)
+			{
+				throw std::runtime_error("is null");
+			}
+
+			return reinterpret_cast<T*>(value);
+		}
+
 		const game::VariableValue& get_raw() const;
 
 		variable_value value_{};
@@ -61,5 +77,51 @@ namespace scripting
 		template <typename T>
 		T get() const;
 
+	};
+
+	class value_wrap
+	{
+	public:
+		value_wrap(const scripting::script_value& value, int argument_index);
+
+		template <typename T>
+		T as() const
+		{
+			try
+			{
+				return this->value_.as<T>();
+			}
+			catch (const std::exception& e)
+			{
+				throw std::runtime_error(utils::string::va("parameter %d %s", this->argument_index_, e.what()));
+			}
+		}
+
+		template <typename T, typename I = int>
+		T* as_ptr()
+		{
+			try
+			{
+				return this->value_.as_ptr<T>();
+			}
+			catch (const std::exception& e)
+			{
+				throw std::runtime_error(utils::string::va("parameter %d %s", this->argument_index_, e.what()));
+			}
+		}
+
+		template <typename T>
+		T is() const
+		{
+			return this->value_.is<T>();
+		}
+
+		const game::VariableValue& get_raw() const
+		{
+			return this->value_.get_raw();
+		}
+
+		int argument_index_{};
+		scripting::script_value value_;
 	};
 }

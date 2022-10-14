@@ -609,10 +609,12 @@ namespace command
 
 			add_commands_generic();
 
-			gsc::function::add("executecommand", []()
+			gsc::function::add("executecommand", [](const gsc::function_args& args)
 			{
-				const auto cmd = gsc::get_argument(0).as<std::string>();
+				const auto cmd = args[0].as<std::string>();
 				command::execute(cmd, true);
+
+				return scripting::script_value{};
 			});
 		}
 
