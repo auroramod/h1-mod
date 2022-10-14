@@ -26,10 +26,33 @@ namespace mapents
 			const auto lines = utils::string::split(source, '\n');
 			auto in_map_ent = false;
 			auto empty = false;
+			auto in_comment = false;
 
 			for (auto i = 0; i < lines.size(); i++)
 			{
-				const auto& line = lines[i];
+				auto line = lines[i];
+				if (line.ends_with('\r'))
+				{
+					line.pop_back();
+				}
+
+				if (line.starts_with("/*"))
+				{
+					in_comment = true;
+					continue;
+				}
+
+				if (line.ends_with("*/"))
+				{
+					in_comment = false;
+					continue;
+				}
+
+				if (in_comment)
+				{
+					continue;
+				}
+
 				if (line.starts_with("//"))
 				{
 					continue;
