@@ -225,9 +225,9 @@ namespace dedicated
 			}), true);
 
 			// return 0 so the game doesn't override the cfg
-			gsc::function::add("isusingmatchrulesdata", []()
+			gsc::function::add("isusingmatchrulesdata", [](const gsc::function_args& args)
 			{
-				game::Scr_AddInt(0);
+				return 0;
 			});
 
 			// delay console commands until the initialization is done // COULDN'T FOUND
