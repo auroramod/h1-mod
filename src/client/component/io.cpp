@@ -13,12 +13,15 @@
 
 #include <utils/hook.hpp>
 #include <utils/http.hpp>
+#include <utils/flags.hpp>
 #include <utils/io.hpp>
 
 namespace io
 {
 	namespace
 	{
+		bool use_root_folder = false;
+
 		void check_path(const std::filesystem::path& path)
 		{
 			if (path.generic_string().find("..") != std::string::npos)
@@ -30,8 +33,15 @@ namespace io
 		std::string convert_path(const std::filesystem::path& path)
 		{
 			check_path(path);
-			static const auto fs_game = game::Dvar_FindVar("fs_game");
 
+			if (use_root_folder)
+			{
+				static const auto fs_base_game = game::Dvar_FindVar("fs_basepath");
+				const std::filesystem::path fs_base_game_path(fs_base_game->current.string);
+				return (fs_base_game_path / path).generic_string();
+			}
+
+			static const auto fs_game = game::Dvar_FindVar("fs_game");
 			if (fs_game->current.string && fs_game->current.string != ""s)
 			{
 				const std::filesystem::path fs_game_path(fs_game->current.string);
@@ -40,6 +50,18 @@ namespace io
 
 			throw std::runtime_error("fs_game is not properly defined");
 		}
+
+		void replace(std::string& str, const std::string& from, const std::string& to)
+		{
+			const auto start_pos = str.find(from);
+
+			if (start_pos == std::string::npos)
+			{
+				return;
+			}
+
+			str.replace(start_pos, from.length(), to);
+		}
 	}
 
 	class component final : public component_interface
@@ -47,6 +69,12 @@ namespace io
 	public:
 		void post_unpack() override
 		{
+			use_root_folder = utils::flags::has_flag("io_game_dir");
+			if (use_root_folder)
+			{
+				console::warn("GSC has access to your game folder. To prevent possible malicious code, remove the '-io_game_dir' launch flag.");
+			}
+
 			gsc::function::add("fileexists", [](const gsc::function_args& args)
 			{
 				const auto path = convert_path(args[0].as<std::string>());
@@ -124,6 +152,19 @@ namespace io
 			{
 				const auto path = convert_path(args[0].as<std::string>());
 				return utils::io::remove_file(path);
+			});
+
+			gsc::function::add("va", [](const gsc::function_args& args)
+			{
+				auto fmt = args[0].as<std::string>();
+
+				for (auto i = 1u; i < args.size(); i++)
+				{
+					const auto arg = args[i].to_string();
+					replace(fmt, "%s", arg);
+				}
+
+				return fmt;
 			});
 		}
 	};

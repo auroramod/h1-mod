@@ -9,7 +9,6 @@
 #include "scripting.hpp"
 
 #include "game/dvars.hpp"
-#include "game/scripting/functions.hpp"
 
 #include <xsk/gsc/types.hpp>
 #include <xsk/gsc/interfaces/compiler.hpp>
@@ -792,7 +791,7 @@ namespace gsc
 
 				for (auto i = 0u; i < args.size(); ++i)
 				{
-					const auto str = args[i].as<std::string>();
+					const auto str = args[i].to_string();
 					buffer.append(str);
 					buffer.append("\t");
 				}
@@ -864,6 +863,19 @@ namespace gsc
 
 				return scripting::script_value{};
 			});
+
+			function::add("getfunction", [](const function_args& args) -> scripting::script_value
+            {
+                const auto filename = args[0].as<std::string>();
+                const auto function = args[1].as<std::string>();
+
+                if (scripting::script_function_table[filename].find(function) != scripting::script_function_table[filename].end())
+                {
+					return scripting::function{scripting::script_function_table[filename][function]};
+                }
+
+                return {};
+            });
 
 			scripting::on_shutdown([](int free_scripts)
 			{

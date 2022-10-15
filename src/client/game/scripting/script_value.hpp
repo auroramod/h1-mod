@@ -9,6 +9,7 @@ namespace scripting
 {
 	class entity;
 	class array;
+	class function;
 	class value_wrap;
 
 	class script_value
@@ -30,6 +31,8 @@ namespace scripting
 
 		script_value(const entity& value);
 		script_value(const array& value);
+
+		script_value(const function& value);
 
 		script_value(const vector& value);
 
@@ -58,7 +61,6 @@ namespace scripting
 		template <typename T, typename I = int>
 		T* as_ptr()
 		{
-
 			const auto value = this->as<I>();
 
 			if (!value)
@@ -76,13 +78,22 @@ namespace scripting
 	private:
 		template <typename T>
 		T get() const;
-
 	};
 
 	class value_wrap
 	{
 	public:
 		value_wrap(const scripting::script_value& value, int argument_index);
+
+		std::string to_string() const
+		{
+			return this->value_.to_string();
+		}
+
+		std::string type_name() const
+		{
+			return this->value_.type_name();
+		}
 
 		template <typename T>
 		T as() const

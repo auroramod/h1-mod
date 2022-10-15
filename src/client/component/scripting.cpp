@@ -1,27 +1,19 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "game/game.hpp"
-#include "game/dvars.hpp"
-
-#include "game/scripting/entity.hpp"
-#include "game/scripting/functions.hpp"
-#include "game/scripting/event.hpp"
-#include "game/scripting/lua/engine.hpp"
-#include "game/scripting/execution.hpp"
-
-#include "console.hpp"
 #include "gsc.hpp"
 #include "scheduler.hpp"
 #include "scripting.hpp"
 
-#include <xsk/gsc/types.hpp>
-#include <xsk/resolver.hpp>
-#include <xsk/utils/compression.hpp>
+#include "game/game.hpp"
+#include "game/dvars.hpp"
+
+#include "game/scripting/event.hpp"
+#include "game/scripting/execution.hpp"
+#include "game/scripting/functions.hpp"
+#include "game/scripting/lua/engine.hpp"
 
 #include <utils/hook.hpp>
-#include <utils/io.hpp>
-#include <utils/string.hpp>
 
 namespace scripting
 {
@@ -96,14 +88,12 @@ namespace scripting
 		{
 			if (!game::VirtualLobby_Loaded())
 			{
-				// init game in game log
 				game::G_LogPrintf("------------------------------------------------------------\n");
 				game::G_LogPrintf("InitGame\n");
 
-				// start lua engine
+				// start lua engine before we execute the start of gsc
 				lua::engine::start();
 
-				// execute main handles
 				gsc::load_main_handles();
 			}
 
@@ -114,7 +104,6 @@ namespace scripting
 		{
 			if (!game::VirtualLobby_Loaded())
 			{
-				// execute init handles
 				gsc::load_init_handles();
 			}
 
@@ -141,7 +130,7 @@ namespace scripting
 			game::G_LogPrintf("ShutdownGame:\n");
 			game::G_LogPrintf("------------------------------------------------------------\n");
 
-			return g_shutdown_game_hook.invoke<void>(free_scripts);
+			g_shutdown_game_hook.invoke<void>(free_scripts);
 		}
 
 		void scr_add_class_field_stub(unsigned int classnum, game::scr_string_t name, unsigned int canonical_string, unsigned int offset)

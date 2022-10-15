@@ -2,6 +2,7 @@
 #include "script_value.hpp"
 #include "entity.hpp"
 #include "array.hpp"
+#include "function.hpp"
 #include "functions.hpp"
 
 namespace scripting
@@ -19,7 +20,6 @@ namespace scripting
 		: value_(value.get_raw())
 	{
 	}
-
 
 	script_value::script_value(const int value)
 	{
@@ -91,6 +91,15 @@ namespace scripting
 		game::VariableValue variable{};
 		variable.type = game::SCRIPT_OBJECT;
 		variable.u.pointerValue = value.get_entity_id();
+
+		this->value_ = variable;
+	}
+
+	script_value::script_value(const function& value)
+	{
+		game::VariableValue variable{};
+		variable.type = game::SCRIPT_FUNCTION;
+		variable.u.codePosValue = value.get_pos();
 
 		this->value_ = variable;
 	}
@@ -252,9 +261,15 @@ namespace scripting
 	 **************************************************************/
 
 	template <>
-	bool script_value::is<std::function<void()>>() const
+	bool script_value::is<function>() const
 	{
 		return this->get_raw().type == game::SCRIPT_FUNCTION;
+	}
+
+	template <>
+	function script_value::get() const
+	{
+		return function(this->get_raw().u.codePosValue);
 	}
 
 	/***************************************************************
@@ -331,7 +346,7 @@ namespace scripting
 			);
 		}
 
-		if (this->is<std::function<void()>>())
+		if (this->is<function>())
 		{
 			return utils::string::va("[[ function ]]");
 		}
