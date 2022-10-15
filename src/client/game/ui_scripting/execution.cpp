@@ -70,7 +70,7 @@ namespace ui_scripting
 			values.push_back(v);
 		}
 
-		if (values.size() == 0)
+		if (values.empty())
 		{
 			values.push_back({});
 		}
@@ -90,7 +90,7 @@ namespace ui_scripting
 			values.push_back(v);
 		}
 
-		if (values.size() == 0)
+		if (values.empty())
 		{
 			values.push_back({});
 		}

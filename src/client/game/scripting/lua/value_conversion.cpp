@@ -275,7 +275,7 @@ namespace scripting::lua
 			return entity_to_array(state, value.get_raw().u.uintValue);
 		}
 
-		if (value.is<std::function<void()>>())
+		if (value.is<function>())
 		{
 			return convert_function(state, value.get_raw().u.codePosValue);
 		}
