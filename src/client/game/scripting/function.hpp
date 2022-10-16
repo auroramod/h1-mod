@@ -11,6 +11,7 @@ namespace scripting
 
 		script_value get_raw() const;
 		const char* get_pos() const;
+		std::string get_name() const;
 
 		script_value call(const entity& self, std::vector<script_value> arguments) const;
 

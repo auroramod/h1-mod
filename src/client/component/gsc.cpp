@@ -865,17 +865,17 @@ namespace gsc
 			});
 
 			function::add("getfunction", [](const function_args& args) -> scripting::script_value
-            {
-                const auto filename = args[0].as<std::string>();
-                const auto function = args[1].as<std::string>();
+			{
+				const auto filename = args[0].as<std::string>();
+				const auto function = args[1].as<std::string>();
 
-                if (scripting::script_function_table[filename].find(function) != scripting::script_function_table[filename].end())
-                {
+				if (scripting::script_function_table[filename].find(function) != scripting::script_function_table[filename].end())
+				{
 					return scripting::function{scripting::script_function_table[filename][function]};
-                }
+				}
 
-                return {};
-            });
+				return {};
+			});
 
 			scripting::on_shutdown([](int free_scripts)
 			{

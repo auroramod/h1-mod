@@ -315,7 +315,7 @@ namespace logfile
 			for (const auto& callback : say_callbacks)
 			{
 				const auto entity_id = game::Scr_GetEntityId(client_num, 0);
-				const auto result = callback(entity_id, { message, cmd == "say_team"s });
+				const auto result = callback(entity_id, {message, cmd == "say_team"s});
 
 				if (result.is<int>() && !hidden)
 				{
@@ -397,11 +397,6 @@ namespace logfile
 			}, scheduler::pipeline::main);
 			g_log_printf_hook.create(game::G_LogPrintf, g_log_printf_stub);
 
-			scripting::on_shutdown([](int)
-			{
-				say_callbacks.clear();
-			});
-
 			gsc::function::add("onplayersay", [](const gsc::function_args& args) -> scripting::script_value
 			{
 				const auto function = args[0].as<scripting::function>();
@@ -409,6 +404,10 @@ namespace logfile
 				return {};
 			});
 
+			scripting::on_shutdown([](int)
+			{
+				say_callbacks.clear();
+			});
 		}
 	};
 }

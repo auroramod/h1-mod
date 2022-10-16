@@ -1,7 +1,10 @@
 #pragma once
 #include "game/game.hpp"
+
 #include "entity.hpp"
 #include "array.hpp"
+#include "function.hpp"
+
 #include "script_value.hpp"
 
 namespace scripting

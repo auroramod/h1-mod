@@ -3,7 +3,6 @@
 #include "entity.hpp"
 #include "array.hpp"
 #include "function.hpp"
-#include "functions.hpp"
 
 namespace scripting
 {
@@ -348,7 +347,8 @@ namespace scripting
 
 		if (this->is<function>())
 		{
-			return utils::string::va("[[ function ]]");
+			const auto func = this->as<function>();
+			return utils::string::va("[[ %s ]]", func.get_name().data());
 		}
 
 		return this->type_name();

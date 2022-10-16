@@ -18,8 +18,11 @@
 namespace scripting
 {
 	std::unordered_map<int, std::unordered_map<std::string, int>> fields_table;
+
 	std::unordered_map<std::string, std::unordered_map<std::string, const char*>> script_function_table;
 	std::unordered_map<std::string, std::vector<std::pair<std::string, const char*>>> script_function_table_sort;
+	std::unordered_map<const char*, std::pair<std::string, std::string>> script_function_table_rev;
+
 	utils::concurrency::container<shared_table_t> shared_table;
 
 	std::string current_file;
@@ -41,7 +44,7 @@ namespace scripting
 
 		utils::hook::detour db_find_xasset_header_hook;
 
-		std::string current_scriptfile;
+		std::string current_script_file;
 		unsigned int current_file_id{};
 
 		game::dvar_t* g_dump_scripts;
@@ -91,7 +94,6 @@ namespace scripting
 				game::G_LogPrintf("------------------------------------------------------------\n");
 				game::G_LogPrintf("InitGame\n");
 
-				// start lua engine before we execute the start of gsc
 				lua::engine::start();
 
 				gsc::load_main_handles();
@@ -147,7 +149,7 @@ namespace scripting
 
 		void process_script_stub(const char* filename)
 		{
-			current_scriptfile = filename;
+			current_script_file = filename;
 			
 			const auto file_id = atoi(filename);
 			if (file_id)
@@ -171,9 +173,9 @@ namespace scripting
 				filename = scripting::get_token(current_file_id);
 			}
 
-			if (script_function_table_sort.find(filename) == script_function_table_sort.end())
+			if (!script_function_table_sort.contains(filename))
 			{
-				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_scriptfile.data(), false);
+				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_script_file.data(), false);
 				if (script)
 				{
 					const auto end = &script->bytecode[script->bytecodeLen];
@@ -190,6 +192,7 @@ namespace scripting
 		{
 			const auto name = get_token(id);
 			script_function_table[file][name] = pos;
+			script_function_table_rev[pos] = {file, name};
 		}
 
 		void scr_set_thread_position_stub(unsigned int thread_name, const char* code_pos)
@@ -264,7 +267,7 @@ namespace scripting
 
 			g_shutdown_game_hook.create(SELECT_VALUE(0x2A5130_b, 0x422F30_b), g_shutdown_game_stub);
 
-			scheduler::loop([]()
+			scheduler::loop([]
 			{
 				lua::engine::run_frame();
 			}, scheduler::pipeline::server);

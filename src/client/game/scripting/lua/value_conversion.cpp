@@ -1,8 +1,8 @@
 #include <std_include.hpp>
 #include "value_conversion.hpp"
-#include "../functions.hpp"
-#include "../execution.hpp"
-#include ".../../component/logfile.hpp"
+#include "game/scripting/functions.hpp"
+#include "game/scripting/execution.hpp"
+#include "component/logfile.hpp"
 
 namespace scripting::lua
 {
