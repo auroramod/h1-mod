@@ -6,7 +6,6 @@
 #include "scripting.hpp"
 
 #include "game/game.hpp"
-#include "game/dvars.hpp"
 
 #include "game/scripting/event.hpp"
 #include "game/scripting/execution.hpp"
