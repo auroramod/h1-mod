@@ -50,6 +50,18 @@ namespace io
 
 			throw std::runtime_error("fs_game is not properly defined");
 		}
+
+		void replace(std::string& str, const std::string& from, const std::string& to)
+		{
+			const auto start_pos = str.find(from);
+
+			if (start_pos == std::string::npos)
+			{
+				return;
+			}
+
+			str.replace(start_pos, from.length(), to);
+		}
 	}
 
 	class component final : public component_interface
@@ -60,7 +72,7 @@ namespace io
 			use_root_folder = utils::flags::has_flag("io_game_dir");
 			if (use_root_folder)
 			{
-				console::warn("WARNING: GSC has access to your game folder. To prevent possible malicious code, remove this flag.");
+				console::warn("GSC has access to your game folder. To prevent possible malicious code, remove the '-io_game_dir' launch flag.");
 			}
 
 			gsc::function::add("fileexists", [](const gsc::function_args& args)
@@ -140,6 +152,19 @@ namespace io
 			{
 				const auto path = convert_path(args[0].as<std::string>());
 				return utils::io::remove_file(path);
+			});
+
+			gsc::function::add("va", [](const gsc::function_args& args)
+			{
+				auto fmt = args[0].as<std::string>();
+
+				for (auto i = 1u; i < args.size(); i++)
+				{
+					const auto arg = args[i].to_string();
+					replace(fmt, "%s", arg);
+				}
+
+				return fmt;
 			});
 		}
 	};

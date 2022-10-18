@@ -14,7 +14,7 @@ namespace logger
 	{
 		utils::hook::detour com_error_hook;
 
-		const game::dvar_t* logger_dev = nullptr;
+		game::dvar_t* logger_dev = nullptr;
 
 		void print_error(const char* msg, ...)
 		{

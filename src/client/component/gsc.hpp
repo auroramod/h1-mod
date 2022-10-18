@@ -1,6 +1,8 @@
 #pragma once
 
-#include "game/scripting/script_value.hpp"
+#include "game/scripting/array.hpp"
+#include "game/scripting/execution.hpp"
+#include "game/scripting/function.hpp"
 
 namespace gsc
 {

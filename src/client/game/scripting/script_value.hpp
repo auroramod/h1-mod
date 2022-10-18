@@ -9,7 +9,94 @@ namespace scripting
 {
 	class entity;
 	class array;
+	class function;
 	class value_wrap;
+
+	namespace
+	{
+		std::unordered_map<int, std::string> typenames =
+		{
+			{0, "undefined"},
+			{1, "object"},
+			{2, "string"},
+			{3, "localized string"},
+			{4, "vector"},
+			{5, "float"},
+			{6, "int"},
+			{7, "codepos"},
+			{8, "precodepos"},
+			{9, "function"},
+			{10, "builtin function"},
+			{11, "builtin method"},
+			{12, "stack"},
+			{13, "animation"},
+			{14, "developer codepos"}, // this exists on H1 but not IW6
+			{15, "pre animation"},
+			{16, "thread"},
+			{17, "notify thread"},
+			{18, "time thread"},
+			{19, "child thread"},
+			{20, "struct"},
+			{21, "removed entity"},
+			{22, "entity"},
+			{23, "array"},
+			{24, "removed thread"},
+			{25, "<free>"},	// VAR_COUNT is 25 on H1, but 24 on IW6
+			{26, "thread list"},
+			{27, "endon list"},
+		};
+
+		std::string get_typename(const game::VariableValue& value)
+		{
+			if (value.type == game::SCRIPT_OBJECT)
+			{
+				const auto type = game::scr_VarGlob->objectVariableValue[value.u.uintValue].w.type;
+				return typenames[type];
+			}
+			else
+			{
+				return typenames[value.type];
+			}
+		}
+
+		template <typename T, typename A = array>
+		std::string get_c_typename()
+		{
+			auto& info = typeid(T);
+
+			if (info == typeid(std::string))
+			{
+				return "string";
+			}
+
+			if (info == typeid(const char*))
+			{
+				return "string";
+			}
+
+			if (info == typeid(entity))
+			{
+				return "entity";
+			}
+
+			if (info == typeid(array))
+			{
+				return "array";
+			}
+
+			if (info == typeid(function))
+			{
+				return "function";
+			}
+
+			if (info == typeid(vector))
+			{
+				return "vector";
+			}
+
+			return info.name();
+		}
+	}
 
 	class script_value
 	{
@@ -31,25 +118,28 @@ namespace scripting
 		script_value(const entity& value);
 		script_value(const array& value);
 
+		script_value(const function& value);
+
 		script_value(const vector& value);
 
-		template <typename T>
-		bool is() const;
-
-		// was gonna do this but no clue if this is the same on H1 so just return string (https://github.com/fedddddd/t6-gsc-utils/blob/main/src/game/scripting/script_value.hpp#L18)
 		std::string type_name() const
 		{
-			return utils::string::va("%s", this->get_raw().type);
+			return get_typename(this->get_raw());
 		}
 
 		std::string to_string() const;
+
+		template <typename T>
+		bool is() const;
 
 		template <typename T>
 		T as() const
 		{
 			if (!this->is<T>())
 			{
-				throw std::runtime_error("Invalid type");
+				const auto type = get_typename(this->get_raw());
+				const auto c_type = get_c_typename<T>();
+				throw std::runtime_error(std::format("has type '{}' but should be '{}'", type, c_type));
 			}
 
 			return get<T>();
@@ -58,7 +148,6 @@ namespace scripting
 		template <typename T, typename I = int>
 		T* as_ptr()
 		{
-
 			const auto value = this->as<I>();
 
 			if (!value)
@@ -72,17 +161,25 @@ namespace scripting
 		const game::VariableValue& get_raw() const;
 
 		variable_value value_{};
-
 	private:
 		template <typename T>
 		T get() const;
-
 	};
 
 	class value_wrap
 	{
 	public:
 		value_wrap(const scripting::script_value& value, int argument_index);
+
+		std::string to_string() const
+		{
+			return this->value_.to_string();
+		}
+
+		std::string type_name() const
+		{
+			return this->value_.type_name();
+		}
 
 		template <typename T>
 		T as() const

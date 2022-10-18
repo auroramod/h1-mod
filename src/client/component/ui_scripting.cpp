@@ -48,16 +48,10 @@ namespace ui_scripting
 		const auto lui_updater = utils::nt::load_resource(LUI_UPDATER);
 		const auto lua_json = utils::nt::load_resource(LUA_JSON);
 
-		struct script
-		{
-			std::string name;
-			std::string root;
-		};
-
 		struct globals_t
 		{
 			std::string in_require_script;
-			std::vector<script> loaded_scripts;
+			std::unordered_map<std::string, std::string> loaded_scripts;
 			bool load_raw_script{};
 			std::string raw_script_name{};
 		};
@@ -66,28 +60,13 @@ namespace ui_scripting
 
 		bool is_loaded_script(const std::string& name)
 		{
-			for (auto i = globals.loaded_scripts.begin(); i != globals.loaded_scripts.end(); ++i)
-			{
-				if (i->name == name)
-				{
-					return true;
-				}
-			}
-
-			return false;
+			return globals.loaded_scripts.contains(name);
 		}
 
 		std::string get_root_script(const std::string& name)
 		{
-			for (auto i = globals.loaded_scripts.begin(); i != globals.loaded_scripts.end(); ++i)
-			{
-				if (i->name == name)
-				{
-					return i->root;
-				}
-			}
-
-			return {};
+			const auto itr = globals.loaded_scripts.find(name);
+			return itr == globals.loaded_scripts.end() ? std::string() : itr->second;
 		}
 
 		table get_globals()
@@ -133,7 +112,7 @@ namespace ui_scripting
 
 		void load_script(const std::string& name, const std::string& data)
 		{
-			globals.loaded_scripts.push_back({name, name});
+			globals.loaded_scripts[name] = name;
 
 			const auto lua = get_globals();
 			const auto load_results = lua["loadstring"](data, name);
@@ -451,8 +430,10 @@ namespace ui_scripting
 			return hks_package_require_hook.invoke<void*>(state);
 		}
 
-		game::XAssetHeader db_find_xasset_header_stub(game::XAssetType type, const char* name, int allow_create_default)
+		game::XAssetHeader db_find_x_asset_header_stub(game::XAssetType type, const char* name, int allow_create_default)
 		{
+			game::XAssetHeader header{.luaFile = nullptr};
+
 			if (!is_loaded_script(globals.in_require_script))
 			{
 				return game::DB_FindXAssetHeader(type, name, allow_create_default);
@@ -466,14 +447,14 @@ namespace ui_scripting
 			{
 				globals.load_raw_script = true;
 				globals.raw_script_name = target_script;
-				return static_cast<game::XAssetHeader>(reinterpret_cast<game::LuaFile*>(1));
+				header.luaFile = reinterpret_cast<game::LuaFile*>(1);
 			}
 			else if (name_.starts_with("ui/LUI/"))
 			{
 				return game::DB_FindXAssetHeader(type, name, allow_create_default);
 			}
 
-			return static_cast<game::XAssetHeader>(nullptr);
+			return header;
 		}
 
 		int hks_load_stub(game::hks::lua_State* state, void* compiler_options, 
@@ -482,14 +463,12 @@ namespace ui_scripting
 			if (globals.load_raw_script)
 			{
 				globals.load_raw_script = false;
-				globals.loaded_scripts.push_back({globals.raw_script_name, globals.in_require_script});
+				globals.loaded_scripts[globals.raw_script_name] = globals.in_require_script;
 				return load_buffer(globals.raw_script_name, utils::io::read_file(globals.raw_script_name));
 			}
-			else
-			{
-				return hks_load_hook.invoke<int>(state, compiler_options, reader,
-					reader_data, chunk_name);
-			}
+
+			return hks_load_hook.invoke<int>(state, compiler_options, reader,
+				reader_data, chunk_name);
 		}
 
 		std::string current_error;
@@ -506,7 +485,7 @@ namespace ui_scripting
 				}
 
 				const auto closure = value.v.cClosure;
-				if (converted_functions.find(closure) == converted_functions.end())
+				if (!converted_functions.contains(closure))
 				{
 					return 0;
 				}
@@ -563,8 +542,8 @@ namespace ui_scripting
 				return;
 			}
 
-			utils::hook::call(SELECT_VALUE(0xE7419_b, 0x25E809_b), db_find_xasset_header_stub);
-			utils::hook::call(SELECT_VALUE(0xE72CB_b, 0x25E6BB_b), db_find_xasset_header_stub);
+			utils::hook::call(SELECT_VALUE(0xE7419_b, 0x25E809_b), db_find_x_asset_header_stub);
+			utils::hook::call(SELECT_VALUE(0xE72CB_b, 0x25E6BB_b), db_find_x_asset_header_stub);
 
 			hks_load_hook.create(SELECT_VALUE(0xB46F0_b, 0x22C180_b), hks_load_stub);
 
@@ -572,7 +551,7 @@ namespace ui_scripting
 			hks_start_hook.create(SELECT_VALUE(0x103C50_b, 0x27A790_b), hks_start_stub);
 			hks_shutdown_hook.create(SELECT_VALUE(0xFB370_b, 0x2707C0_b), hks_shutdown_stub);
 
-			command::add("lui_restart", []()
+			command::add("lui_restart", []
 			{
 				utils::hook::invoke<void>(SELECT_VALUE(0x1052C0_b, 0x27BEC0_b));
 			});

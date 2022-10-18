@@ -167,7 +167,7 @@ namespace ui_scripting
 		{
 			if (!this->is<T>())
 			{
-				const auto hks_typename = game::hks::typenames[this->get_raw().t + 2];
+				const auto hks_typename = game::hks::s_compilerTypeName[this->get_raw().t + 2];
 				const auto typename_ = get_typename<T>();
 
 				throw std::runtime_error(utils::string::va("%s expected, got %s",

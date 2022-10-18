@@ -346,6 +346,6 @@ namespace game
 		WEAK symbol<int(lua_State* s, int level, lua_Debug* ar)> hksi_lua_getstack{0xB87A0, 0x2302B0};
 		WEAK symbol<void(lua_State* s, const char* fmt, ...)> hksi_luaL_error{0xBF120, 0x22F930};
 		WEAK symbol<void(lua_State* s, int what, int data)> hksi_lua_gc{0, 0x236EF0};
-		WEAK symbol<const char*> typenames{0x98CD20, 0x10AD750};
+		WEAK symbol<const char*> s_compilerTypeName{0x98CD20, 0x10AD750};
 	}
 }

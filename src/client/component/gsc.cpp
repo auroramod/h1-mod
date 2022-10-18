@@ -9,7 +9,6 @@
 #include "scripting.hpp"
 
 #include "game/dvars.hpp"
-#include "game/scripting/functions.hpp"
 
 #include <xsk/gsc/types.hpp>
 #include <xsk/gsc/interfaces/compiler.hpp>
@@ -72,14 +71,6 @@ namespace gsc
 				return true;
 			}
 
-			// TODO: check back on this to see if there is a property we can distinguish compared to our rawfiles, like compressedLen?
-			// this will filter out the rawfile "gsc" the game zones actually have, this seems to get all of them
-			if (name.starts_with("maps/createfx") || name.starts_with("maps/createart")
-				|| (name.starts_with("maps/mp") && name.ends_with("_fx.gsc")))
-			{
-				return false;
-			}
-
 			const auto name_str = name.data();
 
 			if (game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, name_str) &&
@@ -105,6 +96,22 @@ namespace gsc
 			if (loaded_scripts.find(real_name) != loaded_scripts.end())
 			{
 				return loaded_scripts[real_name];
+			}
+
+			/*
+				without this check, gsc rawfiles that a map contains will be compiled. however, these aren't the correct files.
+				each rawfile has a scriptfile counterpart in asset pool that is meant to be used instead. 
+				the gsc rawfiles are just leftover from creating the maps.
+
+				(if you are creating a custom map, you can safely have gsc rawfiles without having scriptfile counterparts)
+			*/
+			if (real_name.starts_with("maps/createfx") || real_name.starts_with("maps/createart")
+				|| (real_name.starts_with("maps/mp") && real_name.ends_with("_fx.gsc")))
+			{
+				if (game::DB_XAssetExists(game::ASSET_TYPE_SCRIPTFILE, real_name.data()))
+				{
+					return game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, real_name.data(), false).scriptfile;
+				}
 			}
 
 			std::string source_buffer{};
@@ -792,7 +799,7 @@ namespace gsc
 
 				for (auto i = 0u; i < args.size(); ++i)
 				{
-					const auto str = args[i].as<std::string>();
+					const auto str = args[i].to_string();
 					buffer.append(str);
 					buffer.append("\t");
 				}
@@ -863,6 +870,19 @@ namespace gsc
 				game::G_LogPrintf("%s", buffer.data());
 
 				return scripting::script_value{};
+			});
+
+			function::add("getfunction", [](const function_args& args) -> scripting::script_value
+			{
+				const auto filename = args[0].as<std::string>();
+				const auto function = args[1].as<std::string>();
+
+				if (scripting::script_function_table[filename].find(function) != scripting::script_function_table[filename].end())
+				{
+					return scripting::function{scripting::script_function_table[filename][function]};
+				}
+
+				return {};
 			});
 
 			scripting::on_shutdown([](int free_scripts)

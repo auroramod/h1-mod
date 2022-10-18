@@ -1,8 +1,8 @@
 #include <std_include.hpp>
 #include "value_conversion.hpp"
-#include "../functions.hpp"
-#include "../execution.hpp"
-#include ".../../component/logfile.hpp"
+#include "game/scripting/functions.hpp"
+#include "game/scripting/execution.hpp"
+#include "component/logfile.hpp"
 
 namespace scripting::lua
 {
@@ -275,7 +275,7 @@ namespace scripting::lua
 			return entity_to_array(state, value.get_raw().u.uintValue);
 		}
 
-		if (value.is<std::function<void()>>())
+		if (value.is<function>())
 		{
 			return convert_function(state, value.get_raw().u.codePosValue);
 		}
