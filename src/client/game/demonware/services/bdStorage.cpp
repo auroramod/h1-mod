@@ -14,8 +14,10 @@ namespace demonware
 		this->register_task(20, &bdStorage::list_publisher_files);
 		this->register_task(21, &bdStorage::get_publisher_file);
 		this->register_task(24, &bdStorage::upload_and_validate_files);
+		this->register_task(18, &bdStorage::upload_files);
 		this->register_task(16, &bdStorage::get_user_files);
 		this->register_task(12, &bdStorage::get_user_file);
+		this->register_task(10, &bdStorage::set_user_file);
 
 		this->map_publisher_resource("motd-.*\\.txt", DW_MOTD);
 		// this->map_publisher_resource("ffotd-.*\\.ff", DW_FASTFILE);
@@ -128,6 +130,36 @@ namespace demonware
 		}
 	}
 
+	void bdStorage::set_user_file(service_server* server, byte_buffer* buffer) const
+	{
+		bool priv;
+		uint64_t owner;
+		std::string game, filename, data;
+
+		buffer->read_string(&game);
+		buffer->read_string(&filename);
+		buffer->read_bool(&priv);
+		buffer->read_blob(&data);
+		buffer->read_uint64(&owner);
+
+		const auto path = get_user_file_path(filename);
+		utils::io::write_file(path, data);
+
+		auto* info = new bdFileInfo;
+
+		info->file_id = *reinterpret_cast<const uint64_t*>(utils::cryptography::sha1::compute(filename).data());
+		info->filename = filename;
+		info->create_time = uint32_t(time(nullptr));
+		info->modified_time = info->create_time;
+		info->file_size = uint32_t(data.size());
+		info->owner_id = owner;
+		info->priv = priv;
+
+		auto reply = server->create_reply(this->task_id());
+		reply->add(info);
+		reply->send();
+	}
+
 	std::string bdStorage::get_user_file_path(const std::string& name)
 	{
 		return "players2/user/" + name;
@@ -145,10 +177,6 @@ namespace demonware
 		buffer->read_uint32(&numfiles);
 
 		auto reply = server->create_reply(this->task_id());
-
-#ifdef DW_DEBUG
-		printf("[DW]: [bdStorage]: upload_and_validate_files has %d files\n", numfiles);
-#endif
 
 		for (uint32_t i = 0; i < numfiles; i++)
 		{
@@ -176,15 +204,11 @@ namespace demonware
 			info->data = data;
 
 #ifdef DW_DEBUG
-			printf("[DW]: [bdStorage]: adding \"%s\" to reply\n", filename.data());
+			printf("[DW]: [bdStorage]: set user file: %s\n", filename.data());
 #endif
 
 			reply->add(info);
 		}
-
-#ifdef DW_DEBUG
-		printf("[DW]: [bdStorage]: sending reply for upload_and_validate_files\n");
-#endif
 
 		reply->send();
 	}
@@ -193,10 +217,6 @@ namespace demonware
 	{
 		std::string context;
 		buffer->read_string(&context);
-
-#ifdef DW_DEBUG
-		printf("[DW]: [bdStorage]: context is '%s'\n", context.data());
-#endif
 
 		uint32_t count;
 		buffer->read_uint32(&count);
@@ -220,51 +240,85 @@ namespace demonware
 		{
 			std::string filename;
 			buffer->read_string(&filename);
-
 			filenames.push_back(std::move(filename));
 		}
 
 		auto reply = server->create_reply(this->task_id());
-		uint32_t available = 0;
-
 		for (size_t i = 0u; i < filenames.size(); i++)
 		{
+			auto* entry = new bdFileQueryResult;
+			entry->user_id = user_ctxs.at(i).first;
+			entry->platform = user_ctxs.at(i).second;
+			entry->filename = filenames.at(i);
+			entry->errorcode = 0;
+
 			auto& name = filenames.at(i);
-			std::string data;
-
-			if (utils::io::read_file(get_user_file_path(name), &data))
+			std::string filedata;
+			if (utils::io::read_file(get_user_file_path(name), &filedata))
 			{
-				auto entry = new bdFileQueryResult;
-				entry->owner_id = user_ctxs.at(i).first;
-				entry->platform = user_ctxs.at(i).second;
-				entry->filename = filenames.at(i);
-				entry->errorcode = 0;
-				entry->data = data;
-
-				reply->add(entry);
-
-				++available;
-
+				entry->filedata = filedata;
 #ifdef DW_DEBUG
-				printf("[DW]: [bdStorage]: user file \"%s\" dispatched\n", name.data());
+				printf("[DW]: [bdStorage]: get user file: %s\n", name.data());
 #endif
 			}
 			else
 			{
+				entry->errorcode = game::BD_NO_FILE;
 #ifdef DW_DEBUG
-				printf("[DW]: [bdStorage]: user file \"%s\" not found\n", name.data());
+				printf("[DW]: [bdStorage]: missing user file: %s\n", name.data());
 #endif
 			}
+
+			reply->add(entry);
 		}
 
-		if (available == count)
+		reply->send();
+	}
+
+	void bdStorage::upload_files(service_server* server, byte_buffer* buffer) const
+	{
+		uint64_t owner;
+		uint32_t numfiles;
+		std::string game, platform;
+
+		buffer->read_string(&game);
+		buffer->read_uint64(&owner);
+		buffer->read_string(&platform);
+		buffer->read_uint32(&numfiles);
+
+		auto reply = server->create_reply(this->task_id());
+
+		for (uint32_t i = 0; i < numfiles; i++)
 		{
-			reply->send();
+			std::string filename, data;
+			uint32_t version;
+			bool priv;
+
+			buffer->read_string(&filename);
+			buffer->read_blob(&data);
+			buffer->read_uint32(&version);
+			buffer->read_bool(&priv);
+
+			const auto path = get_user_file_path(filename);
+			utils::io::write_file(path, data);
+
+			auto* info = new bdContextUserStorageFileInfo;
+
+			info->modifed_time = static_cast<uint32_t>(time(nullptr));
+			info->create_time = info->modifed_time;
+			info->priv = priv;
+			info->owner_id = owner;
+			info->account_type = platform;
+			info->filename = filename;
+
+#ifdef DW_DEBUG
+			printf("[DW]: [bdStorage]: set user file: %s\n", filename.data());
+#endif
+
+			reply->add(info);
 		}
-		else
-		{
-			server->create_reply(this->task_id(), game::BD_NO_FILE)->send();
-		}
+
+		reply->send();
 	}
 
 	void bdStorage::get_user_file(service_server* server, byte_buffer* buffer) const
