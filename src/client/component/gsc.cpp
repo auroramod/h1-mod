@@ -71,14 +71,6 @@ namespace gsc
 				return true;
 			}
 
-			// TODO: check back on this to see if there is a property we can distinguish compared to our rawfiles, like compressedLen?
-			// this will filter out the rawfile "gsc" the game zones actually have, this seems to get all of them
-			if (name.starts_with("maps/createfx") || name.starts_with("maps/createart")
-				|| (name.starts_with("maps/mp") && name.ends_with("_fx.gsc")))
-			{
-				return false;
-			}
-
 			const auto name_str = name.data();
 
 			if (game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, name_str) &&
@@ -104,6 +96,22 @@ namespace gsc
 			if (loaded_scripts.find(real_name) != loaded_scripts.end())
 			{
 				return loaded_scripts[real_name];
+			}
+
+			/*
+				without this check, gsc rawfiles that a map contains will be compiled. however, these aren't the correct files.
+				each rawfile has a scriptfile counterpart in asset pool that is meant to be used instead. 
+				the gsc rawfiles are just leftover from creating the maps.
+
+				(if you are creating a custom map, you can safely have gsc rawfiles without having scriptfile counterparts)
+			*/
+			if (real_name.starts_with("maps/createfx") || real_name.starts_with("maps/createart")
+				|| (real_name.starts_with("maps/mp") && real_name.ends_with("_fx.gsc")))
+			{
+				if (game::DB_XAssetExists(game::ASSET_TYPE_SCRIPTFILE, real_name.data()))
+				{
+					return game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, real_name.data(), false).scriptfile;
+				}
 			}
 
 			std::string source_buffer{};
