@@ -1354,7 +1354,7 @@ namespace game
 		int compressedLen;
 		int len;
 		int bytecodeLen;
-		const char* buffer;
+		char* buffer;
 		char* bytecode;
 	};
 

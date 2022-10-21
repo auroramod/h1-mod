@@ -1,8 +1,8 @@
 #include <std_include.hpp>
 #include "functions.hpp"
 
-#include "../../component/console.hpp"
-#include "../../component/gsc.hpp"
+#include "component/console.hpp"
+#include "component/gsc/script_extension.hpp"
 
 #include <xsk/gsc/types.hpp>
 #include <xsk/resolver.hpp>

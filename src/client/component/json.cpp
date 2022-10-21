@@ -1,9 +1,12 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "scheduler.hpp"
-#include "gsc.hpp"
-#include "json.hpp"
+#include "component/scheduler.hpp"
+#include "component/gsc/script_extension.hpp"
+
+#include "game/scripting/array.hpp"
+#include "game/scripting/execution.hpp"
+#include "game/scripting/function.hpp"
 
 #include <json.hpp>
 

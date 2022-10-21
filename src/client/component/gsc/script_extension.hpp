@@ -32,10 +32,7 @@ namespace gsc
 	extern builtin_function func_table[0x1000];
 	extern builtin_method meth_table[0x1000];
 
-	game::ScriptFile* find_script(game::XAssetType /*type*/, const char* name, int /*allow_create_default*/);
-
-	void load_main_handles();
-	void load_init_handles();
+	extern const game::dvar_t* developer_script;
 
 	namespace function
 	{

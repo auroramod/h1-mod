@@ -1,10 +1,10 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "gsc.hpp"
-#include "logfile.hpp"
-#include "scripting.hpp"
-#include "scheduler.hpp"
+#include "component/logfile.hpp"
+#include "component/scripting.hpp"
+#include "component/scheduler.hpp"
+#include "component/gsc/script_extension.hpp"
 
 #include "game/dvars.hpp"
 
@@ -397,11 +397,11 @@ namespace logfile
 			}, scheduler::pipeline::main);
 			g_log_printf_hook.create(game::G_LogPrintf, g_log_printf_stub);
 
-			gsc::function::add("onplayersay", [](const gsc::function_args& args) -> scripting::script_value
+			gsc::function::add("onplayersay", [](const gsc::function_args& args)
 			{
 				const auto function = args[0].as<scripting::function>();
 				say_callbacks.push_back(function);
-				return {};
+				return scripting::script_value{};
 			});
 
 			scripting::on_shutdown([](int)
