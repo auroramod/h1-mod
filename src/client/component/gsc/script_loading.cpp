@@ -6,6 +6,7 @@
 #include "component/filesystem.hpp"
 #include "component/logfile.hpp"
 #include "component/scripting.hpp"
+#include "component/gsc/script_loading.hpp"
 
 #include "game/dvars.hpp"
 

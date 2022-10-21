@@ -1,9 +1,10 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "gsc.hpp"
-#include "scheduler.hpp"
-#include "scripting.hpp"
+#include "component/gsc/script_extension.hpp"
+#include "component/gsc/script_loading.hpp"
+#include "component/scheduler.hpp"
+#include "component/scripting.hpp"
 
 #include "game/game.hpp"
 
