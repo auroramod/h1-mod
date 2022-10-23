@@ -144,7 +144,7 @@ namespace mapents
 		std::string entity_string;
 		const char* cm_entity_string_stub()
 		{
-			const auto original = utils::hook::invoke<const char*>(0x4CD140_b);
+			const auto original = utils::hook::invoke<const char*>(SELECT_VALUE(0x3685C0_b, 0x4CD140_b));
 			const auto parsed = parse_mapents(original);
 			if (parsed.has_value())
 			{
@@ -160,7 +160,7 @@ namespace mapents
 		void cm_unload_stub(void* clip_map)
 		{
 			entity_string.clear();
-			utils::hook::invoke<void>(0x4CD0E0_b, clip_map);
+			utils::hook::invoke<void>(SELECT_VALUE(0x368560_b, 0x4CD0E0_b), clip_map);
 		}
 	}
 
@@ -169,8 +169,8 @@ namespace mapents
 	public:
 		void post_unpack() override
 		{
-			utils::hook::call(0x41F594_b, cm_entity_string_stub);
-			utils::hook::call(0x399814_b, cm_unload_stub);
+			utils::hook::call(SELECT_VALUE(0x2A1154_b, 0x41F594_b), cm_entity_string_stub);
+			utils::hook::call(SELECT_VALUE(0x1F4E74_b, 0x399814_b), cm_unload_stub);
 		}
 	};
 }

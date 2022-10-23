@@ -82,19 +82,19 @@ namespace gameplay
 
 				a.mov(rax, qword_ptr(reinterpret_cast<int64_t>(&dvars::pm_bouncing)));
 				a.mov(al, byte_ptr(rax, 0x10));
-				a.cmp(byte_ptr(rbp, -0x7D), al);
+				a.cmp(byte_ptr(rbp, SELECT_VALUE(-0x5D, -0x7D)), al);
 
 				a.pop(rax);
 				a.jz(no_bounce);
-				a.jmp(0x2D39C0_b);
+				a.jmp(SELECT_VALUE(0x4A2E81_b, 0x2D39C0_b));
 
 				a.bind(no_bounce);
 				a.cmp(dword_ptr(rsp, 0x44), 0);
 				a.jnz(loc_2D395D);
-				a.jmp(0x2D39B1_b);
+				a.jmp(SELECT_VALUE(0x4A2E6F_b, 0x2D39B1_b));
 
 				a.bind(loc_2D395D);
-				a.jmp(0x2D395D_b);
+				a.jmp(SELECT_VALUE(0x4A2F18_b, 0x2D395D_b));
 			});
 		}
 
@@ -330,6 +330,10 @@ namespace gameplay
 			utils::hook::jump(SELECT_VALUE(0x499617_b, 0x2C9F90_b), utils::hook::assemble(pm_trace_stub), true);
 			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DVAR_FLAG_REPLICATED, "Enables Elevators");
 
+			dvars::pm_bouncing = dvars::register_bool("pm_bouncing", false,
+				game::DVAR_FLAG_REPLICATED, "Enable bouncing");
+			utils::hook::jump(SELECT_VALUE(0x4A2E5E_b, 0x2D39A4_b), pm_bouncing_stub_mp(), true);
+
 			if (game::environment::is_sp())
 			{
 				return;
@@ -339,10 +343,6 @@ namespace gameplay
 			utils::hook::jump(0x4006AD_b, g_speed_stub(), true);
 			dvars::g_speed = dvars::register_int("g_speed", 190, 0, 1000,
 				game::DVAR_FLAG_REPLICATED, "changes the speed of the player");
-
-			dvars::pm_bouncing = dvars::register_bool("pm_bouncing", false,
-				game::DVAR_FLAG_REPLICATED, "Enable bouncing");
-			utils::hook::jump(0x2D39A4_b, pm_bouncing_stub_mp(), true);
 
 			dvars::pm_bouncingAllAngles = dvars::register_bool("pm_bouncingAllAngles", false,
 				game::DvarFlags::DVAR_FLAG_REPLICATED, "Enable bouncing from all angles");

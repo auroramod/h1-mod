@@ -399,6 +399,18 @@ namespace fastfiles
 				game::DB_LevelLoadAddZone(load, name, alloc_flags | game::DB_ZONE_CUSTOM, size_est);
 			}
 		}
+
+		void db_find_aipaths_stub(game::XAssetType type, const char* name, int allow_create_default)
+		{
+			if (game::DB_XAssetExists(type, name))
+			{
+				game::DB_FindXAssetHeader(type, name, allow_create_default);
+			}
+			else
+			{
+				console::warn("No aipaths found for this map\n");
+			}
+		}
 	}
 
 	bool exists(const std::string& zone, bool ignore_usermap)
@@ -498,6 +510,14 @@ namespace fastfiles
 			{
 				utils::hook::nop(0x368153_b, 2); // DB_InflateInit
 			}
+	
+			if (game::environment::is_sp())
+			{
+				// Allow loading mp maps
+				utils::hook::set(0x40AF90_b, 0xC300B0);
+				// Don't sys_error if aipaths are missing
+				utils::hook::call(0x2F8EE9_b, db_find_aipaths_stub);
+			}
 
 			// Allow loading of mixed compressor types
 			utils::hook::nop(SELECT_VALUE(0x1C4BE7_b, 0x3687A7_b), 2);
@@ -507,7 +527,10 @@ namespace fastfiles
 
 			// Add custom zone paths
 			sys_createfile_hook.create(game::Sys_CreateFile, sys_create_file_stub);
-			db_file_exists_hook.create(0x394DC0_b, db_file_exists_stub);
+			if (!game::environment::is_sp())
+			{
+				db_file_exists_hook.create(0x394DC0_b, db_file_exists_stub);
+			}
 
 			// load our custom pre_gfx zones
 			utils::hook::call(SELECT_VALUE(0x3862ED_b, 0x15C3FD_b), load_pre_gfx_zones);

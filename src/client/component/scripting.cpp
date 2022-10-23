@@ -218,6 +218,17 @@ namespace scripting
 			canonical_string_table[result] = str;
 			return result;
 		}
+
+		void* get_spawn_point_stub()
+		{
+			const auto spawn_point = utils::hook::invoke<void*>(0x28BD50_b);
+			if (spawn_point == nullptr)
+			{
+				console::warn("No spawnpoint found for this map, using (0, 0, 0)\n");
+				return &game::sp::g_entities[0];
+			}
+			return spawn_point;
+		}
 	}
 
 	std::string get_token(unsigned int id)
@@ -266,6 +277,11 @@ namespace scripting
 			}
 
 			g_shutdown_game_hook.create(SELECT_VALUE(0x2A5130_b, 0x422F30_b), g_shutdown_game_stub);
+
+			if (game::environment::is_sp())
+			{
+				utils::hook::call(0x28AE82_b, get_spawn_point_stub);
+			}
 
 			scheduler::loop([]
 			{
