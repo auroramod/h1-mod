@@ -6,6 +6,8 @@
 #include "component/scheduler.hpp"
 #include "component/scripting.hpp"
 
+#include "console.hpp"
+
 #include "game/game.hpp"
 
 #include "game/scripting/event.hpp"
