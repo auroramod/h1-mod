@@ -134,9 +134,8 @@ namespace gsc
 		void vm_call_builtin_function_stub(builtin_function function)
 		{
 			const auto function_id = get_function_id();
-			const auto is_custom_function = functions.find(function_id) != functions.end();
 
-			if (!is_custom_function)
+			if (!functions.contains(function_id))
 			{
 				function();
 			}
@@ -156,9 +155,8 @@ namespace gsc
 		void vm_call_builtin_method_stub(builtin_method method)
 		{
 			const auto function_id = get_function_id();
-			const auto is_custom_function = methods.find(function_id) != methods.end();
 
-			if (!is_custom_function)
+			if (!methods.contains(function_id))
 			{
 				method(saved_ent_ref);
 			}
@@ -402,17 +400,17 @@ namespace gsc
 				return scripting::script_value{};
 			});
 
-			function::add("getfunction", [](const function_args& args) -> scripting::script_value
+			function::add("getfunction", [](const function_args& args)
 			{
 				const auto filename = args[0].as<std::string>();
 				const auto function = args[1].as<std::string>();
 
-				if (scripting::script_function_table[filename].find(function) != scripting::script_function_table[filename].end())
+				if (!scripting::script_function_table[filename].contains(function))
 				{
-					return scripting::function{scripting::script_function_table[filename][function]};
+					throw std::runtime_error("function not found");
 				}
 
-				return {};
+				return scripting::function{scripting::script_function_table[filename][function]};
 			});
 
 			function::add("replacefunc", [](const function_args& args)

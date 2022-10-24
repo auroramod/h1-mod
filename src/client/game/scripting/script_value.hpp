@@ -30,7 +30,7 @@ namespace scripting
 			{11, "builtin method"},
 			{12, "stack"},
 			{13, "animation"},
-			{14, "developer codepos"}, // this exists on H1 but not IW6
+			{14, "developer codepos"}, // this exists on H1 but not IW6 (also not sure if past here may be correct)
 			{15, "pre animation"},
 			{16, "thread"},
 			{17, "notify thread"},
