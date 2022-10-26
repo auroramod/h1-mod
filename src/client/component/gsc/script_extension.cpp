@@ -469,6 +469,11 @@ namespace gsc
 				return scripting::script_value{};
 			});
 
+			function::add("typeof", [](const function_args& args)
+			{
+				return args[0].type_name();
+			});
+
 			method::add("tell", [](const game::scr_entref_t ent, const function_args& args)
 			{
 				if (ent.classnum != 0)

@@ -243,7 +243,7 @@ namespace io
 			}
 
 			allow_http_access = utils::flags::has_flag("allow_http");
-			if (allow_http_access)
+			if (game::environment::is_dedi() && allow_http_access)
 			{
 				console::warn("GSC has access to external internet usage. Remove the '-allow_http' launch parameter to disable this feature.");
 			}
