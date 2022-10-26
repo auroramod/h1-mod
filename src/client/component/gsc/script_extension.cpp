@@ -33,11 +33,6 @@ namespace gsc
 
 	namespace
 	{
-		struct gsc_error : public std::runtime_error
-		{
-			using std::runtime_error::runtime_error;
-		};
-
 		std::unordered_map<std::uint32_t, script_function> functions;
 		std::unordered_map<std::uint32_t, script_method> methods;
 
@@ -365,6 +360,15 @@ namespace gsc
 
 			utils::hook::call(SELECT_VALUE(0x3CC9F3_b, 0x513A53_b), vm_error_stub);
 
+			if (game::environment::is_dedi())
+			{
+				function::add("isusingmatchrulesdata", [](const function_args& args)
+				{
+					// return 0 so the game doesn't override the cfg
+					return 0;
+				});
+			}
+
 			function::add("print", [](const function_args& args)
 			{
 				print(args);
@@ -455,12 +459,6 @@ namespace gsc
 				command::execute(cmd, true);
 
 				return scripting::script_value{};
-			});
-
-			function::add("isusingmatchrulesdata", [](const function_args& args)
-			{
-				// return 0 so the game doesn't override the cfg
-				return 0;
 			});
 
 			function::add("say", [](const function_args& args)

@@ -38,6 +38,7 @@ namespace scripting
 	void notify(const entity& entity, const std::string& event, const std::vector<script_value>& arguments);
 
 	unsigned int make_array();
+	unsigned int make_object();
 
 	script_value get_object_variable(const unsigned int parent_id, const unsigned int id);
 	script_value get_object_variable(const unsigned int parent_id, const std::string& name);

@@ -206,6 +206,16 @@ namespace scripting
 		return index;
 	}
 
+	unsigned int make_object()
+	{
+		unsigned int index = 0;
+		const auto variable = game::AllocVariable(&index);
+		variable->w.type = game::SCRIPT_STRUCT;
+		variable->u.f.prev = 0;
+
+		return index;
+	}
+
 	void set_object_variable(const unsigned int parent_id, const unsigned int id, const script_value& value)
 	{
 		const auto offset = 0xFA00 * (parent_id & 3);
