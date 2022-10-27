@@ -94,7 +94,7 @@ namespace json
 			case (game::SCRIPT_FUNCTION):
 				return _value.as<scripting::function>().get_name();
 			default:
-				return "[unknown type]";
+				return utils::string::va("[%s]", _value.type_name().data());
 			};
 		}
 

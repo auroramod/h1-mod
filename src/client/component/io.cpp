@@ -20,7 +20,7 @@ namespace io
 {
 	namespace
 	{
-		bool use_root_folder = false;
+		bool allow_root_io = false;
 
 		void check_path(const std::filesystem::path& path)
 		{
@@ -34,7 +34,7 @@ namespace io
 		{
 			check_path(path);
 
-			if (use_root_folder)
+			if (allow_root_io)
 			{
 				static const auto fs_base_game = game::Dvar_FindVar("fs_basepath");
 				const std::filesystem::path fs_base_game_path(fs_base_game->current.string);
@@ -69,10 +69,10 @@ namespace io
 	public:
 		void post_unpack() override
 		{
-			use_root_folder = utils::flags::has_flag("io_game_dir");
-			if (use_root_folder)
+			allow_root_io = utils::flags::has_flag("allow_root_io");
+			if (allow_root_io)
 			{
-				console::warn("GSC has access to your game folder. To prevent possible malicious code, remove the '-io_game_dir' launch flag.");
+				console::warn("GSC has access to your game folder. Remove the '-allow_root_io' launch parameter to disable this feature.");
 			}
 
 			gsc::function::add("fileexists", [](const gsc::function_args& args)
