@@ -20,11 +20,7 @@ namespace io
 {
 	namespace
 	{
-		std::unordered_map<std::uint64_t, bool> active_requests{};
-		std::uint64_t request_id{};
-
 		bool allow_root_io = false;
-		bool allow_http_access = false;
 
 		void check_path(const std::filesystem::path& path)
 		{
@@ -66,169 +62,6 @@ namespace io
 
 			str.replace(start_pos, from.length(), to);
 		}
-
-		bool can_use_http()
-		{
-			if (game::environment::is_dedi() && allow_http_access)
-			{
-				return true;
-			}
-
-			return false;
-		}
-
-		scripting::script_value http_get(const gsc::function_args& args)
-		{
-			if (!can_use_http())
-			{
-				throw std::runtime_error("internet access is not allowed (only on dedicated server)");
-			}
-
-			const auto id = request_id++;
-			active_requests[id] = true;
-
-			const auto url = args[0].as<std::string>();
-			const auto object = scripting::entity(scripting::make_object());
-
-			scheduler::once([id, object, url]()
-			{
-				const auto data = utils::http::get_data(url.data());
-				scheduler::once([id, object, data]()
-				{
-					if (active_requests.find(id) == active_requests.end())
-					{
-						return;
-					}
-
-					if (!data.has_value())
-					{
-						scripting::notify(object, "done", {{}, false, "Unknown error"});
-					}
-
-					const auto& result = data.value();
-					const auto error = curl_easy_strerror(result.code);
-
-					if (result.code != CURLE_OK)
-					{
-						scripting::notify(object, "done", {{}, false, error});
-					}
-
-					if (result.buffer.size() >= 0x5000)
-					{
-						console::warn("WARNING: http result size bigger than 20480 bytes (%i), truncating!", static_cast<int>(result.buffer.size()));
-					}
-
-					scripting::notify(object, "done", {result.buffer.substr(0, 0x5000), true});
-				}, scheduler::pipeline::server);
-			}, scheduler::pipeline::async);
-
-			return object;
-		}
-
-		scripting::script_value http_post(const gsc::function_args& args)
-		{
-			if (!can_use_http())
-			{
-				throw std::runtime_error("internet access is not allowed (only on dedicated server)");
-			}
-
-			const auto id = request_id++;
-			active_requests[id] = true;
-
-			const auto url = args[0].as<std::string>();
-
-			const auto object = scripting::entity(scripting::make_object());
-
-			std::string fields_string{};
-			std::unordered_map<std::string, std::string> headers_map{};
-
-			if (args.size() > 1)
-			{
-				const auto options = args[1].as<scripting::array>();
-
-				const auto fields = options["parameters"];
-				const auto body = options["body"];
-				const auto headers = options["headers"];
-
-				if (fields.is<scripting::array>())
-				{
-					const auto fields_ = fields.as<scripting::array>();
-					const auto keys = fields_.get_keys();
-
-					for (const auto& key : keys)
-					{
-						if (!key.is<std::string>())
-						{
-							continue;
-						}
-
-						const auto key_ = key.as<std::string>();
-						const auto value = fields_[key].to_string();
-						fields_string += key_ + "=" + value + "&";
-					}
-				}
-
-				if (body.is<std::string>())
-				{
-					fields_string = body.as<std::string>();
-				}
-
-				if (headers.is<scripting::array>())
-				{
-					const auto headers_ = headers.as<scripting::array>();
-					const auto keys = headers_.get_keys();
-
-					for (const auto& key : keys)
-					{
-						if (!key.is<std::string>())
-						{
-							continue;
-						}
-
-						const auto key_ = key.as<std::string>();
-						const auto value = headers_[key].to_string();
-
-						headers_map[key_] = value;
-					}
-				}
-			}
-
-			scheduler::once([id, object, url, fields_string, headers_map]()
-			{
-					const auto data = utils::http::get_data(url, fields_string, headers_map);
-					scheduler::once([data, object, id]
-					{
-						if (active_requests.find(id) == active_requests.end())
-						{
-							return;
-                        }
-
-						if (!data.has_value())
-						{
-                            scripting::notify(object, "done", {{}, false, "Unknown error"});
-							return;
-						}
-
-						const auto& result = data.value();
-						const auto error = curl_easy_strerror(result.code);
-
-						if (result.code != CURLE_OK)
-						{
-							scripting::notify(object, "done", {{}, false, error});
-							return;
-						}
-
-						if (result.buffer.size() >= 0x5000)
-						{
-							console::warn("WARNING: http result size bigger than 20480 bytes (%i), truncating!", static_cast<int>(result.buffer.size()));
-						}
-
-						scripting::notify(object, "done", {result.buffer.substr(0, 0x5000), true});
-				}, scheduler::pipeline::server);
-			}, scheduler::pipeline::async);
-
-			return object;
-		}
 	}
 
 	class component final : public component_interface
@@ -240,12 +73,6 @@ namespace io
 			if (allow_root_io)
 			{
 				console::warn("GSC has access to your game folder. Remove the '-allow_root_io' launch parameter to disable this feature.");
-			}
-
-			allow_http_access = utils::flags::has_flag("allow_http");
-			if (game::environment::is_dedi() && allow_http_access)
-			{
-				console::warn("GSC has access to external internet usage. Remove the '-allow_http' launch parameter to disable this feature.");
 			}
 
 			gsc::function::add("fileexists", [](const gsc::function_args& args)
@@ -339,12 +166,6 @@ namespace io
 
 				return fmt;
 			});
-
-			gsc::function::add("httpget", http_get);
-			gsc::function::add("curl", http_get);
-
-			gsc::function::add("httppost", http_post);
-			gsc::function::add("httprequest", http_post);
 		}
 	};
 }
