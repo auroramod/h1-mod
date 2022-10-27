@@ -29,7 +29,6 @@ namespace logfile
 		utils::hook::detour scr_player_damage_hook;
 
 		utils::hook::detour client_command_hook;
-		utils::hook::detour g_shutdown_game_hook;
 
 		utils::hook::detour g_log_printf_hook;
 
@@ -328,8 +327,8 @@ namespace logfile
 				const scripting::entity level{*game::levelEntityId};
 				const scripting::entity player{game::Scr_GetEntityId(self->s.number, 0)};
 
-				scripting::notify(level, cmd, {player, message, hidden});
-				scripting::notify(player, cmd, {message, hidden});
+				notify(level, cmd, {player, message, hidden});
+				notify(player, cmd, {message, hidden});
 
 				game::G_LogPrintf("%s;%s;%i;%s;%s\n",
 					cmd,

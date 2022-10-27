@@ -30,20 +30,19 @@ namespace scripting
 			{11, "builtin method"},
 			{12, "stack"},
 			{13, "animation"},
-			{14, "developer codepos"}, // this exists on H1 but not IW6
-			{15, "pre animation"},
-			{16, "thread"},
-			{17, "notify thread"},
-			{18, "time thread"},
-			{19, "child thread"},
-			{20, "struct"},
-			{21, "removed entity"},
-			{22, "entity"},
-			{23, "array"},
-			{24, "removed thread"},
-			{25, "<free>"},	// VAR_COUNT is 25 on H1, but 24 on IW6
-			{26, "thread list"},
-			{27, "endon list"},
+			{14, "pre animation"},
+			{15, "thread"},
+			{16, "notify thread"},
+			{17, "time thread"},
+			{18, "child thread"},
+			{19, "struct"},
+			{20, "removed entity"},
+			{21, "entity"},
+			{22, "array"},
+			{23, "removed thread"},
+			{24, "<free>"},
+			{25, "thread list"},
+			{26, "endon list"},
 		};
 
 		std::string get_typename(const game::VariableValue& value)

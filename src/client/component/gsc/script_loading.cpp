@@ -88,26 +88,27 @@ namespace gsc
 				return itr->second;
 			}
 
-			/*
-				without this check, gsc rawfiles that a map contains will be compiled. however, these aren't the correct files.
-				each rawfile has a scriptfile counterpart in asset pool that is meant to be used instead.
-				the gsc rawfiles are just leftover from creating the maps.
-
-				(if you are creating a custom map, you can safely have gsc rawfiles without having scriptfile counterparts)
-			*/
-			if (real_name.starts_with("maps/createfx") || real_name.starts_with("maps/createart")
-				|| (real_name.starts_with("maps/mp") && real_name.ends_with("_fx.gsc")))
-			{
-				if (game::DB_XAssetExists(game::ASSET_TYPE_SCRIPTFILE, real_name.data()))
-				{
-					return game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, real_name.data(), false).scriptfile;
-				}
-			}
-
-			std::string source_buffer{};
-			if (!read_script_file(real_name + ".gsc", &source_buffer))
+			std::string source_buffer;
+			const auto rawfile_gsc_exists = read_script_file(real_name + ".gsc", &source_buffer);
+			if (!rawfile_gsc_exists || source_buffer.empty())
 			{
 				return nullptr;
+			}
+
+			if (game::DB_XAssetExists(game::ASSET_TYPE_SCRIPTFILE, file_name) && 
+				!game::DB_IsXAssetDefault(game::ASSET_TYPE_SCRIPTFILE, file_name))
+			{
+				// filter out developer rawfiles that won't compile
+				if ((real_name.starts_with("maps/createfx") || real_name.starts_with("maps/createart") || real_name.starts_with("maps/mp")) 
+					&& (real_name.ends_with("_fx") || real_name.ends_with("_fog") || real_name.ends_with("_hdr")))
+				{
+					return game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, file_name, false).scriptfile;
+				}
+
+				if (!rawfile_gsc_exists)
+				{
+					return game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, file_name, false).scriptfile;
+				}
 			}
 
 			std::vector<std::uint8_t> data;
