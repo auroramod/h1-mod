@@ -69,12 +69,6 @@ namespace ui_scripting
 			return itr == globals.loaded_scripts.end() ? std::string() : itr->second;
 		}
 
-		table get_globals()
-		{
-			const auto state = *game::hks::lua_state;
-			return state->globals.v.table;
-		}
-
 		void print_error(const std::string& error)
 		{
 			console::error("************** LUI script execution error **************\n");
@@ -521,6 +515,12 @@ namespace ui_scripting
 
 			return 0;
 		}
+	}
+
+	table get_globals()
+	{
+		const auto state = *game::hks::lua_state;
+		return state->globals.v.table;
 	}
 
 	template <typename F>

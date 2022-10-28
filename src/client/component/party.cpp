@@ -11,6 +11,7 @@
 #include "fastfiles.hpp"
 
 #include "game/game.hpp"
+#include "game/ui_scripting/execution.hpp"
 
 #include "steam/steam.hpp"
 
@@ -47,6 +48,9 @@ namespace party
 			{"_load.ff", "usermaploadhash", true},
 			{".arena", "usermaparenahash", true},
 		};
+
+        game::netadr_s saved_target;
+		utils::info_string saved_info_string;
 
 		void perform_game_initialization()
 		{
@@ -288,9 +292,51 @@ namespace party
 			return false;
 		}
 
+		void close_joining_popups()
+		{
+			if (game::Menu_IsMenuOpenAndVisible(0, "popup_acceptinginvite"))
+			{
+				command::execute("lui_close popup_acceptinginvite", false);
+			}
+
+			if (game::Menu_IsMenuOpenAndVisible(0, "generic_waiting_popup_"))
+			{
+				command::execute("lui_close generic_waiting_popup_", false);
+			}
+		}
+
+		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool should_download);
+
+		int confirm_user_download_cb(game::hks::lua_State* state)
+		{
+			const auto response = state->m_apistack.base[0].v.boolean;
+			if (!response)
+			{
+				return 0;
+			}
+
+			download_files(saved_target, saved_info_string, true);
+			return 1;
+		}
+
+		void confirm_user_download(const game::netadr_s& target, const utils::info_string& info)
+		{
+			const auto LUI = ui_scripting::get_globals().get("LUI").as<ui_scripting::table>();
+			const auto yes_no_popup_func = LUI.get("yesnopopup").as<ui_scripting::function>();
+
+			const ui_scripting::table data_table{};
+			data_table.set("title", game::UI_SafeTranslateString("MENU_NOTICE"));
+			data_table.set("text", std::format("Would you like to install required 3rd-party content for this server? (from {})", info.get("sv_wwwBaseUrl")));
+			data_table.set("callback", confirm_user_download_cb);
+
+			close_joining_popups();
+
+			yes_no_popup_func(data_table);
+		}
+
 		bool needs_vid_restart = false;
 
-		bool download_files(const game::netadr_s& target, const utils::info_string& info)
+		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool should_download)
 		{
 			try
 			{
@@ -302,8 +348,16 @@ namespace party
 
 				if (files.size() > 0)
 				{
-					download::stop_download();
-					download::start_download(target, info, files);
+					if (should_download)
+					{
+						download::stop_download();
+						download::start_download(target, info, files);
+					}
+					else
+					{
+						confirm_user_download(target, info);
+					}
+
 					return true;
 				}
 				else if (needs_restart || needs_vid_restart)
@@ -428,15 +482,8 @@ namespace party
 	void menu_error(const std::string& error)
 	{
 		console::error("%s\n", error.data());
-		if (game::Menu_IsMenuOpenAndVisible(0, "popup_acceptinginvite"))
-		{
-			command::execute("lui_close popup_acceptinginvite", false);
-		}
 
-		if (game::Menu_IsMenuOpenAndVisible(0, "generic_waiting_popup_"))
-		{
-			command::execute("lui_close generic_waiting_popup_", false);
-		}
+		close_joining_popups();
 
 		utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE"); // Com_SetLocalizedErrorMessage
 		*reinterpret_cast<int*>(0x2ED2F78_b) = 1;
@@ -918,6 +965,9 @@ namespace party
 					return;
 				}
 
+				saved_target = target;
+				saved_info_string = info;
+
 				if (info.get("challenge") != connect_state.challenge)
 				{
 					menu_error("Connection failed: Invalid challenge.");
@@ -959,7 +1009,7 @@ namespace party
 					return;
 				}
 
-				if (download_files(target, info))
+				if (download_files(target, info, false))
 				{
 					return;
 				}
