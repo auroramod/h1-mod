@@ -306,7 +306,7 @@ namespace network
 				on("print", [](const game::netadr_s&, const std::string_view& data)
 				{
 					const std::string message{data};
-					console::info(message.data());
+					console::info("%s\n", message.data());
 				});
 
 				// Use our own socket since the game's socket doesn't work with non localhost addresses
