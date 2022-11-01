@@ -1,7 +1,8 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "system_check.hpp"
+
 #include "arxan.hpp"
+#include "system_check.hpp"
 
 #include "game/game.hpp"
 

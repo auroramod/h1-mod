@@ -138,7 +138,7 @@ namespace dedicated
 
 			va_end(ap);
 
-			scheduler::once([]()
+			scheduler::once([]
 			{
 				command::execute("map_rotate");
 			}, scheduler::main, 3s);
@@ -313,7 +313,7 @@ namespace dedicated
 			{
 				if (game::Live_SyncOnlineDataFlags(0) == 32 && game::Sys_IsDatabaseReady2())
 				{
-					scheduler::once([]()
+					scheduler::once([]
 					{
 						command::execute("xstartprivateparty", true);
 						command::execute("disconnect", true); // 32 -> 0
@@ -324,7 +324,7 @@ namespace dedicated
 				return scheduler::cond_continue;
 			}, scheduler::pipeline::main, 1s);
 
-			scheduler::on_game_initialized([]()
+			scheduler::on_game_initialized([]
 			{
 				initialize();
 

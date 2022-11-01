@@ -29,10 +29,10 @@ namespace bots
 		void bot_team_join(const int entity_num)
 		{
 			const game::scr_entref_t entref{static_cast<uint16_t>(entity_num), 0};
-			scheduler::once([entref]()
+			scheduler::once([entref]
 			{
 				scripting::notify(entref, "luinotifyserver", {"team_select", 2});
-				scheduler::once([entref]()
+				scheduler::once([entref]
 				{
 					auto* _class = utils::string::va("class%d", utils::cryptography::random::get_integer() % 5);
 					scripting::notify(entref, "luinotifyserver", {"class_select", _class});
@@ -65,7 +65,7 @@ namespace bots
 			}
 			else
 			{
-				scheduler::once([]()
+				scheduler::once([]
 				{
 					add_bot();
 				}, scheduler::pipeline::server, 100ms);

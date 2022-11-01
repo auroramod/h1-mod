@@ -1,15 +1,15 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "scheduler.hpp"
-#include "game/game.hpp"
 
 #include "console.hpp"
 #include "command.hpp"
+#include "discord.hpp"
+#include "materials.hpp"
 #include "network.hpp"
 #include "party.hpp"
-#include "materials.hpp"
-#include "discord.hpp"
+#include "scheduler.hpp"
 
+#include "game/game.hpp"
 #include "game/ui_scripting/execution.hpp"
 
 #include <utils/string.hpp>
@@ -58,15 +58,11 @@ namespace discord
 				static char details[0x80] = {0};
 				const auto map = game::Dvar_FindVar("mapname")->current.string;
 				const auto key = utils::string::va("PRESENCE_%s%s", SELECT_VALUE("SP_", ""), map);
-				const char* mapname = nullptr;
+				const char* mapname = map;
 
 				if (game::DB_XAssetExists(game::ASSET_TYPE_LOCALIZE, key) && !game::DB_IsXAssetDefault(game::ASSET_TYPE_LOCALIZE, key))
 				{
 					mapname = game::UI_SafeTranslateString(key);
-				}
-				else
-				{
-					mapname = map;
 				}
 
 				if (game::environment::is_mp())
@@ -80,7 +76,6 @@ namespace discord
 						clean_hostname, sizeof(clean_hostname));
 					auto max_clients = party::server_client_count();
 
-					// When true, we are in Private Match
 					if (game::SV_Loaded())
 					{
 						strcpy_s(clean_hostname, "Private Match");
@@ -227,12 +222,17 @@ namespace discord
 				handlers.joinGame = join_game;
 				handlers.joinRequest = join_request;
 			}
+			else
+			{
+				handlers.joinGame = nullptr;
+				handlers.joinRequest = nullptr;
+			}
 
 			Discord_Initialize("947125042930667530", &handlers, 1, nullptr);
 
 			scheduler::once(download_default_avatar, scheduler::pipeline::async);
 
-			scheduler::once([]()
+			scheduler::once([]
 			{
 				scheduler::once(update_discord, scheduler::pipeline::async);
 				scheduler::loop(update_discord, scheduler::pipeline::async, 5s);
@@ -270,15 +270,12 @@ namespace discord
 
 		static void join_game(const char* join_secret)
 		{
-			console::info("Discord: Join game called with join secret: %s\n", join_secret);
-
-			std::string secret = join_secret;
-			scheduler::once([=]()
+			scheduler::once([=]
 			{
 				game::netadr_s target{};
-				if (game::NET_StringToAdr(secret.data(), &target))
+				if (game::NET_StringToAdr(join_secret, &target))
 				{
-					console::info("Discord: Connecting to server: %s\n", secret.data());
+					console::info("Discord: Connecting to server: %s\n", join_secret);
 					party::connect(target);
 				}
 			}, scheduler::pipeline::main);
@@ -286,7 +283,7 @@ namespace discord
 
 		static void join_request(const DiscordUser* request)
 		{
-			console::info("Discord: join_request from %s (%s)\n", request->username, request->userId);
+			console::info("Discord: Join request from %s (%s)\n", request->username, request->userId);
 
 			if (game::Com_InFrontend() || !ui_scripting::lui_running())
 			{
@@ -299,7 +296,7 @@ namespace discord
 			std::string discriminator = request->discriminator;
 			std::string username = request->username;
 
-			scheduler::once([=]()
+			scheduler::once([=]
 			{
 				const ui_scripting::table request_table{};
 				request_table.set("avatar", avatar);

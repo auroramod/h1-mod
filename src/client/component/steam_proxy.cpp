@@ -5,15 +5,15 @@
 
 #include "arxan.hpp"
 
-#include <utils/nt.hpp>
-#include <utils/flags.hpp>
-#include <utils/string.hpp>
-#include <utils/binary_resource.hpp>
-
 #include "game/game.hpp"
 
 #include "steam/interface.hpp"
 #include "steam/steam.hpp"
+
+#include <utils/nt.hpp>
+#include <utils/flags.hpp>
+#include <utils/string.hpp>
+#include <utils/binary_resource.hpp>
 
 namespace steam_proxy
 {

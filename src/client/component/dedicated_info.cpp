@@ -1,8 +1,11 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "game/game.hpp"
+
 #include "scheduler.hpp"
-#include <utils\string.hpp>
+
+#include "game/game.hpp"
+
+#include <utils/string.hpp>
 
 namespace dedicated_info
 {
@@ -16,7 +19,7 @@ namespace dedicated_info
 				return;
 			}
 
-			scheduler::loop([]()
+			scheduler::loop([]
 			{
 				auto* sv_running = game::Dvar_FindVar("sv_running");
 				if (!sv_running || !sv_running->current.enabled || (*game::mp::svs_clients) == nullptr)
@@ -25,9 +28,9 @@ namespace dedicated_info
 					return;
 				}
 
-				auto* const sv_hostname = game::Dvar_FindVar("sv_hostname");
-				auto* const sv_maxclients = game::Dvar_FindVar("sv_maxclients");
-				auto* const mapname = game::Dvar_FindVar("mapname");
+				const auto sv_hostname = game::Dvar_FindVar("sv_hostname");
+				const auto sv_maxclients = game::Dvar_FindVar("sv_maxclients");
+				const auto mapname = game::Dvar_FindVar("mapname");
 
 				auto bot_count = 0;
 				auto client_count = 0;

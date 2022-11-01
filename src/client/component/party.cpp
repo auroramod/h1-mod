@@ -486,11 +486,6 @@ namespace party
 		return connect_state.host;
 	}
 
-	std::string get_state_challenge()
-	{
-		return connect_state.challenge;
-	}
-
 	void start_map(const std::string& mapname, bool dev)
 	{
 		if (game::Live_SyncOnlineDataFlags(0) > 32)
@@ -770,7 +765,7 @@ namespace party
 
 				game::SV_GameSendServerCommand(client_num, game::SV_CMD_CAN_IGNORE,
 				                               utils::string::va("%c \"%s: %s\"", 84, name, message.data()));
-				printf("%s -> %i: %s\n", name, client_num, message.data());
+				console::info("%s -> %i: %s\n", name, client_num, message.data());
 			});
 
 			command::add("tellraw", [](const command::params& params)
@@ -785,7 +780,7 @@ namespace party
 
 				game::SV_GameSendServerCommand(client_num, game::SV_CMD_CAN_IGNORE,
 				                               utils::string::va("%c \"%s\"", 84, message.data()));
-				printf("%i: %s\n", client_num, message.data());
+				console::info("%i: %s\n", client_num, message.data());
 			});
 
 			command::add("say", [](const command::params& params)
@@ -800,7 +795,7 @@ namespace party
 
 				game::SV_GameSendServerCommand(
 					-1, game::SV_CMD_CAN_IGNORE, utils::string::va("%c \"%s: %s\"", 84, name, message.data()));
-				printf("%s: %s\n", name, message.data());
+				console::info("%s: %s\n", name, message.data());
 			});
 
 			command::add("sayraw", [](const command::params& params)
@@ -814,15 +809,15 @@ namespace party
 
 				game::SV_GameSendServerCommand(-1, game::SV_CMD_CAN_IGNORE,
 				                               utils::string::va("%c \"%s\"", 84, message.data()));
-				printf("%s\n", message.data());
+				console::info("%s\n", message.data());
 			});
 
-			network::on("getInfo", [](const game::netadr_s& target, const std::string_view& data)
+			network::on("getInfo", [](const game::netadr_s& target, const std::string& data)
 			{
 				const auto mapname = get_dvar_string("mapname");
 
-				utils::info_string info{};
-				info.set("challenge", std::string{data});
+				utils::info_string info;
+				info.set("challenge", data);
 				info.set("gamename", "H1");
 				info.set("hostname", get_dvar_string("sv_hostname"));
 				info.set("gametype", get_dvar_string("g_gametype"));
@@ -871,9 +866,9 @@ namespace party
 				network::send(target, "infoResponse", info.build(), '\n');
 			});
 
-			network::on("infoResponse", [](const game::netadr_s& target, const std::string_view& data)
+			network::on("infoResponse", [](const game::netadr_s& target, const std::string& data)
 			{
-				const utils::info_string info{data};
+				const utils::info_string info(data);
 				server_list::handle_info_response(target, info);
 
 				if (connect_state.host != target)

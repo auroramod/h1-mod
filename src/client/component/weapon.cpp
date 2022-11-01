@@ -1,13 +1,13 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "game/game.hpp"
-
-#include "console.hpp"
 #include "command.hpp"
+#include "console.hpp"
 #include "fastfiles.hpp"
 
-#include "utils/hook.hpp"
+#include "game/game.hpp"
+
+#include <utils/hook.hpp>
 
 namespace weapon
 {

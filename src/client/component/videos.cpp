@@ -10,6 +10,7 @@ namespace videos
 	namespace
 	{
 		utils::hook::detour playvid_hook;
+
 		std::unordered_map<std::string, std::string> video_replaces;
 
 		void playvid(const char* name, const int a2, const int a3)

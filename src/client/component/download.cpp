@@ -71,7 +71,7 @@ namespace download
 						static_cast<double>(total));
 				}
 
-				scheduler::once([=]()
+				scheduler::once([=]
 				{
 					ui_scripting::notify("mod_download_progress",
 					{
@@ -91,7 +91,7 @@ namespace download
 
 		void menu_error(const std::string& error)
 		{
-			scheduler::once([=]()
+			scheduler::once([=]
 			{
 				party::menu_error(error);
 			}, scheduler::pipeline::lui);
@@ -102,7 +102,7 @@ namespace download
 	{
 		if (download_active())
 		{
-			scheduler::schedule([=]()
+			scheduler::schedule([=]
 			{
 				if (!download_active())
 				{
@@ -128,14 +128,12 @@ namespace download
 			return;
 		}
 
-		scheduler::once([=]()
+		scheduler::once([]
 		{
-			const ui_scripting::table mod_data_table{};
-
 			ui_scripting::notify("mod_download_start", {});
 		}, scheduler::pipeline::lui);
 
-		scheduler::once([=]()
+		scheduler::once([=]
 		{
 			{
 				const auto _0 = gsl::finally(&mark_unactive);
@@ -148,7 +146,7 @@ namespace download
 
 				for (const auto& file : files)
 				{
-					scheduler::once([=]()
+					scheduler::once([=]
 					{
 						const ui_scripting::table data_table{};
 						data_table.set("name", file.name.data());
@@ -192,12 +190,12 @@ namespace download
 				}
 			}
 
-			scheduler::once([]()
+			scheduler::once([]
 			{
 				ui_scripting::notify("mod_download_done", {});
 			}, scheduler::pipeline::lui);
 
-			scheduler::once([=]()
+			scheduler::once([target]
 			{
 				party::connect(target);
 			}, scheduler::pipeline::main);
@@ -216,11 +214,10 @@ namespace download
 			globals_.abort = true;
 		});
 
-		scheduler::once([]()
+		scheduler::once([]
 		{
 			ui_scripting::notify("mod_download_done", {});
 			party::menu_error("Download for server mod has been cancelled.");
 		}, scheduler::pipeline::lui);
 	}
 }
-

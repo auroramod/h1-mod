@@ -1,10 +1,10 @@
 #include <std_include.hpp>
-#include "console.hpp"
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
 
 #include "command.hpp"
+#include "console.hpp"
 #include "rcon.hpp"
 #include "version.hpp"
 
@@ -62,7 +62,7 @@ namespace console
 		{
 			static thread_local char buffer[0x1000];
 
-			const auto count = _vsnprintf_s(buffer, sizeof(buffer), sizeof(buffer), message, *ap);
+			const auto count = vsnprintf_s(buffer, _TRUNCATE, message, *ap);
 			if (count < 0)
 			{
 				return {};

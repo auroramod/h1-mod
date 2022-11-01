@@ -135,7 +135,7 @@ namespace dvar_cheats
 			utils::hook::nop(0x1861D4_b, 8); // let our stub handle zero-source sets
 			utils::hook::jump(0x1861DF_b, get_dvar_flag_checks_stub(), true); // check extra dvar flags when setting values
 
-			scheduler::once([]()
+			scheduler::once([]
 			{
 				dvars::register_bool("sv_cheats", false, game::DvarFlags::DVAR_FLAG_REPLICATED,
 				                     "Allow cheat commands and dvars on this server");

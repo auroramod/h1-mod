@@ -3,7 +3,7 @@
 
 namespace network
 {
-	using callback = std::function<void(const game::netadr_s&, const std::string_view&)>;
+	using callback = std::function<void(const game::netadr_s&, const std::string&)>;
 
 	void on(const std::string& command, const callback& callback);
 	void send(const game::netadr_s& address, const std::string& command, const std::string& data = {}, char separator = ' ');

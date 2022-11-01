@@ -1,18 +1,18 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "game/game.hpp"
-#include "game/dvars.hpp"
-#include "game/scripting/execution.hpp"
-
 #include "command.hpp"
 #include "console.hpp"
+#include "dvars.hpp"
 #include "game_console.hpp"
 #include "fastfiles.hpp"
 #include "filesystem.hpp"
 #include "scheduler.hpp"
 #include "logfile.hpp"
-#include "dvars.hpp"
+
+#include "game/game.hpp"
+#include "game/dvars.hpp"
+#include "game/scripting/execution.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>

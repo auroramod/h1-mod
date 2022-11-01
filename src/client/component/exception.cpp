@@ -1,8 +1,11 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "system_check.hpp"
-#include "scheduler.hpp"
 
+#include "scheduler.hpp"
+#include "system_check.hpp"
+#include "version.hpp"
+
+#include "game/dvars.hpp"
 #include "game/game.hpp"
 
 #include <utils/hook.hpp>
@@ -12,10 +15,6 @@
 #include <utils/compression.hpp>
 
 #include <exception/minidump.hpp>
-
-#include <version.hpp>
-
-#include "game/dvars.hpp"
 
 namespace exception
 {
@@ -246,7 +245,7 @@ namespace exception
 			SetUnhandledExceptionFilter(exception_filter);
 			utils::hook::jump(SetUnhandledExceptionFilter, set_unhandled_exception_filter_stub, true);
 
-			scheduler::on_game_initialized([]()
+			scheduler::on_game_initialized([]
 			{
 				is_initialized() = true;
 			});
@@ -255,7 +254,7 @@ namespace exception
 		void post_unpack() override
 		{
 			dvars::cg_legacyCrashHandling = dvars::register_bool("cg_legacyCrashHandling", 
-				false, game::DVAR_FLAG_SAVED, "Disable new crash handling");
+				false, game::DVAR_FLAG_SAVED, "Toggle new crash handling");
 		}
 	};
 }

@@ -1,12 +1,12 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "game/dvars.hpp"
-
-#include "fastfiles.hpp"
 #include "command.hpp"
 #include "console.hpp"
+#include "fastfiles.hpp"
 #include "filesystem.hpp"
+
+#include "game/dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/concurrency.hpp>

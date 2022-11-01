@@ -1,11 +1,15 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+
 #include "command.hpp"
+#include "console.hpp"
 #include "scheduler.hpp"
+
+#include "game/game.hpp"
+#include "game/dvars.hpp"
+
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
-#include "game/game.hpp"
-#include <game/dvars.hpp>
 
 namespace map_rotation
 {
@@ -82,14 +86,12 @@ namespace map_rotation
 			auto* const dvar = game::Dvar_FindVar("sv_autoPriority");
 			if (dvar && dvar->current.enabled)
 			{
-				scheduler::on_game_initialized([]()
+				scheduler::on_game_initialized([]
 				{
-					//printf("=======================setting OLD priority=======================\n");
 					SetPriorityClass(GetCurrentProcess(), previous_priority);
 				}, scheduler::pipeline::main, 1s);
 
 				previous_priority = GetPriorityClass(GetCurrentProcess());
-				//printf("=======================setting NEW priority=======================\n");
 				SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 			}
 		}
@@ -119,7 +121,7 @@ namespace map_rotation
 					change_process_priority();
 					if (!game::SV_MapExists(value.data()))
 					{
-						printf("map_rotation: '%s' map doesn't exist!\n", value.data());
+						console::info("map_rotation: '%s' map doesn't exist!\n", value.data());
 						launch_default_map();
 						return;
 					}
@@ -128,7 +130,7 @@ namespace map_rotation
 				}
 				else
 				{
-					printf("Invalid map rotation key: %s\n", key.data());
+					console::info("Invalid map rotation key: %s\n", key.data());
 				}
 			}
 
@@ -137,7 +139,7 @@ namespace map_rotation
 
 		void trigger_map_rotation()
 		{
-			scheduler::schedule([]()
+			scheduler::schedule([]
 			{
 				if (game::CL_IsCgameInitialized())
 				{
@@ -160,7 +162,7 @@ namespace map_rotation
 				return;
 			}
 
-			scheduler::once([]()
+			scheduler::once([]
 			{
 				dvars::register_string("sv_mapRotation", "", game::DVAR_FLAG_NONE, "");
 				dvars::register_string("sv_mapRotationCurrent", "", game::DVAR_FLAG_NONE, "");

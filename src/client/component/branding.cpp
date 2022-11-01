@@ -1,13 +1,13 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
+#include "command.hpp"
+#include "dvars.hpp"
 #include "localized_strings.hpp"
 #include "scheduler.hpp"
-#include "command.hpp"
 #include "version.hpp"
 
 #include "game/game.hpp"
-#include "dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>

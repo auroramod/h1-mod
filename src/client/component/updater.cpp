@@ -2,16 +2,15 @@
 #include "loader/component_loader.hpp"
 
 #include "console.hpp"
-#include "scheduler.hpp"
-#include "dvars.hpp"
-#include "updater.hpp"
 #include "fastfiles.hpp"
-#include "game/ui_scripting/execution.hpp"
-
-#include "version.h"
+#include "dvars.hpp"
+#include "scheduler.hpp"
+#include "updater.hpp"
+#include "version.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
+#include "game/ui_scripting/execution.hpp"
 
 #include <utils/concurrency.hpp>
 #include <utils/cryptography.hpp>
