@@ -427,7 +427,7 @@ namespace gsc
 				const auto what = args[0].get_raw();
 				const auto with = args[1].get_raw();
 
-				if (what.type != game::SCRIPT_FUNCTION || with.type != game::SCRIPT_FUNCTION)
+				if (what.type != game::VAR_FUNCTION || with.type != game::VAR_FUNCTION)
 				{
 					throw std::runtime_error("replaceFunc: parameter 1 must be a function");
 				}

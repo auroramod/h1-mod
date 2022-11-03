@@ -199,7 +199,7 @@ namespace scripting
 	{
 		unsigned int index = 0;
 		const auto variable = game::AllocVariable(&index);
-		variable->w.type = game::SCRIPT_ARRAY;
+		variable->w.type = game::VAR_ARRAY;
 		variable->u.f.prev = 0;
 		variable->u.f.next = 0;
 

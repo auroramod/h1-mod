@@ -22,22 +22,6 @@ namespace game
 		unsigned short classnum;
 	};
 
-	enum scriptType_e
-	{
-		SCRIPT_NONE = 0,
-		SCRIPT_OBJECT = 1,
-		SCRIPT_STRING = 2,
-		SCRIPT_ISTRING = 3,
-		SCRIPT_VECTOR = 4,
-		SCRIPT_FLOAT = 5,
-		SCRIPT_INTEGER = 6,
-		SCRIPT_END = 8,
-		SCRIPT_FUNCTION = 9,
-		SCRIPT_STRUCT = 19,
-		SCRIPT_ARRAY = 22
-	};
-
-	// recreated from IW6 pdb and H1 elf (no structs :/)
 	enum VariableType
 	{
 		VAR_UNDEFINED = 0x0,

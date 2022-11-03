@@ -22,6 +22,6 @@ namespace scripting
 		void assign(const game::VariableValue& value);
 		void release();
 
-		game::VariableValue value_{{0}, game::SCRIPT_NONE};
+		game::VariableValue value_{{0}, game::VAR_UNDEFINED};
 	};
 }

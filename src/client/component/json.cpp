@@ -66,32 +66,32 @@ namespace json
 
 			switch (type)
 			{
-			case (game::SCRIPT_NONE):
+			case (game::VAR_UNDEFINED):
 				return {};
-			case (game::SCRIPT_INTEGER):
+			case (game::VAR_INTEGER):
 				return value.intValue;
-			case (game::SCRIPT_FLOAT):
+			case (game::VAR_FLOAT):
 				return value.floatValue;
-			case (game::SCRIPT_STRING):
-			case (game::SCRIPT_ISTRING):
+			case (game::VAR_STRING):
+			case (game::VAR_ISTRING):
 				return game::SL_ConvertToString(static_cast<game::scr_string_t>(value.stringValue));
-			case (game::SCRIPT_VECTOR):
+			case (game::VAR_VECTOR):
 				return vector_to_array(value.vectorValue);
-			case (game::SCRIPT_OBJECT):
+			case (game::VAR_POINTER):
 			{
 				const auto object_type = game::scr_VarGlob->objectVariableValue[value.uintValue].w.type;
 
 				switch (object_type)
 				{
-				case (game::SCRIPT_STRUCT):
+				case (game::VAR_OBJECT):
 					return "[struct]";
-				case (game::SCRIPT_ARRAY):
+				case (game::VAR_ARRAY):
 					return entity_to_array(value.uintValue);
 				default:
 					return "[entity]";
 				}
 			}
-			case (game::SCRIPT_FUNCTION):
+			case (game::VAR_FUNCTION):
 				return _value.as<scripting::function>().get_name();
 			default:
 				return utils::string::va("[%s]", _value.type_name().data());

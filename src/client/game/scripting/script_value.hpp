@@ -14,47 +14,47 @@ namespace scripting
 
 	namespace
 	{
-		std::unordered_map<int, std::string> typenames =
+		std::array<const char*, 27> var_typename =
 		{
-			{0, "undefined"},
-			{1, "object"},
-			{2, "string"},
-			{3, "localized string"},
-			{4, "vector"},
-			{5, "float"},
-			{6, "int"},
-			{7, "codepos"},
-			{8, "precodepos"},
-			{9, "function"},
-			{10, "builtin function"},
-			{11, "builtin method"},
-			{12, "stack"},
-			{13, "animation"},
-			{14, "pre animation"},
-			{15, "thread"},
-			{16, "notify thread"},
-			{17, "time thread"},
-			{18, "child thread"},
-			{19, "struct"},
-			{20, "removed entity"},
-			{21, "entity"},
-			{22, "array"},
-			{23, "removed thread"},
-			{24, "<free>"},
-			{25, "thread list"},
-			{26, "endon list"},
+			"undefined",
+			"object",
+			"string",
+			"localized string",
+			"vector",
+			"float",
+			"int",
+			"codepos",
+			"precodepos",
+			"function",
+			"builtin function",
+			"builtin method",
+			"stack",
+			"animation",
+			"pre animation",
+			"thread",
+			"thread",
+			"thread",
+			"thread",
+			"struct",
+			"removed entity",
+			"entity",
+			"array",
+			"removed thread",
+			"<free>",
+			"thread list",
+			"endon list",
 		};
 
 		std::string get_typename(const game::VariableValue& value)
 		{
-			if (value.type == game::SCRIPT_OBJECT)
+			if (value.type == game::VAR_POINTER)
 			{
 				const auto type = game::scr_VarGlob->objectVariableValue[value.u.uintValue].w.type;
-				return typenames[type];
+				return var_typename[type];
 			}
 			else
 			{
-				return typenames[value.type];
+				return var_typename[value.type];
 			}
 		}
 

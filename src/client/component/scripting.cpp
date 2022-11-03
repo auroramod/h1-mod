@@ -67,7 +67,7 @@ namespace scripting
 					e.name = string;
 					e.entity = notify_list_owner_id;
 
-					for (auto* value = top; value->type != game::SCRIPT_END; --value)
+					for (auto* value = top; value->type != game::VAR_PRECODEPOS; --value)
 					{
 						e.arguments.emplace_back(*value);
 					}

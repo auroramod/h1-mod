@@ -90,7 +90,7 @@ namespace scripting
 	{
 		if (this->entity_id_)
 		{
-			game::AddRefToValue(game::SCRIPT_OBJECT, {static_cast<int>(this->entity_id_)});
+			game::AddRefToValue(game::VAR_POINTER, {static_cast<int>(this->entity_id_)});
 		}
 	}
 
@@ -98,7 +98,7 @@ namespace scripting
 	{
 		if (this->entity_id_)
 		{
-			game::RemoveRefToValue(game::SCRIPT_OBJECT, {static_cast<int>(this->entity_id_)});
+			game::RemoveRefToValue(game::VAR_POINTER, {static_cast<int>(this->entity_id_)});
 		}
 	}
 

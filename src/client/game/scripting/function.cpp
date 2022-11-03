@@ -15,7 +15,7 @@ namespace scripting
 	script_value function::get_raw() const
 	{
 		game::VariableValue value;
-		value.type = game::SCRIPT_FUNCTION;
+		value.type = game::VAR_FUNCTION;
 		value.u.codePosValue = this->pos_;
 
 		return value;

@@ -35,7 +35,7 @@ namespace scripting
 		{
 			this->release();
 			this->value_ = other.value_;
-			other.value_.type = game::SCRIPT_NONE;
+			other.value_.type = game::VAR_UNDEFINED;
 		}
 
 		return *this;
@@ -59,10 +59,10 @@ namespace scripting
 
 	void variable_value::release()
 	{
-		if (this->value_.type != game::SCRIPT_NONE)
+		if (this->value_.type != game::VAR_UNDEFINED)
 		{
 			game::RemoveRefToValue(this->value_.type, this->value_.u);
-			this->value_.type = game::SCRIPT_NONE;
+			this->value_.type = game::VAR_UNDEFINED;
 		}
 	}
 }
