@@ -1,6 +1,7 @@
 require("language")
 
 if (game:issingleplayer()) then
+    require("sp_unlockall")
     return
 end
 

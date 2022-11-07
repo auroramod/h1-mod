@@ -13,6 +13,9 @@
     "LUA_MENU_RED_DOT_BRIGHTNESS": "Яркость коллиматора",
     "LUA_MENU_RED_DOT_BRIGHTNESS_DESC": "Регулировка яркости красной точки коллиматорных прицелов.",
 
+    "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "Открыть все задания и чит-коды",
+    "LUA_MENU_CANCEL_UNLOCK_CAPS": "Вернуться к своему прогрессу прохождения",
+
     "MENU_MODS": "МОДЫ",
     "MENU_MODS_DESC": "Запуск установленных модов.",
     "LUA_MENU_MOD_DESC_DEFAULT": "Запустить &&1.",

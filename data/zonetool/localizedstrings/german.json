@@ -11,5 +11,7 @@
     "LOCALE_RUSSIAN": "Russisch",
     "LOCALE_SIMPLIFIED_CHINESE": "Vereinfachtes Chinesisch",
     "LOCALE_SPANISH": "Spanisch",
-    "LOCALE_TRADITIONAL_CHINESE": "Traditionelles Chinesisch"
+    "LOCALE_TRADITIONAL_CHINESE": "Traditionelles Chinesisch",
+    "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "Alle Missionen freischalten",
+    "LUA_MENU_CANCEL_UNLOCK_CAPS": "Freischalten abbrechen"
 }

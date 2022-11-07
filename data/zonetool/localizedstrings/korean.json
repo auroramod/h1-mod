@@ -11,5 +11,8 @@
     "LOCALE_RUSSIAN": "러시아어",
     "LOCALE_SIMPLIFIED_CHINESE": "중국어(간체)",
     "LOCALE_SPANISH": "스페인어",
-    "LOCALE_TRADITIONAL_CHINESE": "중국어(번체)"
+    "LOCALE_TRADITIONAL_CHINESE": "중국어(번체)",
+
+    "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "모든 임무 잠금 해제",
+    "LUA_MENU_CANCEL_UNLOCK_CAPS": "잠금 해제 취소"
 }

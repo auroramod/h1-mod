@@ -11,5 +11,8 @@
     "LOCALE_RUSSIAN": "Rosyjski",
     "LOCALE_SIMPLIFIED_CHINESE": "Chiński uproszczony",
     "LOCALE_SPANISH": "Hiszpański",
-    "LOCALE_TRADITIONAL_CHINESE": "Chiński tradycyjny"
+    "LOCALE_TRADITIONAL_CHINESE": "Chiński tradycyjny",
+
+    "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "Odblokuj wszystkie misje",
+    "LUA_MENU_CANCEL_UNLOCK_CAPS": "Anuluj odblokowanie"
 }
