@@ -144,6 +144,11 @@ namespace mapents
 		std::string entity_string;
 		const char* cm_entity_string_stub()
 		{
+			if (!entity_string.empty())
+			{
+				return entity_string.data();
+			}
+
 			const auto original = utils::hook::invoke<const char*>(SELECT_VALUE(0x3685C0_b, 0x4CD140_b));
 			const auto parsed = parse_mapents(original);
 			if (parsed.has_value())
