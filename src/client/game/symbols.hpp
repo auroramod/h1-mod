@@ -112,6 +112,8 @@ namespace game
 	WEAK symbol<void(int clientNum, unsigned int weapon)> G_SelectWeapon{0x2F2EA0, 0x462560};
 	WEAK symbol<int(playerState_s* ps, unsigned int weapon)> G_TakePlayerWeapon{0x2F3050, 0x462770};
 
+	WEAK symbol<int(const char* buf, int max, char** infos)> GameInfo_ParseArenas{0x0, 0x4DE0B0};
+
 	WEAK symbol<char*(char* string)> I_CleanStr{0x4293E0, 0x5AF2E0};
 
 	WEAK symbol<const char*(int, int, int)> Key_KeynumToString{0x1AC410, 0x199990};
@@ -192,6 +194,7 @@ namespace game
 
 	WEAK symbol<int(const RawFile* rawfile)> DB_GetRawFileLen{0x1F1F40, 0x3961B0};
 	WEAK symbol<int(const RawFile* rawfile, char* buf, int size)> DB_GetRawBuffer{0x1F1E00, 0x396080};
+	WEAK symbol<char*(const char* filename, char* buf, int size)> DB_ReadRawFile{0x0, 0x3994B0};
 
 	WEAK symbol<bool(const char* zone, int source)> DB_FileExists{0x1F0D50, 0x394DC0};
 	WEAK symbol<void(XZoneInfo* zoneInfo, unsigned int zoneCount, DBSyncMode syncMode)> DB_LoadXAssets{0x1F31E0, 0x397500};
@@ -302,6 +305,10 @@ namespace game
 	WEAK symbol<SOCKET> query_socket{0xD64D3F8, 0xC9DCD38};
 
 	WEAK symbol<DWORD> threadIds{0xB896210, 0xAC80740};
+
+	WEAK symbol<int> ui_num_arenas{0x0, 0xAA55AD8};
+	WEAK symbol<int> ui_arena_buf_pos{0x0, 0xAA55ADC};
+	WEAK symbol<char*> ui_arena_infos{0x0, 0xAA55AE0};
 
 	WEAK symbol<int> level_time{0x56DBAA0, 0x7361F9C};
 

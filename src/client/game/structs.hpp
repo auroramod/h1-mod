@@ -1563,6 +1563,33 @@ namespace game
 		int unk;
 	};
 
+	struct UISpawnPos
+	{
+		float allySpawnPos[2];
+		float axisSpawnPos[2];
+		float objectives[5][2];
+	};
+
+	struct mapInfo
+	{
+		char mapName[32];
+		char mapLoadName[16];
+		char mapDescription[32];
+		char mapLoadImage[32];
+		char mapCustomKey[32][16];
+		char mapCustomValue[32][64];
+		int mapCustomCount;
+		char mapCamoTypes[2][16];
+		int isAliensMap;
+		int mapPack;
+		int unk1;
+		int gametype;
+		char __pad0[132];
+		UISpawnPos mapSpawnPos[32];
+	};
+
+	static_assert(sizeof(mapInfo) == 4648);
+
 	namespace mp
 	{
 		struct cachedSnapshot_t
