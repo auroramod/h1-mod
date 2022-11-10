@@ -1590,6 +1590,15 @@ namespace game
 
 	static_assert(sizeof(mapInfo) == 4648);
 
+	struct ui_info
+	{
+		char __pad0[16];
+		float cursor_x;
+		float cursor_y;
+		int cursor_time;
+		int ingame_cursor_visible;
+	};
+
 	namespace mp
 	{
 		struct cachedSnapshot_t

@@ -62,6 +62,9 @@ namespace game
 	WEAK symbol<void(int a1)> CL_VirtualLobbyShutdown{0x0, 0x0};
 	WEAK symbol<const char* (int configStringIndex)> CL_GetConfigString{0x0, 0x33B820};
 
+	WEAK symbol<void(int a1)> CL_ShowSystemCursor{0x0, 0x5BAA60};
+	WEAK symbol<void(tagPOINT* position)> CL_GetCursorPos{0x0, 0x5BA800};
+
 	WEAK symbol<void(int hash, const char* name, const char* buffer)> Dvar_SetCommand{0x41BAD0, 0x1857D0};
 	WEAK symbol<dvar_t*(const char* name)> Dvar_FindVar{0x41A600, 0x183EB0};
 	WEAK symbol<dvar_t*(int hash)> Dvar_FindMalleableVar{0x41A570, 0x183E20};
@@ -210,6 +213,9 @@ namespace game
 	WEAK symbol<bool(int clientNum, const char* menu)> Menu_IsMenuOpenAndVisible{0x4F43C0, 0x1AAF10};
 	WEAK symbol<void(int clientNum, const char* menu)> Menus_OpenByName{0x0, 0x1E1270};
 	WEAK symbol<void(int clientNum, const char* menu)> Menus_CloseByName{0x0, 0x1DA4C0};
+	WEAK symbol<void*(void* dc, const char* name)> Menus_FindByName{0x0, 0x1AC810};
+	WEAK symbol<void(void* dc, void* menu, int a3)> Menus_Open{0x0, 0x1E1296};
+	WEAK symbol<void(void* dc)> Display_MouseMove{0x0, 0x180B70};
 
 	WEAK symbol<scr_string_t(const char* str)> SL_FindString{0x3C0F50, 0x507FD0};
 	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{0x3C1210, 0x5083A0};
@@ -258,6 +264,8 @@ namespace game
 	WEAK symbol<void(void* dc, void* menuList, int close)> UI_AddMenuList{0x0, 0x1D9960};
 
 	WEAK symbol<const char*(const char* string)> UI_SafeTranslateString{0x3840A0, 0x4E8BC0};
+
+	WEAK symbol<int(int local_client_num, int menu)> UI_SetActiveMenu{0x0, 0x1E4D80};
 
 	WEAK symbol<void*(jmp_buf* Buf, int Value)> longjmp{0x6DCA90, 0x826710};
 	WEAK symbol<int(jmp_buf* Buf)> _setjmp{0x758980, 0x8A3190};
@@ -309,6 +317,7 @@ namespace game
 	WEAK symbol<int> ui_num_arenas{0x0, 0xAA55AD8};
 	WEAK symbol<int> ui_arena_buf_pos{0x0, 0xAA55ADC};
 	WEAK symbol<char*> ui_arena_infos{0x0, 0xAA55AE0};
+	WEAK symbol<ui_info> ui_info_array{0x0, 0x352E580};
 
 	WEAK symbol<int> level_time{0x56DBAA0, 0x7361F9C};
 

@@ -13,66 +13,21 @@
 
 namespace menus
 {
-	void* ui_info_array;
-	std::string script_main_menu;
-
-	bool UI_AllowScriptMenuResponse()
-	{
-		return *reinterpret_cast<bool*>(0x3532A7C_b);
-	}
-
-	bool UI_Started()
-	{
-		return *reinterpret_cast<bool*>(0x2ED2074_b);
-	}
-
-	bool UI_KeysBypassMenu()
-	{
-		game::dvar_t* cl_bypassMouseInput = game::Dvar_FindVar("cl_bypassMouseInput");
-		if (cl_bypassMouseInput && cl_bypassMouseInput->current.enabled)
-		{
-			return true;
-		}
-		return false;
-	}
-
-	int UI_SetActiveMenu(int local_client_num, int menu)
-	{
-		return utils::hook::invoke<int>(0x1E4D80_b, local_client_num, menu);
-	}
-
-	void CL_ShowSystemCursor(int a1)
-	{
-		return utils::hook::invoke<void>(0x5BAA60_b, a1);
-	}
-
-	void CL_GetCursorPos(tagPOINT* position)
-	{
-		return utils::hook::invoke<void>(0x5BA800_b, position);
-	}
-
-	int Menu_Count()
-	{
-		return *reinterpret_cast<int*>(0x352F9B8_b);
-	}
-
-	void* Menus_FindByName(void* dc, const char* name)
-	{
-		return utils::hook::invoke<void*>(0x1AC810_b, dc, name);
-	}
-
-	void Menus_Open(void* dc, void* menu, int a3)
-	{
-		return utils::hook::invoke<void>(0x1E1296_b, dc, menu, a3);
-	}
-
-	void Display_MouseMove(void* dc)
-	{
-		return utils::hook::invoke<void>(0x180B70_b, dc);
-	}
-
 	namespace
 	{
+		std::string script_main_menu;
+
+		bool keys_bypass_menu()
+		{
+			const auto* cl_bypass_mouse_input = game::Dvar_FindVar("cl_bypassMouseInput");
+			if (cl_bypass_mouse_input && cl_bypass_mouse_input->current.enabled)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
 		game::XAssetHeader load_script_menu_internal(const char* menu)
 		{
 			const char* menu_file = utils::string::va("ui_mp/scriptmenus/%s.menu", menu);
@@ -82,15 +37,16 @@ namespace menus
 		bool load_script_menu(int client_num, const char* menu)
 		{
 			game::XAssetHeader asset = load_script_menu_internal(menu);
-			if (asset.data)
+			if (asset.data != nullptr)
 			{
-				game::UI_AddMenuList(ui_info_array, asset.data, 1);
+				game::UI_AddMenuList(game::ui_info_array, asset.data, 1);
 				return true;
 			}
+
 			return false;
 		}
 
-		void cg_precache_script_menu(int client_num, int config_string_index)
+		void precache_script_menu(int client_num, int config_string_index)
 		{
 			const char* menu = game::CL_GetConfigString(config_string_index);
 			if (menu)
@@ -110,49 +66,52 @@ namespace menus
 			auto nesting = game::R_PopRemoteScreenUpdate();
 			for (auto i = 3432; i < (3432 + 50); i++)
 			{
-				cg_precache_script_menu(client_num, i);
+				precache_script_menu(client_num, i);
 			}
+
 			game::R_PushRemoteScreenUpdate(nesting);
 		}
 
 		void ui_mouse_event(int client_num, int x, int y)
 		{
-			auto scrPlaceFull = game::ScrPlace_GetViewPlacement();
-			auto vX = x / (game::ScrPlace_HiResGetScaleX() * scrPlaceFull->scaleVirtualToFull[0]);
-			auto vY = y / (game::ScrPlace_HiResGetScaleY() * scrPlaceFull->scaleVirtualToFull[1]);
-			*reinterpret_cast<float*>(0x352E590_b) = vX; // cursorX
-			*reinterpret_cast<float*>(0x352E594_b) = vY; // cursorY
-			auto isCursorVisible = vX >= 0.0 && vX <= 640.0 && vY >= 0.0 && vY <= 480.0;
-			
-			if (isCursorVisible)
+			const auto scr_place = game::ScrPlace_GetViewPlacement();
+
+			const auto v_x = x / (game::ScrPlace_HiResGetScaleX() * scr_place->scaleVirtualToFull[0]);
+			const auto v_y = y / (game::ScrPlace_HiResGetScaleY() * scr_place->scaleVirtualToFull[1]);
+
+			game::ui_info_array->cursor_x = v_x;
+			game::ui_info_array->cursor_x = v_y;
+
+			const auto cursor_visible = v_x >= 0.0 && v_x <= 640.0 && v_y >= 0.0 && v_y <= 480.0;
+			if (!cursor_visible)
 			{
-				auto menu_count = Menu_Count();
-				if (menu_count > 0)
-				{
-					*reinterpret_cast<float*>(reinterpret_cast<std::uintptr_t>(ui_info_array) + 16) = vX; // cursor X
-					*reinterpret_cast<float*>(reinterpret_cast<std::uintptr_t>(ui_info_array) + 20) = vY; // cursor Y
+				return;
+			}
 
-					*reinterpret_cast<int*>(reinterpret_cast<std::uintptr_t>(ui_info_array) + 24) = game::Sys_Milliseconds() + 200; // cursor time until ready to move
-
-					*reinterpret_cast<int*>(reinterpret_cast<std::uintptr_t>(ui_info_array) + 28) = isCursorVisible; // ingame cursor visible
-
-					Display_MouseMove(ui_info_array);
-				}
+			const auto menu_count = *reinterpret_cast<int*>(0x352F9B8_b);
+			if (menu_count > 0)
+			{
+				game::ui_info_array->cursor_x = v_x;
+				game::ui_info_array->cursor_y = v_y;
+				game::ui_info_array->cursor_time = game::Sys_Milliseconds() + 200;
+				game::ui_info_array->ingame_cursor_visible = cursor_visible;
+				game::Display_MouseMove(game::ui_info_array);
 			}
 		}
 
 		int ui_mouse_fix(int cx_, int cy_, int dx_, int dy_)
 		{
-			if ((*game::keyCatchers & 0x10) != 0 && !UI_KeysBypassMenu())
+			if ((*game::keyCatchers & 0x10) != 0 && !keys_bypass_menu())
 			{
-				tagPOINT cursor;
+				tagPOINT cursor{};
 
-				CL_ShowSystemCursor(0);
-				CL_GetCursorPos(&cursor);
+				game::CL_ShowSystemCursor(0);
+				game::CL_GetCursorPos(&cursor);
 
 				ui_mouse_event(0, cursor.x, cursor.y);
 				return 0;
 			}
+
 			return utils::hook::invoke<int>(0x1384C0_b, cx_, cy_, dx_, dy_);
 		}
 
@@ -160,13 +119,14 @@ namespace menus
 		{
 			if (!script_main_menu.empty())
 			{
-				void* menu = Menus_FindByName(ui_info_array, script_main_menu.data());
+				void* menu = game::Menus_FindByName(game::ui_info_array, script_main_menu.data());
 				if (menu)
 				{
-					Menus_Open(ui_info_array, menu, 0);
+					game::Menus_Open(game::ui_info_array, menu, 0);
 					return true;
 				}
 			}
+
 			return false;
 		}
 
@@ -178,7 +138,7 @@ namespace menus
 				{
 					if (game::Menu_IsMenuOpenAndVisible(0, script_main_menu.data()))
 					{
-						UI_SetActiveMenu(0, 0);
+						game::UI_SetActiveMenu(0, 0);
 						return;
 					}
 					else if (open_script_main_menu())
@@ -188,7 +148,9 @@ namespace menus
 					}
 				}
 			}
-			return utils::hook::invoke<void>(0x270A90_b, controller_index, context); // LUI_ToggleMenu
+
+			// LUI_ToggleMenu
+			return utils::hook::invoke<void>(0x270A90_b, controller_index, context);
 		}
 	}
 
@@ -206,8 +168,6 @@ namespace menus
 			{
 				return;
 			}
-
-			ui_info_array = reinterpret_cast<void*>(0x352E580_b);
 
 			// add back legacy menu precache
 			cg_set_config_values_hook.create(0x11AC50_b, cg_set_config_values_stub);
