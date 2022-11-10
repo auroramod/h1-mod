@@ -330,6 +330,12 @@ namespace ui_scripting
 				return steam::SteamApps()->GetCurrentGameLanguage();
 			};
 
+			game_type["isdefaultmaterial"] = [](const game&, const std::string& material)
+			{
+				return static_cast<bool>(::game::DB_IsXAssetDefault(::game::ASSET_TYPE_MATERIAL,
+					material.data()));
+			};
+
 			auto server_list_table = table();
 			lua["serverlist"] = server_list_table;
 
