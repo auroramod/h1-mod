@@ -8,6 +8,7 @@
 
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
+#include <utils/memory.hpp>
 
 #define MAX_ARENAS 64
 
@@ -27,16 +28,25 @@ namespace
 			return true;
 		}
 
-		char rawfile_buffer[0x18000] = {0};
-		const auto buf = game::DB_ReadRawFile(path.data(), rawfile_buffer, sizeof(rawfile_buffer));
-		if (buf)
+		if (!game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, path.data()) || 
+			game::DB_IsXAssetDefault(game::ASSET_TYPE_RAWFILE, path.data()))
 		{
-			*game::ui_num_arenas += game::GameInfo_ParseArenas(buf, MAX_ARENAS - *game::ui_num_arenas, 
-				&game::ui_arena_infos[*game::ui_num_arenas]);
-			return true;
+			return false;
 		}
+		
+		const auto rawfile = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, path.data(), 0).rawfile;
+		const auto len = game::DB_GetRawFileLen(rawfile);
 
-		return false;
+		const auto rawfile_buffer = utils::memory::get_allocator()->allocate_array<char>(len);
+		const auto _1 = gsl::finally([&]
+		{
+			utils::memory::get_allocator()->free(rawfile_buffer);
+		});
+
+		game::DB_GetRawBuffer(rawfile, rawfile_buffer, len);
+		*game::ui_num_arenas += game::GameInfo_ParseArenas(rawfile_buffer, MAX_ARENAS - *game::ui_num_arenas,
+			&game::ui_arena_infos[*game::ui_num_arenas]);
+		return true;
 	}
 
 	void load_arenas_stub()
