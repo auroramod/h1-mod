@@ -60,12 +60,26 @@ namespace fastfiles
 		game::XAssetHeader db_find_xasset_header_stub(game::XAssetType type, const char* name, int allow_create_default)
 		{
 			const auto start = game::Sys_Milliseconds();
-			const auto result = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, name, allow_create_default);
+			auto result = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, name, allow_create_default);
 			const auto diff = game::Sys_Milliseconds() - start;
 
 			if (type == game::XAssetType::ASSET_TYPE_SCRIPTFILE)
 			{
 				dump_gsc_script(name, result);
+			}
+
+			if (type == game::XAssetType::ASSET_TYPE_RAWFILE)
+			{
+				if (result.rawfile)
+				{
+					const std::string override_rawfile_name = "override/"s + name;
+					const auto override_rawfile = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_rawfile_name.data(), 0);
+					if (override_rawfile.rawfile)
+					{
+						result.rawfile = override_rawfile.rawfile;
+						console::debug("using override asset for rawfile: \"%s\"\n", name);
+					}
+				}
 			}
 
 			if (diff > 100)
