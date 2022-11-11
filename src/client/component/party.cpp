@@ -343,8 +343,6 @@ namespace party
 				const auto path = get_usermap_file_path(mapname, ext);
 				const auto hash = get_file_hash(path);
 
-				console::debug("%s %s %s != %s\n", ext.data(), key.data(), hash.data(), source_hash.data());
-
 				if ((!source_hash.empty() && hash != source_hash) || (source_hash.empty() && !opt))
 				{
 					command::execute("disconnect");
@@ -422,8 +420,6 @@ namespace party
 					line("");
 				}
 			}
-
-			console::debug("%i %s\n", is_usermap, buffer.data());
 
 			net_out_of_band_print_hook.invoke<void>(sock, addr, buffer.data());
 		}

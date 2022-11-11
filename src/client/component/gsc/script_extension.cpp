@@ -348,11 +348,6 @@ namespace gsc
 			utils::hook::inject(SELECT_VALUE(0x3BDC36_b, 0x504C66_b) + 3, &meth_table);
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BDC3F_b, 0x504C6F_b), sizeof(meth_table));
 
-			if (game::environment::is_sp())
-			{
-				return;
-			}
-
 			developer_script = dvars::register_bool("developer_script", false, 0, "Enable developer script comments");
 
 			utils::hook::nop(SELECT_VALUE(0x3CB723_b, 0x512783_b), 8);
@@ -466,36 +461,39 @@ namespace gsc
 				return scripting::script_value{};
 			});
 
-			function::add("say", [](const function_args& args)
-			{
-				const auto message = args[0].as<std::string>();
-				game::SV_GameSendServerCommand(-1, game::SV_CMD_CAN_IGNORE, utils::string::va("%c \"%s\"", 84, message.data()));
-
-				return scripting::script_value{};
-			});
-
 			function::add("typeof", typeof);
 			function::add("type", typeof);
 
-			method::add("tell", [](const game::scr_entref_t ent, const function_args& args)
+			if (!game::environment::is_sp())
 			{
-				if (ent.classnum != 0)
+				function::add("say", [](const function_args& args)
 				{
-					throw std::runtime_error("Invalid entity");
-				}
+					const auto message = args[0].as<std::string>();
+					game::SV_GameSendServerCommand(-1, game::SV_CMD_CAN_IGNORE, utils::string::va("%c \"%s\"", 84, message.data()));
 
-				const auto client = ent.entnum;
+					return scripting::script_value{};
+				});
 
-				if (game::mp::g_entities[client].client == nullptr)
+				method::add("tell", [](const game::scr_entref_t ent, const function_args& args)
 				{
-					throw std::runtime_error("Not a player entity");
-				}
+					if (ent.classnum != 0)
+					{
+						throw std::runtime_error("Invalid entity");
+					}
 
-				const auto message = args[0].as<std::string>();
-				game::SV_GameSendServerCommand(client, game::SV_CMD_CAN_IGNORE, utils::string::va("%c \"%s\"", 84, message.data()));
+					const auto client = ent.entnum;
 
-				return scripting::script_value{};
-			});
+					if (game::mp::g_entities[client].client == nullptr)
+					{
+						throw std::runtime_error("Not a player entity");
+					}
+
+					const auto message = args[0].as<std::string>();
+					game::SV_GameSendServerCommand(client, game::SV_CMD_CAN_IGNORE, utils::string::va("%c \"%s\"", 84, message.data()));
+
+					return scripting::script_value{};
+				});
+			}
 		}
 	};
 }

@@ -39,13 +39,48 @@ namespace gsc
 		std::unordered_map<std::string, std::uint32_t> main_handles;
 		std::unordered_map<std::string, std::uint32_t> init_handles;
 
+		utils::memory::allocator scriptfile_allocator;
 		std::unordered_map<std::string, game::ScriptFile*> loaded_scripts;
+
+		struct
+		{
+			char* buf = nullptr;
+			char* pos = nullptr;
+			unsigned int size = 0x1000000;
+		} script_memory;
+
+		char* allocate_buffer(size_t size)
+		{
+			if (script_memory.buf == nullptr)
+			{
+				script_memory.buf = game::PMem_AllocFromSource_NoDebug(script_memory.size, 4, 1, game::PMEM_SOURCE_SCRIPT);
+				script_memory.pos = script_memory.buf;
+			}
+
+			if (script_memory.pos + size > script_memory.buf + script_memory.size)
+			{
+				game::Com_Error(game::ERR_FATAL, "Out of custom script memory");
+			}
+
+			const auto pos = script_memory.pos;
+			script_memory.pos += size;
+			return pos;
+		}
+
+		void free_script_memory()
+		{
+			game::PMem_PopFromSource_NoDebug(script_memory.buf, script_memory.size, 4, 1, game::PMEM_SOURCE_SCRIPT);
+			script_memory.buf = nullptr;
+			script_memory.pos = nullptr;
+		}
 
 		void clear()
 		{
 			main_handles.clear();
 			init_handles.clear();
 			loaded_scripts.clear();
+			scriptfile_allocator.clear();
+			free_script_memory();
 		}
 
 		bool read_script_file(const std::string& name, std::string* data)
@@ -75,14 +110,13 @@ namespace gsc
 			return false;
 		}
 
-		char* allocate_buffer(size_t size)
-		{
-			// PMem_AllocFromSource_NoDebug
-			return utils::hook::invoke<char*>(SELECT_VALUE(0x41FB50_b, 0x5A4DC0_b), size, 4, 1, 5);
-		}
-
 		game::ScriptFile* load_custom_script(const char* file_name, const std::string& real_name)
 		{
+			if (game::VirtualLobby_Loaded())
+			{
+				return nullptr;
+			}
+
 			if (const auto itr = loaded_scripts.find(real_name); itr != loaded_scripts.end())
 			{
 				return itr->second;
@@ -134,7 +168,7 @@ namespace gsc
 				return nullptr;
 			}
 
-			const auto script_file_ptr = reinterpret_cast<game::ScriptFile*>(allocate_buffer(sizeof(game::ScriptFile)));
+			const auto script_file_ptr = scriptfile_allocator.allocate<game::ScriptFile>();
 			script_file_ptr->name = file_name;
 
 			const auto stack = assembler->output_stack();
@@ -143,15 +177,12 @@ namespace gsc
 			const auto script = assembler->output_script();
 			script_file_ptr->bytecodeLen = static_cast<int>(script.size());
 
-			const auto script_size = script.size();
-			const auto buffer_size = script_size + stack.size() + 2;
+			script_file_ptr->buffer = game::Hunk_AllocateTempMemoryHigh(stack.size() + 1);
+			std::memcpy(script_file_ptr->buffer, stack.data(), stack.size());
 
-			const auto buffer = allocate_buffer(buffer_size);
-			std::memcpy(buffer, script.data(), script_size);
-			std::memcpy(&buffer[script_size], stack.data(), stack.size());
+			script_file_ptr->bytecode = allocate_buffer(script.size() + 1);
+			std::memcpy(script_file_ptr->bytecode, script.data(), script.size());
 
-			script_file_ptr->bytecode = &buffer[0];
-			script_file_ptr->buffer = reinterpret_cast<char*>(&buffer[script.size()]);
 			script_file_ptr->compressedLen = 0;
 
 			loaded_scripts[real_name] = script_file_ptr;
@@ -254,8 +285,6 @@ namespace gsc
 		{
 			utils::hook::invoke<void>(SELECT_VALUE(0x2B9DA0_b, 0x18BC00_b), a1, a2);
 
-			clear();
-
 			if (game::VirtualLobby_Loaded())
 			{
 				return;
@@ -285,6 +314,27 @@ namespace gsc
 			}
 
 			utils::hook::invoke<void>(SELECT_VALUE(0x1F1E00_b, 0x396080_b), rawfile, buf, size);
+		}
+
+		void pmem_init_stub()
+		{
+			utils::hook::invoke<void>(SELECT_VALUE(0x420260_b, 0x5A5590_b));
+
+			const auto type_0 = &game::g_scriptmem[0];
+			const auto type_1 = &game::g_scriptmem[1];
+
+			const auto size_0 = 0x100000; // default size
+			const auto size_1 = 0x100000 + script_memory.size;
+
+			const auto block = reinterpret_cast<char*>(VirtualAlloc(NULL, size_0 + size_1, MEM_RESERVE, PAGE_READWRITE));
+
+			type_0->buf = block;
+			type_0->size = size_0;
+
+			type_1->buf = block + size_0;
+			type_1->size = size_1;
+
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x420252_b, 0x5A5582_b), size_0 + size_1);
 		}
 	}
 
@@ -329,11 +379,6 @@ namespace gsc
 	public:
 		void post_unpack() override
 		{
-			if (game::environment::is_sp())
-			{
-				return;
-			}
-
 			// allow custom scripts to include other custom scripts
 			xsk::gsc::h1::resolver::init([](const auto& include_name)
 			{
@@ -368,6 +413,9 @@ namespace gsc
 
 			// loads scripts with an uncompressed stack
 			utils::hook::call(SELECT_VALUE(0x3C7280_b, 0x50E3C0_b), db_get_raw_buffer_stub);
+
+			// Increase script memory
+			utils::hook::call(SELECT_VALUE(0x38639C_b, 0x15C4D6_b), pmem_init_stub);
 
 			scripting::on_shutdown([](int free_scripts)
 			{

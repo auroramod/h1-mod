@@ -117,6 +117,8 @@ namespace game
 
 	WEAK symbol<int(const char* buf, int max, char** infos)> GameInfo_ParseArenas{0x0, 0x4DE0B0};
 
+	WEAK symbol<char*(const size_t size)> Hunk_AllocateTempMemoryHigh{0x415DB0, 0x59DEC0};
+
 	WEAK symbol<char*(char* string)> I_CleanStr{0x4293E0, 0x5AF2E0};
 
 	WEAK symbol<const char*(int, int, int)> Key_KeynumToString{0x1AC410, 0x199990};
@@ -154,6 +156,11 @@ namespace game
 
 	WEAK symbol<char* (GfxImage* image, uint32_t width, uint32_t height, uint32_t depth, uint32_t mipCount,
 		uint32_t imageFlags, DXGI_FORMAT imageFormat, const char* name, const D3D11_SUBRESOURCE_DATA* initData)> Image_Setup{0x560740, 0x683890};
+
+	WEAK symbol<char*(const size_t size, unsigned int alignment, 
+		unsigned int type, PMem_Source source)> PMem_AllocFromSource_NoDebug{0x41FB50, 0x5A4DC0};
+	WEAK symbol<void(char* buf, const size_t size, unsigned int alignment, 
+		unsigned int type, PMem_Source source)> PMem_PopFromSource_NoDebug{0x4203D0, 0x5A5700};
 
 	WEAK symbol<unsigned int(unsigned int localId, const char* pos, 
 		unsigned int paramcount)> VM_Execute{0x3C9E50, 0x510EB0};
@@ -298,6 +305,8 @@ namespace game
 	WEAK symbol<scrVarGlob_t> scr_VarGlob{0xBD80E00, 0xB138180};
 	WEAK symbol<scrVmPub_t> scr_VmPub{0xC3F4E20, 0xB7AE3C0};
 	WEAK symbol<function_stack_t> scr_function_stack{0xC4015C0, 0xB7B8940};
+
+	WEAK symbol<physical_memory> g_scriptmem{0xD5F3140, 0xC92EC40};
 
 	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0xF7530B0, 0xE9213F0};
 

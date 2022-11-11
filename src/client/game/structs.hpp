@@ -1599,6 +1599,28 @@ namespace game
 		int ingame_cursor_visible;
 	};
 
+	enum PMem_Source
+	{
+		PMEM_SOURCE_EXTERNAL = 0x0,
+		PMEM_SOURCE_DATABASE = 0x1,
+		PMEM_SOURCE_DEFAULT_LOW = 0x2,
+		PMEM_SOURCE_DEFAULT_HIGH = 0x3,
+		PMEM_SOURCE_MOVIE = 0x4,
+		PMEM_SOURCE_SCRIPT = 0x5,
+	};
+
+	struct physical_memory
+	{
+		char __pad0[0x10];
+		char* buf;
+		char __pad1[0x8];
+		int unk1;
+		size_t size;
+		char __pad2[0x500];
+	};
+
+	static_assert(sizeof(physical_memory) == 0x530);
+
 	namespace mp
 	{
 		struct cachedSnapshot_t
