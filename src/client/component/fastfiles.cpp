@@ -225,8 +225,8 @@ namespace fastfiles
 			}
 
 			const auto& usermap_value = usermap.value();
-			const auto usermap_file = utils::string::va("%s.ff", usermap_value.data());
-			const auto usermap_load_file = utils::string::va("%s_load.ff", usermap_value.data());
+			const std::string usermap_file = utils::string::va("%s.ff", usermap_value.data());
+			const std::string usermap_load_file = utils::string::va("%s_load.ff", usermap_value.data());
 
 			if (mapname == usermap_file || mapname == usermap_load_file)
 			{

@@ -174,7 +174,7 @@ namespace download
 					const auto& result = data.value();
 					if (result.code != CURLE_OK)
 					{
-						menu_error(utils::string::va("Download failed: %s (%i)\n", result.code, curl_easy_strerror(result.code)));
+						menu_error(utils::string::va("Download failed: %s (%i)\n", curl_easy_strerror(result.code), result.code));
 						return;
 					}
 

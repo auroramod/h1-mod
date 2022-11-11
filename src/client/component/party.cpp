@@ -34,6 +34,20 @@ namespace party
 		std::string sv_motd;
 		int sv_maxclients;
 
+		struct usermap_file
+		{
+			std::string extension;
+			std::string name;
+			bool optional;
+		};
+
+		std::vector<usermap_file> usermap_files =
+		{
+			{".ff", "usermaphash", false},
+			{"_load.ff", "usermaploadhash", true},
+			{".arena", "usermaparenahash", true},
+		};
+
 		void perform_game_initialization()
 		{
 			command::execute("onlinegame 1", true);
@@ -161,7 +175,7 @@ namespace party
 			cl_disconnect_hook.invoke<void>(show_main_menu);
 		}
 
-		std::optional<std::string> get_file_hash(const std::string& file)
+		std::string get_file_hash(const std::string& file)
 		{
 			if (!utils::io::file_exists(file))
 			{
@@ -170,7 +184,12 @@ namespace party
 
 			const auto data = utils::io::read_file(file);
 			const auto sha = utils::cryptography::sha1::compute(data, true);
-			return {sha};
+			return sha;
+		}
+
+		std::string get_usermap_file_path(const std::string& mapname, const std::string& extension)
+		{
+			return utils::string::va("usermaps\\%s\\%s%s", mapname.data(), mapname.data(), extension.data());
 		}
 
 		void check_download_map(const utils::info_string& info, std::vector<download::file_t>& files)
@@ -186,38 +205,50 @@ namespace party
 				throw std::runtime_error(utils::string::va("Invalid server mapname value %s\n", mapname.data()));
 			}
 
-			const auto check_file = [&](const std::string& key, const std::string& ext, bool optional)
+			const auto check_file = [&](const std::string& ext, const std::string& name, bool optional)
 			{
-				const auto filename = utils::string::va("usermaps/%s/%s%s", mapname.data(), mapname.data(), ext.data());
-				const auto source_hash = info.get(key);
+				const std::string filename = utils::string::va("usermaps/%s/%s%s", mapname.data(), mapname.data(), ext.data());
+				const auto source_hash = info.get(name);
 				if (source_hash.empty())
 				{
 					if (!optional)
 					{
-						throw std::runtime_error(utils::string::va("Server %s is empty", key.data()));
+						throw std::runtime_error(utils::string::va("Server %s is empty", name.data()));
 					}
 
 					return;
 				}
 
 				const auto hash = get_file_hash(filename);
-				if (!hash.has_value() || hash.value() != source_hash)
+				if (hash != source_hash)
 				{
 					files.emplace_back(filename, source_hash);
 					return;
 				}
 			};
 
-			check_file("usermaphash", ".ff", false);
-			check_file("usermaploadhash", "_load.ff", true);
+			for (const auto& [ext, name, opt] : usermap_files)
+			{
+				check_file(ext, name, opt);
+			}
 		}
 
 		bool check_download_mod(const utils::info_string& info, std::vector<download::file_t>& files)
 		{
+			static const auto fs_game = game::Dvar_FindVar("fs_game");
+			const auto client_fs_game = utils::string::to_lower(fs_game->current.string);
 			const auto server_fs_game = utils::string::to_lower(info.get("fs_game"));
-			if (server_fs_game.empty())
+
+			if (server_fs_game.empty() && client_fs_game.empty())
 			{
 				return false;
+			}
+
+			if (server_fs_game.empty() && !client_fs_game.empty())
+			{
+				game::Dvar_SetFromStringByNameFromSource("fs_game", "",
+					game::DVAR_SOURCE_INTERNAL);
+				return true;
 			}
 
 			if (!server_fs_game.starts_with("mods/") || server_fs_game.contains('.') || server_fs_game.contains("::"))
@@ -230,9 +261,6 @@ namespace party
 			{
 				throw std::runtime_error("Connection failed: Server mod hash is empty.");
 			}
-
-			static const auto fs_game = game::Dvar_FindVar("fs_game");
-			const auto client_fs_game = utils::string::to_lower(fs_game->current.string);
 
 			const auto mod_path = server_fs_game + "/mod.ff";
 			auto has_to_download = !utils::io::file_exists(mod_path);
@@ -300,16 +328,24 @@ namespace party
 
 		void set_new_map(const char* mapname, const char* gametype, game::msg_t* msg)
 		{
-			char buffer[0x400] = {0};
-			// dont bother disconnecting just to update the usermap loadscreen
-			const std::string usermap_hash = game::MSG_ReadStringLine(msg,
-				buffer, static_cast<unsigned int>(sizeof(buffer)));
-
-			if (!game::SV_Loaded() && !fastfiles::is_stock_map(mapname))
+			if (game::SV_Loaded() || fastfiles::is_stock_map(mapname))
 			{
-				const auto filename = utils::string::va("usermaps\\%s\\%s.ff", mapname, mapname);
-				const auto hash = get_file_hash(filename);
-				if (!hash.has_value() || (usermap_hash.empty() || hash.value() != usermap_hash))
+				utils::hook::invoke<void>(0x13AAD0_b, mapname, gametype);
+				return;
+			}
+
+			for (const auto& [ext, key, opt] : usermap_files)
+			{
+				char buffer[0x100] = {0};
+				const std::string source_hash = game::MSG_ReadStringLine(msg,
+					buffer, static_cast<unsigned int>(sizeof(buffer)));
+
+				const auto path = get_usermap_file_path(mapname, ext);
+				const auto hash = get_file_hash(path);
+
+				console::debug("%s %s %s != %s\n", ext.data(), key.data(), hash.data(), source_hash.data());
+
+				if ((!source_hash.empty() && hash != source_hash) || (source_hash.empty() && !opt))
 				{
 					command::execute("disconnect");
 					scheduler::once([]
@@ -354,27 +390,42 @@ namespace party
 			{
 				return net_out_of_band_print_hook.invoke<void>(sock, addr, data);
 			}
-
-			char buffer[0x400] = {0};
-			const auto is_usermap = fastfiles::usermap_exists(current_sv_mapname);
-			std::string hash{};
-			if (is_usermap)
+			
+			std::string buffer{};
+			const auto line = [&](const std::string& data_)
 			{
-				const auto filename = utils::string::va("usermaps\\%s\\%s.ff",
-					current_sv_mapname.data(), current_sv_mapname.data());
-				const auto hash_value = get_file_hash(filename);
-				if (hash_value.has_value())
+				buffer.append(data_);
+				buffer.append("\n");
+			};
+
+			const auto* sv_gametype = game::Dvar_FindVar("g_gametype");
+			line("loadingnewmap");
+			line(current_sv_mapname);
+			line(sv_gametype->current.string);
+
+			const auto add_hash = [&](const std::string extension)
+			{
+				const auto filename = get_usermap_file_path(current_sv_mapname, extension);
+				const auto hash = get_file_hash(filename);
+				line(hash);
+			};
+
+			const auto is_usermap = fastfiles::usermap_exists(current_sv_mapname);
+			for (const auto& [ext, key, opt] : usermap_files)
+			{
+				if (is_usermap)
 				{
-					hash = hash_value.value();
+					add_hash(ext);
+				}
+				else
+				{
+					line("");
 				}
 			}
 
-			auto* sv_gametype = game::Dvar_FindVar("g_gametype");
+			console::debug("%i %s\n", is_usermap, buffer.data());
 
-			sprintf_s(buffer, sizeof(buffer),
-				"loadingnewmap\n%s\n%s\n%s", current_sv_mapname.data(), sv_gametype->current.string, hash.data());
-
-			net_out_of_band_print_hook.invoke<void>(sock, addr, buffer);
+			net_out_of_band_print_hook.invoke<void>(sock, addr, buffer.data());
 		}
 	}
 
@@ -836,18 +887,16 @@ namespace party
 
 				if (!fastfiles::is_stock_map(mapname))
 				{
-					const auto hash = get_file_hash(
-						utils::string::va("usermaps\\%s\\%s.ff", mapname.data(), mapname.data()));
-					if (hash.has_value())
+					const auto add_hash = [&](const std::string& extension, const std::string& name)
 					{
-						info.set("usermaphash", hash.value());
-					}
+						const auto path = get_usermap_file_path(mapname, extension);
+						const auto hash = get_file_hash(path);
+						info.set(name, hash);
+					};
 
-					const auto load_file_hash = get_file_hash(
-						utils::string::va("usermaps\\%s\\%s_load.ff", mapname.data(), mapname.data()));
-					if (load_file_hash.has_value())
+					for (const auto& [ext, name, opt] : usermap_files)
 					{
-						info.set("usermaploadhash", load_file_hash.value());
+						add_hash(ext, name);
 					}
 				}
 
@@ -857,10 +906,7 @@ namespace party
 				if (!fs_game.empty())
 				{
 					const auto hash = get_file_hash(utils::string::va("%s/mod.ff", fs_game.data()));
-					if (hash.has_value())
-					{
-						info.set("modHash", hash.value());
-					}
+					info.set("modHash", hash);
 				}
 
 				network::send(target, "infoResponse", info.build(), '\n');
