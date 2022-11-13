@@ -151,10 +151,13 @@ namespace bots
 			});
 
 			// Clear bot names and reset ID on game shutdown to allow new names to be added without restarting
-			scripting::on_shutdown([](int)
+			scripting::on_shutdown([](bool /*free_scripts*/, bool post_shutdown)
 			{
-				bot_names.clear();
-				bot_id = 0;
+				if (!post_shutdown)
+				{
+					bot_names.clear();
+					bot_id = 0;
+				}
 			});
 		}
 	};

@@ -51,7 +51,7 @@ namespace scripting
 
 		game::dvar_t* g_dump_scripts;
 
-		std::vector<std::function<void(bool)>> shutdown_callbacks;
+		std::vector<std::function<void(bool, bool)>> shutdown_callbacks;
 
 		std::unordered_map<unsigned int, std::string> canonical_string_table;
 
@@ -125,7 +125,7 @@ namespace scripting
 
 			for (const auto& callback : shutdown_callbacks)
 			{
-				callback(free_scripts);
+				callback(free_scripts, false);
 			}
 
 			scripting::notify(*game::levelEntityId, "shutdownGame_called", {1});
@@ -135,6 +135,11 @@ namespace scripting
 			game::G_LogPrintf("------------------------------------------------------------\n");
 
 			g_shutdown_game_hook.invoke<void>(free_scripts);
+
+			for (const auto& callback : shutdown_callbacks)
+			{
+				callback(free_scripts, true);
+			}
 		}
 
 		void scr_add_class_field_stub(unsigned int classnum, game::scr_string_t name, unsigned int canonical_string, unsigned int offset)
@@ -243,7 +248,7 @@ namespace scripting
 		return scripting::find_token(id);
 	}
 
-	void on_shutdown(const std::function<void(bool)>& callback)
+	void on_shutdown(const std::function<void(bool, bool)>& callback)
 	{
 		shutdown_callbacks.push_back(callback);
 	}

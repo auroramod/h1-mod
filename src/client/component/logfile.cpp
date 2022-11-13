@@ -403,9 +403,12 @@ namespace logfile
 				return scripting::script_value{};
 			});
 
-			scripting::on_shutdown([](int)
+			scripting::on_shutdown([](bool /*free_scripts*/, bool post_shutdown)
 			{
-				say_callbacks.clear();
+				if (!post_shutdown)
+				{
+					say_callbacks.clear();
+				}
 			});
 		}
 	};

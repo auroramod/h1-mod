@@ -417,9 +417,9 @@ namespace gsc
 			// Increase script memory
 			utils::hook::call(SELECT_VALUE(0x38639C_b, 0x15C4D6_b), pmem_init_stub);
 
-			scripting::on_shutdown([](int free_scripts)
+			scripting::on_shutdown([](bool free_scripts, bool post_shutdown)
 			{
-				if (free_scripts)
+				if (free_scripts && post_shutdown)
 				{
 					xsk::gsc::h1::resolver::cleanup();
 					clear();
