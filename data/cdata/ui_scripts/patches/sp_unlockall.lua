@@ -3,14 +3,13 @@ if (not Engine.InFrontend()) then
 end
 
 local levelselectmenu = LUI.sp_menus.LevelSelectMenu
-
 levelselectmenu.SetupInfoBoxRightForArcadeMode = function(f44_arg0, f44_arg1)
     return false
 end
 
 local addlevellistbuttons = LUI.LevelSelect.AddLevelListButtons
 LUI.LevelSelect.AddLevelListButtons = function(self, map_info_list)
-    addlevellistbuttons(self, map_info_list)
+    addlevellistbuttons()
 
     if Engine.GetDvarBool("arcademode") then
         return
@@ -50,5 +49,5 @@ levelselectmenu.SetUnlockAll = function(f57_arg0, f57_arg1)
         not Engine.GetDvarBool("profileMenuOption_hasUnlockedAll_SP"))
     Engine.SetDvarBool("mis_cheat", not Engine.GetDvarBool("mis_cheat"))
 
-    setunlockall(f57_arg0, f57_arg1)
+    setunlockall()
 end
