@@ -1,4 +1,6 @@
 {
+    "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "Unlock All Missions and Intel",
+    "LUA_MENU_CANCEL_UNLOCK_CAPS": "Cancel Unlock All Missions",
     "LUA_MENU_CHOOSE_LANGUAGE": "Choose your language",
     "MENU_APPLY_LANGUAGE_SETTINGS": "Apply language settings?"
 }

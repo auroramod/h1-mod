@@ -11,5 +11,8 @@
     "LOCALE_RUSSIAN": "ロシア語",
     "LOCALE_SIMPLIFIED_CHINESE": "簡体字中国語",
     "LOCALE_SPANISH": "スペイン語",
-    "LOCALE_TRADITIONAL_CHINESE": "繁体字中国語"
+    "LOCALE_TRADITIONAL_CHINESE": "繁体字中国語",
+
+    "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "全ミッションをアンロック",
+    "LUA_MENU_CANCEL_UNLOCK_CAPS": "アンロックをキャンセル"
 }

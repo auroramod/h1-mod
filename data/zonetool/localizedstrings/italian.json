@@ -1,4 +1,7 @@
 {
+    "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "Sblocca tutte le missioni",
+    "LUA_MENU_CANCEL_UNLOCK_CAPS": "Annulla sblocco",
+
     "MENU_MODS_DESC": "Abilita mod installate.",
     "LUA_MENU_MOD_DESC_DEFAULT": "Abilita &&1.",
     "LUA_MENU_MOD_DESC": "&&1\nAutore: &&2\nVersione: &&3",

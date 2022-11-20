@@ -1,5 +1,6 @@
 if (game:issingleplayer()) then
-	return
+    require("sp_unlockall")
+    return
 end
 
 if (Engine.InFrontend()) then
