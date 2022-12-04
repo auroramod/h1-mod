@@ -206,6 +206,19 @@ namespace utils::nt
 		return nullptr;
 	}
 
+	bool is_wine()
+	{
+		static std::optional<bool> is_wine = {};
+
+		if (!is_wine.has_value())
+		{
+			const utils::nt::library ntdll("ntdll.dll");
+			is_wine = ntdll.get_proc<void*>("wine_get_version") != nullptr;
+		}
+
+		return is_wine.value();
+	}
+
 	void raise_hard_exception()
 	{
 		int data = false;

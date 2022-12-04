@@ -1,11 +1,11 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "arxan.hpp"
 #include "system_check.hpp"
 
 #include "game/game.hpp"
 
+#include <utils/nt.hpp>
 #include <utils/io.hpp>
 #include <utils/cryptography.hpp>
 
@@ -69,7 +69,7 @@ namespace system_check
 		void verify_binary_version()
 		{
 			const auto value = *reinterpret_cast<DWORD*>(0x1337_b);
-			if (!arxan::is_wine())
+			if (!utils::nt::is_wine())
 			{
 				if (value == 0x60202B6A || value == 0xBC0E9FE)
 				{

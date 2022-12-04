@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 #include "steam.hpp"
 
-#include "component/arxan.hpp"
 #include "component/console.hpp"
 
 #include <utils/nt.hpp>
@@ -239,7 +238,7 @@ namespace steam
 			// however, on [other] Wine [forks], this should be hit. also, the file dialog may not work.. :P
 			HKEY steam_install_reg;
 
-			if (arxan::is_wine())
+			if (::utils::nt::is_wine())
 			{
 				// let's check the registry to see if the user has already manually selected the Steam installation path
 				if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\h1-mod", 0, KEY_QUERY_VALUE, &steam_install_reg) 

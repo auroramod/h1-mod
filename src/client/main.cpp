@@ -4,8 +4,6 @@
 #include "loader/component_loader.hpp"
 #include "game/game.hpp"
 
-#include "component/arxan.hpp"
-
 #include <utils/flags.hpp>
 #include <utils/io.hpp>
 #include <utils/string.hpp>
@@ -95,7 +93,7 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 			&& function != "SteamAPI_GetSteamInstallPath") // Arxan requires one valid steam api import - maybe SteamAPI_Shutdown is better?
 		{
 			static bool check_for_steam_install = false;
-			if (!check_for_steam_install && !arxan::is_wine())
+			if (!check_for_steam_install && !utils::nt::is_wine())
 			{
 				HKEY key;
 				if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Valve\\Steam", 0, KEY_ALL_ACCESS, &key) == ERROR_SUCCESS)
@@ -208,7 +206,7 @@ int main()
 	FARPROC entry_point;
 
 	// leaving these for Windows only for now, need to test to see if we can have for Wine -mikey
-	if (!arxan::is_wine())
+	if (!utils::nt::is_wine())
 	{
 		enable_dpi_awareness();
 	
