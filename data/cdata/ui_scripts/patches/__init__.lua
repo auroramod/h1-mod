@@ -1,3 +1,5 @@
+require("background_effects")
+
 if (game:issingleplayer()) then
     require("sp_unlockall")
     return
@@ -14,7 +16,7 @@ end
 
 -- defined in mp_hud/hudutils.lua
 function GetGameModeName()
-	return Engine.Localize(Engine.TableLookup(GameTypesTable.File, 
+	return Engine.Localize(Engine.TableLookup(GameTypesTable.File,
 		GameTypesTable.Cols.Ref, GameX.GetGameMode(), GameTypesTable.Cols.Name))
 end
 
