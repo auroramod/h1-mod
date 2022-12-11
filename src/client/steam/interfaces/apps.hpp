@@ -25,9 +25,6 @@ namespace steam
 				strcpy_s(language, sizeof(language), content.data());
 				return;
 			}
-
-			// default to english if no file is found
-			strcpy_s(language, sizeof(language), "english");
 		}
 
 		virtual bool BIsSubscribed();

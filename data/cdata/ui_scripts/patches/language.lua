@@ -1,14 +1,14 @@
 local available_languages = {"english", "english_safe", "french", "german", "italian", "polish", "portuguese",
                              "russian", "spanish", "simplified_chinese", "traditional_chinese", "japanese_partial",
                              "korean"}
-local current_language = "english"
+local current_language = "LANGUAGE"
 
 LUI.UIButtonText.IsOffsetedLanguage = function()
     return false
 end
 
-function get_current_language()
-    current_language = game:getcurrentgamelanguage()
+function get_user_language()
+    user_language = game:getcurrentgamelanguage()
 end
 
 function set_language(value)
@@ -22,7 +22,11 @@ function does_zone_folder_exists(language)
     return io.directoryexists("zone/" .. language)
 end
 
-get_current_language()
+get_user_language()
+
+if user_language ~= "" and does_zone_folder_exists(user_language) then
+    current_language = user_language
+end
 
 LUI.addmenubutton("pc_controls", {
     index = 4,
