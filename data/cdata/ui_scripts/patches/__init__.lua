@@ -1,3 +1,4 @@
+require("language")
 require("background_effects")
 
 if (game:issingleplayer()) then
