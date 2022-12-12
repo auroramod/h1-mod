@@ -14,6 +14,8 @@
 #include <utils/hook.hpp>
 #include <utils/properties.hpp>
 
+#define LANGUAGE_FILE "players2/default/language"
+
 namespace filesystem
 {
 	namespace
@@ -56,6 +58,11 @@ namespace filesystem
 			std::vector<std::filesystem::path> paths{};
 
 			const auto code = game::SEH_GetCurrentLanguageName();
+
+			if (!::utils::io::file_exists(LANGUAGE_FILE) or ::utils::io::file_size(LANGUAGE_FILE) == 0)
+			{
+				::utils::io::write_file(LANGUAGE_FILE, code);
+			}
 
 			paths.push_back(path);
 
