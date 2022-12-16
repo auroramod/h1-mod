@@ -120,6 +120,7 @@ namespace scripting
 			{
 				script_function_table_sort.clear();
 				script_function_table.clear();
+				script_function_table_rev.clear();
 				canonical_string_table.clear();
 			}
 
