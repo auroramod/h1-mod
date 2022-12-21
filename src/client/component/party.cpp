@@ -308,8 +308,6 @@ namespace party
 			}
 		}
 
-		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download);
-
 		std::string get_whitelist_json_path()
 		{
 			return (utils::properties::get_appdata_path() / "whitelist.json").generic_string();
@@ -344,6 +342,8 @@ namespace party
 				static_cast<int>(saved_info_response.host.ip[2]),
 				static_cast<int>(saved_info_response.host.ip[3]));
 		}
+
+		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download);
 
 		int user_download_response(game::hks::lua_State* state)
 		{
