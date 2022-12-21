@@ -67,9 +67,12 @@ namespace discord
 
 				if (game::environment::is_mp())
 				{
+					static char clean_gametype[0x80] = {0};
 					const auto gametype = game::UI_GetGameTypeDisplayName(
 						game::Dvar_FindVar("g_gametype")->current.string);
-					strcpy_s(details, 0x80, utils::string::va("%s on %s", gametype, mapname));
+					utils::string::strip(gametype,
+						clean_gametype, sizeof(clean_gametype));
+					strcpy_s(details, 0x80, utils::string::va("%s on %s", clean_gametype, mapname));
 
 					static char clean_hostname[0x80] = {0};
 					utils::string::strip(game::Dvar_FindVar("sv_hostname")->current.string, 
