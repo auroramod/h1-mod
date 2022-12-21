@@ -334,6 +334,8 @@ namespace party
 				return;
 			}
 
+			fastfiles::set_usermap(mapname);
+
 			for (const auto& [ext, key, opt] : usermap_files)
 			{
 				char buffer[0x100] = {0};
