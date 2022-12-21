@@ -15,6 +15,7 @@
 
 #include "steam/steam.hpp"
 
+#include <utils/properties.hpp>
 #include <utils/string.hpp>
 #include <utils/info_string.hpp>
 #include <utils/cryptography.hpp>
@@ -309,6 +310,41 @@ namespace party
 
 		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download);
 
+		std::string get_whitelist_json_path()
+		{
+			return (utils::properties::get_appdata_path() / "whitelist.json").generic_string();
+		}
+
+		bool get_whitelist_json_object(nlohmann::json* object)
+		{
+			std::string data;
+			if (!utils::io::read_file(get_whitelist_json_path(), &data))
+			{
+				return false;
+			}
+
+			try
+			{
+				*object = nlohmann::json::parse(data.data());
+			}
+			catch (const nlohmann::json::parse_error& ex)
+			{
+				menu_error(utils::string::va("%s\n", ex.what()));
+				return false;
+			}
+
+			return false;
+		}
+
+		std::string target_ip_to_string(const game::netadr_s& target)
+		{
+			return utils::string::va("%i.%i.%i.%i",
+				static_cast<int>(saved_info_response.host.ip[0]),
+				static_cast<int>(saved_info_response.host.ip[1]),
+				static_cast<int>(saved_info_response.host.ip[2]),
+				static_cast<int>(saved_info_response.host.ip[3]));
+		}
+
 		int user_download_response(game::hks::lua_State* state)
 		{
 			const auto response = state->m_apistack.base[0].v.boolean;
@@ -317,12 +353,36 @@ namespace party
 				return 0;
 			}
 
+			nlohmann::json obj;
+			if (!get_whitelist_json_object(&obj))
+			{
+				return false;
+			}
+
+			obj.insert(obj.end(), target_ip_to_string(saved_info_response.host));
+			utils::io::write_file_json(get_whitelist_json_path(), obj);
+
 			download_files(saved_info_response.host, saved_info_response.info_string, true);
 			return 1;
 		}
 
-		void confirm_user_download(const game::netadr_s& target, const utils::info_string& info)
+		bool should_user_confirm(const game::netadr_s& target, const utils::info_string& info)
 		{
+			nlohmann::json obj;
+			if (!get_whitelist_json_object(&obj))
+			{
+				return false;
+			}
+
+			const auto target_ip = target_ip_to_string(target);
+			for (const auto& [key, value] : obj.items())
+			{
+				if (value.is_string() && value.get<std::string>() == target_ip)
+				{
+					return false;
+				}
+			}
+
 			const auto LUI = ui_scripting::get_globals().get("LUI").as<ui_scripting::table>();
 			const auto yes_no_popup_func = LUI.get("yesnopopup").as<ui_scripting::function>();
 
@@ -334,6 +394,8 @@ namespace party
 			data_table.set("callback", user_download_response);
 
 			yes_no_popup_func(data_table);
+
+			return true;
 		}
 
 		bool needs_vid_restart = false;
@@ -350,9 +412,8 @@ namespace party
 
 				if (files.size() > 0)
 				{
-					if (!allow_download)
+					if (!allow_download && should_user_confirm(target, info))
 					{
-						confirm_user_download(target, info);
 						return true;
 					}
 
