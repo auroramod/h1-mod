@@ -313,25 +313,26 @@ namespace party
 			return (utils::properties::get_appdata_path() / "whitelist.json").generic_string();
 		}
 
-		bool get_whitelist_json_object(nlohmann::json* object)
+		nlohmann::json get_whitelist_json_object()
 		{
 			std::string data;
 			if (!utils::io::read_file(get_whitelist_json_path(), &data))
 			{
-				return false;
+				return nullptr;
 			}
 
+			nlohmann::json obj;
 			try
 			{
-				*object = nlohmann::json::parse(data.data());
+				obj = nlohmann::json::parse(data.data());
 			}
 			catch (const nlohmann::json::parse_error& ex)
 			{
 				menu_error(utils::string::va("%s\n", ex.what()));
-				return false;
+				return nullptr;
 			}
 
-			return false;
+			return obj;
 		}
 
 		std::string target_ip_to_string(const game::netadr_s& target)
@@ -353,8 +354,8 @@ namespace party
 				return 0;
 			}
 
-			nlohmann::json obj;
-			if (!get_whitelist_json_object(&obj))
+			nlohmann::json obj = get_whitelist_json_object();
+			if (obj == nullptr)
 			{
 				return false;
 			}
@@ -368,8 +369,8 @@ namespace party
 
 		bool should_user_confirm(const game::netadr_s& target, const utils::info_string& info)
 		{
-			nlohmann::json obj;
-			if (!get_whitelist_json_object(&obj))
+			nlohmann::json obj = get_whitelist_json_object();
+			if (obj == nullptr)
 			{
 				return false;
 			}
