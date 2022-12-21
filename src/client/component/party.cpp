@@ -49,8 +49,11 @@ namespace party
 			{".arena", "usermaparenahash", true},
 		};
 
-        game::netadr_s saved_target;
-		utils::info_string saved_info_string;
+		struct
+		{
+			game::netadr_s host{};
+			utils::info_string info_string{};
+		} saved_info_response;
 
 		void perform_game_initialization()
 		{
@@ -298,16 +301,15 @@ namespace party
 			{
 				command::execute("lui_close popup_acceptinginvite", false);
 			}
-
 			if (game::Menu_IsMenuOpenAndVisible(0, "generic_waiting_popup_"))
 			{
 				command::execute("lui_close generic_waiting_popup_", false);
 			}
 		}
 
-		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool should_download);
+		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download);
 
-		int confirm_user_download_cb(game::hks::lua_State* state)
+		int user_download_response(game::hks::lua_State* state)
 		{
 			const auto response = state->m_apistack.base[0].v.boolean;
 			if (!response)
@@ -315,7 +317,7 @@ namespace party
 				return 0;
 			}
 
-			download_files(saved_target, saved_info_string, true);
+			download_files(saved_info_response.host, saved_info_response.info_string, true);
 			return 1;
 		}
 
@@ -324,20 +326,26 @@ namespace party
 			const auto LUI = ui_scripting::get_globals().get("LUI").as<ui_scripting::table>();
 			const auto yes_no_popup_func = LUI.get("yesnopopup").as<ui_scripting::function>();
 
+			close_joining_popups();
+
 			const ui_scripting::table data_table{};
 			data_table.set("title", game::UI_SafeTranslateString("MENU_NOTICE"));
 			data_table.set("text", std::format("Would you like to install required 3rd-party content for this server? (from {})", info.get("sv_wwwBaseUrl")));
-			data_table.set("callback", confirm_user_download_cb);
-
-			close_joining_popups();
+			data_table.set("callback", user_download_response);
 
 			yes_no_popup_func(data_table);
 		}
 
 		bool needs_vid_restart = false;
 
-		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool should_download)
+		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download)
 		{
+			if (!allow_download)
+			{
+				confirm_user_download(target, info);
+				return true;
+			}
+
 			try
 			{
 				std::vector<download::file_t> files{};
@@ -348,16 +356,8 @@ namespace party
 
 				if (files.size() > 0)
 				{
-					if (should_download)
-					{
-						download::stop_download();
-						download::start_download(target, info, files);
-					}
-					else
-					{
-						confirm_user_download(target, info);
-					}
-
+					download::stop_download();
+					download::start_download(target, info, files);
 					return true;
 				}
 				else if (needs_restart || needs_vid_restart)
@@ -965,8 +965,9 @@ namespace party
 					return;
 				}
 
-				saved_target = target;
-				saved_info_string = info;
+				saved_info_response = {};
+				saved_info_response.host = target;
+				saved_info_response.info_string = info;
 
 				if (info.get("challenge") != connect_state.challenge)
 				{
