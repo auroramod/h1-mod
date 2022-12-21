@@ -340,12 +340,6 @@ namespace party
 
 		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download)
 		{
-			if (!allow_download)
-			{
-				confirm_user_download(target, info);
-				return true;
-			}
-
 			try
 			{
 				std::vector<download::file_t> files{};
@@ -356,6 +350,12 @@ namespace party
 
 				if (files.size() > 0)
 				{
+					if (!allow_download)
+					{
+						confirm_user_download(target, info);
+						return true;
+					}
+
 					download::stop_download();
 					download::start_download(target, info, files);
 					return true;
