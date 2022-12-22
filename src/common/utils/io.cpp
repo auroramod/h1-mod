@@ -19,27 +19,6 @@ namespace utils::io
 		return std::ifstream(file).good();
 	}
 
-	bool write_file_json(const std::string& file, const nlohmann::json& object)
-	{
-		const auto pos = file.find_last_of("/\\");
-		if (pos != std::string::npos)
-		{
-			create_directory(file.substr(0, pos));
-		}
-
-		std::ofstream stream(
-			file, std::ios::binary | std::ofstream::out);
-
-		if (stream.is_open())
-		{
-			stream << object;
-			stream.close();
-			return true;
-		}
-
-		return false;
-	}
-
 	bool write_file(const std::string& file, const std::string& data, const bool append)
 	{
 		const auto pos = file.find_last_of("/\\");

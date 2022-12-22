@@ -10,7 +10,6 @@ namespace utils::io
 	bool remove_file(const std::string& file);
 	bool move_file(const std::string& src, const std::string& target);
 	bool file_exists(const std::string& file);
-	bool write_file_json(const std::string& file, const nlohmann::json& object);
 	bool write_file(const std::string& file, const std::string& data, bool append = false);
 	bool read_file(const std::string& file, std::string* data);
 	std::string read_file(const std::string& file);

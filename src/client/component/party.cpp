@@ -355,41 +355,38 @@ namespace party
 
 		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download);
 
-		int user_download_response(game::hks::lua_State* state)
+		void user_download_response(bool response)
 		{
-			const auto response = state->m_apistack.base[0].v.boolean;
 			if (!response)
 			{
-				return 0;
+				return;
 			}
 
 			nlohmann::json obj = get_whitelist_json_object();
 			if (obj == nullptr)
 			{
-				return 0;
+				obj = {};
 			}
 
-			obj.insert(obj.end(), target_ip_to_string(saved_info_response.host));
-			utils::io::write_file_json(get_whitelist_json_path(), obj);
+			obj.push_back(target_ip_to_string(saved_info_response.host));
+
+			utils::io::write_file(get_whitelist_json_path(), obj.dump(4));
 
 			download_files(saved_info_response.host, saved_info_response.info_string, true);
-			return 1;
 		}
 
 		bool should_user_confirm(const game::netadr_s& target, const utils::info_string& info)
 		{
 			nlohmann::json obj = get_whitelist_json_object();
-			if (obj == nullptr)
+			if (obj != nullptr)
 			{
-				return false;
-			}
-
-			const auto target_ip = target_ip_to_string(target);
-			for (const auto& [key, value] : obj.items())
-			{
-				if (value.is_string() && value.get<std::string>() == target_ip)
+				const auto target_ip = target_ip_to_string(target);
+				for (const auto& [key, value] : obj.items())
 				{
-					return false;
+					if (value.is_string() && value.get<std::string>() == target_ip)
+					{
+						return false;
+					}
 				}
 			}
 
