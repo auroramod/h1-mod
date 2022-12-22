@@ -15,7 +15,6 @@ Engine.GetLuiRoot():registerEventHandler("mod_download_start", function(element,
     end)
 
     popup:registerEventHandler("mod_download_progress", function(element, event)
-        print(event.fraction * 100)
         popup.text:setText(string.format("Downloading %s (%i%%)...", file, math.floor(event.fraction * 100)))
     end)
 
