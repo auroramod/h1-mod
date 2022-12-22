@@ -36,7 +36,7 @@ LUI.MenuBuilder.registerType("stats_menu", function(a1)
         menu_width = luiglobals.GenericMenuDims.OptionMenuWidth
     })
 
-    createdivider(menu, "@LUA_MENU_SETTINGS")
+    createdivider(menu, "LUA_MENU_SETTINGS")
 
     LUI.Options.CreateOptionButton(menu, "cg_unlockall_items", "@LUA_MENU_UNLOCKALL_ITEMS",
         "@LUA_MENU_UNLOCKALL_ITEMS_DESC", {{
@@ -65,7 +65,7 @@ LUI.MenuBuilder.registerType("stats_menu", function(a1)
             value = false
         }}, nil, nil)
 
-    createdivider(menu, "@LUA_MENU_EDIT_STATS")
+    createdivider(menu, "LUA_MENU_EDIT_STATS")
 
     local prestige = Engine.GetPlayerData(0, CoD.StatsGroup.Ranked, "prestige") or 0
     local experience = Engine.GetPlayerData(0, CoD.StatsGroup.Ranked, "experience") or 0
