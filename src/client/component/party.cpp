@@ -11,9 +11,11 @@
 #include "fastfiles.hpp"
 
 #include "game/game.hpp"
+#include "game/ui_scripting/execution.hpp"
 
 #include "steam/steam.hpp"
 
+#include <utils/properties.hpp>
 #include <utils/string.hpp>
 #include <utils/info_string.hpp>
 #include <utils/cryptography.hpp>
@@ -47,6 +49,12 @@ namespace party
 			{"_load.ff", "usermaploadhash", true},
 			{".arena", "usermaparenahash", true},
 		};
+
+		struct
+		{
+			game::netadr_s host{};
+			utils::info_string info_string{};
+		} saved_info_response;
 
 		void perform_game_initialization()
 		{
@@ -297,9 +305,80 @@ namespace party
 			return false;
 		}
 
+		void close_joining_popups()
+		{
+			if (game::Menu_IsMenuOpenAndVisible(0, "popup_acceptinginvite"))
+			{
+				command::execute("lui_close popup_acceptinginvite", false);
+			}
+			if (game::Menu_IsMenuOpenAndVisible(0, "generic_waiting_popup_"))
+			{
+				command::execute("lui_close generic_waiting_popup_", false);
+			}
+		}
+
+		std::string get_whitelist_json_path()
+		{
+			return (utils::properties::get_appdata_path() / "whitelist.json").generic_string();
+		}
+
+		nlohmann::json get_whitelist_json_object()
+		{
+			std::string data;
+			if (!utils::io::read_file(get_whitelist_json_path(), &data))
+			{
+				return nullptr;
+			}
+
+			nlohmann::json obj;
+			try
+			{
+				obj = nlohmann::json::parse(data.data());
+			}
+			catch (const nlohmann::json::parse_error& ex)
+			{
+				menu_error(utils::string::va("%s\n", ex.what()));
+				return nullptr;
+			}
+
+			return obj;
+		}
+
+		std::string target_ip_to_string(const game::netadr_s& target)
+		{
+			return utils::string::va("%i.%i.%i.%i",
+				static_cast<int>(saved_info_response.host.ip[0]),
+				static_cast<int>(saved_info_response.host.ip[1]),
+				static_cast<int>(saved_info_response.host.ip[2]),
+				static_cast<int>(saved_info_response.host.ip[3]));
+		}
+
+		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download);
+
+		bool should_user_confirm(const game::netadr_s& target)
+		{
+			nlohmann::json obj = get_whitelist_json_object();
+			if (obj != nullptr)
+			{
+				const auto target_ip = target_ip_to_string(target);
+				for (const auto& [key, value] : obj.items())
+				{
+					if (value.is_string() && value.get<std::string>() == target_ip)
+					{
+						return false;
+					}
+				}
+			}
+
+			close_joining_popups();
+			command::execute("lui_open_popup popup_confirmdownload", false);
+
+			return true;
+		}
+
 		bool needs_vid_restart = false;
 
-		bool download_files(const game::netadr_s& target, const utils::info_string& info)
+		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download)
 		{
 			try
 			{
@@ -311,6 +390,11 @@ namespace party
 
 				if (files.size() > 0)
 				{
+					if (!allow_download && should_user_confirm(target))
+					{
+						return true;
+					}
+
 					download::stop_download();
 					download::start_download(target, info, files);
 					return true;
@@ -437,18 +521,36 @@ namespace party
 		}
 	}
 
+	std::string get_www_url()
+	{
+		return saved_info_response.info_string.get("sv_wwwBaseUrl");
+	}
+
+	void user_download_response(bool response)
+	{
+		if (!response)
+		{
+			return;
+		}
+
+		nlohmann::json obj = get_whitelist_json_object();
+		if (obj == nullptr)
+		{
+			obj = {};
+		}
+
+		obj.push_back(target_ip_to_string(saved_info_response.host));
+
+		utils::io::write_file(get_whitelist_json_path(), obj.dump(4));
+
+		download_files(saved_info_response.host, saved_info_response.info_string, true);
+	}
+
 	void menu_error(const std::string& error)
 	{
 		console::error("%s\n", error.data());
-		if (game::Menu_IsMenuOpenAndVisible(0, "popup_acceptinginvite"))
-		{
-			command::execute("lui_close popup_acceptinginvite", false);
-		}
 
-		if (game::Menu_IsMenuOpenAndVisible(0, "generic_waiting_popup_"))
-		{
-			command::execute("lui_close generic_waiting_popup_", false);
-		}
+		close_joining_popups();
 
 		utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE"); // Com_SetLocalizedErrorMessage
 		*reinterpret_cast<int*>(0x2ED2F78_b) = 1;
@@ -930,6 +1032,10 @@ namespace party
 					return;
 				}
 
+				saved_info_response = {};
+				saved_info_response.host = target;
+				saved_info_response.info_string = info;
+
 				if (info.get("challenge") != connect_state.challenge)
 				{
 					menu_error("Connection failed: Invalid challenge.");
@@ -971,7 +1077,7 @@ namespace party
 					return;
 				}
 
-				if (download_files(target, info))
+				if (download_files(target, info, false))
 				{
 					return;
 				}

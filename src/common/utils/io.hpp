@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <json.hpp>
 
 namespace utils::io
 {

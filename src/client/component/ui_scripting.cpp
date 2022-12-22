@@ -19,6 +19,7 @@
 #include "scripting.hpp"
 #include "updater.hpp"
 #include "server_list.hpp"
+#include "party.hpp"
 
 #include "game/ui_scripting/execution.hpp"
 #include "game/scripting/execution.hpp"
@@ -67,12 +68,6 @@ namespace ui_scripting
 		{
 			const auto itr = globals.loaded_scripts.find(name);
 			return itr == globals.loaded_scripts.end() ? std::string() : itr->second;
-		}
-
-		table get_globals()
-		{
-			const auto state = *game::hks::lua_state;
-			return state->globals.v.table;
 		}
 
 		void print_error(const std::string& error)
@@ -369,6 +364,9 @@ namespace ui_scripting
 			lua["download"] = download_table;
 
 			download_table["abort"] = download::stop_download;
+
+			download_table["userdownloadresponse"] = party::user_download_response;
+			download_table["getwwwurl"] = party::get_www_url;
 		}
 
 		void start()
@@ -521,6 +519,12 @@ namespace ui_scripting
 
 			return 0;
 		}
+	}
+
+	table get_globals()
+	{
+		const auto state = *game::hks::lua_state;
+		return state->globals.v.table;
 	}
 
 	template <typename F>

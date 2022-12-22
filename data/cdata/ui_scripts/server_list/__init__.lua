@@ -4,3 +4,4 @@ end
 
 require("lobby")
 require("serverlist")
+require("confirm")
