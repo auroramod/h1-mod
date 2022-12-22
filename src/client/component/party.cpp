@@ -357,7 +357,7 @@ namespace party
 			nlohmann::json obj = get_whitelist_json_object();
 			if (obj == nullptr)
 			{
-				return false;
+				return 0;
 			}
 
 			obj.insert(obj.end(), target_ip_to_string(saved_info_response.host));
