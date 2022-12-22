@@ -167,6 +167,10 @@ namespace fastfiles
 			{
 				const auto language = game::SEH_GetCurrentLanguageCode();
 				try_load_zone(language + "_"s + name, false);
+				if (game::environment::is_mp())
+				{
+					try_load_zone(language + "_"s + name + "_mp"s, false);
+				}
 			}
 
 			if (!fastfiles::exists(name))
@@ -256,7 +260,7 @@ namespace fastfiles
 			{
 				if (!mod_dir.empty())
 				{
-					const auto path = utils::string::va("%s\\%s\\%s", 
+					const auto path = utils::string::va("%s\\%s\\%s",
 						dir.data(), mod_dir.data(), base_filename);
 
 					if (utils::io::file_exists(path))
@@ -309,7 +313,7 @@ namespace fastfiles
 			return fastfiles::usermap_exists(file);
 		}
 
-		template <typename T> 
+		template <typename T>
 		inline void merge(std::vector<T>* target, T* source, size_t length)
 		{
 			if (source)
@@ -321,7 +325,7 @@ namespace fastfiles
 			}
 		}
 
-		template <typename T> 
+		template <typename T>
 		inline void merge(std::vector<T>* target, std::vector<T> source)
 		{
 			for (auto& entry : source)
@@ -450,7 +454,7 @@ namespace fastfiles
 		});
 	}
 
-	void enum_assets(const game::XAssetType type, 
+	void enum_assets(const game::XAssetType type,
 		const std::function<void(game::XAssetHeader)>& callback, const bool includeOverride)
 	{
 		game::DB_EnumXAssets_Internal(type, static_cast<void(*)(game::XAssetHeader, void*)>([](game::XAssetHeader header, void* data)
@@ -524,7 +528,7 @@ namespace fastfiles
 			{
 				utils::hook::nop(0x368153_b, 2); // DB_InflateInit
 			}
-	
+
 			if (game::environment::is_sp())
 			{
 				// Allow loading mp maps
