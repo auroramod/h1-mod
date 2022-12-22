@@ -8,6 +8,8 @@
 
     "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "Открыть все задания и чит-коды",
     "LUA_MENU_CANCEL_UNLOCK_CAPS": "Вернуться к своему прогрессу прохождения",
+    "LUA_MENU_CHOOSE_LANGUAGE": "Выбор языка",
+    "LUA_MENU_CHOOSE_LANGUAGE_DESC": "Поменять язык интерфейса и озвучки.",
 
     "MENU_MODS": "МОДЫ",
     "MENU_MODS_DESC": "Запуск установленных модов.",

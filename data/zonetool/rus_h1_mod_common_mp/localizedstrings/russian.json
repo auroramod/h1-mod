@@ -30,6 +30,8 @@
     "LUA_MENU_SETTINGS": "Параметры",
     "LUA_MENU_EDIT_STATS": "Корректировка статистики",
 
+    "LUA_MENU_3RD_PARTY_CONTENT_DESC": "Согласны загрузить сторонний контент, необходимый для игры на этом сервере? (&&1)",
+
     "LUA_MENU_MULTIPLAYER_CAPS": "H1-MOD: СЕТЕВАЯ ИГРА\n",
     "MENU_MULTIPLAYER_CAPS": "H1-MOD: СЕТЕВАЯ ИГРА",
 

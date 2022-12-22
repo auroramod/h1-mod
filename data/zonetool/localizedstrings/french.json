@@ -46,5 +46,6 @@
     "LOCALE_SPANISH": "Espagnol",
     "LOCALE_TRADITIONAL_CHINESE": "Chinois traditionnel",
 
-    "LUA_MENU_CHOOSE_LANGUAGE": "Choisissez la langue"
+    "LUA_MENU_CHOOSE_LANGUAGE": "Choisissez la langue",
+    "LUA_MENU_CHOOSE_LANGUAGE_DESC": "Choisissez la langue."
 }
