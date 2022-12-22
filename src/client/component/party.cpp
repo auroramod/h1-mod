@@ -9,6 +9,7 @@
 #include "server_list.hpp"
 #include "download.hpp"
 #include "fastfiles.hpp"
+#include "mods.hpp"
 
 #include "game/game.hpp"
 #include "game/ui_scripting/execution.hpp"
@@ -263,8 +264,7 @@ namespace party
 
 			if (server_fs_game.empty() && !client_fs_game.empty())
 			{
-				game::Dvar_SetFromStringByNameFromSource("fs_game", "",
-					game::DVAR_SOURCE_INTERNAL);
+				mods::clear_mod();
 				return true;
 			}
 
@@ -297,8 +297,7 @@ namespace party
 			}
 			else if (client_fs_game != server_fs_game)
 			{
-				game::Dvar_SetFromStringByNameFromSource("fs_game", server_fs_game.data(),
-					game::DVAR_SOURCE_INTERNAL);
+				mods::set_mod(server_fs_game);
 				return true;
 			}
 

@@ -63,25 +63,25 @@ namespace mods
 			utils::nt::relaunch_self(mode.append(arg), true);
 			utils::nt::terminate();
 		}
-	}
 
-	bool mod_requires_restart(const std::string& path)
-	{
-		return utils::io::file_exists(path + "/mod.ff") || utils::io::file_exists(path + "/zone/mod.ff");
-	}
-
-	void set_filesystem_data(const std::string& path)
-	{
-		if (mod_path.has_value())
+		bool mod_requires_restart(const std::string& path)
 		{
-			filesystem::unregister_path(mod_path.value());
+			return utils::io::file_exists(path + "/mod.ff") || utils::io::file_exists(path + "/zone/mod.ff");
 		}
 
-		if (!game::environment::is_sp())
+		void set_filesystem_data(const std::string& path)
 		{
-			// modify fs_game on mp/dedi because its not set when we obviously vid_restart (sp does a full relaunch with command line arguments)
-			game::Dvar_SetFromStringByNameFromSource("fs_game", path.data(),
-				game::DVAR_SOURCE_INTERNAL);
+			if (mod_path.has_value())
+			{
+				filesystem::unregister_path(mod_path.value());
+			}
+
+			if (!game::environment::is_sp())
+			{
+				// modify fs_game on mp/dedi because its not set when we obviously vid_restart (sp does a full relaunch with command line arguments)
+				game::Dvar_SetFromStringByNameFromSource("fs_game", path.data(),
+					game::DVAR_SOURCE_INTERNAL);
+			}
 		}
 	}
 
