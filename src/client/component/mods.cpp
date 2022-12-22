@@ -17,7 +17,7 @@
 
 namespace mods
 {
-	std::string mod_path{};
+	std::optional<std::string> mod_path;
 
 	namespace
 	{
@@ -51,6 +51,13 @@ namespace mods
 
 		void full_restart(const std::string& arg)
 		{
+			if (game::environment::is_mp())
+			{
+				// vid_restart works on multiplayer, but not on singleplayer
+				command::execute("vid_restart");
+				return;
+			}
+
 			auto mode = game::environment::is_mp() ? " -multiplayer "s : " -singleplayer "s;
 
 			utils::nt::relaunch_self(mode.append(arg), true);
@@ -61,6 +68,38 @@ namespace mods
 	bool mod_requires_restart(const std::string& path)
 	{
 		return utils::io::file_exists(path + "/mod.ff") || utils::io::file_exists(path + "/zone/mod.ff");
+	}
+
+	void set_filesystem_data(const std::string& path)
+	{
+		if (mod_path.has_value())
+		{
+			filesystem::unregister_path(mod_path.value());
+		}
+
+		if (!game::environment::is_sp())
+		{
+			// modify fs_game on mp/dedi because its not set when we obviously vid_restart (sp does a full relaunch with command line arguments)
+			game::Dvar_SetFromStringByNameFromSource("fs_game", path.data(),
+				game::DVAR_SOURCE_INTERNAL);
+		}
+	}
+
+	void set_mod(const std::string& path)
+	{
+		set_filesystem_data(path);
+		mod_path = path;
+	}
+
+	void clear_mod()
+	{
+		set_filesystem_data("");
+		mod_path.reset();
+	}
+
+	std::optional<std::string> get_mod()
+	{
+		return mod_path;
 	}
 
 	class component final : public component_interface
@@ -98,24 +137,23 @@ namespace mods
 				}
 
 				console::info("Loading mod %s\n", path);
+				set_mod(path);
 
-				if (mod_requires_restart(mod_path) || mod_requires_restart(path))
+				if ((mod_path.has_value() && mod_requires_restart(mod_path.value())) ||
+					mod_requires_restart(path))
 				{
 					console::info("Restarting...\n");
 					full_restart("+set fs_game \""s + path + "\"");
 				}
 				else
 				{
-					filesystem::unregister_path(mod_path);
-					filesystem::register_path(path);
-					mod_path = path;
 					restart();
 				}
 			});
 
 			command::add("unloadmod", [](const command::params& params)
 			{
-				if (mod_path.empty())
+				if (!mod_path.has_value())
 				{
 					console::info("No mod loaded\n");
 					return;
@@ -128,17 +166,17 @@ namespace mods
 					return;
 				}
 
-				console::info("Unloading mod %s\n", mod_path.data());
+				console::info("Unloading mod %s\n", mod_path.value().data());
 
-				if (mod_requires_restart(mod_path))
+				if (mod_requires_restart(mod_path.value()))
 				{
 					console::info("Restarting...\n");
+					clear_mod();
 					full_restart("");
 				}
 				else
 				{
-					filesystem::unregister_path(mod_path);
-					mod_path.clear();
+					clear_mod();
 					restart();
 				}
 			});

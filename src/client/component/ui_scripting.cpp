@@ -268,7 +268,8 @@ namespace ui_scripting
 
 			game_type["getloadedmod"] = [](const game&)
 			{
-				return mods::mod_path;
+				const auto& path = mods::get_mod();
+				return path.value_or("");
 			};
 
 			if (::game::environment::is_sp())

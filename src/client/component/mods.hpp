@@ -2,5 +2,5 @@
 
 namespace mods
 {
-	extern std::string mod_path;
+	std::optional<std::string> get_mod();
 }

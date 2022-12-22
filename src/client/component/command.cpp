@@ -28,7 +28,7 @@ namespace command
 		std::unordered_map<std::string, std::function<void(params&)>> handlers;
 		std::unordered_map<std::string, std::function<void(int, params_sv&)>> handlers_sv;
 
-		std::string saved_fs_game;
+		std::optional<std::string> saved_fs_game;
 
 		void main_handler()
 		{
@@ -563,10 +563,10 @@ namespace command
 		const auto new_mod_path = fs_game->current.string;
 
 		// check if the last saved fs_game value isn't empty and if it doesn't equal the new fs_game
-		if (!saved_fs_game.empty() && saved_fs_game != new_mod_path)
+		if (saved_fs_game.has_value() && saved_fs_game != new_mod_path)
 		{
 			// unregister path to be used as a fs directory
-			filesystem::unregister_path(saved_fs_game);
+			filesystem::unregister_path(saved_fs_game.value());
 		}
 
 		if (new_mod_path && !new_mod_path[0])
