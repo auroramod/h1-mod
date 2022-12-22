@@ -32,9 +32,6 @@
 
     "LUA_MENU_3RD_PARTY_CONTENT_DESC": "Согласны загрузить сторонний контент, необходимый для игры на этом сервере? (&&1)",
 
-    "LUA_MENU_MULTIPLAYER_CAPS": "H1-MOD: СЕТЕВАЯ ИГРА\n",
-    "MENU_MULTIPLAYER_CAPS": "H1-MOD: СЕТЕВАЯ ИГРА",
-
     "PLATFORM_SYSTEM_LINK_TITLE": "СПИСОК СЕРВЕРОВ",
 
     "EXE_SAY": "^3Всем^7",
