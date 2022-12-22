@@ -62,6 +62,8 @@
     "MPHUD_LATENCY_MS": " ms",
     "LUA_MENU_TELEMETRY": "TELEMETRY",
 
+    "LUA_MENU_3RD_PARTY_CONTENT_DESC": "Would you like to install required 3rd-party content for this server? (from &&1)",
+
     "MENU_ENGLISH": "English",
     "MENU_ENGLISH_SAFE": "English (Safe)",
     "MENU_FRENCH": "Français",

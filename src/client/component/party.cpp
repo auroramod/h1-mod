@@ -355,27 +355,7 @@ namespace party
 
 		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download);
 
-		void user_download_response(bool response)
-		{
-			if (!response)
-			{
-				return;
-			}
-
-			nlohmann::json obj = get_whitelist_json_object();
-			if (obj == nullptr)
-			{
-				obj = {};
-			}
-
-			obj.push_back(target_ip_to_string(saved_info_response.host));
-
-			utils::io::write_file(get_whitelist_json_path(), obj.dump(4));
-
-			download_files(saved_info_response.host, saved_info_response.info_string, true);
-		}
-
-		bool should_user_confirm(const game::netadr_s& target, const utils::info_string& info)
+		bool should_user_confirm(const game::netadr_s& target)
 		{
 			nlohmann::json obj = get_whitelist_json_object();
 			if (obj != nullptr)
@@ -390,17 +370,8 @@ namespace party
 				}
 			}
 
-			const auto LUI = ui_scripting::get_globals().get("LUI").as<ui_scripting::table>();
-			const auto yes_no_popup_func = LUI.get("yesnopopup").as<ui_scripting::function>();
-
 			close_joining_popups();
-
-			const ui_scripting::table data_table{};
-			data_table.set("title", game::UI_SafeTranslateString("MENU_NOTICE"));
-			data_table.set("text", std::format("Would you like to install required 3rd-party content for this server? (from {})", info.get("sv_wwwBaseUrl")));
-			data_table.set("callback", user_download_response);
-
-			yes_no_popup_func(data_table);
+			command::execute("lui_open_popup popup_confirmdownload", false);
 
 			return true;
 		}
@@ -419,7 +390,7 @@ namespace party
 
 				if (files.size() > 0)
 				{
-					if (!allow_download && should_user_confirm(target, info))
+					if (!allow_download && should_user_confirm(target))
 					{
 						return true;
 					}
@@ -548,6 +519,31 @@ namespace party
 
 			net_out_of_band_print_hook.invoke<void>(sock, addr, buffer.data());
 		}
+	}
+
+	std::string get_www_url()
+	{
+		return saved_info_response.info_string.get("sv_wwwBaseUrl");
+	}
+
+	void user_download_response(bool response)
+	{
+		if (!response)
+		{
+			return;
+		}
+
+		nlohmann::json obj = get_whitelist_json_object();
+		if (obj == nullptr)
+		{
+			obj = {};
+		}
+
+		obj.push_back(target_ip_to_string(saved_info_response.host));
+
+		utils::io::write_file(get_whitelist_json_path(), obj.dump(4));
+
+		download_files(saved_info_response.host, saved_info_response.info_string, true);
 	}
 
 	void menu_error(const std::string& error)

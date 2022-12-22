@@ -3,6 +3,9 @@
 
 namespace party
 {
+	std::string get_www_url();
+	void user_download_response(bool response);
+
 	void menu_error(const std::string& error);
 
 	void reset_connect_state();

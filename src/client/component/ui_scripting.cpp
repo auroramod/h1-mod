@@ -19,6 +19,7 @@
 #include "scripting.hpp"
 #include "updater.hpp"
 #include "server_list.hpp"
+#include "party.hpp"
 
 #include "game/ui_scripting/execution.hpp"
 #include "game/scripting/execution.hpp"
@@ -363,6 +364,9 @@ namespace ui_scripting
 			lua["download"] = download_table;
 
 			download_table["abort"] = download::stop_download;
+
+			download_table["userdownloadresponse"] = party::user_download_response;
+			download_table["getwwwurl"] = party::get_www_url;
 		}
 
 		void start()
