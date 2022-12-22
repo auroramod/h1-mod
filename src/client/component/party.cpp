@@ -175,6 +175,8 @@ namespace party
 			cl_disconnect_hook.invoke<void>(show_main_menu);
 		}
 
+		std::unordered_map<std::string, std::string> hash_cache;
+
 		std::string get_file_hash(const std::string& file)
 		{
 			if (!utils::io::file_exists(file))
@@ -182,8 +184,15 @@ namespace party
 				return {};
 			}
 
+			const auto iter = hash_cache.find(file);
+			if (iter != hash_cache.end())
+			{
+				return iter->second;
+			}
+
 			const auto data = utils::io::read_file(file);
 			const auto sha = utils::cryptography::sha1::compute(data, true);
+			hash_cache[file] = sha;
 			return sha;
 		}
 
@@ -379,6 +388,7 @@ namespace party
 				fastfiles::set_usermap(map);
 			}
 
+			hash_cache.clear();
 			current_sv_mapname = map;
 			utils::hook::invoke<void>(0x54BBB0_b, map, a2, a3, a4, a5);
 		}
