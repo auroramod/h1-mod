@@ -1,16 +1,17 @@
 require("language")
 require("background_effects")
 
-if (game:issingleplayer()) then
+if game:issingleplayer() then
     require("sp_unlockall")
     return
 end
 
-if (Engine.InFrontend()) then
+require("disable_useless_things")
+
+if Engine.InFrontend() then
     require("shader_dialog")
     require("gamemodes")
     require("no_mode_switch")
-    require("disable_useless_things")
 else
     require("scoreboard")
 end

@@ -30,8 +30,8 @@ end
 
 LUI.addmenubutton("pc_controls", {
     index = 4,
-    text = "@MENU_LANGUAGE",
-    description = Engine.Localize("@LUA_MENU_CHOOSE_LANGUAGE"),
+    text = "LUA_MENU_CHOOSE_LANGUAGE",
+    description = Engine.Localize("LUA_MENU_CHOOSE_LANGUAGE_DESC"),
     callback = function()
         LUI.FlowManager.RequestAddMenu(nil, "choose_language_menu")
     end
@@ -39,32 +39,10 @@ LUI.addmenubutton("pc_controls", {
 
 LUI.MenuBuilder.registerType("choose_language_menu", function(a1)
     local menu = LUI.MenuTemplate.new(a1, {
-        menu_title = "@LUA_MENU_CHOOSE_LANGUAGE",
+        menu_title = "LUA_MENU_CHOOSE_LANGUAGE",
         menu_list_divider_top_offset = -(LUI.H1MenuTab.tabChangeHoldingElementHeight + H1MenuDims.spacing),
         uppercase_title = true
     })
-
-    function createdivider(menu, text)
-        local element = LUI.UIElement.new({
-            leftAnchor = true,
-            rightAnchor = false,
-            left = 10,
-            right = 0,
-            topAnchor = true,
-            bottomAnchor = false,
-            top = 0,
-            bottom = 33.33
-        })
-
-        element.scrollingToNext = true
-        element:addElement(LUI.MenuBuilder.BuildRegisteredType("h1_option_menu_titlebar", {
-            title_bar_text = text
-        }))
-
-        menu.list:addElement(element)
-    end
-
-    createdivider(menu, "^2" .. Engine.Localize("@LUA_MENU_DOWNLOAD") .. ": ^7https://docs.h1.gg/languages")
 
     for i = 1, #available_languages do
         if does_zone_folder_exists(available_languages[i]) then
@@ -95,7 +73,33 @@ LUI.MenuBuilder.registerType("choose_language_menu", function(a1)
     })
 
     LUI.Options.AddOptionTextInfo(menu)
+
+    menu:AddHelp({
+        name = "add_button_helper_text",
+        button_ref = "",
+        helper_text = "^2" .. Engine.Localize("@LUA_MENU_DOWNLOAD") .. ": ^7https://docs.h1.gg/languages",
+        side = "left",
+        priority = -9001,
+        clickable = false
+    })
+
     menu:AddBackButton()
 
     return menu
 end)
+
+-- fix for ammo zeros
+if not Engine.InFrontend() then
+    local weaponinfodef = LUI.MenuBuilder.m_definitions["WeaponInfoHudDef"]
+    LUI.MenuBuilder.m_definitions["WeaponInfoHudDef"] = function(...)
+        Engine.GetCurrentLanguage = function()
+            return 0
+        end
+        local res = weaponinfodef(...)
+        Engine.GetCurrentLanguage = function()
+            lang = Engine.GetDvarString("loc_language")
+            return lang
+        end
+        return res
+    end
+end
