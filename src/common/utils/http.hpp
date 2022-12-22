@@ -12,6 +12,7 @@ namespace utils::http
 	struct result
 	{
 		CURLcode code{};
+		unsigned int response_code{};
 		std::string buffer{};
 	};
 

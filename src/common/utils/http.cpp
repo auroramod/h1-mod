@@ -83,11 +83,14 @@ namespace utils::http
 		}
 
 		const auto code = curl_easy_perform(curl);
+		unsigned int response_code{};
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
 
 		if (code == CURLE_OK)
 		{
 			result result;
 			result.code = code;
+			result.response_code = response_code;
 			result.buffer = std::move(buffer);
 
 			return result;

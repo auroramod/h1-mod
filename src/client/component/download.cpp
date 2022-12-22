@@ -174,7 +174,15 @@ namespace download
 					const auto& result = data.value();
 					if (result.code != CURLE_OK)
 					{
-						menu_error(utils::string::va("Download failed: %s (%i)\n", curl_easy_strerror(result.code), result.code));
+						menu_error(utils::string::va("Download failed: %s (%i)\n", 
+							curl_easy_strerror(result.code), result.code));
+						return;
+					}
+
+					if (result.response_code >= 400)
+					{
+						menu_error(utils::string::va("Download failed: Server returned bad response code %i\n", 
+							result.response_code));
 						return;
 					}
 
