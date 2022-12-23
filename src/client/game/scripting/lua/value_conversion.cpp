@@ -1,8 +1,8 @@
 #include <std_include.hpp>
 #include "value_conversion.hpp"
-#include "../functions.hpp"
-#include "../execution.hpp"
-#include ".../../component/logfile.hpp"
+#include "game/scripting/functions.hpp"
+#include "game/scripting/execution.hpp"
+#include "component/logfile.hpp"
 
 namespace scripting::lua
 {
@@ -30,7 +30,7 @@ namespace scripting::lua
 			{
 				const auto var = game::scr_VarGlob->childVariableValue[i];
 
-				if (var.type == game::SCRIPT_NONE)
+				if (var.type == game::VAR_UNDEFINED)
 				{
 					current = var.nextSibling;
 					continue;
@@ -120,12 +120,11 @@ namespace scripting::lua
 		game::VariableValue convert_function(sol::lua_value value)
 		{
 			const auto function = value.as<sol::protected_function>();
-			const auto index = reinterpret_cast<char*>(logfile::vm_execute_hooks.size());
+			const auto index = reinterpret_cast<char*>(logfile::get_hook_count() + 1);
+			logfile::set_lua_hook(index, function);
 
-			logfile::vm_execute_hooks[index] = function;
-
-			game::VariableValue func;
-			func.type = game::SCRIPT_FUNCTION;
+			game::VariableValue func{};
+			func.type = game::VAR_FUNCTION;
 			func.u.codePosValue = index;
 
 			return func;
@@ -276,7 +275,7 @@ namespace scripting::lua
 			return entity_to_array(state, value.get_raw().u.uintValue);
 		}
 
-		if (value.is<std::function<void()>>())
+		if (value.is<function>())
 		{
 			return convert_function(state, value.get_raw().u.codePosValue);
 		}

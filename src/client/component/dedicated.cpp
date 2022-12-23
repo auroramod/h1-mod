@@ -19,6 +19,8 @@ namespace dedicated
 		utils::hook::detour gscr_set_dynamic_dvar_hook;
 		utils::hook::detour com_quit_f_hook;
 
+		const game::dvar_t* sv_lanOnly;
+
 		void init_dedicated_server()
 		{
 			static bool initialized = false;
@@ -31,8 +33,7 @@ namespace dedicated
 
 		void send_heartbeat()
 		{
-			auto* const dvar = game::Dvar_FindVar("sv_lanOnly");
-			if (dvar && dvar->current.enabled)
+			if (sv_lanOnly->current.enabled)
 			{
 				return;
 			}
@@ -80,12 +81,11 @@ namespace dedicated
 			return console_command_queue;
 		}
 
-		void execute_console_command(const int client, const char* command)
+		void execute_console_command([[maybe_unused]] const int local_client_num, const char* command)
 		{
 			if (game::Live_SyncOnlineDataFlags(0) == 0)
 			{
-				game::Cbuf_AddText(client, 0, command);
-				game::Cbuf_AddText(client, 0, "\n");
+				command::execute(command);
 			}
 			else
 			{
@@ -100,29 +100,13 @@ namespace dedicated
 
 			for (const auto& command : queue)
 			{
-				game::Cbuf_AddText(0, 0, command.data());
-				game::Cbuf_AddText(0, 0, "\n");
+				command::execute(command);
 			}
 		}
 
 		void sync_gpu_stub()
 		{
 			std::this_thread::sleep_for(1ms);
-		}
-
-		game::dvar_t* gscr_set_dynamic_dvar()
-		{
-			/*
-			auto s = game::Scr_GetString(0);
-			auto* dvar = game::Dvar_FindVar(s);
-
-			if (dvar && !strncmp("scr_", dvar->name, 4))
-			{
-				return dvar;
-			}
-			*/
-
-			return gscr_set_dynamic_dvar_hook.invoke<game::dvar_t*>();
 		}
 
 		void kill_server()
@@ -145,16 +129,16 @@ namespace dedicated
 
 		void sys_error_stub(const char* msg, ...)
 		{
-			char buffer[2048];
+			char buffer[2048]{};
 
 			va_list ap;
 			va_start(ap, msg);
 
-			vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, msg, ap);
+			vsnprintf_s(buffer, _TRUNCATE, msg, ap);
 
 			va_end(ap);
 
-			scheduler::once([]()
+			scheduler::once([]
 			{
 				command::execute("map_rotate");
 			}, scheduler::main, 3s);
@@ -210,7 +194,7 @@ namespace dedicated
 			dvars::register_bool("dedicated", true, game::DVAR_FLAG_READ, "Dedicated server");
 
 			// Add lanonly mode
-			dvars::register_bool("sv_lanOnly", false, game::DVAR_FLAG_NONE, "Don't send heartbeat");
+			sv_lanOnly = dvars::register_bool("sv_lanOnly", false, game::DVAR_FLAG_NONE, "Don't send heartbeat");
 
 			// Disable VirtualLobby
 			dvars::override::register_bool("virtualLobbyEnabled", false, game::DVAR_FLAG_READ);
@@ -237,14 +221,11 @@ namespace dedicated
 				a.popad64();
 
 				a.jmp(0x157DDF_b);
-			}), true);//
+			}), true);
 
 			// delay console commands until the initialization is done // COULDN'T FOUND
 			// utils::hook::call(0x1400D808C, execute_console_command);
 			// utils::hook::nop(0x1400D80A4, 5);
-
-			// patch GScr_SetDynamicDvar to behave better
-			gscr_set_dynamic_dvar_hook.create(0x43CF60_b, &gscr_set_dynamic_dvar);
 
 			utils::hook::nop(0x189514_b, 248); // don't load config file
 			utils::hook::nop(0x156C46_b, 5); // ^
@@ -332,7 +313,7 @@ namespace dedicated
 			{
 				if (game::Live_SyncOnlineDataFlags(0) == 32 && game::Sys_IsDatabaseReady2())
 				{
-					scheduler::once([]()
+					scheduler::once([]
 					{
 						command::execute("xstartprivateparty", true);
 						command::execute("disconnect", true); // 32 -> 0
@@ -343,7 +324,7 @@ namespace dedicated
 				return scheduler::cond_continue;
 			}, scheduler::pipeline::main, 1s);
 
-			scheduler::on_game_initialized([]()
+			scheduler::on_game_initialized([]
 			{
 				initialize();
 

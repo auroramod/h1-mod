@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <json.hpp>
 
 namespace utils::io
 {
@@ -18,5 +19,6 @@ namespace utils::io
 	bool directory_is_empty(const std::string& directory);
 	bool remove_directory(const std::string& directory);
 	std::vector<std::string> list_files(const std::string& directory);
+	std::vector<std::string> list_files_recursively(const std::string& directory);
 	void copy_folder(const std::filesystem::path& src, const std::filesystem::path& target);
 }

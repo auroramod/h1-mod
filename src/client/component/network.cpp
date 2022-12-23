@@ -7,6 +7,7 @@
 #include "dvars.hpp"
 
 #include "game/dvars.hpp"
+#include "game/game.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
@@ -33,7 +34,7 @@ namespace network
 				return false;
 			}
 
-			const std::string_view data(message->data + offset, message->cursize - offset);
+			const std::string data(message->data + offset, message->cursize - offset);
 
 			handler->second(*address, data);
 #ifdef DEBUG
@@ -302,11 +303,10 @@ namespace network
 				utils::hook::set<int>(0x4F1E25_b, max_packet_size);
 
 				// ignore built in "print" oob command and add in our own
-				utils::hook::set<uint8_t>(0x12F817_b, 0xEB);
-				on("print", [](const game::netadr_s&, const std::string_view& data)
+				utils::hook::set<std::uint8_t>(0x12F817_b, 0xEB);
+				on("print", [](const game::netadr_s&, const std::string& data)
 				{
-					const std::string message{data};
-					console::info(message.data());
+					console::info("%s\n", data.data());
 				});
 
 				// Use our own socket since the game's socket doesn't work with non localhost addresses

@@ -3,15 +3,17 @@
 #include "steam_proxy.hpp"
 #include "scheduler.hpp"
 
-#include <utils/nt.hpp>
-#include <utils/flags.hpp>
-#include <utils/string.hpp>
-#include <utils/binary_resource.hpp>
+#include "arxan.hpp"
 
 #include "game/game.hpp"
 
 #include "steam/interface.hpp"
 #include "steam/steam.hpp"
+
+#include <utils/nt.hpp>
+#include <utils/flags.hpp>
+#include <utils/string.hpp>
+#include <utils/binary_resource.hpp>
 
 namespace steam_proxy
 {
@@ -31,12 +33,7 @@ namespace steam_proxy
 	public:
 		void post_load() override
 		{
-			if (game::environment::is_dedi() || is_disabled())
-			{
-				return;
-			}
-			
-			if (!FindWindowA(0, "Steam"))
+			if (game::environment::is_dedi() || is_disabled() || !FindWindowA(0, "Steam"))
 			{
 				return;
 			}
@@ -107,7 +104,10 @@ namespace steam_proxy
 		void load_client()
 		{
 			const std::filesystem::path steam_path = steam::SteamAPI_GetSteamInstallPath();
-			if (steam_path.empty()) return;
+			if (steam_path.empty()) 
+			{
+				return;
+			}
 
 			utils::nt::library::load(steam_path / "tier0_s64.dll");
 			utils::nt::library::load(steam_path / "vstdlib_s64.dll");

@@ -2,7 +2,7 @@
 #include "script_value.hpp"
 #include "entity.hpp"
 #include "array.hpp"
-#include "functions.hpp"
+#include "function.hpp"
 
 namespace scripting
 {
@@ -15,10 +15,15 @@ namespace scripting
 	{
 	}
 
+	script_value::script_value(const value_wrap& value)
+		: value_(value.get_raw())
+	{
+	}
+
 	script_value::script_value(const int value)
 	{
 		game::VariableValue variable{};
-		variable.type = game::SCRIPT_INTEGER;
+		variable.type = game::VAR_INTEGER;
 		variable.u.intValue = value;
 
 		this->value_ = variable;
@@ -27,7 +32,7 @@ namespace scripting
 	script_value::script_value(const unsigned int value)
 	{
 		game::VariableValue variable{};
-		variable.type = game::SCRIPT_INTEGER;
+		variable.type = game::VAR_INTEGER;
 		variable.u.uintValue = value;
 
 		this->value_ = variable;
@@ -41,7 +46,7 @@ namespace scripting
 	script_value::script_value(const float value)
 	{
 		game::VariableValue variable{};
-		variable.type = game::SCRIPT_FLOAT;
+		variable.type = game::VAR_FLOAT;
 		variable.u.floatValue = value;
 
 		this->value_ = variable;
@@ -55,7 +60,7 @@ namespace scripting
 	script_value::script_value(const char* value)
 	{
 		game::VariableValue variable{};
-		variable.type = game::SCRIPT_STRING;
+		variable.type = game::VAR_STRING;
 		variable.u.stringValue = game::SL_GetString(value, 0);
 
 		const auto _ = gsl::finally([&variable]()
@@ -74,7 +79,7 @@ namespace scripting
 	script_value::script_value(const entity& value)
 	{
 		game::VariableValue variable{};
-		variable.type = game::SCRIPT_OBJECT;
+		variable.type = game::VAR_POINTER;
 		variable.u.pointerValue = value.get_entity_id();
 
 		this->value_ = variable;
@@ -83,8 +88,17 @@ namespace scripting
 	script_value::script_value(const array& value)
 	{
 		game::VariableValue variable{};
-		variable.type = game::SCRIPT_OBJECT;
+		variable.type = game::VAR_POINTER;
 		variable.u.pointerValue = value.get_entity_id();
+
+		this->value_ = variable;
+	}
+
+	script_value::script_value(const function& value)
+	{
+		game::VariableValue variable{};
+		variable.type = game::VAR_FUNCTION;
+		variable.u.codePosValue = value.get_pos();
 
 		this->value_ = variable;
 	}
@@ -92,7 +106,7 @@ namespace scripting
 	script_value::script_value(const vector& value)
 	{
 		game::VariableValue variable{};
-		variable.type = game::SCRIPT_VECTOR;
+		variable.type = game::VAR_VECTOR;
 		variable.u.vectorValue = game::Scr_AllocVector(value);
 
 		const auto _ = gsl::finally([&variable]()
@@ -110,7 +124,7 @@ namespace scripting
 	template <>
 	bool script_value::is<int>() const
 	{
-		return this->get_raw().type == game::SCRIPT_INTEGER;
+		return this->get_raw().type == game::VAR_INTEGER;
 	}
 
 	template <>
@@ -150,7 +164,7 @@ namespace scripting
 	template <>
 	bool script_value::is<float>() const
 	{
-		return this->get_raw().type == game::SCRIPT_FLOAT;
+		return this->get_raw().type == game::VAR_FLOAT;
 	}
 
 	template <>
@@ -178,7 +192,7 @@ namespace scripting
 	template <>
 	bool script_value::is<const char*>() const
 	{
-		return this->get_raw().type == game::SCRIPT_STRING;
+		return this->get_raw().type == game::VAR_STRING;
 	}
 
 	template <>
@@ -206,7 +220,7 @@ namespace scripting
 	template <>
 	bool script_value::is<array>() const
 	{
-		if (this->get_raw().type != game::SCRIPT_OBJECT)
+		if (this->get_raw().type != game::VAR_POINTER)
 		{
 			return false;
 		}
@@ -214,7 +228,7 @@ namespace scripting
 		const auto id = this->get_raw().u.uintValue;
 		const auto type = game::scr_VarGlob->objectVariableValue[id].w.type;
 
-		return type == game::SCRIPT_ARRAY;
+		return type == game::VAR_ARRAY;
 	}
 
 	template <>
@@ -230,7 +244,7 @@ namespace scripting
 	template <>
 	bool script_value::is<std::map<std::string, script_value>>() const
 	{
-		if (this->get_raw().type != game::SCRIPT_OBJECT)
+		if (this->get_raw().type != game::VAR_POINTER)
 		{
 			return false;
 		}
@@ -238,7 +252,7 @@ namespace scripting
 		const auto id = this->get_raw().u.uintValue;
 		const auto type = game::scr_VarGlob->objectVariableValue[id].w.type;
 
-		return type == game::SCRIPT_STRUCT;
+		return type == game::VAR_OBJECT;
 	}
 
 	/***************************************************************
@@ -246,9 +260,15 @@ namespace scripting
 	 **************************************************************/
 
 	template <>
-	bool script_value::is<std::function<void()>>() const
+	bool script_value::is<function>() const
 	{
-		return this->get_raw().type == game::SCRIPT_FUNCTION;
+		return this->get_raw().type == game::VAR_FUNCTION;
+	}
+
+	template <>
+	function script_value::get() const
+	{
+		return function(this->get_raw().u.codePosValue);
 	}
 
 	/***************************************************************
@@ -258,7 +278,7 @@ namespace scripting
 	template <>
 	bool script_value::is<entity>() const
 	{
-		return this->get_raw().type == game::SCRIPT_OBJECT;
+		return this->get_raw().type == game::VAR_POINTER;
 	}
 
 	template <>
@@ -274,7 +294,7 @@ namespace scripting
 	template <>
 	bool script_value::is<vector>() const
 	{
-		return this->get_raw().type == game::SCRIPT_VECTOR;
+		return this->get_raw().type == game::VAR_VECTOR;
 	}
 
 	template <>
@@ -290,6 +310,12 @@ namespace scripting
 	const game::VariableValue& script_value::get_raw() const
 	{
 		return this->value_.get();
+	}
+
+	value_wrap::value_wrap(const scripting::script_value& value, int argument_index)
+		: value_(value)
+		, argument_index_(argument_index)
+	{
 	}
 
 	std::string script_value::to_string() const
@@ -319,9 +345,10 @@ namespace scripting
 			);
 		}
 
-		if (this->is<std::function<void()>>())
+		if (this->is<function>())
 		{
-			return utils::string::va("[[ function ]]");
+			const auto func = this->as<function>();
+			return utils::string::va("[[ %s ]]", func.get_name().data());
 		}
 
 		return this->type_name();

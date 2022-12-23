@@ -5,10 +5,20 @@ namespace demonware
 {
 	bdDML::bdDML() : service(27, "bdDML")
 	{
-		this->register_task(2, &bdDML::get_user_raw_data);
+		this->register_task(1, &bdDML::recordIP);
+		this->register_task(2, &bdDML::getUserData);
+		this->register_task(3, &bdDML::getUserHierarchicalData);
+		this->register_task(4, &bdDML::getUsersLastLogonData);
 	}
 
-	void bdDML::get_user_raw_data(service_server* server, byte_buffer* /*buffer*/) const
+	void bdDML::recordIP(service_server* server, byte_buffer* /*buffer*/) const
+	{
+		// TODO:
+		auto reply = server->create_reply(this->task_id());
+		reply->send();
+	}
+
+	void bdDML::getUserData(service_server* server, byte_buffer* /*buffer*/) const
 	{
 		auto result = new bdDMLRawData;
 		result->country_code = "US";
@@ -23,6 +33,20 @@ namespace demonware
 
 		auto reply = server->create_reply(this->task_id());
 		reply->add(result);
+		reply->send();
+	}
+
+	void bdDML::getUserHierarchicalData(service_server* server, byte_buffer* /*buffer*/) const
+	{
+		// TODO:
+		auto reply = server->create_reply(this->task_id());
+		reply->send();
+	}
+
+	void bdDML::getUsersLastLogonData(service_server* server, byte_buffer* /*buffer*/) const
+	{
+		// TODO:
+		auto reply = server->create_reply(this->task_id());
 		reply->send();
 	}
 }

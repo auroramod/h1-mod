@@ -11,9 +11,9 @@ namespace demonware
 
 		byte_buffer buffer(packet);
 		buffer.set_use_data_types(false);
-		buffer.read_byte(&type);
-		buffer.read_byte(&version);
-		buffer.read_byte(&padding);
+		buffer.read_ubyte(&type);
+		buffer.read_ubyte(&version);
+		buffer.read_ubyte(&padding);
 
 		switch (type)
 		{
@@ -34,9 +34,9 @@ namespace demonware
 
 		byte_buffer buffer;
 		buffer.set_use_data_types(false);
-		buffer.write_byte(31); // type
-		buffer.write_byte(2); // version
-		buffer.write_byte(0); // version
+		buffer.write_ubyte(31); // type
+		buffer.write_ubyte(2); // version
+		buffer.write_ubyte(0); // version
 		buffer.write_uint32(ip); // external ip
 		buffer.write_uint16(3074); // port
 
@@ -49,9 +49,9 @@ namespace demonware
 
 		byte_buffer buffer;
 		buffer.set_use_data_types(false);
-		buffer.write_byte(21); // type
-		buffer.write_byte(2); // version
-		buffer.write_byte(0); // version
+		buffer.write_ubyte(21); // type
+		buffer.write_ubyte(2); // version
+		buffer.write_ubyte(0); // version
 		buffer.write_uint32(ip); // external ip
 		buffer.write_uint16(3074); // port
 		buffer.write_uint32(this->get_address()); // server ip

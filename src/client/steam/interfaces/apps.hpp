@@ -1,11 +1,31 @@
 #pragma once
 
+#include "component/console.hpp"
+#include <utils/io.hpp>
+
+#define LANGUAGE_FILE "players2/default/language"
+
 namespace steam
 {
 	class apps
 	{
 	public:
 		~apps() = default;
+
+		char language[0x30] = { 0 };
+
+		apps()
+		{
+			std::string content;
+			if (::utils::io::read_file(LANGUAGE_FILE, &content))
+			{
+#if DEBUG
+				console::info("Language switched to \"%s\".\n", content.data());
+#endif
+				strcpy_s(language, sizeof(language), content.data());
+				return;
+			}
+		}
 
 		virtual bool BIsSubscribed();
 		virtual bool BIsLowViolence();

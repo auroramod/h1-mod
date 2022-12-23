@@ -10,7 +10,6 @@
 namespace game
 {
 	extern uint64_t base_address;
-	void load_base_address();
 
 	namespace environment
 	{
@@ -77,6 +76,8 @@ namespace game
 	void Cmd_EndTokenizeString();
 }
 
-uintptr_t operator"" _b(const uintptr_t ptr);
+size_t operator"" _b(const size_t ptr);
+size_t reverse_b(const size_t ptr);
+size_t reverse_b(const void* ptr);
 
 #include "symbols.hpp"

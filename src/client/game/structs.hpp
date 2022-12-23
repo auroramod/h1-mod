@@ -22,19 +22,39 @@ namespace game
 		unsigned short classnum;
 	};
 
-	enum scriptType_e
+	enum VariableType
 	{
-		SCRIPT_NONE = 0,
-		SCRIPT_OBJECT = 1,
-		SCRIPT_STRING = 2,
-		SCRIPT_ISTRING = 3,
-		SCRIPT_VECTOR = 4,
-		SCRIPT_FLOAT = 5,
-		SCRIPT_INTEGER = 6,
-		SCRIPT_END = 8,
-		SCRIPT_FUNCTION = 9,
-		SCRIPT_STRUCT = 19,
-		SCRIPT_ARRAY = 22
+		VAR_UNDEFINED = 0x0,
+		VAR_BEGIN_REF = 0x1,
+		VAR_POINTER = 0x1,
+		VAR_STRING = 0x2,
+		VAR_ISTRING = 0x3,
+		VAR_VECTOR = 0x4,
+		VAR_END_REF = 0x5,
+		VAR_FLOAT = 0x5,
+		VAR_INTEGER = 0x6,
+		VAR_CODEPOS = 0x7,
+		VAR_PRECODEPOS = 0x8,
+		VAR_FUNCTION = 0x9,
+		VAR_BUILTIN_FUNCTION = 0xA,
+		VAR_BUILTIN_METHOD = 0xB,
+		VAR_STACK = 0xC,
+		VAR_ANIMATION = 0xD,
+		VAR_PRE_ANIMATION = 0xE,
+		VAR_THREAD = 0xF,
+		VAR_NOTIFY_THREAD = 0x10,
+		VAR_TIME_THREAD = 0x11,
+		VAR_CHILD_THREAD = 0x12,
+		VAR_OBJECT = 0x13,
+		VAR_DEAD_ENTITY = 0x14,
+		VAR_ENTITY = 0x15,
+		VAR_ARRAY = 0x16,
+		VAR_DEAD_THREAD = 0x17,
+		VAR_COUNT = 0x18,
+		VAR_FREE = 0x18,
+		VAR_THREAD_LIST = 0x19,
+		VAR_ENDON_LIST = 0x1A,
+		VAR_TOTAL_COUNT = 0x1B,
 	};
 
 	struct VariableStackBuffer
@@ -882,6 +902,7 @@ namespace game
 		DVAR_FLAG_SAVED = 0x1,
 		DVAR_FLAG_LATCHED = 0x2,
 		DVAR_FLAG_CHEAT = 0x4,
+		DVAR_FLAG_EXTERNAL = 0x100,
 		DVAR_FLAG_REPLICATED = 0x8,
 		DVAR_FLAG_WRITE = 0x800,
 		DVAR_FLAG_READ = 0x2000,
@@ -1008,6 +1029,20 @@ namespace game
 		DB_LOAD_ASYNC_FORCE_FREE = 0x3,
 		DB_LOAD_ASYNC_NO_SYNC_THREADS = 0x4,
 		DB_LOAD_SYNC_SKIP_ALWAYS_LOADED = 0x5,
+	};
+
+	enum DBAllocFlags : std::int32_t
+	{
+		DB_ZONE_NONE = 0x0,
+		DB_ZONE_COMMON = 0x1,
+		DB_ZONE_UI = 0x2,
+		DB_ZONE_GAME = 0x4,
+		DB_ZONE_LOAD = 0x8,
+		DB_ZONE_DEV = 0x10,
+		DB_ZONE_BASEMAP = 0x20,
+		DB_ZONE_TRANSIENT_POOL = 0x40,
+		DB_ZONE_TRANSIENT_MASK = 0x40,
+		DB_ZONE_CUSTOM = 0x200 // added for custom zone loading
 	};
 
 	struct XZoneInfo
@@ -1302,7 +1337,7 @@ namespace game
 		int compressedLen;
 		int len;
 		int bytecodeLen;
-		const char* buffer;
+		char* buffer;
 		char* bytecode;
 	};
 
@@ -1397,6 +1432,22 @@ namespace game
 		const char* name;
 	};
 
+	struct XModel
+	{
+		const char* name;
+	};
+
+	struct WeaponDef
+	{
+		const char* name;
+	};
+
+	struct LocalizeEntry
+	{
+		const char* value;
+		const char* name;
+	};
+
 	union XAssetHeader
 	{
 		void* data;
@@ -1408,6 +1459,9 @@ namespace game
 		LuaFile* luaFile;
 		GfxImage* image;
 		TTF* ttf;
+		XModel* model;
+		WeaponDef* weapon;
+		LocalizeEntry* localize;
 	};
 
 	struct XAsset
@@ -1501,6 +1555,71 @@ namespace game
 	{
 		unsigned int data;
 	};
+
+	struct map_t
+	{
+		const char* name;
+		int id;
+		int unk;
+	};
+
+	struct UISpawnPos
+	{
+		float allySpawnPos[2];
+		float axisSpawnPos[2];
+		float objectives[5][2];
+	};
+
+	struct mapInfo
+	{
+		char mapName[32];
+		char mapLoadName[16];
+		char mapDescription[32];
+		char mapLoadImage[32];
+		char mapCustomKey[32][16];
+		char mapCustomValue[32][64];
+		int mapCustomCount;
+		char mapCamoTypes[2][16];
+		int isAliensMap;
+		int mapPack;
+		int unk1;
+		int gametype;
+		char __pad0[132];
+		UISpawnPos mapSpawnPos[32];
+	};
+
+	static_assert(sizeof(mapInfo) == 4648);
+
+	struct ui_info
+	{
+		char __pad0[16];
+		float cursor_x;
+		float cursor_y;
+		int cursor_time;
+		int ingame_cursor_visible;
+	};
+
+	enum PMem_Source
+	{
+		PMEM_SOURCE_EXTERNAL = 0x0,
+		PMEM_SOURCE_DATABASE = 0x1,
+		PMEM_SOURCE_DEFAULT_LOW = 0x2,
+		PMEM_SOURCE_DEFAULT_HIGH = 0x3,
+		PMEM_SOURCE_MOVIE = 0x4,
+		PMEM_SOURCE_SCRIPT = 0x5,
+	};
+
+	struct physical_memory
+	{
+		char __pad0[0x10];
+		char* buf;
+		char __pad1[0x8];
+		int unk1;
+		size_t size;
+		char __pad2[0x500];
+	};
+
+	static_assert(sizeof(physical_memory) == 0x530);
 
 	namespace mp
 	{

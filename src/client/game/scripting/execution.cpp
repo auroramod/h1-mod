@@ -16,14 +16,6 @@ namespace scripting
 			return value_ptr;
 		}
 
-		void push_value(const script_value& value)
-		{
-			auto* value_ptr = allocate_argument();
-			*value_ptr = value.get_raw();
-
-			game::AddRefToValue(value_ptr->type, value_ptr->u);
-		}
-
 		int get_field_id(const int classnum, const std::string& field)
 		{
 			if (scripting::fields_table[classnum].find(field) != scripting::fields_table[classnum].end())
@@ -47,6 +39,14 @@ namespace scripting
 
 			return script_value(game::scr_VmPub->top[1 - game::scr_VmPub->outparamcount]);
 		}
+	}
+
+	void push_value(const script_value& value)
+	{
+		auto* value_ptr = allocate_argument();
+		*value_ptr = value.get_raw();
+
+		game::AddRefToValue(value_ptr->type, value_ptr->u);
 	}
 
 	void notify(const entity& entity, const std::string& event, const std::vector<script_value>& arguments)
@@ -110,13 +110,13 @@ namespace scripting
 		stack_isolation _;
 		for (auto i = arguments.rbegin(); i != arguments.rend(); ++i)
 		{
-			scripting::push_value(*i);
+			push_value(*i);
 		}
 
 		game::AddRefToObject(id);
 
 		const auto local_id = game::AllocThread(id);
-		const auto result = game::VM_Execute(local_id, pos, (unsigned int)arguments.size());
+		const auto result = game::VM_Execute(local_id, pos, static_cast<std::uint32_t>(arguments.size()));
 		game::RemoveRefToObject(result);
 
 		return get_return_value();
@@ -124,13 +124,13 @@ namespace scripting
 
 	const char* get_function_pos(const std::string& filename, const std::string& function)
 	{
-		if (scripting::script_function_table.find(filename) == scripting::script_function_table.end())
+		if (!script_function_table.contains(filename))
 		{
 			throw std::runtime_error("File '" + filename + "' not found");
-		};
+		}
 
-		const auto functions = scripting::script_function_table[filename];
-		if (functions.find(function) == functions.end())
+		const auto& functions = script_function_table[filename];
+		if (!functions.contains(function))
 		{
 			throw std::runtime_error("Function '" + function + "' in file '" + filename + "' not found");
 		}
@@ -184,7 +184,7 @@ namespace scripting
 				throw std::runtime_error("Failed to get value for field '" + field + "'");
 			}
 
-			const auto __ = gsl::finally([value]()
+			const auto _0 = gsl::finally([value]
 			{
 				game::RemoveRefToValue(value.type, value.u);
 			});
@@ -199,7 +199,7 @@ namespace scripting
 	{
 		unsigned int index = 0;
 		const auto variable = game::AllocVariable(&index);
-		variable->w.type = game::SCRIPT_ARRAY;
+		variable->w.type = game::VAR_ARRAY;
 		variable->u.f.prev = 0;
 		variable->u.f.next = 0;
 

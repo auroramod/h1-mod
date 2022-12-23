@@ -8,19 +8,19 @@ namespace utils::http
 	{
 		struct progress_helper
 		{
-			const std::function<void(size_t)>* callback{};
+			const std::function<int(size_t, size_t)>* callback{};
 			std::exception_ptr exception{};
 		};
 
-		int progress_callback(void* clientp, const curl_off_t /*dltotal*/, const curl_off_t dlnow, const curl_off_t /*ultotal*/, const curl_off_t /*ulnow*/)
+		int progress_callback(void* clientp, const curl_off_t dltotal, const curl_off_t dlnow, const curl_off_t /*ultotal*/, const curl_off_t /*ulnow*/)
 		{
 			auto* helper = static_cast<progress_helper*>(clientp);
 
 			try
 			{
-				if (*helper->callback)
+				if (*helper->callback && (*helper->callback)(dltotal, dlnow) == -1)
 				{
-					(*helper->callback)(dlnow);
+					return -1;
 				}
 			}
 			catch (...)
@@ -43,7 +43,7 @@ namespace utils::http
 	}
 
 	std::optional<result> get_data(const std::string& url, const std::string& fields,
-		const headers& headers, const std::function<void(size_t)>& callback)
+		const headers& headers, const std::function<int(size_t, size_t)>& callback)
 	{
 		curl_slist* header_list = nullptr;
 		auto* curl = curl_easy_init();
@@ -74,6 +74,7 @@ namespace utils::http
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
 		curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
 		curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &helper);
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
 
 		if (!fields.empty())
@@ -82,11 +83,14 @@ namespace utils::http
 		}
 
 		const auto code = curl_easy_perform(curl);
+		unsigned int response_code{};
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
 
 		if (code == CURLE_OK)
 		{
 			result result;
 			result.code = code;
+			result.response_code = response_code;
 			result.buffer = std::move(buffer);
 
 			return result;
@@ -104,7 +108,7 @@ namespace utils::http
 	}
 
 	std::future<std::optional<result>> get_data_async(const std::string& url, const std::string& fields,
-		const headers& headers, const std::function<void(size_t)>& callback)
+		const headers& headers, const std::function<int(size_t, size_t)>& callback)
 	{
 		return std::async(std::launch::async, [url, fields, headers, callback]()
 		{

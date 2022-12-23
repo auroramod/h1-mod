@@ -1,0 +1,33 @@
+{
+    "LUA_MENU_SERVERLIST": "LISTE DES SERVEURS",
+    "MENU_NUMPLAYERS": "Joueurs",
+    "MENU_PING": "Latence",
+    "SERVERLIST_PLAYER_COUNT": "&&1 Joueurs",
+    "SERVERLIST_SERVER_COUNT": "&&1 Serveurs",
+
+    "LUA_MENU_STATS": "Stats",
+    "LUA_MENU_STATS_DESC": "Modifier les paramètres des statistiques du joueur.",
+    "LUA_MENU_UNLOCKALL_ITEMS": "Déverrouiller tous les éléments",
+    "LUA_MENU_UNLOCKALL_ITEMS_DESC": "Si les éléments doivent être verrouillés en fonction des statistiques du joueur ou toujours déverrouillés.",
+    "LUA_MENU_UNLOCKALL_LOOT": "Débloquez tout le butin",
+    "LUA_MENU_UNLOCKALL_LOOT_DESC": "Si le butin doit être verrouillé en fonction des statistiques du joueur ou toujours déverrouillé.",
+    "LUA_MENU_UNLOCKALL_CLASSES": "Débloquer toutes les classes",
+    "LUA_MENU_UNLOCKALL_CLASSES_DESC": "Si les classes doivent être verrouillées en fonction des statistiques du joueur ou toujours déverrouillées.",
+    "LUA_MENU_PRESTIGE": "Prestige",
+    "LUA_MENU_PRESTIGE_DESC": "Modifier le niveau de prestige.",
+    "LUA_MENU_RANK": "Grade",
+    "LUA_MENU_RANK_DESC": "Modifier le grade.",
+    "LUA_MENU_UNSAVED_CHANGES": "Vous avez des modifications non enregistrées, êtes-vous sûr de vouloir quitter ?",
+    "LUA_MENU_SAVE": "Sauvegarder les modifications",
+    "LUA_MENU_SAVE_DESC": "Sauvegarder les modifications.",
+    "LUA_MENU_SETTINGS": "Paramètres",
+    "LUA_MENU_EDIT_STATS": "Modifier les statistiques",
+
+    "UPDATER_POPUP_NO_UPDATES_AVAILABLE": "Aucune mise à jour disponible",
+    "UPDATER_POPUP_AVAILABLE_UPDATE_TEXT": "Une mise à jour est disponible,\npoursuivre l'installation ?",
+    "UPDATER_POPUP_SUCCESSFUL": "Mise à jour réussie",
+    "UPDATER_POPUP_RESTART_POPUP_TEXT": "La mise à jour nécessite un redémarrage",
+    "UPDATER_POPUP_CHECKING_FOR_UPDATES": "Vérification des mises à jour...",
+
+    "PLATFORM_SYSTEM_LINK_TITLE": "LISTE DES SERVEURS"
+}

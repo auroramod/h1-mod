@@ -1,0 +1,26 @@
+{
+    "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "Sblocca tutte le missioni",
+    "LUA_MENU_CANCEL_UNLOCK_CAPS": "Annulla sblocco",
+
+    "MENU_MODS_DESC": "Abilita mod installate.",
+    "LUA_MENU_MOD_DESC_DEFAULT": "Abilita &&1.",
+    "LUA_MENU_MOD_DESC": "&&1\nAutore: &&2\nVersione: &&3",
+    "LUA_MENU_LOADED_MOD": "Mod attiva: ^2&&1",
+    "LUA_MENU_AVAILABLE_MODS": "Mod disponibili",
+    "LUA_MENU_UNLOAD": "Disabilita",
+    "LUA_MENU_UNLOAD_DESC": "Disabilita la mod attualmente attiva.",
+
+    "LOCALE_ENGLISH": "Inglese",
+    "LOCALE_ENGLISH_SAFE": "Inglese (sicuro)",
+    "LOCALE_FRENCH": "Francese",
+    "LOCALE_GERMAN": "Tedesco",
+    "LOCALE_ITALIAN": "Italiano",
+    "LOCALE_JAPANESE_PARTIAL": "Giapponese (parziale)",
+    "LOCALE_KOREAN": "Coreano",
+    "LOCALE_POLISH": "Polacco",
+    "LOCALE_PORTUGUESE": "Portoghese",
+    "LOCALE_RUSSIAN": "Russo",
+    "LOCALE_SIMPLIFIED_CHINESE": "Cinese semplificato",
+    "LOCALE_SPANISH": "Spagnolo",
+    "LOCALE_TRADITIONAL_CHINESE": "Cinese tradizionale"
+}

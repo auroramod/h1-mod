@@ -13,7 +13,6 @@
 #pragma warning(disable: 4702)
 #pragma warning(disable: 4996)
 #pragma warning(disable: 5054)
-#pragma warning(disable: 5056)
 #pragma warning(disable: 6011)
 #pragma warning(disable: 6297)
 #pragma warning(disable: 6385)
@@ -59,6 +58,14 @@
 #undef min
 #endif
 
+#ifdef DEBUG
+//#define DW_DEBUG
+#endif
+
+#define MSG_BOX_INFO(message) MessageBoxA(nullptr, message, "H1-Mod: INFORMATION", MB_ICONINFORMATION);
+#define MSG_BOX_WARN(message) MessageBoxA(nullptr, message, "H1-Mod: WARNING", MB_ICONWARNING);
+#define MSG_BOX_ERROR(message) MessageBoxA(nullptr, message, "H1-Mod: ERROR", MB_ICONERROR);
+
 #include <map>
 #include <atomic>
 #include <vector>
@@ -81,6 +88,10 @@
 #include <udis86.h>
 #include <MinHook.h>
 #include <tomcrypt.h>
+#include <json.hpp>
+
+#define RAPIDJSON_NOEXCEPT
+#define RAPIDJSON_ASSERT(cond) if(cond); else throw std::runtime_error("rapidjson assert fail");
 
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>

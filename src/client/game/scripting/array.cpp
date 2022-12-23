@@ -17,7 +17,7 @@ namespace scripting
 		const auto value = game::scr_VarGlob->childVariableValue[this->id_ + 0xFA00 * (this->parent_id_ & 3)];
 		game::VariableValue variable;
 		variable.u = value.u.u;
-		variable.type = (game::scriptType_e)value.type;
+		variable.type = value.type;
 
 		this->value_ = variable;
 	}
@@ -115,7 +115,7 @@ namespace scripting
 	{
 		if (this->id_)
 		{
-			game::AddRefToValue(game::SCRIPT_OBJECT, {static_cast<int>(this->id_)});
+			game::AddRefToValue(game::VAR_POINTER, {static_cast<int>(this->id_)});
 		}
 	}
 
@@ -123,7 +123,7 @@ namespace scripting
 	{
 		if (this->id_)
 		{
-			game::RemoveRefToValue(game::SCRIPT_OBJECT, {static_cast<int>(this->id_)});
+			game::RemoveRefToValue(game::VAR_POINTER, {static_cast<int>(this->id_)});
 		}
 	}
 
@@ -138,7 +138,7 @@ namespace scripting
 		{
 			const auto var = game::scr_VarGlob->childVariableValue[i];
 
-			if (var.type == game::SCRIPT_NONE)
+			if (var.type == game::VAR_UNDEFINED)
 			{
 				current = var.nextSibling;
 				continue;
@@ -227,7 +227,7 @@ namespace scripting
 		const auto value = game::scr_VarGlob->childVariableValue[variable_id + 0xFA00 * (this->id_ & 3)];
 		game::VariableValue variable;
 		variable.u = value.u.u;
-		variable.type = (game::scriptType_e)value.type;
+		variable.type = value.type;
 
 		return variable;
 	}
@@ -244,7 +244,7 @@ namespace scripting
 		const auto value = game::scr_VarGlob->childVariableValue[variable_id + 0xFA00  * (this->id_ & 3)];
 		game::VariableValue variable;
 		variable.u = value.u.u;
-		variable.type = (game::scriptType_e)value.type;
+		variable.type = value.type;
 
 		return variable;
 	}

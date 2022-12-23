@@ -1,0 +1,18 @@
+{
+    "LOCALE_ENGLISH": "英語",
+    "LOCALE_ENGLISH_SAFE": "英語(検閲)",
+    "LOCALE_FRENCH": "フランス語",
+    "LOCALE_GERMAN": "ドイツ語",
+    "LOCALE_ITALIAN": "イタリア語",
+    "LOCALE_JAPANESE_PARTIAL": "日本語(一部)",
+    "LOCALE_KOREAN": "韓国語",
+    "LOCALE_POLISH": "ポーランド語",
+    "LOCALE_PORTUGUESE": "ポルトガル語",
+    "LOCALE_RUSSIAN": "ロシア語",
+    "LOCALE_SIMPLIFIED_CHINESE": "簡体字中国語",
+    "LOCALE_SPANISH": "スペイン語",
+    "LOCALE_TRADITIONAL_CHINESE": "繁体字中国語",
+
+    "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "全ミッションをアンロック",
+    "LUA_MENU_CANCEL_UNLOCK_CAPS": "アンロックをキャンセル"
+}

@@ -25,10 +25,6 @@
 [submodule "deps/lua"]
 	path = deps/lua
 	url = https://github.com/lua/lua.git
-[submodule "deps/stb"]
-	path = deps/stb
-	url = https://github.com/nothings/stb.git
-	branch = develop
 [submodule "deps/libtomcrypt"]
 	path = deps/libtomcrypt
 	url = https://github.com/libtom/libtomcrypt.git
@@ -48,3 +44,13 @@
 [submodule "deps/curl"]
 	path = deps/curl
 	url = https://github.com/curl/curl.git
+[submodule "deps/json"]
+	path = deps/json
+	url = https://github.com/nlohmann/json.git
+[submodule "deps/gsc-tool"]
+	path = deps/gsc-tool
+	url = https://github.com/xensik/gsc-tool.git
+	branch = xlabs
+[submodule "deps/stb"]
+	path = deps/stb
+	url = https://github.com/nothings/stb.git

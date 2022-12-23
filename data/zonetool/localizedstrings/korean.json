@@ -1,0 +1,18 @@
+{
+    "LOCALE_ENGLISH": "영어",
+    "LOCALE_ENGLISH_SAFE": "영어(검열)",
+    "LOCALE_FRENCH": "프랑스어",
+    "LOCALE_GERMAN": "독일어",
+    "LOCALE_ITALIAN": "이탈리아어",
+    "LOCALE_JAPANESE_PARTIAL": "일본어(일부)",
+    "LOCALE_KOREAN": "한국어",
+    "LOCALE_POLISH": "폴란드어",
+    "LOCALE_PORTUGUESE": "포르투갈어",
+    "LOCALE_RUSSIAN": "러시아어",
+    "LOCALE_SIMPLIFIED_CHINESE": "중국어(간체)",
+    "LOCALE_SPANISH": "스페인어",
+    "LOCALE_TRADITIONAL_CHINESE": "중국어(번체)",
+
+    "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "모든 임무 잠금 해제",
+    "LUA_MENU_CANCEL_UNLOCK_CAPS": "잠금 해제 취소"
+}

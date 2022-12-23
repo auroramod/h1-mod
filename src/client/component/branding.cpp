@@ -1,13 +1,13 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
+#include "command.hpp"
+#include "dvars.hpp"
 #include "localized_strings.hpp"
 #include "scheduler.hpp"
-#include "command.hpp"
 #include "version.hpp"
 
 #include "game/game.hpp"
-#include "dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
@@ -20,7 +20,7 @@ namespace branding
 	{
 		utils::hook::detour ui_get_formatted_build_number_hook;
 
-		float color[4] = {0.666f, 0.666f, 0.666f, 0.666f};
+		float color[4] = {0.39f, 0.9f, 0.4f, 0.9f};
 
 		const char* ui_get_formatted_build_number_stub()
 		{
@@ -30,15 +30,19 @@ namespace branding
 
 		void draw_branding()
 		{
-			const auto font = game::R_RegisterFont("fonts/fira_mono_bold.ttf", 20);
+			const auto font = game::R_RegisterFont("fonts/fira_mono_bold.ttf", 22);
 			if (font)
 			{
 #ifdef DEBUG
-				game::R_AddCmdDrawText("H1-Mod: " VERSION " (" __DATE__ " " __TIME__ ")", 0x7FFFFFFF, font, 10.f,
-					5.f + static_cast<float>(font->pixelHeight), 1.f, 1.f, 0.0f, color, 0);
+				game::R_AddCmdDrawText("h1-mod: " VERSION " (" __DATE__ " " __TIME__ ")", 
+					0x7FFFFFFF, font, 10.f,
+					5.f + static_cast<float>(font->pixelHeight), 
+					1.f, 1.f, 0.0f, color, 0);
 #else
-				game::R_AddCmdDrawText("H1-Mod: " VERSION, 0x7FFFFFFF, font, 10.f,
-					5.f + static_cast<float>(font->pixelHeight), 1.f, 1.f, 0.0f, color, 0);
+				game::R_AddCmdDrawText("h1-mod",
+					0x7FFFFFFF, font, 10.f,
+					5.f + static_cast<float>(font->pixelHeight), 
+					1.f, 1.f, 0.0f, color, 0);
 #endif
 			}
 		}
@@ -57,12 +61,6 @@ namespace branding
 			if (game::environment::is_dedi())
 			{
 				return;
-			}
-
-			if (game::environment::is_mp())
-			{
-				localized_strings::override("LUA_MENU_MULTIPLAYER_CAPS", "H1-MOD: MULTIPLAYER\n");
-				localized_strings::override("MENU_MULTIPLAYER_CAPS", "H1-MOD: MULTIPLAYER");
 			}
 
 			ui_get_formatted_build_number_hook.create(

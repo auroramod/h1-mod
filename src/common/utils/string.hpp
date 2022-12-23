@@ -99,4 +99,6 @@ namespace utils::string
 	std::string replace(std::string str, const std::string& from, const std::string& to);
 
 	bool match_compare(const std::string& input, const std::string& text, const bool exact);
+
+	bool is_numeric(const std::string& text);
 }

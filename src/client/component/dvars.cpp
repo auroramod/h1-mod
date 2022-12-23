@@ -1,5 +1,6 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+
 #include "dvars.hpp"
 
 #include "game/game.hpp"
@@ -252,6 +253,23 @@ namespace dvars
 		}
 	}
 
+	namespace callback
+	{
+		static std::unordered_map<int, std::function<void()>> new_value_callbacks;
+
+		static std::unordered_map<int, std::function<void()>> dvar_on_register_function_map;
+
+		void on_new_value(const std::string& name, const std::function<void()> callback)
+		{
+			new_value_callbacks[game::generateHashValue(name.data())] = callback;
+		}
+
+		void on_register(const std::string& name, const std::function<void()>& callback)
+		{
+			dvar_on_register_function_map[game::generateHashValue(name.data())] = callback;
+		}
+	}
+
 	utils::hook::detour dvar_register_bool_hook;
 	utils::hook::detour dvar_register_bool_hashed_hook;
 	utils::hook::detour dvar_register_float_hook;
@@ -263,11 +281,15 @@ namespace dvars
 	utils::hook::detour dvar_register_vector3_hook;
 	utils::hook::detour dvar_register_enum_hook;
 
+	utils::hook::detour dvar_register_new_hook;
+
 	utils::hook::detour dvar_set_bool_hook;
 	utils::hook::detour dvar_set_float_hook;
 	utils::hook::detour dvar_set_int_hook;
 	utils::hook::detour dvar_set_string_hook;
 	utils::hook::detour dvar_set_from_string_hook;
+
+	utils::hook::detour dvar_set_variant_hook;
 
 	game::dvar_t* dvar_register_bool(const int hash, const char* name, bool value, unsigned int flags)
 	{
@@ -407,6 +429,20 @@ namespace dvars
 		return dvar_register_enum_hook.invoke<game::dvar_t*>(hash, name, value_list, default_index, flags);
 	}
 
+	game::dvar_t* dvar_register_new(const int hash, const char* name, game::dvar_type type, unsigned int flags,
+		game::dvar_value* value, game::dvar_limits* domain, const char* description)
+	{
+		auto* dvar = dvar_register_new_hook.invoke<game::dvar_t*>(hash, name, type, flags, value, domain, description);
+
+		if (dvar && callback::dvar_on_register_function_map.find(hash) != callback::dvar_on_register_function_map.end())
+		{
+			callback::dvar_on_register_function_map[hash]();
+			callback::dvar_on_register_function_map.erase(hash);
+		}
+
+		return dvar;
+	}
+
 	void dvar_set_bool(game::dvar_t* dvar, bool boolean)
 	{
 		const auto disabled = find_dvar(disable::set_bool_disables, dvar->hash);
@@ -492,6 +528,16 @@ namespace dvars
 		return dvar_set_from_string_hook.invoke<void>(dvar, string, source);
 	}
 
+	void dvar_set_variant(game::dvar_t* dvar, game::dvar_value* value, game::DvarSetSource source)
+	{
+		dvar_set_variant_hook.invoke<void>(dvar, value, source);
+
+		if (callback::new_value_callbacks.find(dvar->hash) != callback::new_value_callbacks.end())
+		{
+			callback::new_value_callbacks[dvar->hash]();
+		}
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -505,6 +551,8 @@ namespace dvars
 			dvar_register_vector3_hook.create(SELECT_VALUE(0x419A00_b, 0x182DB0_b), &dvar_register_vector3);
 			dvar_register_enum_hook.create(SELECT_VALUE(0x419500_b, 0x182700_b), &dvar_register_enum);
 
+			dvar_register_new_hook.create(SELECT_VALUE(0x41B1D0_b, 0x184DF0_b), &dvar_register_new);
+
 			if (!game::environment::is_sp())
 			{
 				dvar_register_bool_hashed_hook.create(SELECT_VALUE(0x0, 0x182420_b), &dvar_register_bool_hashed);
@@ -517,6 +565,8 @@ namespace dvars
 			dvar_set_int_hook.create(SELECT_VALUE(0x41BEE0_b, 0x185D10_b), &dvar_set_int);
 			dvar_set_string_hook.create(SELECT_VALUE(0x41C0F0_b, 0x186080_b), &dvar_set_string);
 			dvar_set_from_string_hook.create(SELECT_VALUE(0x41BE20_b, 0x185C60_b), &dvar_set_from_string);
+
+			dvar_set_variant_hook.create(SELECT_VALUE(0x41C190_b, 0x186120_b), &dvar_set_variant);
 		}
 	};
 }

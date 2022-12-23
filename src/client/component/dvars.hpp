@@ -26,4 +26,11 @@ namespace dvars
 		void set_string(const std::string& name, const std::string& string);
 		void set_from_string(const std::string& name, const std::string& value);
 	}
+
+	namespace callback
+	{
+		void on_new_value(const std::string& name, const std::function<void()> callback);
+
+		void on_register(const std::string& name, const std::function<void()>& callback);
+	}
 }

@@ -34,11 +34,6 @@ namespace chat
 			utils::hook::inject(0x18A980_b, reinterpret_cast<void*>(0x2E6F588_b));
 			utils::hook::call(0x33EDEC_b, ui_get_font_handle_stub);
 
-			// set text style to 0 (non-blurry)
-			utils::hook::set<uint8_t>(0x18A9F2_b, 0);
-			utils::hook::set<uint8_t>(0x0F7151_b, 0);
-			utils::hook::set<uint8_t>(0x33EE0E_b, 0);
-
 			localized_strings::override("EXE_SAY", "^3Match^7");
 			localized_strings::override("EXE_SAYTEAM", "^5Team^7");
 

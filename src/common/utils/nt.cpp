@@ -206,6 +206,19 @@ namespace utils::nt
 		return nullptr;
 	}
 
+	bool is_wine()
+	{
+		static std::optional<bool> is_wine = {};
+
+		if (!is_wine.has_value())
+		{
+			const utils::nt::library ntdll("ntdll.dll");
+			is_wine = ntdll.get_proc<void*>("wine_get_version") != nullptr;
+		}
+
+		return is_wine.value();
+	}
+
 	void raise_hard_exception()
 	{
 		int data = false;
@@ -225,7 +238,7 @@ namespace utils::nt
 		return std::string(LPSTR(LockResource(handle)), SizeofResource(nullptr, res));
 	}
 
-	void relaunch_self()
+	void relaunch_self(const std::string& extra_command_line, bool override_command_line)
 	{
 		const utils::nt::library self;
 
@@ -238,9 +251,21 @@ namespace utils::nt
 
 		char current_dir[MAX_PATH];
 		GetCurrentDirectoryA(sizeof(current_dir), current_dir);
-		auto* const command_line = GetCommandLineA();
 
-		CreateProcessA(self.get_path().data(), command_line, nullptr, nullptr, false, NULL, nullptr, current_dir,
+		std::string command_line = GetCommandLineA();
+		if (!extra_command_line.empty())
+		{
+			if (override_command_line)
+			{
+				command_line = extra_command_line;
+			}
+			else
+			{
+				command_line += " " + extra_command_line;
+			}
+		}
+
+		CreateProcessA(self.get_path().data(), command_line.data(), nullptr, nullptr, false, NULL, nullptr, current_dir,
 		               &startup_info, &process_info);
 
 		if (process_info.hThread && process_info.hThread != INVALID_HANDLE_VALUE) CloseHandle(process_info.hThread);

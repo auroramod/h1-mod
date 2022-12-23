@@ -1,16 +1,16 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include <utils/hook.hpp>
-#include <utils/thread.hpp>
-
 #include "game/game.hpp"
 #include "game/demonware/servers/lobby_server.hpp"
 #include "game/demonware/servers/auth3_server.hpp"
 #include "game/demonware/servers/stun_server.hpp"
 #include "game/demonware/servers/umbrella_server.hpp"
 #include "game/demonware/server_registry.hpp"
-#include <game/dvars.hpp>
+#include "game/dvars.hpp"
+
+#include <utils/hook.hpp>
+#include <utils/thread.hpp>
 
 #define TCP_BLOCKING true
 #define UDP_BLOCKING false
@@ -119,7 +119,7 @@ namespace demonware
 			int getaddrinfo_stub(const char* name, const char* service,
 				const addrinfo* hints, addrinfo** res)
 			{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 				printf("[ network ]: [getaddrinfo]: \"%s\" \"%s\"\n", name, service);
 #endif
 
@@ -202,7 +202,7 @@ namespace demonware
 
 			hostent* gethostbyname_stub(const char* name)
 			{
-#ifdef DEBUG
+#ifdef DW_DEBUG
 				printf("[ network ]: [gethostbyname]: \"%s\"\n", name);
 #endif
 
@@ -430,7 +430,7 @@ namespace demonware
 			//printf("logged\n");
 		}
 
-#ifdef DEBUG
+#ifdef DW_DEBUG
 		void a(unsigned int n)
 		{
 			printf("bdAuth: Auth task failed with HTTP code [%u]\n", n);

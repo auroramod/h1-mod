@@ -1,15 +1,15 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
+#include "dvars.hpp"
 #include "fps.hpp"
+#include "scheduler.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
-#include "dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
-#include <component/scheduler.hpp>
 
 namespace fps
 {

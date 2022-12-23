@@ -56,7 +56,7 @@ namespace scripting::safe_execution
 		*game::g_script_error_level += 1;
 		if (game::_setjmp(&game::g_script_error[*game::g_script_error_level]))
 		{
-			value->type = game::SCRIPT_NONE;
+			value->type = game::VAR_UNDEFINED;
 			value->u.intValue = 0;
 			*game::g_script_error_level -= 1;
 			return false;

@@ -142,32 +142,31 @@ namespace demonware
 		}
 	};
 
-	// made up name
-	class bdFile final : public bdTaskResult
+	class bdFileQueryResult final : public bdTaskResult
 	{
 	public:
-		uint64_t owner_id;
+		std::uint64_t user_id;
 		std::string platform;
 		std::string filename;
-		uint32_t unk;
-		std::string data;
+		std::uint32_t errorcode;
+		std::string filedata;
 
 		void serialize(byte_buffer* buffer) override
 		{
-			buffer->write_uint64(this->owner_id);
+			buffer->write_uint64(this->user_id);
 			buffer->write_string(this->platform);
 			buffer->write_string(this->filename);
-			buffer->write_uint32(this->unk);
-			buffer->write_blob(this->data);
+			buffer->write_uint32(this->errorcode);
+			buffer->write_blob(this->filedata);
 		}
 
 		void deserialize(byte_buffer* buffer) override
 		{
-			buffer->read_uint64(&this->owner_id);
+			buffer->read_uint64(&this->user_id);
 			buffer->read_string(&this->platform);
 			buffer->read_string(&this->filename);
-			buffer->read_uint32(&this->unk);
-			buffer->read_blob(&this->data);
+			buffer->read_uint32(&this->errorcode);
+			buffer->read_blob(&this->filedata);
 		}
 	};
 
@@ -205,6 +204,37 @@ namespace demonware
 			buffer->read_string(&this->platform);
 			buffer->read_string(&this->filename);
 			buffer->read_blob(&this->data);
+		}
+	};
+
+	class bdContextUserStorageFileInfo final : public bdTaskResult
+	{
+	public:
+		uint32_t create_time;
+		uint32_t modifed_time;
+		bool priv;
+		uint64_t owner_id;
+		std::string account_type;
+		std::string filename;
+
+		void serialize(byte_buffer* buffer) override
+		{
+			buffer->write_uint32(this->create_time);
+			buffer->write_uint32(this->modifed_time);
+			buffer->write_bool(this->priv);
+			buffer->write_uint64(this->owner_id);
+			buffer->write_string(this->account_type);
+			buffer->write_string(this->filename);
+		}
+
+		void deserialize(byte_buffer* buffer) override
+		{
+			buffer->read_uint32(&this->create_time);
+			buffer->read_uint32(&this->modifed_time);
+			buffer->read_bool(&this->priv);
+			buffer->read_uint64(&this->owner_id);
+			buffer->read_string(&this->account_type);
+			buffer->read_string(&this->filename);
 		}
 	};
 }
