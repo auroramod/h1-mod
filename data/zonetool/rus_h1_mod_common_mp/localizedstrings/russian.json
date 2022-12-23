@@ -7,10 +7,13 @@
     "CUSTOM_DEPOT_EULA_6": "Команда H1-mod.",
 
     "LUA_MENU_SERVERLIST": "Список серверов",
+    "PLATFORM_SYSTEM_LINK_TITLE": "СПИСОК СЕРВЕРОВ",
     "MENU_NUMPLAYERS": "Игроки [+боты]",
     "MENU_PING": "Пинг",
     "SERVERLIST_PLAYER_COUNT": "Игроков: &&1",
     "SERVERLIST_SERVER_COUNT": "Серверов: &&1",
+    "EXE_SAY": "^3Всем^7",
+    "EXE_SAYTEAM": "^5Команде^7",
 
     "LUA_MENU_STATS": "Статистика",
     "LUA_MENU_STATS_DESC": "Изменение статистических показателей игрока.",
@@ -31,11 +34,6 @@
     "LUA_MENU_EDIT_STATS": "Корректировка статистики",
 
     "LUA_MENU_3RD_PARTY_CONTENT_DESC": "Согласны загрузить сторонний контент, необходимый для игры на этом сервере? (&&1)",
-
-    "PLATFORM_SYSTEM_LINK_TITLE": "СПИСОК СЕРВЕРОВ",
-
-    "EXE_SAY": "^3Всем^7",
-    "EXE_SAYTEAM": "^5Команде^7",
 
     "MENU_SB_TOOLTIP_BTN_REFRESH": "Обновить список",
     "MENU_TYPE1": "Режим",
