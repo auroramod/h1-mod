@@ -1042,7 +1042,7 @@ namespace game
 		DB_ZONE_BASEMAP = 0x20,
 		DB_ZONE_TRANSIENT_POOL = 0x40,
 		DB_ZONE_TRANSIENT_MASK = 0x40,
-		DB_ZONE_CUSTOM = 0x200 // added for custom zone loading
+		DB_ZONE_CUSTOM = 0x1000 // added for custom zone loading
 	};
 
 	struct XZoneInfo
