@@ -1,4 +1,8 @@
 {
+    "LUA_MENU_SERVERLIST": "Serverliste",
+    "PLATFORM_SYSTEM_LINK_TITLE": "SERVERLISTE",
+    "MENU_NUMPLAYERS": "Spieler",
+    "MENU_PING": "Ping",
     "LOCALE_ENGLISH": "Englisch",
     "LOCALE_ENGLISH_SAFE": "Englisch (Sicher)",
     "LOCALE_FRENCH": "Französisch",

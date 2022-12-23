@@ -1,4 +1,9 @@
 {
+    "LUA_MENU_SERVERLIST": "伺服器列表",
+    "PLATFORM_SYSTEM_LINK_TITLE": "伺服器列表",
+    "MENU_NUMPLAYERS": "玩家",
+    "MENU_PING": "網路延遲",
+    "MENU_TYPE1": "類型",
     "LOCALE_ENGLISH": "英文",
     "LOCALE_ENGLISH_SAFE": "英文 (審查制度)",
     "LOCALE_FRENCH": "法文",

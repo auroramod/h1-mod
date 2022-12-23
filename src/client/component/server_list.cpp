@@ -319,7 +319,7 @@ namespace server_list
 
 	bool get_master_server(game::netadr_s& address)
 	{
-		return game::NET_StringToAdr(utils::string::va("%s:%s", 
+		return game::NET_StringToAdr(utils::string::va("%s:%s",
 			master_server_ip->current.string, master_server_port->current.string), &address);
 	}
 
@@ -423,8 +423,6 @@ namespace server_list
 				return;
 			}
 
-			localized_strings::override("PLATFORM_SYSTEM_LINK_TITLE", "SERVER LIST");
-			
 			// hook LUI_OpenMenu to refresh server list for system link menu
 			lui_open_menu_hook.create(game::LUI_OpenMenu, lui_open_menu_stub);
 
@@ -441,7 +439,7 @@ namespace server_list
 				a.pop(rdi);
 				a.ret();
 			}), true);
-			
+
 			utils::hook::jump(0x28E557_b, utils::hook::assemble([](utils::hook::assembler& a)
 			{
 				a.mov(r8d, edi);
