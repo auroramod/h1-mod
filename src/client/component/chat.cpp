@@ -34,9 +34,6 @@ namespace chat
 			utils::hook::inject(0x18A980_b, reinterpret_cast<void*>(0x2E6F588_b));
 			utils::hook::call(0x33EDEC_b, ui_get_font_handle_stub);
 
-			localized_strings::override("EXE_SAY", "^3Match^7");
-			localized_strings::override("EXE_SAYTEAM", "^5Team^7");
-
 			// move chat position on the screen above menu splashes
 			dvars::override::register_vec2("cg_hudChatPosition", 5, 200, 0, 640, game::DVAR_FLAG_SAVED);
 			dvars::override::register_int("cg_chatHeight", 5, 0, 8, game::DVAR_FLAG_SAVED);

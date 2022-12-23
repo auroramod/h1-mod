@@ -27,11 +27,14 @@
     "PLATFORM_SHADER_PRECACHE_ASK": "Would you like to populate the shader cache? It may cause crashes with certain GPUs (e.g. RTX cards) but will improve performance if successful.",
     "MENU_NO_DONT_ASK": "No, don't ask me again",
 
-    "LUA_MENU_SERVERLIST": "SERVER LIST",
+    "LUA_MENU_SERVERLIST": "Server list",
+    "PLATFORM_SYSTEM_LINK_TITLE": "SERVER LIST",
     "MENU_NUMPLAYERS": "Players",
     "MENU_PING": "Ping",
     "SERVERLIST_PLAYER_COUNT": "&&1 Players",
     "SERVERLIST_SERVER_COUNT": "&&1 Servers",
+    "EXE_SAY": "^3Match^7",
+    "EXE_SAYTEAM": "^5Team^7",
 
     "LUA_MENU_STATS": "Stats",
     "LUA_MENU_STATS_DESC": "Edit player stats settings.",
