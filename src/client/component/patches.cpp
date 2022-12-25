@@ -438,7 +438,7 @@ namespace patches
 			// prevent servers overriding our fov
 			utils::hook::nop(0x17DA96_b, 0x16);
 			utils::hook::nop(0xE00BE_b, 0x17);
-			utils::hook::set<uint8_t>(0x307F39_b, 0xEB);
+			utils::hook::nop(0x307F90_b, 0x5); // don't change cg_fov when toggling third person spectating
 
 			// make setclientdvar behave like older games
 			cg_set_client_dvar_from_server_hook.create(0x11AA90_b, cg_set_client_dvar_from_server_stub);
