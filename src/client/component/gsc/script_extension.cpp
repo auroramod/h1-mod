@@ -456,7 +456,7 @@ namespace gsc
 			function::add("executecommand", [](const function_args& args)
 			{
 				const auto cmd = args[0].as<std::string>();
-				command::execute(cmd, true);
+				command::execute(cmd, false);
 
 				return scripting::script_value{};
 			});
