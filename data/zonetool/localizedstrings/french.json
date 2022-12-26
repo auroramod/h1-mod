@@ -9,7 +9,7 @@
     "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "Débloquer toutes les missions",
     "LUA_MENU_CANCEL_UNLOCK_CAPS": "Annuler déblocage",
 
-    "MENU_MODS": "MODS",
+    "MENU_MODS": "Mods",
     "MENU_MODS_DESC": "Charger les mods installés.",
     "LUA_MENU_MOD_DESC_DEFAULT": "Charger &&1.",
     "LUA_MENU_MOD_DESC": "&&1\nAuteur: &&2\nVersion: &&3",
