@@ -11,7 +11,7 @@
     "LUA_MENU_CHOOSE_LANGUAGE": "Выбор языка",
     "LUA_MENU_CHOOSE_LANGUAGE_DESC": "Поменять язык интерфейса и озвучки.",
 
-    "MENU_MODS": "МОДЫ",
+    "MENU_MODS": "Моды",
     "MENU_MODS_DESC": "Запуск установленных модов.",
     "LUA_MENU_MOD_DESC_DEFAULT": "Запустить &&1.",
     "LUA_MENU_MOD_DESC": "&&1\nАвтор: &&2\nВерсия: &&3.",
