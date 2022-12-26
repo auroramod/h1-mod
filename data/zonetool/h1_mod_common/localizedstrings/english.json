@@ -31,6 +31,7 @@
     "PLATFORM_SYSTEM_LINK_TITLE": "SERVER LIST",
     "MENU_NUMPLAYERS": "Players",
     "MENU_PING": "Ping",
+    "MENU_MOD": "Mod",
     "SERVERLIST_PLAYER_COUNT": "&&1 Players",
     "SERVERLIST_SERVER_COUNT": "&&1 Servers",
     "EXE_SAY": "^3Match^7",

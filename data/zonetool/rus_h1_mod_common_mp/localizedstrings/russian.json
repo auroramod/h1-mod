@@ -10,6 +10,7 @@
     "PLATFORM_SYSTEM_LINK_TITLE": "СПИСОК СЕРВЕРОВ",
     "MENU_NUMPLAYERS": "Игроки [+боты]",
     "MENU_PING": "Пинг",
+    "MENU_MODS": "Моды",
     "SERVERLIST_PLAYER_COUNT": "Игроков: &&1",
     "SERVERLIST_SERVER_COUNT": "Серверов: &&1",
     "EXE_SAY": "^3Всем^7",

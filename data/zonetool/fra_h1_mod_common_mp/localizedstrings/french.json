@@ -3,6 +3,7 @@
     "PLATFORM_SYSTEM_LINK_TITLE": "LISTE DES SERVEURS",
     "MENU_NUMPLAYERS": "Joueurs",
     "MENU_PING": "Latence",
+    "MENU_MODS": "Mods",
     "SERVERLIST_PLAYER_COUNT": "&&1 Joueurs",
     "SERVERLIST_SERVER_COUNT": "&&1 Serveurs",
 
