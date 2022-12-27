@@ -49,8 +49,8 @@ LUI.MenuBuilder.registerType("choose_language_menu", function(a1)
             menu:AddButton(Engine.Localize(string.format("MENU_%s", available_languages[i])), function()
                 LUI.yesnopopup({
                     title = Engine.Localize("@MENU_NOTICE"),
-                    text = Engine.Localize("MENU_" .. current_language) .. " → " ..
-                        Engine.Localize("MENU_" .. available_languages[i]) .. "\n\n" ..
+                    text = "^2" .. Engine.Localize("MENU_" .. current_language) .. "^7 → ^5" ..
+                        Engine.Localize("MENU_" .. available_languages[i]) .. "\n\n^7" ..
                         Engine.Localize("@LUA_MENU_CONFIRM_LANGUAGE") .. " " ..
                         Engine.Localize("@MENU_APPLY_LANGUAGE_SETTINGS"),
                     callback = function(result)
@@ -103,3 +103,19 @@ if not Engine.InFrontend() then
         return res
     end
 end
+
+-- H2 title font
+if game:issingleplayer() or
+    (user_language == "simplified_chinese" or user_language == "traditional_chinese" or user_language ==
+        "japanese_partial" or user_language == "korean") then
+    return
+end
+
+local scale = function(size)
+    return size * 720 / 1080
+end
+
+CoD.TextSettings.H1TitleFont = {
+    Font = RegisterFont("fonts/bank_h1.ttf", 50),
+    Height = scale(50)
+}
