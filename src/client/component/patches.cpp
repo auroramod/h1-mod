@@ -351,6 +351,9 @@ namespace patches
 			dvars::override::register_float("cg_fovScale", 1.f, 0.1f, 2.f, game::DvarFlags::DVAR_FLAG_SAVED);
 			dvars::override::register_float("cg_fovMin", 1.f, 1.0f, 90.f, game::DvarFlags::DVAR_FLAG_SAVED);
 
+			// Makes com_maxfps saved dvar
+			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
+
 			// Makes mis_cheat saved dvar
 			dvars::override::register_bool("mis_cheat", 0, game::DVAR_FLAG_SAVED);
 
@@ -473,8 +476,6 @@ namespace patches
 
 			dvars::override::register_bool("ui_drawCrosshair", true, game::DVAR_FLAG_WRITE);
 			utils::hook::jump(0x1E6010_b, ui_draw_crosshair);
-
-			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
 
 			// Prevent clients from ending the game as non host by sending 'end_game' lui notification
 			cmd_lui_notify_server_hook.create(0x412D50_b, cmd_lui_notify_server_stub);
