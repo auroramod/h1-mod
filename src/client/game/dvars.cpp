@@ -3583,7 +3583,7 @@ namespace dvars
 		},
 		{
 			"fs_game",
-			"Game data directory. Must be \"\" or a sub directory of 'mods/'.",
+			"Game data directory. Must be \"\" or a sub directory of 'mods/'. Use \"Mods\" menu to change.",
 			generate_hash("fs_game")
 		},
 		{
