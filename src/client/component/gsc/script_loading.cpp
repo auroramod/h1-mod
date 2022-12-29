@@ -83,7 +83,7 @@ namespace gsc
 			free_script_memory();
 		}
 
-		bool read_script_file(const std::string& name, std::string* data)
+		bool read_scriptfile(const std::string& name, std::string* data)
 		{
 			if (filesystem::read_file(name, data))
 			{
@@ -91,7 +91,6 @@ namespace gsc
 			}
 
 			const auto name_str = name.data();
-
 			if (game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, name_str) &&
 				!game::DB_IsXAssetDefault(game::ASSET_TYPE_RAWFILE, name_str))
 			{
@@ -117,13 +116,13 @@ namespace gsc
 				return nullptr;
 			}
 
-			if (const auto itr = loaded_scripts.find(real_name); itr != loaded_scripts.end())
+			if (loaded_scripts.contains(real_name))
 			{
-				return itr->second;
+				return loaded_scripts[real_name];
 			}
 
 			std::string source_buffer;
-			if (!read_script_file(real_name + ".gsc", &source_buffer) || source_buffer.empty())
+			if (!read_scriptfile(real_name + ".gsc", &source_buffer) || source_buffer.empty())
 			{
 				return nullptr;
 			}
@@ -139,8 +138,7 @@ namespace gsc
 				}
 			}
 
-			std::vector<std::uint8_t> data;
-			data.assign(source_buffer.begin(), source_buffer.end());
+			auto data = std::vector<std::uint8_t>{source_buffer.begin(), source_buffer.end()};
 
 			try
 			{
@@ -201,10 +199,10 @@ namespace gsc
 			return std::to_string(id);
 		}
 
-		std::vector<std::uint8_t> decompile_script_file(const std::string& name, const std::string& real_name)
+		std::vector<std::uint8_t> decompile_scriptfile(const std::string& name, const std::string& real_name)
 		{
 			const auto* script_file = game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, name.data(), false).scriptfile;
-			if (!script_file)
+			if (script_file == nullptr)
 			{
 				throw std::runtime_error(std::format("Could not load scriptfile '{}'", real_name));
 			}
@@ -385,12 +383,12 @@ namespace gsc
 				const auto real_name = include_name + ".gsc";
 
 				std::string file_buffer;
-				if (!read_script_file(real_name, &file_buffer) || file_buffer.empty())
+				if (!read_scriptfile(real_name, &file_buffer) || file_buffer.empty())
 				{
 					const auto name = get_script_file_name(include_name);
 					if (game::DB_XAssetExists(game::ASSET_TYPE_SCRIPTFILE, name.data()))
 					{
-						return decompile_script_file(name, real_name);
+						return decompile_scriptfile(name, real_name);
 					}
 					else
 					{

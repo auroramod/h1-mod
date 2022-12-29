@@ -5,6 +5,7 @@
 
 #include "command.hpp"
 #include "console.hpp"
+#include "dvars.hpp"
 #include "filesystem.hpp"
 #include "fonts.hpp"
 #include "localized_strings.hpp"
@@ -53,7 +54,6 @@ namespace mods
 		{
 			if (game::environment::is_mp())
 			{
-				// vid_restart works on multiplayer, but not on singleplayer
 				command::execute("vid_restart");
 				return;
 			}
@@ -69,32 +69,37 @@ namespace mods
 			return utils::io::file_exists(path + "/mod.ff") || utils::io::file_exists(path + "/zone/mod.ff");
 		}
 
-		void set_filesystem_data(const std::string& path)
+		void set_filesystem_data(const std::string& path, bool change_fs_game)
 		{
 			if (mod_path.has_value())
 			{
 				filesystem::unregister_path(mod_path.value());
 			}
 
-			if (!game::environment::is_sp())
+			if (change_fs_game)
 			{
-				// modify fs_game on mp/dedi because its not set when we obviously vid_restart (sp does a full relaunch with command line arguments)
-				game::Dvar_SetFromStringByNameFromSource("fs_game", path.data(),
-					game::DVAR_SOURCE_INTERNAL);
+				game::Dvar_SetFromStringByNameFromSource("fs_game", path.data(), game::DVAR_SOURCE_INTERNAL);
+			}
+
+			if (path != "")
+			{
+				filesystem::register_path(path);
 			}
 		}
 	}
 
-	void set_mod(const std::string& path)
+	void set_mod(const std::string& path, bool change_fs_game)
 	{
-		set_filesystem_data(path);
-		mod_path = path;
-	}
+		set_filesystem_data(path, change_fs_game);
 
-	void clear_mod()
-	{
-		set_filesystem_data("");
-		mod_path.reset();
+		if (path != "")
+		{
+			mod_path = path;
+		}
+		else
+		{
+			mod_path.reset();
+		}
 	}
 
 	std::optional<std::string> get_mod()
@@ -113,6 +118,12 @@ namespace mods
 			}
 
 			db_release_xassets_hook.create(SELECT_VALUE(0x1F4DB0_b, 0x399740_b), db_release_xassets_stub);
+
+			dvars::callback::on_new_value("fs_game", [](game::dvar_value* value)
+			{
+				console::warn("fs_game value changed to '%s'\n", value->string);
+				set_mod(value->string, false);
+			});
 
 			command::add("loadmod", [](const command::params& params)
 			{
@@ -143,7 +154,7 @@ namespace mods
 					mod_requires_restart(path))
 				{
 					console::info("Restarting...\n");
-					full_restart("+set fs_game \""s + path + "\"");
+					full_restart("-mod \""s + path + "\"");
 				}
 				else
 				{
@@ -171,12 +182,12 @@ namespace mods
 				if (mod_requires_restart(mod_path.value()))
 				{
 					console::info("Restarting...\n");
-					clear_mod();
+					set_mod("");
 					full_restart("");
 				}
 				else
 				{
-					clear_mod();
+					set_mod("");
 					restart();
 				}
 			});

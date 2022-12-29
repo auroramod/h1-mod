@@ -255,13 +255,13 @@ namespace dvars
 
 	namespace callback
 	{
-		static std::unordered_map<int, std::function<void()>> new_value_callbacks;
+		static std::unordered_map<int, std::function<void(game::dvar_value*)>> dvar_new_value_callbacks;
 
 		static std::unordered_map<int, std::function<void()>> dvar_on_register_function_map;
 
-		void on_new_value(const std::string& name, const std::function<void()> callback)
+		void on_new_value(const std::string& name, const std::function<void(game::dvar_value*)> callback)
 		{
-			new_value_callbacks[game::generateHashValue(name.data())] = callback;
+			dvar_new_value_callbacks[game::generateHashValue(name.data())] = callback;
 		}
 
 		void on_register(const std::string& name, const std::function<void()>& callback)
@@ -532,9 +532,9 @@ namespace dvars
 	{
 		dvar_set_variant_hook.invoke<void>(dvar, value, source);
 
-		if (callback::new_value_callbacks.find(dvar->hash) != callback::new_value_callbacks.end())
+		if (callback::dvar_new_value_callbacks.contains(dvar->hash))
 		{
-			callback::new_value_callbacks[dvar->hash]();
+			callback::dvar_new_value_callbacks[dvar->hash](value);
 		}
 	}
 

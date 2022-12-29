@@ -264,7 +264,7 @@ namespace party
 
 			if (server_fs_game.empty() && !client_fs_game.empty())
 			{
-				mods::clear_mod();
+				mods::set_mod("");
 				return true;
 			}
 

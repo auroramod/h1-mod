@@ -318,7 +318,7 @@ namespace ui_scripting
 
 			game_type["virtuallobbypresentable"] = [](const game&)
 			{
-				::game::Dvar_SetFromStringByNameFromSource("virtualLobbyPresentable", "1", ::game::DvarSetSource::DVAR_SOURCE_INTERNAL);
+				::game::Dvar_SetFromStringByNameFromSource("virtualLobbyPresentable", "1", ::game::DVAR_SOURCE_INTERNAL);
 			};
 
 			game_type["getcurrentgamelanguage"] = [](const game&)
