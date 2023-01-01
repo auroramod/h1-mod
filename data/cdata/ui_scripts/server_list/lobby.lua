@@ -1,7 +1,7 @@
 local Lobby = luiglobals.Lobby
 local MPLobbyOnline = LUI.mp_menus.MPLobbyOnline
 
-function LeaveLobby(f5_arg0)
+function LeaveLobby()
     LeaveXboxLive()
     if Lobby.IsInPrivateParty() == false or Lobby.IsPrivatePartyHost() then
         LUI.FlowManager.RequestLeaveMenuByName("menu_xboxlive")
@@ -9,7 +9,7 @@ function LeaveLobby(f5_arg0)
     end
 end
 
-function menu_xboxlive(f16_arg0, f16_arg1)
+function menu_xboxlive(f16_arg0)
     local menu = LUI.MPLobbyBase.new(f16_arg0, {
         menu_title = "@PLATFORM_UI_HEADER_PLAY_MP_CAPS",
         memberListState = Lobby.MemberListStates.Prelobby
@@ -17,7 +17,7 @@ function menu_xboxlive(f16_arg0, f16_arg1)
 
     menu:setClass(LUI.MPLobbyOnline)
 
-    local serverListButton = menu:AddButton("@LUA_MENU_SERVERLIST", function(a1, a2)
+    local serverListButton = menu:AddButton("@LUA_MENU_SERVERLIST", function(a1)
         LUI.FlowManager.RequestAddMenu(a1, "menu_systemlink_join", true, nil)
     end)
     serverListButton:setDisabledRefreshRate(500)
@@ -26,10 +26,8 @@ function menu_xboxlive(f16_arg0, f16_arg1)
         menu:AddBarracksButton()
         menu:AddPersonalizationButton()
         menu:AddDepotButton()
-
-        -- kinda a weird place to do this, but it's whatever
-        -- add "MODS" button below depot button
-        local modsButton = menu:AddButton("@MENU_MODS", function(a1, a2)
+        
+        menu:AddButton("@MENU_MODS", function(a1)
             LUI.FlowManager.RequestAddMenu(a1, "mods_menu", true, nil)
         end)
     end
@@ -58,6 +56,7 @@ function menu_xboxlive(f16_arg0, f16_arg1)
         menu:addElement(self)
     end
 
+    menu:AddMarketingPanel(LUI.MarketingLocation.Featured, LUI.ComScore.ScreenID.PlayOnline)
     menu.isSignInMenu = true
     menu:registerEventHandler("gain_focus", LUI.MPLobbyOnline.OnGainFocus)
     menu:registerEventHandler("player_joined", luiglobals.Cac.PlayerJoinedEvent)
