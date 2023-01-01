@@ -26,7 +26,7 @@ function menu_xboxlive(f16_arg0)
         menu:AddBarracksButton()
         menu:AddPersonalizationButton()
         menu:AddDepotButton()
-        
+
         menu:AddButton("@MENU_MODS", function(a1)
             LUI.FlowManager.RequestAddMenu(a1, "mods_menu", true, nil)
         end)
@@ -80,6 +80,15 @@ function menu_xboxlive(f16_arg0)
             game:virtuallobbypresentable()
         end
     end)
+
+    menu:AddHelp({
+        name = "add_button_helper_text",
+        button_ref = "",
+        helper_text = "                                                                                                ",
+        side = "left",
+        priority = -9000,
+        clickable = false
+    })
 
     return menu
 end
