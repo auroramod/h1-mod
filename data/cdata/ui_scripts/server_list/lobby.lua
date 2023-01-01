@@ -56,6 +56,7 @@ function menu_xboxlive(f16_arg0)
         menu:addElement(self)
     end
 
+    menu:AddMenuDescription(1)
     menu:AddMarketingPanel(LUI.MarketingLocation.Featured, LUI.ComScore.ScreenID.PlayOnline)
     menu.isSignInMenu = true
     menu:registerEventHandler("gain_focus", LUI.MPLobbyOnline.OnGainFocus)
