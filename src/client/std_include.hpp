@@ -83,6 +83,7 @@
 #include <optional>
 #include <unordered_set>
 #include <variant>
+#include <random>
 
 #include <gsl/gsl>
 #include <udis86.h>
