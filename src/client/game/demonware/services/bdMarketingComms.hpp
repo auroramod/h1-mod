@@ -10,5 +10,6 @@ namespace demonware
 	private:
 		void getMessages(service_server* server, byte_buffer* buffer) const;
 		void reportFullMessagesViewed(service_server* server, byte_buffer* buffer) const;
+		void getMessages_(service_server* server, byte_buffer* buffer) const;
 	};
 }
