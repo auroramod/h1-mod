@@ -4993,13 +4993,18 @@ namespace dvars
 		},
 		{
 			"marketing_active",
-			"Are we allowed to enable Marketing Comms or not",
+			"Enable/Disable Marketing Comms",
 			generate_hash("marketing_active")
 		},
 		{
 			"marketing_refresh_time",
-			"time in seconds to wait before refreshing marketing messages from demonware",
+			"Time in seconds to wait before refreshing marketing messages from demonware",
 			generate_hash("marketing_refresh_time")
+		},
+		{
+			"marketing_motd_once_per_day",
+			"Display motd once per day",
+			generate_hash("marketing_motd_once_per_day")
 		},
 		{
 			"matchdata_active",
