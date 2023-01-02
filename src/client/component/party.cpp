@@ -11,6 +11,7 @@
 #include "fastfiles.hpp"
 #include "mods.hpp"
 
+#include "game/dvars.hpp"
 #include "game/game.hpp"
 #include "game/ui_scripting/execution.hpp"
 
@@ -56,6 +57,8 @@ namespace party
 			game::netadr_s host{};
 			utils::info_string info_string{};
 		} saved_info_response;
+
+		const game::dvar_t* sv_say_name = nullptr;
 
 		void perform_game_initialization()
 		{
@@ -908,8 +911,7 @@ namespace party
 
 			scheduler::once([]()
 			{
-				const auto hash = game::generateHashValue("sv_sayName");
-				game::Dvar_RegisterString(hash, "sv_sayName", "console", game::DvarFlags::DVAR_FLAG_NONE);
+				sv_say_name = dvars::register_string("sv_sayName", "console", game::DvarFlags::DVAR_FLAG_NONE, "");
 			}, scheduler::pipeline::main);
 
 			command::add("tell", [](const command::params& params)
@@ -921,7 +923,7 @@ namespace party
 
 				const auto client_num = atoi(params.get(1));
 				const auto message = params.join(2);
-				const auto* const name = game::Dvar_FindVar("sv_sayName")->current.string;
+				const auto* const name = sv_say_name->current.string;
 
 				game::SV_GameSendServerCommand(client_num, game::SV_CMD_CAN_IGNORE,
 				                               utils::string::va("%c \"%s: %s\"", 84, name, message.data()));
@@ -951,7 +953,7 @@ namespace party
 				}
 
 				const auto message = params.join(1);
-				const auto* const name = game::Dvar_FindVar("sv_sayName")->current.string;
+				const auto* const name = sv_say_name->current.string;
 
 				game::SV_GameSendServerCommand(
 					-1, game::SV_CMD_CAN_IGNORE, utils::string::va("%c \"%s: %s\"", 84, name, message.data()));

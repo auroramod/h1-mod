@@ -669,7 +669,6 @@ namespace command
 
 				const auto name = params.get(1);
 				const auto dvar = game::Dvar_FindVar(name);
-
 				if (dvar == nullptr)
 				{
 					console::info("%s doesn't exist\n", name);

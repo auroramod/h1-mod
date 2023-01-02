@@ -21,7 +21,7 @@ namespace dedicated_info
 
 			scheduler::loop([]
 			{
-				auto* sv_running = game::Dvar_FindVar("sv_running");
+				const auto sv_running = game::Dvar_FindVar("sv_running");
 				if (!sv_running || !sv_running->current.enabled || (*game::mp::svs_clients) == nullptr)
 				{
 					SetConsoleTitle("H1-Mod Dedicated Server");
