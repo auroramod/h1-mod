@@ -911,7 +911,7 @@ namespace party
 
 			scheduler::once([]()
 			{
-				sv_say_name = dvars::register_string("sv_sayName", "console", game::DvarFlags::DVAR_FLAG_NONE);
+				sv_say_name = dvars::register_string("sv_sayName", "console", game::DvarFlags::DVAR_FLAG_NONE, "");
 			}, scheduler::pipeline::main);
 
 			command::add("tell", [](const command::params& params)

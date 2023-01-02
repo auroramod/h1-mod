@@ -4,6 +4,7 @@
 #include "console.hpp"
 #include "command.hpp"
 #include "discord.hpp"
+#include "fastfiles.hpp"
 #include "materials.hpp"
 #include "network.hpp"
 #include "party.hpp"
@@ -37,21 +38,21 @@ namespace discord
 				discord_presence.details = SELECT_VALUE("Singleplayer", "Multiplayer");
 				discord_presence.state = "Main Menu";
 
-				const auto in_firing_range = game::Dvar_FindVar("virtualLobbyInFiringRange");
-				if (in_firing_range && in_firing_range->current.enabled == 1)
-				{
-					discord_presence.state = "Firing Range";
-				}
-
 				discord_presence.partySize = 0;
 				discord_presence.partyMax = 0;
 				discord_presence.startTimestamp = 0;
 				discord_presence.largeImageKey = SELECT_VALUE("menu_singleplayer", "menu_multiplayer");
-			
-				// set to blank when in lobby
+
 				discord_presence.matchSecret = "";
 				discord_presence.joinSecret = "";
 				discord_presence.partyId = "";
+
+				const auto in_firing_range = game::Dvar_FindVar("virtualLobbyInFiringRange");
+				if (in_firing_range && in_firing_range->current.enabled == 1)
+				{
+					discord_presence.state = "Firing Range";
+					discord_presence.largeImageKey = "mp_vlobby_room";
+				}
 			}
 			else
 			{
@@ -121,6 +122,11 @@ namespace discord
 					discord_presence.partyMax = max_clients;
 					discord_presence.state = clean_hostname;
 					discord_presence.largeImageKey = map;
+
+					if (!fastfiles::is_stock_map(map))
+					{
+						discord_presence.largeImageKey = "menu_multiplayer";
+					}
 				}
 				else if (game::environment::is_sp())
 				{
