@@ -237,4 +237,29 @@ namespace demonware
 			buffer->read_string(&this->filename);
 		}
 	};
+
+	class bdMarketingMessage final : public bdTaskResult
+	{
+	public:
+		uint64_t m_messageID;
+		std::string m_languageCode;
+		std::string m_content;
+		std::string m_metadata;
+
+		void serialize(byte_buffer* buffer) override
+		{
+			buffer->write_uint64(this->m_messageID);
+			buffer->write_string(this->m_languageCode);
+			buffer->write_blob(this->m_content);
+			buffer->write_blob(this->m_metadata);
+		}
+
+		void deserialize(byte_buffer* buffer) override
+		{
+			buffer->read_uint64(&this->m_messageID);
+			buffer->read_string(&this->m_languageCode);
+			buffer->read_blob(&this->m_content);
+			buffer->read_blob(&this->m_metadata);
+		}
+	};
 }

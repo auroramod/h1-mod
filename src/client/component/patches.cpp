@@ -351,6 +351,9 @@ namespace patches
 			dvars::override::register_float("cg_fovScale", 1.f, 0.1f, 2.f, game::DvarFlags::DVAR_FLAG_SAVED);
 			dvars::override::register_float("cg_fovMin", 1.f, 1.0f, 90.f, game::DvarFlags::DVAR_FLAG_SAVED);
 
+			// Enable Marketing Comms
+			dvars::override::register_int("marketing_active", 1, 1, 1, game::DVAR_FLAG_WRITE);
+
 			// Makes com_maxfps saved dvar
 			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
 
