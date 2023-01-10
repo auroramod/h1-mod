@@ -48,6 +48,8 @@ namespace game
 	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{0x384820, 0x159860};
 	WEAK symbol<void()> Com_Quit_f{0x0, 0x1F9280};
 	WEAK symbol<void(char const* finalMessage)> Com_Shutdown{0x3A6A50, 0x0};
+	WEAK symbol<bool(const char* mapname, const char** base_mapname)> Com_IsAddonMap{0x40AED0, 0x17C100};
+	WEAK symbol<int(char* dest, int size, const char* fmt, ...)> Com_sprintf{0x429200, 0x5AF0F0};
 
 	WEAK symbol<void()> Quit{0x3A5A20, 0x17CF50};
 

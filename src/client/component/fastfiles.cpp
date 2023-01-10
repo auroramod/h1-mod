@@ -429,6 +429,50 @@ namespace fastfiles
 				console::warn("No aipaths found for this map\n");
 			}
 		}
+
+		int format_bsp_name(char* filename, int size, const char* mapname)
+		{
+			std::string name = mapname;
+			auto fmt = "maps/%s.d3dbsp";
+			if (name.starts_with("mp_"))
+			{
+				fmt = "maps/mp/%s.d3dbsp";
+			}
+
+			return game::Com_sprintf(filename, size, fmt, mapname);
+		}
+
+		void get_bsp_filename_stub(char* filename, int size, const char* mapname)
+		{
+			auto base_mapname = mapname;
+			game::Com_IsAddonMap(mapname, &base_mapname);
+			format_bsp_name(filename, size, base_mapname);
+		}
+
+		utils::hook::detour image_file_decrypt_value_hook;
+		bool image_file_decrypt_value_stub(char* value, int size, char* buffer)
+		{
+			auto is_all_zero = true;
+			for (auto i = 0; i < size; i++)
+			{
+				if (value[i] != 0)
+				{
+					is_all_zero = false;
+				}
+			}
+
+			if (is_all_zero)
+			{
+				return true;
+			}
+
+			return image_file_decrypt_value_hook.invoke<bool>(value, size, buffer);
+		}
+
+		int com_sprintf_stub(char* dest, int size, const char* /*fmt*/, const char* mapname)
+		{
+			return format_bsp_name(dest, size, mapname);
+		}
 	}
 
 	bool exists(const std::string& zone, bool ignore_usermap)
@@ -523,10 +567,13 @@ namespace fastfiles
 
 			g_dump_scripts = dvars::register_bool("g_dumpScripts", false, game::DVAR_FLAG_NONE, "Dump GSC scripts");
 
-			// Allow loading of unsigned fastfiles
+			// Allow loading of unsigned fastfiles & imagefiles
 			if (!game::environment::is_sp())
 			{
 				utils::hook::nop(0x368153_b, 2); // DB_InflateInit
+
+				image_file_decrypt_value_hook.create(0x367520_b, image_file_decrypt_value_stub);
+				utils::hook::set(0x366F00_b, 0xC301B0);
 			}
 
 			if (game::environment::is_sp())
@@ -535,6 +582,12 @@ namespace fastfiles
 				utils::hook::set(0x40AF90_b, 0xC300B0);
 				// Don't sys_error if aipaths are missing
 				utils::hook::call(0x2F8EE9_b, db_find_aipaths_stub);
+			}
+			else
+			{
+				// Allow loading sp maps on mp
+				utils::hook::jump(0x15AFC0_b, get_bsp_filename_stub);
+				utils::hook::call(0x112ED8_b, com_sprintf_stub);
 			}
 
 			// Allow loading of mixed compressor types
