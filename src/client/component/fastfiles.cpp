@@ -22,6 +22,7 @@ namespace fastfiles
 	{
 		utils::hook::detour db_try_load_x_file_internal_hook;
 		utils::hook::detour db_find_xasset_header_hook;
+
 		game::dvar_t* g_dump_scripts;
 
 		std::vector<HANDLE> fastfile_handles;

@@ -1217,22 +1217,133 @@ namespace game
 		char rasterizerState;
 	};
 
-	struct Material
+	struct Packed128
+	{
+		std::uint64_t p0;
+		std::uint64_t p1;
+	};
+
+	struct GfxDrawSurfFields
+	{
+		unsigned __int64 objectId : 16; // p0 >> 0
+		unsigned __int64 pad0 : 20;
+		unsigned __int64 reflectionProbeIndex : 8;
+		unsigned __int64 hasGfxEntIndex : 1;
+		unsigned __int64 customIndex : 5; // p0 >> 45
+		unsigned __int64 materialSortedIndex : 14; // p0 >> 50
+		unsigned __int64 tessellation : 2; // p1 >> 0
+		unsigned __int64 prepass : 2; // p1 >> 2
+		unsigned __int64 pad1 : 4;
+		unsigned __int64 useHeroLighting : 1;
+		unsigned __int64 sceneLightEnvIndex : 16;
+		unsigned __int64 viewModelRender : 1;
+		unsigned __int64 surfType : 4;
+		unsigned __int64 primarySortKey : 6; // p1 >> 30
+		unsigned __int64 unused : 28;
+	};
+
+	union GfxDrawSurf
+	{
+		GfxDrawSurfFields fields;
+		Packed128 packed;
+	};
+
+	enum SurfaceTypeBits : std::uint64_t
+	{
+		SURFTYPE_BITS_DEFAULT = 0x0,
+		SURFTYPE_BITS_BARK = 0x1,
+		SURFTYPE_BITS_BRICK = 0x2,
+		SURFTYPE_BITS_CARPET = 0x4,
+		SURFTYPE_BITS_CLOTH = 0x8,
+		SURFTYPE_BITS_CONCRETE = 0x10,
+		SURFTYPE_BITS_DIRT = 0x20,
+		SURFTYPE_BITS_FLESH = 0x40,
+		SURFTYPE_BITS_FOLIAGE_DEBRIS = 0x80,
+		SURFTYPE_BITS_GLASS = 0x100,
+		SURFTYPE_BITS_GRASS = 0x200,
+		SURFTYPE_BITS_GRAVEL = 0x400,
+		SURFTYPE_BITS_ICE = 0x800,
+		SURFTYPE_BITS_METAL_SOLID = 0x1000,
+		SURFTYPE_BITS_METAL_GRATE = 0x2000,
+		SURFTYPE_BITS_MUD = 0x4000,
+		SURFTYPE_BITS_PAPER = 0x8000,
+		SURFTYPE_BITS_PLASTER = 0x10000,
+		SURFTYPE_BITS_ROCK = 0x20000,
+		SURFTYPE_BITS_SAND = 0x40000,
+		SURFTYPE_BITS_SNOW = 0x80000,
+		SURFTYPE_BITS_WATER_WAIST = 0x100000,
+		SURFTYPE_BITS_WOOD_SOLID = 0x200000,
+		SURFTYPE_BITS_ASPHALT = 0x400000,
+		SURFTYPE_BITS_CERAMIC = 0x800000,
+		SURFTYPE_BITS_PLASTIC_SOLID = 0x1000000,
+		SURFTYPE_BITS_RUBBER = 0x2000000,
+		SURFTYPE_BITS_FRUIT = 0x4000000,
+		SURFTYPE_BITS_PAINTEDMETAL = 0x8000000,
+		SURFTYPE_BITS_RIOTSHIELD = 0x10000000,
+		SURFTYPE_BITS_SLUSH = 0x20000000,
+		SURFTYPE_BITS_ASPHALT_WET = 0x40000000,
+		SURFTYPE_BITS_ASPHALT_DEBRIS = 0x80000000,
+		SURFTYPE_BITS_CONCRETE_WET = 0x100000000,
+		SURFTYPE_BITS_CONCRETE_DEBRIS = 0x200000000,
+		SURFTYPE_BITS_FOLIAGE_VEGETATION = 0x400000000,
+		SURFTYPE_BITS_FOLIAGE_LEAVES = 0x800000000,
+		SURFTYPE_BITS_GRASS_TALL = 0x1000000000,
+		SURFTYPE_BITS_METAL_HOLLOW = 0x2000000000,
+		SURFTYPE_BITS_METAL_VEHICLE = 0x4000000000,
+		SURFTYPE_BITS_METAL_THIN = 0x8000000000,
+		SURFTYPE_BITS_METAL_WET = 0x10000000000,
+		SURFTYPE_BITS_METAL_DEBRIS = 0x20000000000,
+		SURFTYPE_BITS_PLASTIC_HOLLOW = 0x40000000000,
+		SURFTYPE_BITS_PLASTIC_TARP = 0x80000000000,
+		SURFTYPE_BITS_ROCK_WET = 0x100000000000,
+		SURFTYPE_BITS_ROCK_DEBRIS = 0x200000000000,
+		SURFTYPE_BITS_WATER_ANKLE = 0x400000000000,
+		SURFTYPE_BITS_WATER_KNEE = 0x800000000000,
+		SURFTYPE_BITS_WOOD_HOLLOW = 0x1000000000000,
+		SURFTYPE_BITS_WOOD_WET = 0x2000000000000,
+		SURFTYPE_BITS_WOOD_DEBRIS = 0x4000000000000,
+		SURFTYPE_BITS_CUSHION = 0x8000000000000,
+	};
+
+	struct MaterialInfo
 	{
 		const char* name;
-		char __pad0[0x118];
-		char textureCount;
-		char constantCount;
-		char stateBitsCount;
-		char stateFlags;
-		char cameraRegion;
-		char materialType;
-		char assetFlags;
+		unsigned char gameFlags;
+		unsigned char sortKey;
+		unsigned char textureAtlasRowCount;
+		unsigned char textureAtlasColumnCount;
+		unsigned char textureAtlasFrameBlend;
+		unsigned char textureAtlasAsArray;
+		unsigned char renderFlags;
+		GfxDrawSurf drawSurf;
+		void* surfaceTypeBits;
+		unsigned int hashIndex;
+	};
+
+	struct Material
+	{
+		union
+		{
+			const char* name;
+			MaterialInfo info;
+		};
+		unsigned char stateBitsEntry[240];
+		unsigned char textureCount;
+		unsigned char constantCount;
+		unsigned char stateBitsCount;
+		unsigned char stateFlags;
+		unsigned char cameraRegion;
+		unsigned char materialType;
+		unsigned char layerCount;
+		unsigned char assetFlags;
 		MaterialTechniqueSet* techniqueSet;
 		MaterialTextureDef* textureTable;
 		void* constantTable;
 		GfxStateBits* stateBitsTable;
-		char __pad2[0x108];
+		unsigned char constantBufferIndex[240];
+		void* constantBufferTable;
+		unsigned char constantBufferCount;
+		const char** subMaterials;
 	};
 
 	static_assert(sizeof(Material) == 0x250);

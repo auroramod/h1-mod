@@ -22,6 +22,7 @@ namespace materials
 		utils::hook::detour db_material_streaming_fail_hook;
 		utils::hook::detour material_register_handle_hook;
 		utils::hook::detour db_get_material_index_hook;
+		utils::hook::detour material_compare_hook;
 
 		struct material_data_t
 		{
@@ -156,6 +157,27 @@ namespace materials
 
 			return db_get_material_index_hook.invoke<unsigned int>(material);
 		}
+
+#ifdef DEBUG
+		char material_compare_stub(unsigned int index_a, unsigned int index_b)
+		{
+			char result = 0;
+
+			__try
+			{
+				result = material_compare_hook.invoke<char>(index_a, index_b);
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER)
+			{
+				const auto* material_a = utils::hook::invoke<game::Material*>(0x395FE0_b, index_a);
+				const auto* material_b = utils::hook::invoke<game::Material*>(0x395FE0_b, index_b);
+				console::error("Material_Compare: %s - %s (%d - %d)", 
+					material_a->name, material_b->name, material_a->info.sortKey, material_b->info.sortKey);
+			}
+
+			return result;
+		}
+#endif
 	}
 
 	void add(const std::string& name, const std::string& data)
@@ -205,6 +227,9 @@ namespace materials
 			material_register_handle_hook.create(game::Material_RegisterHandle, material_register_handle_stub);
 			db_material_streaming_fail_hook.create(SELECT_VALUE(0x1FB400_b, 0x3A1600_b), db_material_streaming_fail_stub);
 			db_get_material_index_hook.create(SELECT_VALUE(0x1F1D80_b, 0x396000_b), db_get_material_index_stub);
+#ifdef DEBUG
+			material_compare_hook.create(0x693D1E_b, material_compare_stub);
+#endif
 		}
 	};
 }
