@@ -227,8 +227,12 @@ namespace materials
 			material_register_handle_hook.create(game::Material_RegisterHandle, material_register_handle_stub);
 			db_material_streaming_fail_hook.create(SELECT_VALUE(0x1FB400_b, 0x3A1600_b), db_material_streaming_fail_stub);
 			db_get_material_index_hook.create(SELECT_VALUE(0x1F1D80_b, 0x396000_b), db_get_material_index_stub);
+
 #ifdef DEBUG
-			material_compare_hook.create(0x693D1E_b, material_compare_stub);
+			if (!game::environment::is_sp())
+			{
+				material_compare_hook.create(0x693B90_b, material_compare_stub);
+			}
 #endif
 		}
 	};
