@@ -315,6 +315,8 @@ namespace game
 	WEAK symbol<void*> DB_XAssetPool{0xEC9FB0, 0x10B4460};
 	WEAK symbol<const char*> g_assetNames{0x991BA0, 0x10B30D0};
 
+	WEAK symbol< DB_FileSysInterface*> db_fs{0x25C1168, 0x1566C08};
+
 	WEAK symbol<int> keyCatchers{0x252AF70, 0x2EC82C4};
 	WEAK symbol<PlayerKeyState> playerKeys{0x2395B0C, 0x2999E1C};
 

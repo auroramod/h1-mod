@@ -223,6 +223,40 @@ namespace game
 		SF_COUNT = 0x6,
 	};
 
+	enum FileSysResult : std::int32_t
+	{
+		FILESYSRESULT_SUCCESS = 0x0,
+		FILESYSRESULT_EOF = 0x1,
+		FILESYSRESULT_ERROR = 0x2,
+	};
+
+	struct DB_IFileSysFile
+	{
+		void* file;
+		uint64_t last_read;
+		uint64_t bytes_read;
+	};
+
+	static_assert(sizeof(DB_IFileSysFile) == 24);
+
+	struct DB_FileSysInterface;
+
+	// this is a best guess, interface doesn't match up exactly w/other games (IW8, T9)
+	struct DB_FileSysInterface_vtbl
+	{
+		DB_IFileSysFile* (__fastcall* OpenFile)(DB_FileSysInterface* _this, Sys_Folder folder, const char* filename);
+		FileSysResult(__fastcall* Read)(DB_FileSysInterface* _this, DB_IFileSysFile* handle, unsigned __int64 offset, unsigned __int64 size, void* dest);
+		FileSysResult(__fastcall* Tell)(DB_FileSysInterface* _this, DB_IFileSysFile* handle, unsigned __int64* bytesRead);
+		__int64(__fastcall* Size)(DB_FileSysInterface* _this, DB_IFileSysFile* handle);
+		void(__fastcall* Close)(DB_FileSysInterface* _this, DB_IFileSysFile* handle);
+		bool(__fastcall* Exists)(DB_FileSysInterface* _this, Sys_Folder folder, const char* filename);
+	};
+
+	struct DB_FileSysInterface
+	{
+		DB_FileSysInterface_vtbl* vftbl;
+	};
+
 	enum CodPlayMode
 	{
 		CODPLAYMODE_NONE = 0x0,
