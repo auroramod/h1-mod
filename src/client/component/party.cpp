@@ -45,11 +45,19 @@ namespace party
 			bool optional;
 		};
 
+		// snake case these names before release
 		std::vector<usermap_file> usermap_files =
 		{
 			{".ff", "usermaphash", false},
 			{"_load.ff", "usermaploadhash", true},
 			{".arena", "usermaparenahash", true},
+			{".pak", "usermappakhash", true},
+		};
+
+		std::vector<usermap_file> mod_files =
+		{
+			{".ff", "modHash", false},
+			{".pak", "modpakhash", true},
 		};
 
 		struct
@@ -226,15 +234,16 @@ namespace party
 				throw std::runtime_error(utils::string::va("Invalid server mapname value %s\n", mapname.data()));
 			}
 
-			const auto check_file = [&](const std::string& ext, const std::string& name, bool optional)
+			const auto check_file = [&](const usermap_file& file)
 			{
-				const std::string filename = utils::string::va("usermaps/%s/%s%s", mapname.data(), mapname.data(), ext.data());
-				const auto source_hash = info.get(name);
+				const std::string filename = utils::string::va("usermaps/%s/%s%s",
+					mapname.data(), mapname.data(), file.extension.data());
+				const auto source_hash = info.get(file.name);
 				if (source_hash.empty())
 				{
-					if (!optional)
+					if (!file.optional)
 					{
-						throw std::runtime_error(utils::string::va("Server %s is empty", name.data()));
+						throw std::runtime_error(utils::string::va("Server %s is empty", file.name.data()));
 					}
 
 					return;
@@ -248,9 +257,9 @@ namespace party
 				}
 			};
 
-			for (const auto& [ext, name, opt] : usermap_files)
+			for (const auto& file : usermap_files)
 			{
-				check_file(ext, name, opt);
+				check_file(file);
 			}
 		}
 
@@ -276,35 +285,53 @@ namespace party
 				throw std::runtime_error(utils::string::va("Invalid server fs_game value %s\n", server_fs_game.data()));
 			}
 
-			const auto source_hash = info.get("modHash");
-			if (source_hash.empty())
+			auto needs_restart = false;
+			for (const auto& file : mod_files)
 			{
-				throw std::runtime_error("Connection failed: Server mod hash is empty.");
+				const auto source_hash = info.get(file.name);
+				if (source_hash.empty() && !file.optional)
+				{
+					if (file.optional)
+					{
+						continue;
+					}
+
+					throw std::runtime_error(
+						utils::string::va("Connection failed: Server %s is empty.", file.name.data()));
+				}
+
+				const auto file_path = server_fs_game + "/mod" + file.extension;
+				auto has_to_download = !utils::io::file_exists(file_path);
+
+				if (!has_to_download)
+				{
+					const auto data = utils::io::read_file(file_path);
+					const auto hash = utils::cryptography::sha1::compute(data, true);
+
+					has_to_download = source_hash != hash;
+				}
+
+				if (has_to_download)
+				{
+					// unload mod before downloading it
+					if (client_fs_game == server_fs_game)
+					{
+						mods::set_mod("", true);
+						return true;
+					}
+					else
+					{
+						files.emplace_back(file_path, source_hash);
+					}
+				}
+				else if (client_fs_game != server_fs_game)
+				{
+					mods::set_mod(server_fs_game);
+					needs_restart = true;
+				}
 			}
 
-			const auto mod_path = server_fs_game + "/mod.ff";
-			auto has_to_download = !utils::io::file_exists(mod_path);
-
-			if (!has_to_download)
-			{
-				const auto data = utils::io::read_file(mod_path);
-				const auto hash = utils::cryptography::sha1::compute(data, true);
-
-				has_to_download = source_hash != hash;
-			}
-
-			if (has_to_download)
-			{
-				files.emplace_back(mod_path, source_hash);
-				return false;
-			}
-			else if (client_fs_game != server_fs_game)
-			{
-				mods::set_mod(server_fs_game);
-				return true;
-			}
-
-			return false;
+			return needs_restart;
 		}
 
 		void close_joining_popups()
@@ -431,16 +458,16 @@ namespace party
 
 			fastfiles::set_usermap(mapname);
 
-			for (const auto& [ext, key, opt] : usermap_files)
+			for (const auto& file : usermap_files)
 			{
 				char buffer[0x100] = {0};
 				const std::string source_hash = game::MSG_ReadStringLine(msg,
 					buffer, static_cast<unsigned int>(sizeof(buffer)));
 
-				const auto path = get_usermap_file_path(mapname, ext);
+				const auto path = get_usermap_file_path(mapname, file.extension);
 				const auto hash = get_file_hash(path);
 
-				if ((!source_hash.empty() && hash != source_hash) || (source_hash.empty() && !opt))
+				if ((!source_hash.empty() && hash != source_hash) || (source_hash.empty() && !file.optional))
 				{
 					command::execute("disconnect");
 					scheduler::once([]
@@ -499,19 +526,14 @@ namespace party
 			line(current_sv_mapname);
 			line(sv_gametype->current.string);
 
-			const auto add_hash = [&](const std::string extension)
-			{
-				const auto filename = get_usermap_file_path(current_sv_mapname, extension);
-				const auto hash = get_file_hash(filename);
-				line(hash);
-			};
-
 			const auto is_usermap = fastfiles::usermap_exists(current_sv_mapname);
-			for (const auto& [ext, key, opt] : usermap_files)
+			for (const auto& file : usermap_files)
 			{
 				if (is_usermap)
 				{
-					add_hash(ext);
+					const auto filename = get_usermap_file_path(current_sv_mapname, file.extension);
+					const auto hash = get_file_hash(filename);
+					line(hash);
 				}
 				else
 				{
@@ -998,16 +1020,11 @@ namespace party
 
 				if (!fastfiles::is_stock_map(mapname))
 				{
-					const auto add_hash = [&](const std::string& extension, const std::string& name)
+					for (const auto& file : usermap_files)
 					{
-						const auto path = get_usermap_file_path(mapname, extension);
+						const auto path = get_usermap_file_path(mapname, file.extension);
 						const auto hash = get_file_hash(path);
-						info.set(name, hash);
-					};
-
-					for (const auto& [ext, name, opt] : usermap_files)
-					{
-						add_hash(ext, name);
+						info.set(file.name, hash);
 					}
 				}
 
@@ -1016,8 +1033,12 @@ namespace party
 
 				if (!fs_game.empty())
 				{
-					const auto hash = get_file_hash(utils::string::va("%s/mod.ff", fs_game.data()));
-					info.set("modHash", hash);
+					for (const auto& file : mod_files)
+					{
+						const auto hash = get_file_hash(utils::string::va("%s/mod%s", 
+							fs_game.data(), file.extension.data()));
+						info.set(file.name, hash);
+					}
 				}
 
 				network::send(target, "infoResponse", info.build(), '\n');

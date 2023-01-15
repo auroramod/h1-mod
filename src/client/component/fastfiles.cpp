@@ -5,6 +5,7 @@
 #include "console.hpp"
 #include "fastfiles.hpp"
 #include "filesystem.hpp"
+#include "imagefiles.hpp"
 
 #include "game/dvars.hpp"
 
@@ -232,8 +233,9 @@ namespace fastfiles
 			const auto& usermap_value = usermap.value();
 			const std::string usermap_file = utils::string::va("%s.ff", usermap_value.data());
 			const std::string usermap_load_file = utils::string::va("%s_load.ff", usermap_value.data());
+			const std::string usermap_pak_file = utils::string::va("%s.pak", usermap_value.data());
 
-			if (mapname == usermap_file || mapname == usermap_load_file)
+			if (mapname == usermap_file || mapname == usermap_load_file || mapname == usermap_pak_file)
 			{
 				const auto path = utils::string::va("usermaps\\%s\\%s",
 					usermap_value.data(), mapname.data());
@@ -289,7 +291,7 @@ namespace fastfiles
 				}
 			}
 
-			if (name.ends_with(".ff"))
+			if (name.ends_with(".ff") || name.ends_with(".pak"))
 			{
 				handle = find_fastfile(name, true);
 			}
@@ -337,6 +339,8 @@ namespace fastfiles
 
 		void load_pre_gfx_zones(game::XZoneInfo* zoneInfo, unsigned int zoneCount, game::DBSyncMode syncMode)
 		{
+			imagefiles::close_custom_handles();
+
 			std::vector<game::XZoneInfo> data;
 			merge(&data, zoneInfo, zoneCount);
 
