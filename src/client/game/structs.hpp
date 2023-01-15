@@ -1086,6 +1086,13 @@ namespace game
 		int freeFlags;
 	};
 
+	struct XZoneInfoInternal
+	{
+		char name[64];
+		int flags;
+		int isBaseMap;
+	};
+
 	enum XAssetType
 	{
 		ASSET_TYPE_PHYSPRESET,
@@ -1897,6 +1904,15 @@ namespace game
 		}; // size = 1011960
 
 		static_assert(sizeof(client_t) == 1011960);
+
+		struct XZone
+		{
+			char __pad0[32];
+			char name[64];
+			char __pad1[408];
+		};
+
+		static_assert(sizeof(XZone) == 504);
 	}
 
 	namespace sp
@@ -1918,6 +1934,15 @@ namespace game
 		struct playerState_s
 		{
 		};
+
+		struct XZone
+		{
+			char __pad0[32];
+			char name[64];
+			char __pad1[128];
+		};
+
+		static_assert(sizeof(XZone) == 224);
 	}
 
 	union playerState_s

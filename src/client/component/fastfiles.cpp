@@ -478,6 +478,34 @@ namespace fastfiles
 		{
 			return format_bsp_name(dest, size, mapname);
 		}
+
+		const char* get_zone_name(const unsigned int index)
+		{
+			if (game::environment::is_sp())
+			{
+				return game::sp::g_zones[index].name;
+			}
+			else
+			{
+				return game::mp::g_zones[index].name;
+			}
+		}
+
+		utils::hook::detour db_unload_x_zones_hook;
+		void db_unload_x_zones_stub(const unsigned short* unload_zones, 
+			const unsigned int unload_count, const bool create_default)
+		{
+			for (auto i = 0u; i < unload_count; i++)
+			{
+				const auto zone_name = get_zone_name(unload_zones[i]);
+				if (zone_name[0] != '\0')
+				{
+					imagefiles::close_handle(zone_name);
+				}
+			}
+
+			db_unload_x_zones_hook.invoke<void>(unload_zones, unload_count, create_default);
+		}
 	}
 
 	bool exists(const std::string& zone, bool ignore_usermap)
@@ -569,6 +597,9 @@ namespace fastfiles
 			db_try_load_x_file_internal_hook.create(
 				SELECT_VALUE(0x1F5700_b, 0x39A620_b), &db_try_load_x_file_internal);
 			db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
+
+			db_unload_x_zones_hook.create(SELECT_VALUE(0x1F6040_b, 
+				0x39B3C0_b), db_unload_x_zones_stub);
 
 			g_dump_scripts = dvars::register_bool("g_dumpScripts", false, game::DVAR_FLAG_NONE, "Dump GSC scripts");
 
