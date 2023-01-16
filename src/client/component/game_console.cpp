@@ -272,7 +272,7 @@ namespace game_console
 				draw_hint_text(0, utils::string::va("%i matches (too many to show here, press shift+tilde to open full console)", matches.size()),
 					dvars::con_inputDvarMatchColor->current.vector);
 
-				if (GetAsyncKeyState(VK_SHIFT) && GetAsyncKeyState(VK_OEM_3) & 1)
+				if (GetAsyncKeyState(VK_TAB) & 1)
 				{
 					console::info("]%s\n", con.buffer);
 					for (size_t i = 0; i < matches.size(); i++)
