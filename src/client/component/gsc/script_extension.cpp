@@ -132,7 +132,16 @@ namespace gsc
 
 			if (!functions.contains(function_id))
 			{
-				function();
+				if (function == nullptr)
+				{
+					force_error_print = true;
+					gsc_error_msg = "function doesn't exist";
+					game::Scr_ErrorInternal();
+				}
+				else
+				{
+					function();
+				}
 			}
 			else
 			{
@@ -153,7 +162,16 @@ namespace gsc
 
 			if (!methods.contains(function_id))
 			{
-				method(saved_ent_ref);
+				if (method == nullptr)
+				{
+					force_error_print = true;
+					gsc_error_msg = "method doesn't exist";
+					game::Scr_ErrorInternal();
+				}
+				else
+				{
+					method(saved_ent_ref);
+				}
 			}
 			else
 			{
