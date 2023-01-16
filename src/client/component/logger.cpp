@@ -96,6 +96,12 @@ namespace logger
 
 			console::info("%s", buffer);
 		}
+
+		void r_warn_once_per_frame_vsnprintf_stub(char* buffer, size_t buffer_length, char* msg, va_list va)
+		{
+			vsnprintf(buffer, buffer_length, msg, va);
+			console::warn(buffer);
+		}
 	}
 
 	class component final : public component_interface
@@ -109,6 +115,11 @@ namespace logger
 				utils::hook::jump(SELECT_VALUE(0x106010_b, 0x27CBB0_b), print_dev);   // debug
 				utils::hook::jump(SELECT_VALUE(0x107680_b, 0x27E210_b), print_error); // error
 				utils::hook::jump(SELECT_VALUE(0x0E6E30_b, 0x1F6140_b), printf);      // print
+
+				if (game::environment::is_mp())
+				{
+					utils::hook::call(0x6BBB81_b, r_warn_once_per_frame_vsnprintf_stub);
+				}
 			}
 
 			com_error_hook.create(game::Com_Error, com_error_stub);
