@@ -506,6 +506,90 @@ namespace fastfiles
 
 			db_unload_x_zones_hook.invoke<void>(unload_zones, unload_count, create_default);
 		}
+
+		namespace mp
+		{
+			constexpr unsigned int get_asset_type_size(const game::XAssetType type)
+			{
+				constexpr int asset_type_sizes[] =
+				{
+					96, 88, 128, 56, 40, 216,
+					56, 680, 592, 32, 32, 32,
+					32, 32, 2112, 1936, 104,
+					32, 24, 152, 152, 152, 16,
+					64, 640, 40, 16, 136, 24,
+					296, 176, 2864, 48, 0, 24,
+					200, 88, 16, 144, 3616, 56,
+					64, 16, 16, 0, 0, 0, 0, 24,
+					40, 24, 48, 40, 24, 16, 80,
+					128, 2256, 136, 32, 72,
+					24, 64, 88, 48, 32, 96, 152,
+					64, 32, 32,
+				};
+
+				return asset_type_sizes[type];
+			}
+
+			constexpr unsigned int get_pool_type_size(const game::XAssetType type)
+			{
+				constexpr int asset_pool_sizes[] =
+				{
+					128, 256, 16, 1, 128, 5000,
+					5248, 4352, 17536, 256, 49152,
+					12288, 12288, 72864, 512,
+					2750, 23264, 16000, 256, 64,
+					64, 64, 64, 8000, 1, 1, 1, 1,
+					1, 2, 1, 1, 32, 0, 128, 910,
+					16, 14100, 128, 200, 1, 2048,
+					4, 6, 0, 0, 0, 0, 1024, 768,
+					400, 128, 128, 24, 24, 24,
+					32, 32, 2, 128, 64, 384, 128,
+					1, 128, 64, 32, 32, 16, 32, 16
+				};
+
+				return asset_pool_sizes[type];
+			}
+
+			template <game::XAssetType Type, size_t Size>
+			char* reallocate_asset_pool()
+			{
+				constexpr auto element_size = get_asset_type_size(Type);
+				static char new_pool[element_size * Size] = {0};
+				static_assert(element_size != 0);
+				assert(element_size == game::DB_GetXAssetTypeSize(Type));
+
+				std::memmove(new_pool, game::g_assetPool[Type], game::g_poolSize[Type] * element_size);
+
+				game::g_assetPool[Type] = new_pool;
+				game::g_poolSize[Type] = Size;
+
+				return new_pool;
+			}
+
+			template <game::XAssetType Type, size_t Multiplier>
+			char* reallocate_asset_pool_multiplier()
+			{
+				constexpr auto pool_size = get_pool_type_size(Type);
+				return reallocate_asset_pool<Type, pool_size* Multiplier>();
+			}
+
+			void reallocate_asset_pools()
+			{
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIM, 2>();
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_WEAPON, 2>();
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_SOUND, 2>();
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOADED_SOUND, 2>();
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOCALIZE, 2>();
+			}
+		}
+
+		void reallocate_asset_pools()
+		{
+			if (!game::environment::is_sp())
+			{
+				mp::reallocate_asset_pools();
+			}
+		}
 	}
 
 	bool exists(const std::string& zone, bool ignore_usermap)
@@ -602,6 +686,8 @@ namespace fastfiles
 				0x39B3C0_b), db_unload_x_zones_stub);
 
 			g_dump_scripts = dvars::register_bool("g_dumpScripts", false, game::DVAR_FLAG_NONE, "Dump GSC scripts");
+
+			reallocate_asset_pools();
 
 			// Allow loading of unsigned fastfiles & imagefiles
 			if (!game::environment::is_sp())

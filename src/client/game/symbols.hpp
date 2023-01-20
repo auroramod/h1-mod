@@ -195,7 +195,7 @@ namespace game
 	WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)>
 	DB_EnumXAssets_Internal{0x1F0BF0, 0x394C60};
 	WEAK symbol<const char*(const XAsset* asset)> DB_GetXAssetName{0x1BF890, 0x366140};
-	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x0, 0x0};
+	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x0, 0x366180};
 	WEAK symbol<XAssetHeader(XAssetType type, const char* name, 
 		int createDefault)> DB_FindXAssetHeader{0x1F1120, 0x3950C0};
 	WEAK symbol<void(void* levelLoad, const char* name, 
@@ -312,7 +312,7 @@ namespace game
 	WEAK symbol<int> dvarCount{0xC90E550, 0x2999C34};
 	WEAK symbol<dvar_t> dvarPool{0xC90E560, 0x344DF20};
 
-	WEAK symbol<void*> DB_XAssetPool{0xEC9FB0, 0x10B4460};
+	WEAK symbol<void*> g_assetPool{0xEC9FB0, 0x10B4460};
 	WEAK symbol<const char*> g_assetNames{0x991BA0, 0x10B30D0};
 	WEAK symbol<XZoneInfoInternal> g_zoneInfo{0x0, 0x5F5A370};
 	WEAK symbol<unsigned short> g_zoneIndex{0x0, 0x3D1008C};
