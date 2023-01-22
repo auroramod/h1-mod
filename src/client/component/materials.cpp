@@ -4,6 +4,7 @@
 #include "materials.hpp"
 #include "console.hpp"
 #include "filesystem.hpp"
+#include "scheduler.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -22,7 +23,13 @@ namespace materials
 		utils::hook::detour db_material_streaming_fail_hook;
 		utils::hook::detour material_register_handle_hook;
 		utils::hook::detour db_get_material_index_hook;
+
+#ifdef DEBUG
 		utils::hook::detour material_compare_hook;
+		utils::hook::detour set_pixel_texture_hook;
+
+		const game::dvar_t* debug_materials = nullptr;
+#endif
 
 		struct material_data_t
 		{
@@ -177,6 +184,57 @@ namespace materials
 
 			return result;
 		}
+
+		void print_material(const game::Material* material)
+		{
+			if (!debug_materials || !debug_materials->current.enabled)
+			{
+				return;
+			}
+
+			console::debug("current material is \"%s\"\n", material->name);
+		}
+
+		void print_current_material_stub(utils::hook::assembler& a)
+		{
+			const auto loc_6AD59B = a.newLabel();
+
+			a.pushad64();
+			a.mov(rcx, r15);
+			a.call_aligned(print_material);
+			a.popad64();
+
+			a.cmp(byte_ptr(rbx), 5);
+			a.mov(rax, ptr(r15, 0x130));
+
+			a.jnz(loc_6AD59B);
+			a.nop(dword_ptr(rax, rax, 0x00000000));
+
+			a.jmp(0x6AD570_b);
+
+			a.bind(loc_6AD59B);
+			a.jmp(0x6AD59B_b);
+		}
+
+		void set_pixel_texture_stub(void* cmd_buf_state, unsigned int a2, const game::GfxImage* image)
+		{
+			if (!debug_materials || !debug_materials->current.enabled)
+			{
+				set_pixel_texture_hook.invoke<void>(cmd_buf_state, a2, image);
+				return;
+			}
+
+			if (image && image->name)
+			{
+				console::debug("set_pixel_texture_stub: \"%s\"\n", image->name);
+			}
+			else
+			{
+				console::error("set_pixel_texture_stub: texture has no name or is nullptr\n");
+			}
+
+			set_pixel_texture_hook.invoke<void>(cmd_buf_state, a2, image);
+		}
 #endif
 	}
 
@@ -232,6 +290,14 @@ namespace materials
 			if (!game::environment::is_sp())
 			{
 				material_compare_hook.create(0x693B90_b, material_compare_stub);
+				set_pixel_texture_hook.create(0x6B33E0_b, set_pixel_texture_stub);
+
+				utils::hook::jump(0x6AD55C_b, utils::hook::assemble(print_current_material_stub), true);
+
+				scheduler::once([]
+				{
+					debug_materials = dvars::register_bool("debug_materials", 0, 0x0, "Print current material and images");
+				}, scheduler::main);
 			}
 #endif
 		}
