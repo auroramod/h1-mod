@@ -8,6 +8,7 @@
 #include "game/game.hpp"
 
 #include <utils/hook.hpp>
+#include <utils/memory.hpp>
 
 namespace weapon
 {
