@@ -269,17 +269,13 @@ namespace game_console
 			if (matches.size() > 24)
 			{
 				draw_hint_box(1, dvars::con_inputHintBoxColor->current.vector);
-				draw_hint_text(0, utils::string::va("%i matches (too many to show here, press shift+tilde to open full console)", matches.size()),
-					dvars::con_inputDvarMatchColor->current.vector);
-
-				if (GetAsyncKeyState(VK_TAB) & 1)
-				{
-					console::info("]%s\n", con.buffer);
-					for (size_t i = 0; i < matches.size(); i++)
-					{
-						console::info("\t%s\n", matches[i].name.data());
-					}
-				}
+				draw_hint_text(0, 
+					utils::string::va(
+						"%i matches (too many to show here, "
+						"press shift+tilde to open full console, "
+						"press tab to print them all)",
+						matches.size()
+					), dvars::con_inputDvarMatchColor->current.vector);
 			}
 			else if (matches.size() == 1)
 			{
@@ -716,6 +712,15 @@ namespace game_console
 					history_index = -1;
 
 					clear();
+				}
+
+				if (key == game::keyNum_t::K_TAB && std::strlen(con.buffer) >= 2 && matches.size() > 24)
+				{
+					console::info("]%s\n", con.buffer);
+					for (const auto& match : matches)
+					{
+						console::info("\t%s\n", match.name.data());
+					}
 				}
 			}
 		}
