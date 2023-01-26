@@ -379,7 +379,26 @@ namespace ui_scripting
 
 			setup_functions();
 
-			lua["print"] = function(reinterpret_cast<game::hks::lua_function>(SELECT_VALUE(0x93490_b, 0x209EB0_b)));
+			lua["print"] = [](const variadic_args& va)
+			{
+				std::string buffer{};
+				const auto to_string = get_globals()["tostring"];
+
+				for (auto i = 0; i < va.size(); i++)
+				{
+					const auto& arg = va[i];
+					const auto str = to_string(arg)[0].as<std::string>();
+					buffer.append(str);
+
+					if (i < va.size() - 1)
+					{
+						buffer.append("\t");
+					}
+				}
+
+				console::info("%s\n", buffer.data());
+			};
+
 			lua["table"]["unpack"] = lua["unpack"];
 			lua["luiglobals"] = lua;
 

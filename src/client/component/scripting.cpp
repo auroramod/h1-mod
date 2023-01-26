@@ -97,20 +97,16 @@ namespace scripting
 				game::G_LogPrintf("InitGame\n");
 
 				lua::engine::start();
-
-				gsc::load_main_handles();
 			}
+
+			gsc::load_main_handles();
 
 			g_load_structs_hook.invoke<void>();
 		}
 
 		void scr_load_level_stub()
 		{
-			if (!game::VirtualLobby_Loaded())
-			{
-				gsc::load_init_handles();
-			}
-
+			gsc::load_init_handles();
 			scr_load_level_hook.invoke<void>();
 		}
 

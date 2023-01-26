@@ -1600,6 +1600,81 @@ namespace game
 		const char* name;
 	};
 
+	struct DDLMember
+	{
+		const char* name;
+		int index;
+		void* parent;
+		int bitSize;
+		int limitSize;
+		int offset;
+		int type;
+		int externalIndex;
+		unsigned int rangeLimit;
+		unsigned int serverDelta;
+		unsigned int clientDelta;
+		int arraySize;
+		int enumIndex;
+		int permission;
+	};
+
+	struct DDLHash
+	{
+		unsigned int hash;
+		int index;
+	};
+
+	struct DDLHashTable
+	{
+		DDLHash* list;
+		int count;
+		int max;
+	};
+
+	struct DDLStruct
+	{
+		const char* name;
+		int bitSize;
+		int memberCount;
+		DDLMember* members;
+		DDLHashTable hashTableUpper;
+		DDLHashTable hashTableLower;
+	};
+
+	struct DDLEnum
+	{
+		const char* name;
+		int memberCount;
+		const char** members;
+		DDLHashTable hashTable;
+	};
+
+	struct DDLDef
+	{
+		char* name;
+		unsigned short version;
+		unsigned int checksum;
+		unsigned char flags;
+		int bitSize;
+		int byteSize;
+		DDLStruct* structList;
+		int structCount;
+		DDLEnum* enumList;
+		int enumCount;
+		DDLDef* next;
+		int headerBitSize;
+		int headerByteSize;
+		int reserveSize;
+		int userFlagsSize;
+		bool paddingUsed;
+	};
+
+	struct DDLRoot
+	{
+		const char* name;
+		DDLDef* ddlDef;
+	};
+
 	union XAssetHeader
 	{
 		void* data;

@@ -82,6 +82,27 @@ namespace gsc
 			}
 			return res;
 		}
+
+		template <size_t rva>
+		void safe_func()
+		{
+			static utils::hook::detour hook;
+
+			const auto stub = []()
+			{
+				__try
+				{
+					hook.invoke<void>();
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					game::Scr_ErrorInternal();
+				}
+			};
+
+			const auto ptr = rva + 0_b;
+			hook.create(ptr, stub);
+		}
 	}
 
 	std::optional<std::pair<std::string, std::string>> find_function(const char* pos)
@@ -111,6 +132,8 @@ namespace gsc
 			utils::hook::call(SELECT_VALUE(0x3BD626_b, 0x504606_b), unknown_function_stub); // CompileError (LinkFile)
 			utils::hook::call(SELECT_VALUE(0x3BD672_b, 0x504652_b), unknown_function_stub); // ^
 			utils::hook::call(SELECT_VALUE(0x3BD75A_b, 0x50473A_b), find_variable_stub);	// Scr_EmitFunction
+
+			safe_func<0xBA7A0>(); // fix vlobby cac crash
 		}
 
 		void pre_destroy() override

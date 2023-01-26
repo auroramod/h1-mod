@@ -346,6 +346,8 @@ namespace fastfiles
 
 			// code_pre_gfx
 
+			try_load_zone("h1_mod_code_pre_gfx", true);
+
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
 		}
 

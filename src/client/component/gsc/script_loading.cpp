@@ -109,16 +109,18 @@ namespace gsc
 			return false;
 		}
 
+		bool force_load = false;
+
 		game::ScriptFile* load_custom_script(const char* file_name, const std::string& real_name)
 		{
-			if (game::VirtualLobby_Loaded())
-			{
-				return nullptr;
-			}
-
 			if (loaded_scripts.contains(real_name))
 			{
 				return loaded_scripts[real_name];
+			}
+
+			if (game::VirtualLobby_Loaded() && !force_load)
+			{
+				return nullptr;
 			}
 
 			std::string source_buffer;
@@ -283,21 +285,27 @@ namespace gsc
 		{
 			utils::hook::invoke<void>(SELECT_VALUE(0x2B9DA0_b, 0x18BC00_b), a1, a2);
 
-			if (game::VirtualLobby_Loaded())
-			{
-				return;
-			}
-
 			for (const auto& path : filesystem::get_search_paths())
 			{
-				load_scripts(path, "scripts/");
 				if (game::environment::is_sp())
 				{
 					load_scripts(path, "scripts/sp/");
+					load_scripts(path, "scripts/");
 				}
 				else
 				{
-					load_scripts(path, "scripts/mp/");
+					if (!game::VirtualLobby_Loaded())
+					{
+						load_scripts(path, "scripts/mp/");
+						load_scripts(path, "scripts/");
+					}
+	
+					force_load = true;
+					const auto _0 = gsl::finally([&]
+					{
+						force_load = false;
+					});
+					load_scripts(path, "scripts/mp_patches/");
 				}
 			}
 		}
