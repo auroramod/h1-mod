@@ -435,6 +435,7 @@ namespace party
 					needs_vid_restart = false;
 					scheduler::once([=]()
 					{
+						mods::read_stats();
 						connect(target);
 					}, scheduler::pipeline::main);
 					return true;

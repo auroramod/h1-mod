@@ -58,8 +58,7 @@ namespace mods
 				command::execute("vid_restart");
 				scheduler::once([]
 				{
-					demonware::set_storage_path(mod_path.value_or(""));
-					utils::hook::invoke<void>(0x4E6B60_b, 0); // read stats
+					mods::read_stats();
 				}, scheduler::main);
 				return;
 			}
@@ -111,6 +110,12 @@ namespace mods
 	std::optional<std::string> get_mod()
 	{
 		return mod_path;
+	}
+
+	void read_stats()
+	{
+		demonware::set_storage_path(mod_path.value_or(""));
+		utils::hook::invoke<void>(0x4E6B60_b, 0); // read stats
 	}
 
 	class component final : public component_interface
