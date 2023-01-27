@@ -24,9 +24,9 @@
     "MENU_NO_DONT_ASK": "Нет, больше не спрашивать",
 
     "UPDATER_POPUP_NO_UPDATES_AVAILABLE": "У вас установлены все последние обновления",
-    "UPDATER_POPUP_AVAILABLE_UPDATE_TEXT": "Доступно обновление клиента игры,\nначать установку сейчас?",
+    "MENU_CCS_NEW_PATCH_NOTICE": "Доступно обновление клиента игры,\nначать установку сейчас?",
     "UPDATER_POPUP_SUCCESSFUL": "Обновление завершено",
-    "UPDATER_POPUP_RESTART_POPUP_TEXT": "Для применения изменений необходим перезапуск игры",
+    "MENU_CCS_RESTART_CONFIRMATION_TEXT": "Для применения изменений необходим перезапуск игры",
     "UPDATER_POPUP_CHECKING_FOR_UPDATES": "Проверка наличия обновлений...",
 
     "MPHUD_FPS": "К/С: ",
