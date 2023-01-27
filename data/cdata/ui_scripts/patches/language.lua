@@ -104,6 +104,7 @@ if not Engine.InFrontend() then
     end
 end
 
+--[[
 -- H2 title font
 if game:issingleplayer() or
     (user_language == "simplified_chinese" or user_language == "traditional_chinese" or user_language ==
@@ -119,3 +120,4 @@ CoD.TextSettings.H1TitleFont = {
     Font = RegisterFont("fonts/bank_h1.ttf", 50),
     Height = scale(50)
 }
+]]--
