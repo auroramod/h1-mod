@@ -6,6 +6,7 @@
 #include "fastfiles.hpp"
 #include "filesystem.hpp"
 #include "imagefiles.hpp"
+#include "weapon.hpp"
 
 #include "game/dvars.hpp"
 
@@ -27,10 +28,12 @@ namespace fastfiles
 		game::dvar_t* g_dump_scripts;
 
 		std::vector<HANDLE> fastfile_handles;
+		bool is_mod_pre_gfx = false;
 
 		void db_try_load_x_file_internal(const char* zone_name, const int flags)
 		{
 			console::info("Loading fastfile %s\n", zone_name);
+			is_mod_pre_gfx = zone_name == "mod_pre_gfx"s;
 			current_fastfile.access([&](std::string& fastfile)
 			{
 				fastfile = zone_name;
@@ -346,7 +349,9 @@ namespace fastfiles
 
 			// code_pre_gfx
 
-			try_load_zone("h1_mod_code_pre_gfx", true);
+			weapon::clear_modifed_enums();
+			try_load_zone("mod_pre_gfx", true);
+			try_load_zone("h1_mod_pre_gfx", true);
 
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
 		}
@@ -960,6 +965,24 @@ namespace fastfiles
 				mp::reallocate_asset_pools();
 			}
 		}
+
+		utils::hook::detour db_link_x_asset_entry_hook;
+		game::XAssetEntry* db_link_x_asset_entry_stub(game::XAssetType type, game::XAssetHeader* header)
+		{
+			if (!is_mod_pre_gfx)
+			{
+				return db_link_x_asset_entry_hook.invoke<game::XAssetEntry*>(type, header);
+			}
+
+			static game::XAssetEntry entry{};
+
+			if (type != game::ASSET_TYPE_STRINGTABLE)
+			{
+				return &entry;
+			}
+
+			return db_link_x_asset_entry_hook.invoke<game::XAssetEntry*>(type, header);
+		}
 	}
 
 	bool exists(const std::string& zone, bool ignore_usermap)
@@ -1054,6 +1077,11 @@ namespace fastfiles
 
 			db_unload_x_zones_hook.create(SELECT_VALUE(0x1F6040_b, 
 				0x39B3C0_b), db_unload_x_zones_stub);
+
+			if (!game::environment::is_sp())
+			{
+				db_link_x_asset_entry_hook.create(0x396E80_b, db_link_x_asset_entry_stub);
+			}
 
 			g_dump_scripts = dvars::register_bool("g_dumpScripts", false, game::DVAR_FLAG_NONE, "Dump GSC scripts");
 

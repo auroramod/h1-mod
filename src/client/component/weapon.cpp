@@ -138,6 +138,7 @@ namespace weapon
 		}
 
 		utils::memory::allocator ddl_allocator;
+		std::unordered_set<void*> modified_enums;
 
 		std::vector<const char*> get_stringtable_entries(const std::string& name)
 		{
@@ -194,8 +195,6 @@ namespace weapon
 
 		void load_ddl_asset_stub(game::DDLRoot** asset)
 		{
-			static std::unordered_set<void*> modified_enums;
-
 			const auto root = *asset;
 			if (!root->ddlDef)
 			{
@@ -215,14 +214,14 @@ namespace weapon
 
 					if ((enum_->name == "WeaponStats"s || enum_->name == "Weapon"s))
 					{
-						static const auto weapons = get_stringtable_entries("mp/customWeapons.csv");
+						const auto weapons = get_stringtable_entries("mp/customweapons.csv");
 						add_entries_to_enum(enum_, weapons);
 						modified_enums.insert(enum_);
 					}
 
 					if (enum_->name == "AttachmentBase"s)
 					{
-						static const auto attachments = get_stringtable_entries("mp/customAttachments.csv");
+						const auto attachments = get_stringtable_entries("mp/customattachments.csv");
 						add_entries_to_enum(enum_, attachments);
 						modified_enums.insert(enum_);
 					}
@@ -233,6 +232,11 @@ namespace weapon
 
 			utils::hook::invoke<void>(0x39BE20_b, asset);
 		}
+	}
+
+	void clear_modifed_enums()
+	{
+		modified_enums.clear();
 	}
 
 	class component final : public component_interface

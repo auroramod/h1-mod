@@ -2,6 +2,8 @@
 
 namespace demonware
 {
+	void set_storage_path(const std::string& path);
+
 	class bdStorage final : public service
 	{
 	public:

@@ -12,6 +12,7 @@
 #include "materials.hpp"
 #include "mods.hpp"
 #include "scheduler.hpp"
+#include "game/demonware/services.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
@@ -55,6 +56,11 @@ namespace mods
 			if (game::environment::is_mp())
 			{
 				command::execute("vid_restart");
+				scheduler::once([]
+				{
+					demonware::set_storage_path(mod_path.value_or(""));
+					utils::hook::invoke<void>(0x4E6B60_b, 0); // read stats
+				}, scheduler::main);
 				return;
 			}
 

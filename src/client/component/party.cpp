@@ -57,6 +57,7 @@ namespace party
 		std::vector<usermap_file> mod_files =
 		{
 			{".ff", "modHash", false},
+			{"_pre_gfx.ff", "modpregfxhash", false},
 			{".pak", "modpakhash", true},
 		};
 
