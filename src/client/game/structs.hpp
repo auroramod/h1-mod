@@ -1737,6 +1737,16 @@ namespace game
 		float halfSize[3];
 	};
 
+	struct rectDef_s
+	{
+		float x;
+		float y;
+		float w;
+		float h;
+		int horzAlign;
+		int vertAlign;
+	};
+
 	// made up
 	struct client_state_t
 	{
