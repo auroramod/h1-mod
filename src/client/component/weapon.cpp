@@ -6,6 +6,7 @@
 #include "fastfiles.hpp"
 
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/memory.hpp>
@@ -260,6 +261,9 @@ namespace weapon
 				utils::hook::call(0x41C595_b, g_find_config_string_index_stub);
 
 				utils::hook::call(0x36B4D4_b, load_ddl_asset_stub);
+
+				dvars::register_bool("sv_disableCustomClasses", 
+					false, game::DVAR_FLAG_REPLICATED, "Disable custom classes on server");
 			}
 
 #ifdef DEBUG
