@@ -56,9 +56,10 @@
     "LUA_MENU_EDIT_STATS": "Edit Stats",
 
     "UPDATER_POPUP_NO_UPDATES_AVAILABLE": "No updates available",
-    "UPDATER_POPUP_AVAILABLE_UPDATE_TEXT": "An update is available, proceed with installation?",
+    "MENU_CCS_NEW_PATCH_NOTICE": "An update is available, proceed with installation?",
+    "MENU_DOWNLOAD_AUTOUPDATE_PATCH": " ",
     "UPDATER_POPUP_SUCCESSFUL": "Update successful",
-    "UPDATER_POPUP_RESTART_POPUP_TEXT": "Update requires restart",
+    "MENU_CCS_RESTART_CONFIRMATION_TEXT": "Update requires restart",
     "UPDATER_POPUP_CHECKING_FOR_UPDATES": "Checking for updates...",
 
     "MPHUD_FPS": "FPS: ",

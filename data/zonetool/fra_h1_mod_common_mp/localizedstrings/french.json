@@ -25,8 +25,8 @@
     "LUA_MENU_EDIT_STATS": "Modifier les statistiques",
 
     "UPDATER_POPUP_NO_UPDATES_AVAILABLE": "Aucune mise à jour disponible",
-    "UPDATER_POPUP_AVAILABLE_UPDATE_TEXT": "Une mise à jour est disponible,\npoursuivre l'installation ?",
+    "MENU_CCS_NEW_PATCH_NOTICE": "Une mise à jour est disponible,\npoursuivre l'installation ?",
     "UPDATER_POPUP_SUCCESSFUL": "Mise à jour réussie",
-    "UPDATER_POPUP_RESTART_POPUP_TEXT": "La mise à jour nécessite un redémarrage",
+    "MENU_CCS_RESTART_CONFIRMATION_TEXT": "La mise à jour nécessite un redémarrage",
     "UPDATER_POPUP_CHECKING_FOR_UPDATES": "Vérification des mises à jour..."
 }

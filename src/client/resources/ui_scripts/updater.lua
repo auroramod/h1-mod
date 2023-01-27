@@ -28,7 +28,7 @@ function startupdatecheck(popup, autoclose)
 
 		LUI.yesnopopup({
 			title = Engine.Localize("@MENU_NOTICE"),
-			text = Engine.Localize("UPDATER_POPUP_AVAILABLE_UPDATE_TEXT"),
+			text = Engine.Localize("@MENU_CCS_NEW_PATCH_NOTICE") .. " " .. Engine.Localize("@MENU_DOWNLOAD_AUTOUPDATE_PATCH"),
 			callback = function(result)
 				if (result) then
 					startupdatedownload(popup, autoclose)
@@ -75,7 +75,7 @@ function startupdatedownload(popup, autoclose)
 		if (updater.isrestartrequired()) then
 			LUI.confirmationpopup({
 				title = Engine.Localize("@MENU_CCS_RESTART_CONFIRMATION_TITLE"),
-				text = Engine.Localize("UPDATER_POPUP_RESTART_POPUP_TEXT"),
+				text = Engine.Localize("@MENU_CCS_RESTART_CONFIRMATION_TEXT"),
 				buttontext = Engine.Localize("@MENU_CCS_RESTART_BUTTON_LABEL"),
 				callback = function()
 					updater.relaunch()
