@@ -21,6 +21,11 @@ find_in_table(csv, weap)
     return false;
 }
 
+get_attachment_name(attachment)
+{
+    return tablelookup("mp/attachkits.csv", 1, attachment, 2);
+}
+
 is_custom_weapon(weap)
 {
     return find_in_table("mp/customweapons.csv", weap);
@@ -197,11 +202,15 @@ buildweaponname(var_0, var_1, var_2, var_3, var_4, var_5)
         }
     }
 
-    if (issubstr(var_0, "h2_"))
+    if (!issubstr(var_0, "h1_"))
     {
         if (var_9)
         {
-            var_7 += "_" + var_1;
+            name = get_attachment_name(var_1);
+            if (isdefined(name) && name != "")
+            {
+                var_7 += "_" + name;
+            }
         }
     }
     else if (var_9 || var_10)
