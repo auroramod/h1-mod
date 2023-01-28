@@ -170,6 +170,11 @@ namespace weapon
 
 		void add_entries_to_enum(game::DDLEnum* enum_, const std::vector<const char*> entries)
 		{
+			if (entries.size() <= 0)
+			{
+				return;
+			}
+
 			const auto new_size = enum_->memberCount + entries.size();
 			const auto members = ddl_allocator.allocate_array<const char*>(new_size);
 			const auto hash_list = ddl_allocator.allocate_array<game::DDLHash>(new_size);
