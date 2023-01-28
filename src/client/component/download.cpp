@@ -23,10 +23,16 @@ namespace download
 			bool active{};
 		};
 
+		std::atomic_bool kill_downloads = false;
 		utils::concurrency::container<globals_t> globals;
 
 		bool download_aborted()
 		{
+			if (kill_downloads)
+			{
+				return true;
+			}
+
 			return globals.access<bool>([](globals_t& globals_)
 			{
 				return globals_.abort;
@@ -228,4 +234,15 @@ namespace download
 			party::menu_error("Download for server mod has been cancelled.");
 		}, scheduler::pipeline::lui);
 	}
+
+	class component final : public component_interface
+	{
+	public:
+		void pre_destroy() override
+		{
+			kill_downloads = true;
+		}
+	};
 }
+
+REGISTER_COMPONENT(download::component)
