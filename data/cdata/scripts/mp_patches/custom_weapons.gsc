@@ -295,6 +295,16 @@ isvalidweapon(var_0, var_1)
 
 isvalidsecondary(var_0, var_1)
 {
+    if (maps\mp\_utility::is_true(var_1))
+    {
+        return isvalidprimary(var_0);
+    }
+
+    if (maps\mp\_utility::islootweapon(var_0))
+    {
+        var_0 = maps\mp\gametypes\_class::getbasefromlootversion(var_0);
+    }
+
     if (is_custom_weapon(var_0))
     {
         return true;
