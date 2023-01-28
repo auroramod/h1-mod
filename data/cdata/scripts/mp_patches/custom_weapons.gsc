@@ -9,10 +9,11 @@ main()
 
 find_in_table(csv, weap)
 {
-    rows = tablelookuprownum(csv);
+    rows = tablegetrowcount(csv);
+
     for (i = 0; i < rows; i++)
     {
-        if (tablelookup(csv, i, 0) == weap)
+        if (tablelookupbyrow(csv, i, 0) == weap)
         {
             return true;
         }
@@ -21,9 +22,36 @@ find_in_table(csv, weap)
     return false;
 }
 
-get_attachment_name(attachment)
+get_attachment_override(weapon, attachment)
 {
-    return tablelookup("mp/attachkits.csv", 1, attachment, 2);
+    csv = "mp/attachoverrides.csv";
+    rows = tablegetrowcount(csv);
+
+    if (!issubstr(weapon, "_mp"))
+    {
+        weapon += "_mp";
+    }
+
+    for (i = 0; i < rows; i++)
+    {
+        if (tablelookupbyrow(csv, i, 0) == weapon && tablelookupbyrow(csv, i, 1) == attachment)
+        {
+            return tablelookupbyrow(csv, i, 2);
+        }
+    }
+}
+
+get_attachment_name(weapon, attachment)
+{
+    name = tablelookup("mp/attachkits.csv", 1, attachment, 2);
+    override = get_attachment_override(weapon, name);
+
+    if (isdefined(override) && override != "")
+    {
+        return override;
+    }
+
+    return name;
 }
 
 is_custom_weapon(weap)
@@ -206,7 +234,7 @@ buildweaponname(var_0, var_1, var_2, var_3, var_4, var_5)
     {
         if (var_9)
         {
-            name = get_attachment_name(var_1);
+            name = get_attachment_name(var_0, var_1);
             if (isdefined(name) && name != "")
             {
                 var_7 += "_" + name;
