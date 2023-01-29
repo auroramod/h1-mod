@@ -293,7 +293,7 @@ isvalidweapon(var_0, var_1)
     return 0;
 }
 
-isvalidsecondary(var_0, var_1)
+isvalidsecondary(var_0, var_1, var_2)
 {
     if (maps\mp\_utility::is_true(var_1))
     {
