@@ -87,8 +87,7 @@ namespace gsc
 		void safe_func()
 		{
 			static utils::hook::detour hook;
-
-			const auto stub = []()
+			static const auto stub = []()
 			{
 				__try
 				{
@@ -101,7 +100,7 @@ namespace gsc
 			};
 
 			const auto ptr = rva + 0_b;
-			hook.create(ptr, stub);
+			hook.create(reinterpret_cast<void*>(ptr), stub);
 		}
 	}
 
