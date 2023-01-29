@@ -274,7 +274,7 @@ namespace game
 
 	WEAK symbol<const char*(const char* string)> UI_SafeTranslateString{0x3840A0, 0x4E8BC0};
 	WEAK symbol<void(ScreenPlacement* scrPlace, const char* text, rectDef_s* rect, Font_s* font, float x, float y,
-		float scale, const float* color, int style, int textAlignMode, rectDef_s* textRect, char a12)> UI_DrawWrappedText{0x0, 0x1DCE30};
+		float scale, const float* color, int style, int textAlignMode, rectDef_s* textRect, char a12)> UI_DrawWrappedText{0x406CD0, 0x1DCE30};
 
 	WEAK symbol<int(int local_client_num, int menu)> UI_SetActiveMenu{0x0, 0x1E4D80};
 
