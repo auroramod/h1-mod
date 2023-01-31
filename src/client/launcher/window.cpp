@@ -50,7 +50,7 @@ void window::close()
 {
 	if (!this->handle_) return;
 
-	SendMessageA(this->handle_, WM_KILL_WINDOW, NULL, NULL);
+	DestroyWindow(this->handle_);
 	this->handle_ = nullptr;
 }
 
