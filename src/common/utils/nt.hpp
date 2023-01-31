@@ -60,6 +60,13 @@ namespace utils::nt
 		}
 
 		template <typename T>
+		T get_proc(const char* name) const
+		{
+			if (!this->is_valid()) T{};
+			return reinterpret_cast<T>(GetProcAddress(this->module_, name));
+		}
+
+		template <typename T>
 		std::function<T> get(const std::string& process) const
 		{
 			if (!this->is_valid()) return std::function<T>();
@@ -97,6 +104,7 @@ namespace utils::nt
 		PIMAGE_OPTIONAL_HEADER get_optional_header() const;
 
 		void** get_iat_entry(const std::string& module_name, const std::string& proc_name) const;
+		void** get_iat_entry(const std::string& module_name, const char* name) const;
 
 	private:
 		HMODULE module_;
