@@ -26,6 +26,7 @@ namespace fastfiles
 		utils::hook::detour db_find_xasset_header_hook;
 
 		game::dvar_t* g_dump_scripts;
+		game::dvar_t* db_print_default_assets;
 
 		std::vector<HANDLE> fastfile_handles;
 		bool is_mod_pre_gfx = false;
@@ -85,6 +86,12 @@ namespace fastfiles
 						console::debug("using override asset for rawfile: \"%s\"\n", name);
 					}
 				}
+			}
+
+			if (db_print_default_assets->current.enabled && game::DB_IsXAssetDefault(type, name))
+			{
+				console::warn("Waited %i msec for default asset \"%s\" of type \"%s\"\n",
+					diff, name, game::g_assetNames[type]);
 			}
 
 			if (diff > 100)
@@ -1078,6 +1085,9 @@ namespace fastfiles
 			db_unload_x_zones_hook.create(SELECT_VALUE(0x1F6040_b, 
 				0x39B3C0_b), db_unload_x_zones_stub);
 
+			db_print_default_assets = dvars::register_bool("db_printDefaultAssets",
+				false, game::DVAR_FLAG_SAVED, "Print default asset usage");
+
 			if (!game::environment::is_sp())
 			{
 				db_link_x_asset_entry_hook.create(0x396E80_b, db_link_x_asset_entry_stub);
@@ -1167,6 +1177,53 @@ namespace fastfiles
 				{
 					console::warn("loadzone: zone \"%s\" could not be found!\n", name);
 				}
+			});
+
+			command::add("poolUsages", []()
+			{
+				for (auto i = 0; i < game::ASSET_TYPE_COUNT; i++)
+				{
+					auto count = 0;
+					enum_assets(static_cast<game::XAssetType>(i), [&](game::XAssetHeader header)
+					{
+						count++;
+					}, true);
+
+					console::info("%i %s: %i / %i\n", i, game::g_assetNames[i], count, game::g_poolSize[i]);
+				}
+			});
+
+			command::add("poolUsage", [](const command::params& params)
+			{
+				if (params.size() < 2)
+				{
+					console::info("Usage: poolUsage <type>\n");
+					return;
+				}
+
+				const auto type = static_cast<game::XAssetType>(std::atoi(params.get(1)));
+
+				auto count = 0;
+				enum_assets(type, [&](game::XAssetHeader header)
+				{
+					count++;
+				}, true);
+
+				console::info("%i %s: %i / %i\n", type, game::g_assetNames[type], count, game::g_poolSize[type]);
+			});
+
+			command::add("assetCount", [](const command::params& params)
+			{
+				auto count = 0;
+				for (auto i = 0; i < game::ASSET_TYPE_COUNT; i++)
+				{
+					enum_assets(static_cast<game::XAssetType>(i), [&](game::XAssetHeader header)
+					{
+						count++;
+					}, true);
+				}
+
+				console::info("assets: %i / %i\n", count, 155000);
 			});
 		}
 	};

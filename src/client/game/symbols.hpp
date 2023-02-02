@@ -300,7 +300,7 @@ namespace game
 
 	WEAK symbol<int> connectionState{0x0, 0x2EC82C8};
 
-	WEAK symbol<int> g_poolSize{0x0, 0x10B3C80};
+	WEAK symbol<int> g_poolSize{0xEC97D0, 0x10B3C80};
 	WEAK symbol<int> g_compressor{0x2574804, 0x3962804};
 
 	WEAK symbol<scrVarGlob_t> scr_VarGlob{0xBD80E00, 0xB138180};
