@@ -589,12 +589,37 @@ namespace fastfiles
 
 #define RVA(ptr) static_cast<uint32_t>(reinterpret_cast<size_t>(ptr) - 0_b)
 
+			struct buffer_info
+			{
+				void* ptr;
+				size_t size;
+			};
+
+			std::vector<buffer_info> string_buffers;
+			void memset_stub(void* place, int value, size_t size)
+			{
+				for (const auto& buffer : string_buffers)
+				{
+					std::memset(buffer.ptr, 0, buffer.size);
+				}
+
+				std::memset(place, value, size);
+			}
+
 			void reallocate_weapon_pool()
 			{
-				constexpr auto size = get_pool_type_size(game::ASSET_TYPE_WEAPON) * 2;
-				static void* weapon_complete_defs[size]{};
+				constexpr auto multiplier = 2;
+				constexpr auto pool_size = get_pool_type_size(game::ASSET_TYPE_WEAPON) * multiplier;
+				static void* weapon_complete_defs[pool_size]{};
+				static void* weapon_strings[pool_size]{};
 
-				reallocate_asset_pool<game::ASSET_TYPE_WEAPON, size>();
+				string_buffers.emplace_back(weapon_strings, pool_size * sizeof(void*));
+
+				utils::hook::set<uint32_t>(0x1186A4_b + 4, RVA(weapon_strings));
+				utils::hook::set<uint32_t>(0x1186B5_b + 4, RVA(weapon_strings));
+				utils::hook::set<uint32_t>(0x104BD2_b + 4, RVA(weapon_strings) - 0x38F1750);
+
+				reallocate_asset_pool<game::ASSET_TYPE_WEAPON, pool_size>();
 				
 				utils::hook::inject(0x2E3005_b + 3, 
 					reinterpret_cast<void*>(reinterpret_cast<size_t>(weapon_complete_defs) + 8));
@@ -955,9 +980,62 @@ namespace fastfiles
 				utils::hook::set<uint32_t>(0x11865F_b + 4, RVA(&weapon_complete_defs));
 			}
 
+			void reallocate_attachment_pool()
+			{
+				constexpr auto multiplier = 2;
+				constexpr auto pool_size = get_pool_type_size(game::ASSET_TYPE_ATTACHMENT) * multiplier;
+				reallocate_asset_pool<game::ASSET_TYPE_ATTACHMENT, pool_size>();
+
+				static void* attachment_array[pool_size]{};
+				static void* attachment_strings[pool_size]{};
+
+				string_buffers.emplace_back(attachment_strings, pool_size * sizeof(void*));
+
+				utils::hook::inject(0x118599_b + 3, attachment_strings);
+				utils::hook::inject(0x441187_b + 3, attachment_strings);
+				utils::hook::set<uint32_t>(0x104C8A_b + 4, RVA(attachment_strings) - 0x38F1750);
+
+				const auto sub_118540_stub = [](utils::hook::assembler& a)
+				{
+					a.mov(rax, reinterpret_cast<size_t>(&attachment_array[0]));
+					a.mov(r8d, pool_size);
+					a.mov(rdx, rax);
+					a.mov(ecx, game::ASSET_TYPE_ATTACHMENT);
+					a.call(0x59D460_b);
+					a.jmp(0x118573_b);
+				};
+
+				const auto loc_1185A0_stub = [](utils::hook::assembler& a)
+				{
+					a.mov(rax, reinterpret_cast<size_t>(&attachment_array[0]));
+					a.push(rbx);
+					a.imul(rbx, 8);
+					a.mov(rcx, qword_ptr(rax, rbx));
+					a.pop(rbx);
+					a.cmp(qword_ptr(rcx, 8), 0);
+					a.lea(rsi, qword_ptr(rcx, 8));
+					a.jmp(0x1185AE_b);
+				};
+
+				utils::hook::jump(0x11855F_b, utils::hook::assemble(sub_118540_stub), true);
+				utils::hook::jump(0x1185A0_b, utils::hook::assemble(loc_1185A0_stub), true);
+			}
+
+			void reallocate_attachment_and_weapon()
+			{
+				// weapon & attachment strings are reset here (we need to also reset the reallocated ones)
+				utils::hook::call(0x13ABBA_b, memset_stub);
+				utils::hook::call(0x13AC5C_b, memset_stub);
+				utils::hook::call(0x13ACF0_b, memset_stub);
+				utils::hook::call(0x17D1C5_b, memset_stub);
+
+				reallocate_weapon_pool();
+				reallocate_attachment_pool();
+			}
+
 			void reallocate_asset_pools()
 			{
-				reallocate_weapon_pool();
+				reallocate_attachment_and_weapon();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIM, 2>();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_SOUND, 2>();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOADED_SOUND, 2>();
