@@ -20,7 +20,7 @@ namespace experimental
 			dvars::override::register_int("r_smodelInstancedThreshold", 0, 0, 128, 0x0);
 
 			// change minimum cap to -2000 instead of -1000 (culling issue)
-			dvars::override::register_int("r_lodBiasRigid", 0, -2000, 0, 0x0);
+			dvars::override::register_float("r_lodBiasRigid", 0, -2000, 0, 0x0);
 		}
 	};
 }
