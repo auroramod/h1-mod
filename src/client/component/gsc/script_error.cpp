@@ -43,8 +43,7 @@ namespace gsc
 			{
 				const auto& pos = function.value();
 				unknown_function_error = std::format(
-					"while processing function '{}' in script '{}':\nunknown script '{}'", 
-					pos.first, pos.second, scripting::current_file
+					"while processing function '{}' in script '{}':\nunknown script '{}'", pos.first, pos.second, scripting::current_file
 				);
 			}
 			else
@@ -59,16 +58,14 @@ namespace gsc
 			const auto name = scripting::get_token(thread_name);
 
 			unknown_function_error = std::format(
-				"while processing script '{}':\nunknown function '{}::{}'",
-				scripting::current_file, filename, name
+				"while processing script '{}':\nunknown function '{}::{}'", scripting::current_file, filename, name
 			);
 		}
 
-		void unknown_function_stub(const char* code_pos)
+		void compile_error_stub(const char* code_pos, [[maybe_unused]] const char* msg)
 		{
 			get_unknown_function_error(code_pos);
-			game::Com_Error(game::ERR_DROP, "script link error\n%s",
-				unknown_function_error.data());
+			game::Com_Error(game::ERR_DROP, "script link error\n%s", unknown_function_error.data());
 		}
 
 		std::uint32_t find_variable_stub(std::uint32_t parent_id, std::uint32_t thread_name)
@@ -77,8 +74,7 @@ namespace gsc
 			if (!res)
 			{
 				get_unknown_function_error(thread_name);
-				game::Com_Error(game::ERR_DROP, "script link error\n%s",
-					unknown_function_error.data());
+				game::Com_Error(game::ERR_DROP, "script link error\n%s", unknown_function_error.data());
 			}
 			return res;
 		}
@@ -128,9 +124,9 @@ namespace gsc
 		{
 			scr_emit_function_hook.create(SELECT_VALUE(0x3BD680_b, 0x504660_b), &scr_emit_function_stub);
 
-			utils::hook::call(SELECT_VALUE(0x3BD626_b, 0x504606_b), unknown_function_stub); // CompileError (LinkFile)
-			utils::hook::call(SELECT_VALUE(0x3BD672_b, 0x504652_b), unknown_function_stub); // ^
-			utils::hook::call(SELECT_VALUE(0x3BD75A_b, 0x50473A_b), find_variable_stub);	// Scr_EmitFunction
+			utils::hook::call(SELECT_VALUE(0x3BD626_b, 0x504606_b), compile_error_stub); // CompileError (LinkFile)
+			utils::hook::call(SELECT_VALUE(0x3BD672_b, 0x504652_b), compile_error_stub); // ^
+			utils::hook::call(SELECT_VALUE(0x3BD75A_b, 0x50473A_b), find_variable_stub); // Scr_EmitFunction
 
 			safe_func<0xBA7A0>(); // fix vlobby cac crash
 		}

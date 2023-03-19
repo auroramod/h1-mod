@@ -3,10 +3,7 @@
 
 #include "game/dvars.hpp"
 #include "game/game.hpp"
-#include "game/scripting/execution.hpp"
-#include "game/scripting/function.hpp"
 #include "game/scripting/functions.hpp"
-#include "game/scripting/lua/error.hpp"
 
 #include <utils/hook.hpp>
 
@@ -15,11 +12,9 @@
 #include "component/scripting.hpp"
 #include "component/logfile.hpp"
 
-#include <xsk/gsc/types.hpp>
-#include <xsk/resolver.hpp>
-
-#include "script_extension.hpp"
 #include "script_error.hpp"
+#include "script_extension.hpp"
+#include "script_loading.hpp"
 
 namespace gsc
 {
@@ -185,13 +180,11 @@ namespace gsc
 
 			if (function_id > 0x1000)
 			{
-				console::warn("in call to builtin method \"%s\"%s",
-					xsk::gsc::h1::resolver::method_name(function_id).data(), error.data());
+				console::warn("in call to builtin method \"%s\"%s", gsc_ctx->meth_name(function_id).data(), error.data());
 			}
 			else
 			{
-				console::warn("in call to builtin function \"%s\"%s",
-					xsk::gsc::h1::resolver::function_name(function_id).data(), error.data());
+				console::warn("in call to builtin function \"%s\"%s", gsc_ctx->func_name(function_id).data(), error.data());
 			}
 		}
 
@@ -199,7 +192,8 @@ namespace gsc
 		{
 			try
 			{
-				return {xsk::gsc::h1::resolver::opcode_name(opcode)};
+				const auto index = gsc_ctx->opcode_enum(opcode);
+				return {gsc_ctx->opcode_name(index)};
 			}
 			catch (...)
 			{
@@ -288,15 +282,15 @@ namespace gsc
 	{
 		void add(const std::string& name, script_function function)
 		{
-			if (xsk::gsc::h1::resolver::find_function(name))
+			if (gsc_ctx->func_exists(name))
 			{
-				const auto id = xsk::gsc::h1::resolver::function_id(name);
+				const auto id = gsc_ctx->func_id(name);
 				functions[id] = function;
 			}
 			else
 			{
 				const auto id = ++function_id_start;
-				xsk::gsc::h1::resolver::add_function(name, static_cast<std::uint16_t>(id));
+				gsc_ctx->func_add(name, static_cast<std::uint16_t>(id));
 				functions[id] = function;
 			}
 		}
@@ -306,15 +300,15 @@ namespace gsc
 	{
 		void add(const std::string& name, script_method method)
 		{
-			if (xsk::gsc::h1::resolver::find_method(name))
+			if (gsc_ctx->meth_exists(name))
 			{
-				const auto id = xsk::gsc::h1::resolver::method_id(name);
+				const auto id = gsc_ctx->meth_id(name);
 				methods[id] = method;
 			}
 			else
 			{
 				const auto id = ++method_id_start;
-				xsk::gsc::h1::resolver::add_method(name, static_cast<std::uint16_t>(id));
+				gsc_ctx->meth_add(name, static_cast<std::uint16_t>(id));
 				methods[id] = method;
 			}
 		}
@@ -376,7 +370,7 @@ namespace gsc
 			utils::hook::nop(SELECT_VALUE(0x3CBA4E_b, 0x512AAE_b), 2);
 			utils::hook::call(SELECT_VALUE(0x3CBA46_b, 0x512AA6_b), vm_call_builtin_method_stub);
 
-			utils::hook::call(SELECT_VALUE(0x3CC9F3_b, 0x513A53_b), vm_error_stub);
+			utils::hook::call(SELECT_VALUE(0x3CC9F3_b, 0x513A53_b), vm_error_stub); // LargeLocalResetToMark
 
 			if (game::environment::is_dedi())
 			{
@@ -442,7 +436,7 @@ namespace gsc
 
 				if (what.type != game::VAR_FUNCTION || with.type != game::VAR_FUNCTION)
 				{
-					throw std::runtime_error("replaceFunc: parameter 1 must be a function");
+					throw std::runtime_error("replacefunc: parameter 1 must be a function");
 				}
 
 				logfile::set_gsc_hook(what.u.codePosValue, with.u.codePosValue);
@@ -473,8 +467,7 @@ namespace gsc
 
 			function::add("executecommand", [](const function_args& args)
 			{
-				const auto cmd = args[0].as<std::string>();
-				command::execute(cmd, false);
+				command::execute(args[0].as<std::string>(), false);
 
 				return scripting::script_value{};
 			});

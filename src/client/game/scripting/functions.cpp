@@ -4,8 +4,7 @@
 #include "component/console.hpp"
 #include "component/gsc/script_extension.hpp"
 
-#include <xsk/gsc/types.hpp>
-#include <xsk/resolver.hpp>
+#include "component/gsc/script_loading.hpp"
 
 #include <utils/string.hpp>
 
@@ -13,11 +12,21 @@ namespace scripting
 {
 	namespace
 	{
+		const xsk::u16 func_id_wrapper(const std::string& name)
+		{
+			return gsc::gsc_ctx->func_id(name);
+		}
+
+		const xsk::u16 meth_id_wrapper(const std::string& name)
+		{
+			return gsc::gsc_ctx->meth_id(name);
+		}
+
 		int find_function_index(const std::string& name, const bool prefer_global)
 		{
 			const auto target = utils::string::to_lower(name);
-			auto first = xsk::gsc::h1::resolver::function_id;
-			auto second = xsk::gsc::h1::resolver::method_id;
+			auto first = func_id_wrapper;
+			auto second = meth_id_wrapper;
 			if (!prefer_global)
 			{
 				std::swap(first, second);
@@ -66,12 +75,12 @@ namespace scripting
 
 	std::string find_token(unsigned int id)
 	{
-		return xsk::gsc::h1::resolver::token_name(static_cast<std::uint16_t>(id));
+		return gsc::gsc_ctx->token_name(id);
 	}
 
 	unsigned int find_token_id(const std::string& name)
 	{
-		const auto result = xsk::gsc::h1::resolver::token_id(name);
+		const auto result = gsc::gsc_ctx->token_id(name);
 		if (result)
 		{
 			return result;

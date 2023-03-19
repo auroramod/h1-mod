@@ -7,13 +7,7 @@
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 
-#include <xsk/gsc/types.hpp>
-#include <xsk/gsc/interfaces/compiler.hpp>
-#include <xsk/gsc/interfaces/decompiler.hpp>
-#include <xsk/gsc/interfaces/assembler.hpp>
-#include <xsk/gsc/interfaces/disassembler.hpp>
-#include <xsk/resolver.hpp>
-#include <interface.hpp>
+#include "gsc/script_loading.hpp"
 
 namespace mapents
 {
@@ -128,7 +122,7 @@ namespace mapents
 				}
 
 				const auto key_ = key.substr(1, key.size() - 2);
-				const auto id = xsk::gsc::h1::resolver::token_id(key_);
+				const auto id = gsc::gsc_ctx->token_id(key_);
 				if (id == 0)
 				{
 					console::warn("[map_ents parser] Key '%s' not found, on line %i (%s)\n", key_.data(), i, line.data());
