@@ -12,36 +12,20 @@ namespace scripting
 {
 	namespace
 	{
-		const xsk::u16 func_id_wrapper(const std::string& name)
-		{
-			return gsc::gsc_ctx->func_id(name);
-		}
-
-		const xsk::u16 meth_id_wrapper(const std::string& name)
-		{
-			return gsc::gsc_ctx->meth_id(name);
-		}
-
 		int find_function_index(const std::string& name, const bool prefer_global)
 		{
 			const auto target = utils::string::to_lower(name);
-			auto first = func_id_wrapper;
-			auto second = meth_id_wrapper;
-			if (!prefer_global)
+			auto const& first = gsc::gsc_ctx->func_map();
+			auto const& second = gsc::gsc_ctx->meth_map();
+
+			if (const auto itr = first.find(name); itr != first.end())
 			{
-				std::swap(first, second);
+				return static_cast<int>(itr->second);
 			}
 
-			const auto first_res = first(target);
-			if (first_res)
+			if (const auto itr = second.find(name); itr != second.end())
 			{
-				return first_res;
-			}
-
-			const auto second_res = second(target);
-			if (second_res)
-			{
-				return second_res;
+				return static_cast<int>(itr->second);
 			}
 
 			return -1;

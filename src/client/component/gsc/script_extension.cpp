@@ -28,8 +28,8 @@ namespace gsc
 
 	namespace
 	{
-		std::unordered_map<std::uint32_t, script_function> functions;
-		std::unordered_map<std::uint32_t, script_method> methods;
+		std::unordered_map<std::uint16_t, script_function> functions;
+		std::unordered_map<std::uint16_t, script_method> methods;
 
 		bool force_error_print = false;
 		std::optional<std::string> gsc_error_msg;

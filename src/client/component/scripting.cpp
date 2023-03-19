@@ -252,12 +252,12 @@ namespace scripting
 
 	std::optional<std::string> get_canonical_string(const unsigned int id)
 	{
-		if (canonical_string_table.find(id) == canonical_string_table.end())
+		if (const auto itr = canonical_string_table.find(id); itr != canonical_string_table.end())
 		{
-			return {};
+			return itr->second;
 		}
 
-		return {canonical_string_table[id]};
+		return {};
 	}
 
 	class component final : public component_interface
