@@ -83,19 +83,6 @@ namespace gsc
 			}
 
 			const auto* name_str = name.data();
-
-			// filter out "GSC rawfiles" that were used for development usage and are not meant for us.
-			// each "GSC rawfile" has a ScriptFile counterpart to be used instead
-			if (game::DB_XAssetExists(game::ASSET_TYPE_SCRIPTFILE, name_str) &&
-				!game::DB_IsXAssetDefault(game::ASSET_TYPE_SCRIPTFILE, name_str))
-			{
-				if ((name.starts_with("maps/createfx") || name.starts_with("maps/createart") || name.starts_with("maps/mp"))
-					&& (name.ends_with("_fx") || name.ends_with("_fog") || name.ends_with("_hdr")))
-				{
-					return false;
-				}
-			}
-
 			if (game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, name_str) &&
 				!game::DB_IsXAssetDefault(game::ASSET_TYPE_RAWFILE, name_str))
 			{
@@ -128,16 +115,28 @@ namespace gsc
 				return nullptr;
 			}
 
+			std::string source_buffer{};
+			if (!read_raw_script_file(real_name + ".gsc", &source_buffer) || source_buffer.empty())
+			{
+				return nullptr;
+			}
+
+			// filter out "GSC rawfiles" that were used for development usage and are not meant for us.
+			// each "GSC rawfile" has a ScriptFile counterpart to be used instead
+			if (game::DB_XAssetExists(game::ASSET_TYPE_SCRIPTFILE, file_name) &&
+				!game::DB_IsXAssetDefault(game::ASSET_TYPE_SCRIPTFILE, file_name))
+			{
+				if ((real_name.starts_with("maps/createfx") || real_name.starts_with("maps/createart") || real_name.starts_with("maps/mp"))
+					&& (real_name.ends_with("_fx") || real_name.ends_with("_fog") || real_name.ends_with("_hdr")))
+				{
+					return game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, file_name, false).scriptfile;
+				}
+			}
+
 			try
 			{
 				auto& compiler = gsc_ctx->compiler();
 				auto& assembler = gsc_ctx->assembler();
-
-				std::string source_buffer{};
-				if (!read_raw_script_file(real_name + ".gsc", &source_buffer))
-				{
-					return nullptr;
-				}
 
 				std::vector<std::uint8_t> data;
 				data.assign(source_buffer.begin(), source_buffer.end());
