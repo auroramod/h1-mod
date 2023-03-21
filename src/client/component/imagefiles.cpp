@@ -58,7 +58,6 @@ namespace imagefiles
 			}
 		}
 
-
 		namespace sp
 		{
 			struct image_file_unk
