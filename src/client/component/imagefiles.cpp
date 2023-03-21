@@ -21,37 +21,71 @@ namespace imagefiles
 {
 	namespace
 	{
-		struct image_file_unk
-		{
-			char __pad0[120];
-		};
-
 		utils::memory::allocator image_file_allocator;
-		std::unordered_map<std::string, image_file_unk*> image_file_unk_map;
 		std::unordered_map<std::string, game::DB_IFileSysFile*> image_file_handles;
 
 		std::string get_image_file_name()
 		{
 			return fastfiles::get_current_fastfile();
 		}
-
-		image_file_unk* get_image_file_unk(unsigned int index)
+		
+		namespace mp
 		{
-			if (index != CUSTOM_IMAGE_FILE_INDEX)
+			struct image_file_unk
 			{
-				return &reinterpret_cast<image_file_unk*>(
-					SELECT_VALUE(0x4802090_b, 0x6306770_b))[index];
-			}
+				char __pad0[120];
+			};
 
-			const auto name = get_image_file_name();
-			if (image_file_unk_map.find(name) == image_file_unk_map.end())
+			std::unordered_map<std::string, image_file_unk*> image_file_unk_map;
+
+			void* get_image_file_unk_mp(unsigned int index)
 			{
-				const auto unk = image_file_allocator.allocate<image_file_unk>();
-				image_file_unk_map[name] = unk;
-				return unk;
-			}
+				if (index != CUSTOM_IMAGE_FILE_INDEX)
+				{
+					return &reinterpret_cast<image_file_unk*>(
+						SELECT_VALUE(0x4802090_b, 0x6306770_b))[index];
+				}
 
-			return image_file_unk_map[name];
+				const auto name = get_image_file_name();
+				if (image_file_unk_map.find(name) == image_file_unk_map.end())
+				{
+					const auto unk = image_file_allocator.allocate<image_file_unk>();
+					image_file_unk_map[name] = unk;
+					return unk;
+				}
+
+				return image_file_unk_map[name];
+			}
+		}
+
+
+		namespace sp
+		{
+			struct image_file_unk
+			{
+				char __pad0[96];
+			};
+
+			std::unordered_map<std::string, image_file_unk*> image_file_unk_map;
+
+			void* get_image_file_unk_mp(unsigned int index)
+			{
+				if (index != CUSTOM_IMAGE_FILE_INDEX)
+				{
+					return &reinterpret_cast<image_file_unk*>(
+						SELECT_VALUE(0x4802090_b, 0x6306770_b))[index];
+				}
+
+				const auto name = get_image_file_name();
+				if (image_file_unk_map.find(name) == image_file_unk_map.end())
+				{
+					const auto unk = image_file_allocator.allocate<image_file_unk>();
+					image_file_unk_map[name] = unk;
+					return unk;
+				}
+
+				return image_file_unk_map[name];
+			}
 		}
 
 		game::DB_IFileSysFile* get_image_file_handle(unsigned int index)
@@ -76,7 +110,7 @@ namespace imagefiles
 			a.push(rax);
 			a.pushad64();
 			a.mov(rcx, rax);
-			a.call_aligned(get_image_file_unk);
+			a.call_aligned(SELECT_VALUE(sp::get_image_file_unk_mp, mp::get_image_file_unk_mp));
 			a.mov(qword_ptr(rsp, 0x80), rax);
 			a.popad64();
 			a.pop(rax);
@@ -149,7 +183,8 @@ namespace imagefiles
 		}
 
 		image_file_handles.clear();
-		image_file_unk_map.clear();
+		sp::image_file_unk_map.clear();
+		mp::image_file_unk_map.clear();
 		image_file_allocator.clear();
 	}
 
@@ -168,8 +203,16 @@ namespace imagefiles
 		}
 
 		image_file_handles.erase(fastfile);
-		image_file_allocator.free(image_file_unk_map[fastfile]);
-		image_file_unk_map.erase(fastfile);
+		if (game::environment::is_sp())
+		{
+			image_file_allocator.free(sp::image_file_unk_map[fastfile]);
+			sp::image_file_unk_map.erase(fastfile);
+		}
+		else
+		{
+			image_file_allocator.free(mp::image_file_unk_map[fastfile]);
+			mp::image_file_unk_map.erase(fastfile);
+		}
 	}
 
 	class component final : public component_interface
