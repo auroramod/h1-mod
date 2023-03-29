@@ -1,5 +1,6 @@
 require("language")
 require("background_effects")
+require("pausequit")
 
 if game:issingleplayer() then
     require("sp_unlockall")
