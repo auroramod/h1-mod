@@ -95,5 +95,6 @@
     "LOCALE_RUSSIAN": "Russian",
     "LOCALE_SIMPLIFIED_CHINESE": "Simplified Chinese",
     "LOCALE_SPANISH": "Spanish",
-    "LOCALE_TRADITIONAL_CHINESE": "Traditional Chinese"
+    "LOCALE_TRADITIONAL_CHINESE": "Traditional Chinese",
+    "MENU_QUIT_TO_DESKTOP": "Quit to Desktop"
 }

@@ -45,6 +45,7 @@
     "LOCALE_SIMPLIFIED_CHINESE": "Chinois simplifié",
     "LOCALE_SPANISH": "Espagnol",
     "LOCALE_TRADITIONAL_CHINESE": "Chinois traditionnel",
+    "MENU_QUIT_TO_DESKTOP": "Retour au bureau",
 
     "LUA_MENU_CHOOSE_LANGUAGE": "Choisissez la langue",
     "LUA_MENU_CHOOSE_LANGUAGE_DESC": "Choisissez la langue."

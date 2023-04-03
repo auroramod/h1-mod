@@ -16,6 +16,7 @@
     "LOCALE_SIMPLIFIED_CHINESE": "중국어(간체)",
     "LOCALE_SPANISH": "스페인어",
     "LOCALE_TRADITIONAL_CHINESE": "중국어(번체)",
+    "MENU_QUIT_TO_DESKTOP": "데스크탑으로 나가기",
 
     "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "모든 임무 잠금 해제",
     "LUA_MENU_CANCEL_UNLOCK_CAPS": "잠금 해제 취소"
