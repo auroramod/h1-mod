@@ -1,4 +1,5 @@
 #pragma once
+#pragma comment (lib, "dwmapi.lib")
 
 #define WM_KILL_WINDOW (WM_USER+0)
 
