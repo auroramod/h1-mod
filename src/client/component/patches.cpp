@@ -361,7 +361,7 @@ namespace patches
 			dvars::override::register_bool("mis_cheat", 0, game::DVAR_FLAG_SAVED);
 
 			// Fix speaker config bug
-			dvars::override::register_int("snd_speakerConfig", 50, 2, 50, game::DVAR_FLAG_SAVED);
+			dvars::override::register_int("snd_detectedSpeakerConfig", 0, 0, 100, 0);
 
 			// Allow kbam input when gamepad is enabled
 			utils::hook::nop(SELECT_VALUE(0x1AC0CE_b, 0x135EFB_b), 2);
