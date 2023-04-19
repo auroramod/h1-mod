@@ -192,7 +192,7 @@ namespace patches
 
 		void sv_execute_client_message_stub(game::mp::client_t* client, game::msg_t* msg)
 		{
-			if (client->reliableAcknowledge < 0)
+			if ((client->reliableSequence - client->reliableAcknowledge) < 0)
 			{
 				client->reliableAcknowledge = client->reliableSequence;
 				console::info("Negative reliableAcknowledge from %s - cl->reliableSequence is %i, reliableAcknowledge is %i\n",
