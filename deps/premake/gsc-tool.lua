@@ -17,6 +17,7 @@ function gsc_tool.project()
     project "xsk-gsc-utils"
     kind "StaticLib"
     language "C++"
+    warnings "Off"
 
     files {
         path.join(gsc_tool.source, "include/xsk/utils/*.hpp"), 
@@ -32,6 +33,7 @@ function gsc_tool.project()
     project "xsk-gsc-h1"
     kind "StaticLib"
     language "C++"
+    warnings "Off"
 
     filter "action:vs*"
         buildoptions "/Zc:__cplusplus"
