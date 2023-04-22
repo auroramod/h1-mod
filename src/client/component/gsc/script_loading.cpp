@@ -24,10 +24,13 @@
 
 namespace gsc
 {
-	std::unique_ptr<xsk::gsc::h1::context> gsc_ctx;
+	std::unique_ptr<xsk::gsc::h1::context> gsc_ctx = std::make_unique<xsk::gsc::h1::context>();;
 
 	namespace
 	{
+		utils::hook::detour scr_begin_load_scripts_hook;
+		utils::hook::detour scr_end_load_scripts_hook;
+
 		std::unordered_map<std::string, std::uint32_t> main_handles;
 		std::unordered_map<std::string, std::uint32_t> init_handles;
 
@@ -129,9 +132,12 @@ namespace gsc
 				if ((real_name.starts_with("maps/createfx") || real_name.starts_with("maps/createart") || real_name.starts_with("maps/mp"))
 					&& (real_name.ends_with("_fx") || real_name.ends_with("_fog") || real_name.ends_with("_hdr")))
 				{
+					console::debug("Refusing to compile rawfile '%s\n", real_name.data());
 					return game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, file_name, false).scriptfile;
 				}
 			}
+
+			console::debug("Loading custom gsc \"%s.gsc\"", real_name.data());
 
 			try
 			{
@@ -198,7 +204,7 @@ namespace gsc
 			return std::to_string(id);
 		}
 
-		auto read_compiled_script_file(const std::string& name, const std::string& real_name)
+		std::pair<xsk::gsc::buffer, std::vector<std::uint8_t>> read_compiled_script_file(const std::string& name, const std::string& real_name)
 		{
 			const auto* script_file = game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, name.data(), false).scriptfile;
 			if (script_file == nullptr)
@@ -206,19 +212,17 @@ namespace gsc
 				throw std::runtime_error(std::format("Could not load scriptfile '{}'", real_name));
 			}
 
+			console::debug("Decompiling scriptfile '%s'\n", real_name.data());
+
 			const auto len = script_file->compressedLen;
 			const std::string stack{script_file->buffer, static_cast<std::uint32_t>(len)};
 
 			const auto decompressed_stack = utils::compression::zlib::decompress(stack);
 
 			std::vector<std::uint8_t> stack_data;
+			stack_data.assign(decompressed_stack.begin(), decompressed_stack.end());
 
-			const xsk::gsc::buffer buffer{
-				reinterpret_cast<uint8_t*>(script_file->bytecode), 
-				static_cast<std::size_t>(script_file->bytecodeLen) 
-			};
-
-			return std::make_pair(buffer, stack_data);
+			return {{reinterpret_cast<std::uint8_t*>(script_file->bytecode), static_cast<std::uint32_t>(script_file->bytecodeLen)}, stack_data};
 		}
 
 		void load_script(const std::string& name)
@@ -233,13 +237,13 @@ namespace gsc
 
 			if (main_handle)
 			{
-				console::info("Loaded '%s::main'\n", name.data());
+				console::debug("Loaded '%s::main'\n", name.data());
 				main_handles[name] = main_handle;
 			}
 
 			if (init_handle)
 			{
-				console::info("Loaded '%s::init'\n", name.data());
+				console::debug("Loaded '%s::init'\n", name.data());
 				init_handles[name] = init_handle;
 			}
 		}
@@ -316,12 +320,13 @@ namespace gsc
 				return;
 			}
 
-			utils::hook::invoke<void>(SELECT_VALUE(0x1F1E00_b, 0x396080_b), rawfile, buf, size);
+			game::DB_GetRawBuffer(rawfile, buf, size);
 		}
 
 		void scr_begin_load_scripts_stub()
 		{
-			const auto comp_mode = developer_script->current.enabled ?
+			const bool dev_script = developer_script ? developer_script->current.enabled : false;
+			const auto comp_mode = dev_script ?
 				xsk::gsc::build::dev:
 				xsk::gsc::build::prod;
 
@@ -348,14 +353,15 @@ namespace gsc
 				return {{}, script_data};
 			});
 
-			utils::hook::invoke<void>(SELECT_VALUE(0x3BDB90_b, 0x504BC0_b));
+			scr_begin_load_scripts_hook.invoke<void>();
 		}
 
 		void scr_end_load_scripts_stub()
 		{
 			// cleanup the compiler
 			gsc_ctx->cleanup();
-			utils::hook::invoke<void>(SELECT_VALUE(0x3BDCC0_b, 0x504CF0_b));
+
+			scr_end_load_scripts_hook.invoke<void>();
 		}
 
 		void pmem_init_stub()
@@ -384,7 +390,7 @@ namespace gsc
 	{
 		for (auto& function_handle : main_handles)
 		{
-			console::info("Executing '%s::main'\n", function_handle.first.data());
+			console::debug("Executing '%s::main'\n", function_handle.first.data());
 			game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
 		}
 	}
@@ -393,7 +399,7 @@ namespace gsc
 	{
 		for (auto& function_handle : init_handles)
 		{
-			console::info("Executing '%s::init'\n", function_handle.first.data());
+			console::debug("Executing '%s::init'\n", function_handle.first.data());
 			game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
 		}
 	}
@@ -419,25 +425,23 @@ namespace gsc
 	class loading final : public component_interface
 	{
 	public:
-		void post_load() override
-		{
-			gsc_ctx = std::make_unique<xsk::gsc::h1::context>();
-		}
-
 		void post_unpack() override
 		{
-			utils::hook::call(SELECT_VALUE(0x2B9FC7_b, 0x18C1F5_b), scr_begin_load_scripts_stub);
-			utils::hook::call(SELECT_VALUE(0x2E03B5_b, 0x18C355_b), scr_end_load_scripts_stub);
+			// Load our scripts with an uncompressed stack
+			utils::hook::call(SELECT_VALUE(0x3C7280_b, 0x50E3C0_b), db_get_raw_buffer_stub);
 
-			// hook xasset functions to return our own custom scripts
+			scr_begin_load_scripts_hook.create(SELECT_VALUE(0x3BDB90_b, 0x504BC0_b), scr_begin_load_scripts_stub);
+			scr_end_load_scripts_hook.create(SELECT_VALUE(0x3BDCC0_b, 0x504CF0_b), scr_end_load_scripts_stub);
+
+			// ProcessScript: hook xasset functions to return our own custom scripts
 			utils::hook::call(SELECT_VALUE(0x3C7217_b, 0x50E357_b), find_script);
 			utils::hook::call(SELECT_VALUE(0x3C7227_b, 0x50E367_b), db_is_x_asset_default);
 
-			// initial loading of scripts
+			// GScr_LoadScripts: initial loading of scripts
 			utils::hook::call(SELECT_VALUE(0x2BA152_b, 0x18C325_b), load_gametype_script_stub);
 
-			// loads scripts with an uncompressed stack
-			utils::hook::call(SELECT_VALUE(0x3C7280_b, 0x50E3C0_b), db_get_raw_buffer_stub);
+			// main is called from scripting.cpp
+			// init is called from scripting.cpp
 
 			// Increase script memory
 			utils::hook::call(SELECT_VALUE(0x38639C_b, 0x15C4D6_b), pmem_init_stub);

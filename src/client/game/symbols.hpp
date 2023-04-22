@@ -96,6 +96,7 @@ namespace game
 	WEAK symbol<void(const char* gameName)> FS_Startup{0x40D890, 0x0};
 	WEAK symbol<void(const char* path, const char* dir)> FS_AddLocalizedGameDirectory{0x40B1E0, 0x1878F0};
 
+	WEAK symbol<unsigned int(unsigned int)> GetObjectType{0x3C3680, 0x50A810};
 	WEAK symbol<unsigned int(unsigned int, unsigned int)> GetVariable{0x3C3740, 0x50A8D0};
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int unsignedValue)> GetNewVariable{0x3C3360, 0x50A4F0};
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int unsignedValue)> GetNewArrayVariable{0x3C31E0, 0x50A370};
@@ -177,6 +178,7 @@ namespace game
 	WEAK symbol<float(int index)> Scr_GetFloat{0x3C87D0, 0x50F870};
 	WEAK symbol<const char*(int index)> Scr_GetString{0x3C8CC0, 0x50FCB0};
 	WEAK symbol<int()> Scr_GetNumParam{0x3C89E0, 0x50F9D0};
+	WEAK symbol<bool(VariableValue* value)> Scr_CastString{0x3C4450, 0x50B4B0};
 	WEAK symbol<void()> Scr_ClearOutParams{0x3C7EF0, 0x50F070};
 	WEAK symbol<scr_entref_t(unsigned int entId)> Scr_GetEntityIdRef{0x3C6760, 0x50D8E0};
 	WEAK symbol<unsigned int(int classnum, unsigned int entnum)> Scr_GetEntityId{0x3C66B0, 0x50D830};

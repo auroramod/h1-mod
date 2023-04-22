@@ -65,10 +65,15 @@ namespace gsc
 				reinterpret_cast<size_t>(pos - 2));
 		}
 
+		game::scr_entref_t get_entity_id_stub(std::uint32_t ent_id)
+		{
+			const auto ref = game::Scr_GetEntityIdRef(ent_id);
+			saved_ent_ref = ref;
+			return ref;
+		}
+
 		void execute_custom_function(const std::uint16_t id)
 		{
-			auto error = false;
-
 			try
 			{
 				const auto& function = functions[id];
@@ -80,23 +85,33 @@ namespace gsc
 					return_value(result);
 				}
 			}
-			catch (const std::exception& e)
+			catch (const std::exception& ex)
 			{
-				error = true;
-				force_error_print = true;
-				gsc_error_msg = e.what();
+				scr_error(ex.what());
+			}
+		}
+
+		void vm_call_builtin_function_stub(builtin_function func)
+		{
+			const auto function_id = get_function_id();
+			const auto custom = functions.contains(static_cast<std::uint16_t>(function_id));
+			if (custom)
+			{
+				execute_custom_function(function_id);
+				return;
 			}
 
-			if (error)
+			if (func == nullptr)
 			{
-				game::Scr_ErrorInternal();
+				scr_error("function doesn't exist");
+				return;
 			}
+
+			func();
 		}
 
 		void execute_custom_method(const std::uint16_t id)
 		{
-			auto error = false;
-
 			try
 			{
 				const auto& method = methods[id];
@@ -108,70 +123,29 @@ namespace gsc
 					return_value(result);
 				}
 			}
-			catch (const std::exception& e)
+			catch (const std::exception& ex)
 			{
-				error = true;
-				force_error_print = true;
-				gsc_error_msg = e.what();
-			}
-
-			if (error)
-			{
-				game::Scr_ErrorInternal();
+				scr_error(ex.what());
 			}
 		}
 
-		void vm_call_builtin_function_stub(builtin_function function)
+		void vm_call_builtin_method_stub(builtin_method meth)
 		{
-			const auto function_id = get_function_id();
-
-			if (!functions.contains(function_id))
+			const auto method_id = get_function_id();
+			const auto custom = methods.contains(static_cast<std::uint16_t>(method_id));
+			if (custom)
 			{
-				if (function == nullptr)
-				{
-					force_error_print = true;
-					gsc_error_msg = "function doesn't exist";
-					game::Scr_ErrorInternal();
-				}
-				else
-				{
-					function();
-				}
+				execute_custom_method(method_id);
+				return;
 			}
-			else
-			{
-				execute_custom_function(function_id);
-			}
-		}
 
-		game::scr_entref_t get_entity_id_stub(std::uint32_t ent_id)
-		{
-			const auto ref = game::Scr_GetEntityIdRef(ent_id);
-			saved_ent_ref = ref;
-			return ref;
-		}
-
-		void vm_call_builtin_method_stub(builtin_method method)
-		{
-			const auto function_id = get_function_id();
-
-			if (!methods.contains(function_id))
+			if (meth == nullptr)
 			{
-				if (method == nullptr)
-				{
-					force_error_print = true;
-					gsc_error_msg = "method doesn't exist";
-					game::Scr_ErrorInternal();
-				}
-				else
-				{
-					method(saved_ent_ref);
-				}
+				scr_error("function doesn't exist");
+				return;
 			}
-			else
-			{
-				execute_custom_method(function_id);
-			}
+
+			meth(saved_ent_ref);
 		}
 
 		void builtin_call_error(const std::string& error)
@@ -192,8 +166,7 @@ namespace gsc
 		{
 			try
 			{
-				const auto index = gsc_ctx->opcode_enum(opcode);
-				return {gsc_ctx->opcode_name(index)};
+				return {gsc_ctx->opcode_name(static_cast<xsk::gsc::opcode>(opcode))};
 			}
 			catch (...)
 			{
@@ -221,7 +194,8 @@ namespace gsc
 
 		void vm_error_stub(int mark_pos)
 		{
-			if (!developer_script->current.enabled && !force_error_print)
+			const bool dev_script = developer_script ? developer_script->current.enabled : false;
+			if (!dev_script && !force_error_print)
 			{
 				utils::hook::invoke<void>(SELECT_VALUE(0x415C90_b, 0x59DDA0_b), mark_pos);
 				return;
@@ -276,6 +250,14 @@ namespace gsc
 		{
 			return args[0].type_name();
 		}
+	}
+
+	void scr_error(const char* error)
+	{
+		force_error_print = true;
+		gsc_error_msg = error;
+
+		game::Scr_ErrorInternal();
 	}
 
 	namespace function
@@ -344,6 +326,8 @@ namespace gsc
 	public:
 		void post_unpack() override
 		{
+			developer_script = dvars::register_bool("developer_script", false, 0, "Enable developer script comments");
+
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD86C_b, 0x50484C_b), 0x1000); // change builtin func count
 
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BD872_b, 0x504852_b) + 4,
