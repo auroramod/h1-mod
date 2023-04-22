@@ -3,18 +3,17 @@
 
 #include "game/dvars.hpp"
 #include "game/game.hpp"
-#include "game/scripting/functions.hpp"
 
-#include <utils/hook.hpp>
-
+#include "component/logfile.hpp"
 #include "component/command.hpp"
 #include "component/console.hpp"
 #include "component/scripting.hpp"
-#include "component/logfile.hpp"
 
 #include "script_error.hpp"
 #include "script_extension.hpp"
 #include "script_loading.hpp"
+
+#include <utils/hook.hpp>
 
 namespace gsc
 {

@@ -10,8 +10,6 @@
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 
-#include <utils/thread.hpp>
-
 using namespace utils::string;
 
 namespace gsc
