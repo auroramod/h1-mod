@@ -244,26 +244,6 @@ namespace patches
 			}
 		}
 
-		int out_of_memory_text_stub(char* dest, int size, const char* fmt, ...)
-		{
-			fmt = "%s (%d)\n\n"
-				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.\n\n"
-				"If this still occurs, try using the '-memoryfix' parameter to generate the 'players2' folder.";
-
-			char buffer[2048];
-
-			{
-				va_list ap;
-				va_start(ap, fmt);
-
-				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
-
-				va_end(ap);
-			}
-
-			return utils::hook::invoke<int>(SELECT_VALUE(0x429200_b, 0x5AF0F0_b), dest, size, "%s", buffer);
-		}
-
 		void create_2d_texture_stub_1(const char* fmt, ...)
 		{
 			fmt = "Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
@@ -377,18 +357,6 @@ namespace patches
 			utils::hook::call(SELECT_VALUE(0x55E919_b, 0x681A69_b), create_2d_texture_stub_1); 	// Sys_Error for "Create2DTexture( %s, %i, %i, %i, %i ) failed"
 			utils::hook::call(SELECT_VALUE(0x55EACB_b, 0x681C1B_b), create_2d_texture_stub_2); 	// Com_Error for ^
 			utils::hook::call(SELECT_VALUE(0x5B35BA_b, 0x6CB1BC_b), swap_chain_stub); 			// Com_Error for "IDXGISwapChain::Present failed: %s"
-			utils::hook::call(SELECT_VALUE(0x457BC9_b, 0x1D8E09_b), out_of_memory_text_stub); 	// Com_sprintf for "Out of memory. You are probably low on disk space."
-
-			// "fix" for rare 'Out of memory error' error
-			// this will *at least* generate the configs for mp/sp, which is the #1 issue
-			if (utils::flags::has_flag("memoryfix"))
-			{
-				utils::hook::jump(SELECT_VALUE(0x5110D0_b, 0x6200C0_b), malloc);
-				utils::hook::jump(SELECT_VALUE(0x510FF0_b, 0x61FFE0_b), _aligned_malloc);
-				utils::hook::jump(SELECT_VALUE(0x511130_b, 0x620120_b), free);
-				utils::hook::jump(SELECT_VALUE(0x511220_b, 0x620210_b), realloc);
-				utils::hook::jump(SELECT_VALUE(0x511050_b, 0x620040_b), _aligned_realloc);
-			}
 
 			// Uncheat protect gamepad-related dvars
 			dvars::override::register_float("gpad_button_deadzone", 0.13f, 0, 1, game::DVAR_FLAG_SAVED);

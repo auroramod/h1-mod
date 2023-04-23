@@ -1844,6 +1844,13 @@ namespace game
 		int ingame_cursor_visible;
 	};
 
+	enum PMem_Direction
+	{
+		PHYS_ALLOC_LOW = 0x0,
+		PHYS_ALLOC_HIGH = 0x1,
+		PHYS_ALLOC_COUNT = 0x2,
+	};
+
 	enum PMem_Source
 	{
 		PMEM_SOURCE_EXTERNAL = 0x0,
@@ -1852,19 +1859,38 @@ namespace game
 		PMEM_SOURCE_DEFAULT_HIGH = 0x3,
 		PMEM_SOURCE_MOVIE = 0x4,
 		PMEM_SOURCE_SCRIPT = 0x5,
+		PMEM_SOURCE_UNK5 = 0x5,
+		PMEM_SOURCE_UNK6 = 0x6,
+		PMEM_SOURCE_UNK7 = 0x7,
+		PMEM_SOURCE_UNK8 = 0x8,
+		PMEM_SOURCE_CUSTOMIZATION = 0x9,
 	};
 
-	struct physical_memory
+	struct PhysicalMemoryAllocation
 	{
-		char __pad0[0x10];
-		char* buf;
-		char __pad1[0x8];
-		int unk1;
-		size_t size;
-		char __pad2[0x500];
-	};
+		const char* name;
+		char __pad0[16];
+		unsigned __int64 pos;
+		char __pad1[8];
+	}; static_assert(sizeof(PhysicalMemoryAllocation) == 40);
 
-	static_assert(sizeof(physical_memory) == 0x530);
+	struct PhysicalMemoryPrim
+	{
+		const char* name;
+		unsigned int allocListCount;
+		char __pad0[4];
+		unsigned char* buf;
+		char __pad1[8];
+		int unk1;
+		char __pad2[4];
+		unsigned __int64 pos;
+		PhysicalMemoryAllocation allocList[32];
+	}; static_assert(sizeof(PhysicalMemoryPrim) == 1328);
+
+	struct PhysicalMemory
+	{
+		PhysicalMemoryPrim prim[2];
+	}; static_assert(sizeof(PhysicalMemory) == 0xA60);
 
 	namespace mp
 	{

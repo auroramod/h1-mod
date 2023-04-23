@@ -34,6 +34,8 @@ namespace gsc
 
 	extern const game::dvar_t* developer_script;
 
+	void scr_error(const char* error);
+
 	namespace function
 	{
 		void add(const std::string& name, script_function function);

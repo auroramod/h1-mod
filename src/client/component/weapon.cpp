@@ -39,7 +39,7 @@ namespace weapon
 			// precache items
 			for (std::size_t i = 0; i < weapons.size(); i++)
 			{
-				console::debug("precaching weapon \"%s\"\n", weapons[i]->name);
+				//console::debug("precaching weapon \"%s\"\n", weapons[i]->name);
 				game::G_GetWeaponForName(weapons[i]->name);
 			}
 		}

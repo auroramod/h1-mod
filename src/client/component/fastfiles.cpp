@@ -28,7 +28,7 @@ namespace fastfiles
 		game::dvar_t* g_dump_scripts;
 		game::dvar_t* db_print_default_assets;
 
-		std::vector<HANDLE> fastfile_handles;
+		utils::concurrency::container<std::vector<HANDLE>> fastfile_handles;
 		bool is_mod_pre_gfx = false;
 
 		void db_try_load_x_file_internal(const char* zone_name, const int flags)
@@ -226,7 +226,10 @@ namespace fastfiles
 					FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING, nullptr);
 			if (handle != INVALID_HANDLE_VALUE)
 			{
-				fastfile_handles.push_back(handle);
+				fastfile_handles.access([&](std::vector<HANDLE>& handles)
+				{
+					handles.push_back(handle);
+				});
 			}
 
 			return handle;
@@ -1035,7 +1038,7 @@ namespace fastfiles
 
 			void reallocate_asset_pools()
 			{
-				reallocate_attachment_and_weapon();
+				//reallocate_attachment_and_weapon();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIM, 2>();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_SOUND, 2>();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOADED_SOUND, 2>();
@@ -1105,10 +1108,14 @@ namespace fastfiles
 
 	void close_fastfile_handles()
 	{
-		for (const auto& handle : fastfile_handles)
+		fastfile_handles.access([&](std::vector<HANDLE>& handles)
 		{
-			CloseHandle(handle);
-		}
+			for (const auto& handle : handles)
+			{
+				CloseHandle(handle);
+			}
+		});
+		
 	}
 
 	void set_usermap(const std::string& usermap)
