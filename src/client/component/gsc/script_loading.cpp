@@ -6,7 +6,7 @@
 #include "component/filesystem.hpp"
 #include "component/logfile.hpp"
 #include "component/scripting.hpp"
-#include "component/gsc/script_loading.hpp"
+#include "component/memory.hpp"
 
 #include "game/dvars.hpp"
 
@@ -41,7 +41,7 @@ namespace gsc
 		{
 			char* buf = nullptr;
 			char* pos = nullptr;
-			unsigned int size = 0x1000000;
+			const unsigned int size = memory::custom_script_mem_size;
 		} script_memory;
 
 		char* allocate_buffer(size_t size)
@@ -132,12 +132,12 @@ namespace gsc
 				if ((real_name.starts_with("maps/createfx") || real_name.starts_with("maps/createart") || real_name.starts_with("maps/mp"))
 					&& (real_name.ends_with("_fx") || real_name.ends_with("_fog") || real_name.ends_with("_hdr")))
 				{
-					console::debug("Refusing to compile rawfile '%s\n", real_name.data());
+					console::debug("Refusing to compile rawfile '%s'\n", real_name.data());
 					return game::DB_FindXAssetHeader(game::ASSET_TYPE_SCRIPTFILE, file_name, false).scriptfile;
 				}
 			}
 
-			console::debug("Loading custom gsc \"%s.gsc\"", real_name.data());
+			console::debug("Loading custom gsc '%s.gsc'", real_name.data());
 
 			try
 			{
@@ -363,27 +363,6 @@ namespace gsc
 
 			scr_end_load_scripts_hook.invoke<void>();
 		}
-
-		void pmem_init_stub()
-		{
-			utils::hook::invoke<void>(SELECT_VALUE(0x420260_b, 0x5A5590_b));
-
-			const auto type_0 = &game::g_scriptmem[0];
-			const auto type_1 = &game::g_scriptmem[1];
-
-			const auto size_0 = 0x100000; // default size
-			const auto size_1 = 0x100000 + script_memory.size;
-
-			const auto block = reinterpret_cast<char*>(VirtualAlloc(NULL, size_0 + size_1, MEM_RESERVE, PAGE_READWRITE));
-
-			type_0->buf = block;
-			type_0->size = size_0;
-
-			type_1->buf = block + size_0;
-			type_1->size = size_1;
-
-			utils::hook::set<uint32_t>(SELECT_VALUE(0x420252_b, 0x5A5582_b), size_0 + size_1);
-		}
 	}
 
 	void load_main_handles()
@@ -442,9 +421,6 @@ namespace gsc
 
 			// main is called from scripting.cpp
 			// init is called from scripting.cpp
-
-			// Increase script memory
-			utils::hook::call(SELECT_VALUE(0x38639C_b, 0x15C4D6_b), pmem_init_stub);
 
 			scripting::on_shutdown([](bool free_scripts, bool post_shutdown)
 			{

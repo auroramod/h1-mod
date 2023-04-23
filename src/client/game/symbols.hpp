@@ -309,7 +309,15 @@ namespace game
 	WEAK symbol<scrVmPub_t> scr_VmPub{0xC3F4E20, 0xB7AE3C0};
 	WEAK symbol<function_stack_t> scr_function_stack{0xC4015C0, 0xB7B8940};
 
-	WEAK symbol<physical_memory> g_scriptmem{0xD5F3140, 0xC92EC40};
+	WEAK game::symbol<unsigned __int64> pmem_size{0xD5F26D8, 0xC92E1D8};
+	WEAK game::symbol<unsigned char*> pmem_buffer{0xD5F26D0, 0xC92E1D0};
+
+	WEAK game::symbol<PhysicalMemory> g_mem{0xD5F26E0, 0xC92E1E0};
+	WEAK game::symbol<PhysicalMemory> g_scriptmem{0xD5F3140, 0xC92EC40};
+	WEAK game::symbol<PhysicalMemory> g_physmem{0xD5F3BA0, 0xC92F6A0};
+
+	WEAK game::symbol<unsigned __int64> stream_size{0x1DAD810, 0x258AA10};
+	WEAK game::symbol<unsigned char*> stream_buffer{0x1DAD808, 0x258AA08};
 
 	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0xF7530B0, 0xE9213F0};
 
