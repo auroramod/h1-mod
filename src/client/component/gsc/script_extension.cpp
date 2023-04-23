@@ -165,7 +165,8 @@ namespace gsc
 		{
 			try
 			{
-				return {gsc_ctx->opcode_name(static_cast<xsk::gsc::opcode>(opcode))};
+				const auto index = gsc_ctx->opcode_enum(opcode);
+				return { gsc_ctx->opcode_name(index) };
 			}
 			catch (...)
 			{

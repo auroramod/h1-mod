@@ -329,17 +329,17 @@ namespace gsc
 			utils::hook::call(SELECT_VALUE(0x3BD75A_b, 0x50473A_b), find_variable_stub); // Scr_EmitFunction
 
 			// Restore basic error messages for commonly used scr functions
-			utils::hook::jump(SELECT_VALUE(0x3C89F0, 0x50F9E0_b), scr_get_object);
-			utils::hook::jump(SELECT_VALUE(0x3C84C0, 0x50F560_b), scr_get_const_string);
-			utils::hook::jump(SELECT_VALUE(0x3C8280, 0x50F320_b), scr_get_const_istring);
-			utils::hook::jump(SELECT_VALUE(0x2D6950, 0x452EF0_b), scr_validate_localized_string_ref);
-			utils::hook::jump(SELECT_VALUE(0x3C8F30, 0x50FF20_b), scr_get_vector);
-			utils::hook::jump(SELECT_VALUE(0x3C8930, 0x50F920_b), scr_get_int);
-			utils::hook::jump(SELECT_VALUE(0x3C87D0, 0x50F870_b), scr_get_float);
+			utils::hook::jump(SELECT_VALUE(0x3C89F0_b, 0x50F9E0_b), scr_get_object);
+			utils::hook::jump(SELECT_VALUE(0x3C84C0_b, 0x50F560_b), scr_get_const_string);
+			utils::hook::jump(SELECT_VALUE(0x3C8280_b, 0x50F320_b), scr_get_const_istring);
+			utils::hook::jump(SELECT_VALUE(0x2D6950_b, 0x452EF0_b), scr_validate_localized_string_ref);
+			utils::hook::jump(SELECT_VALUE(0x3C8F30_b, 0x50FF20_b), scr_get_vector);
+			utils::hook::jump(SELECT_VALUE(0x3C8930_b, 0x50F920_b), scr_get_int);
+			utils::hook::jump(SELECT_VALUE(0x3C87D0_b, 0x50F870_b), scr_get_float);
 
-			utils::hook::jump(SELECT_VALUE(0x3C8C10, 0x50FC00_b), scr_get_pointer_type);
-			utils::hook::jump(SELECT_VALUE(0x3C8DE0, 0x50FDD0_b), scr_get_type);
-			utils::hook::jump(SELECT_VALUE(0x3C8E50, 0x50FE40_b), scr_get_type_name);
+			utils::hook::jump(SELECT_VALUE(0x3C8C10_b, 0x50FC00_b), scr_get_pointer_type);
+			utils::hook::jump(SELECT_VALUE(0x3C8DE0_b, 0x50FDD0_b), scr_get_type);
+			utils::hook::jump(SELECT_VALUE(0x3C8E50_b, 0x50FE40_b), scr_get_type_name);
 
 			if (!game::environment::is_sp())
 			{
