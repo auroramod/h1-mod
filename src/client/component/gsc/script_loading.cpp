@@ -430,6 +430,12 @@ namespace gsc
 				}
 			});
 		}
+
+		void pre_destroy() override
+		{
+			scr_begin_load_scripts_hook.clear();
+			scr_end_load_scripts_hook.clear();
+		}
 	};
 }
 

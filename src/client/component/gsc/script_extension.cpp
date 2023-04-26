@@ -344,8 +344,6 @@ namespace gsc
 			utils::hook::inject(SELECT_VALUE(0x3BDC36_b, 0x504C66_b) + 3, &meth_table);
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x3BDC3F_b, 0x504C6F_b), sizeof(meth_table));
 
-			developer_script = dvars::register_bool("developer_script", false, 0, "Enable developer script comments");
-
 			utils::hook::nop(SELECT_VALUE(0x3CB723_b, 0x512783_b), 8);
 			utils::hook::call(SELECT_VALUE(0x3CB723_b, 0x512783_b), vm_call_builtin_function_stub);
 

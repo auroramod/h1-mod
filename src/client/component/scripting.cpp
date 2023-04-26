@@ -63,7 +63,7 @@ namespace scripting
 				const auto* string = game::SL_ConvertToString(string_value);
 				if (string)
 				{
-					event e;
+					event e{};
 					e.name = string;
 					e.entity = notify_list_owner_id;
 
@@ -159,6 +159,7 @@ namespace scripting
 			if (file_id)
 			{
 				current_file_id = static_cast<std::uint16_t>(file_id);
+				current_file = scripting::get_token(current_file_id);
 			}
 			else
 			{
@@ -172,10 +173,6 @@ namespace scripting
 		void add_function_sort(unsigned int id, const char* pos)
 		{
 			std::string filename = current_file;
-			if (current_file_id)
-			{
-				filename = scripting::get_token(current_file_id);
-			}
 
 			if (!script_function_table_sort.contains(filename))
 			{
@@ -203,15 +200,7 @@ namespace scripting
 		{
 			add_function_sort(thread_name, code_pos);
 
-			if (current_file_id)
-			{
-				const auto name = get_token(current_file_id);
-				add_function(name, thread_name, code_pos);
-			}
-			else
-			{
-				add_function(current_file, thread_name, code_pos);
-			}
+			add_function(current_file, thread_name, code_pos);
 
 			scr_set_thread_position_hook.invoke<void>(thread_name, code_pos);
 		}
@@ -252,12 +241,12 @@ namespace scripting
 
 	std::optional<std::string> get_canonical_string(const unsigned int id)
 	{
-		if (const auto itr = canonical_string_table.find(id); itr != canonical_string_table.end())
+		if (canonical_string_table.find(id) == canonical_string_table.end())
 		{
-			return itr->second;
+			return {};
 		}
 
-		return {};
+		return {canonical_string_table[id]};
 	}
 
 	class component final : public component_interface
