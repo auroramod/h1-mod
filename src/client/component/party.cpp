@@ -290,7 +290,7 @@ namespace party
 			for (const auto& file : mod_files)
 			{
 				const auto source_hash = info.get(file.name);
-				if (source_hash.empty() && !file.optional)
+				if (source_hash.empty())
 				{
 					if (file.optional)
 					{
