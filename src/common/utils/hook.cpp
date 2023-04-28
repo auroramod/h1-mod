@@ -307,4 +307,31 @@ namespace utils::hook
 
 		return extract<void*>(data + 1);
 	}
+
+	uint8_t* allocate_somewhere_near(const void* base_address, const size_t size)
+	{
+		size_t offset = 0;
+		while (true)
+		{
+			offset += size;
+			auto* target_address = static_cast<const uint8_t*>(base_address) - offset;
+			if (utils::hook::is_relatively_far(base_address, target_address))
+			{
+				return nullptr;
+			}
+
+			const auto res = VirtualAlloc(const_cast<uint8_t*>(target_address), size, MEM_RESERVE | MEM_COMMIT,
+				PAGE_EXECUTE_READWRITE);
+			if (res)
+			{
+				if (utils::hook::is_relatively_far(base_address, target_address))
+				{
+					VirtualFree(res, 0, MEM_RELEASE);
+					return nullptr;
+				}
+
+				return static_cast<uint8_t*>(res);
+			}
+		}
+	}
 }

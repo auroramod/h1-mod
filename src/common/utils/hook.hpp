@@ -202,4 +202,6 @@ namespace utils::hook
 	{
 		return static_cast<T(*)(Args ...)>(func)(args...);
 	}
+
+	uint8_t* allocate_somewhere_near(const void* base_address, const size_t size);
 }

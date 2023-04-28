@@ -526,6 +526,8 @@ namespace fastfiles
 
 		namespace mp
 		{
+			char* new_pools[game::XAssetType::ASSET_TYPE_COUNT]{nullptr};
+
 			constexpr unsigned int get_asset_type_size(const game::XAssetType type)
 			{
 				constexpr int asset_type_sizes[] =
@@ -571,14 +573,23 @@ namespace fastfiles
 			char* reallocate_asset_pool()
 			{
 				constexpr auto element_size = get_asset_type_size(Type);
-				static char new_pool[element_size * Size] = {0};
+				constexpr auto new_pool_size = element_size * Size;
+				char* new_pool = reinterpret_cast<char*>(utils::hook::allocate_somewhere_near(
+					reinterpret_cast<char*>(game::base_address), new_pool_size));
+
+				assert(new_pool != nullptr);
+				assert(utils::hook::is_relatively_far(game::g_assetPool[Type], new_pool) == false);
+
 				static_assert(element_size != 0);
 				assert(element_size == game::DB_GetXAssetTypeSize(Type));
 
+				std::memset(new_pool, 0, new_pool_size);
 				std::memmove(new_pool, game::g_assetPool[Type], game::g_poolSize[Type] * element_size);
 
 				game::g_assetPool[Type] = new_pool;
 				game::g_poolSize[Type] = Size;
+
+				new_pools[Type] = new_pool;
 
 				return new_pool;
 			}
@@ -1050,6 +1061,18 @@ namespace fastfiles
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOADED_SOUND, 1.5f>();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOCALIZE, 1.5f>();
 			}
+
+			void free_reallocated_asset_pools()
+			{
+				for (auto* pool : new_pools)
+				{
+					if (pool)
+					{
+						VirtualFree(pool, 0, MEM_RELEASE);
+						pool = nullptr;
+					}
+				}
+			}
 		}
 
 		void reallocate_asset_pools()
@@ -1057,6 +1080,14 @@ namespace fastfiles
 			if (!game::environment::is_sp())
 			{
 				mp::reallocate_asset_pools();
+			}
+		}
+
+		void free_reallocated_asset_pools()
+		{
+			if (!game::environment::is_sp())
+			{
+				mp::free_reallocated_asset_pools();
 			}
 		}
 
@@ -1316,6 +1347,11 @@ namespace fastfiles
 
 				console::info("assets: %i / %i\n", count, 155000);
 			});
+		}
+
+		void pre_destroy() override
+		{
+			free_reallocated_asset_pools();
 		}
 	};
 }
