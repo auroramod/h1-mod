@@ -526,8 +526,6 @@ namespace fastfiles
 
 		namespace mp
 		{
-			char* new_pools[game::XAssetType::ASSET_TYPE_COUNT]{nullptr};
-
 			constexpr unsigned int get_asset_type_size(const game::XAssetType type)
 			{
 				constexpr int asset_type_sizes[] =
@@ -573,38 +571,23 @@ namespace fastfiles
 			char* reallocate_asset_pool()
 			{
 				constexpr auto element_size = get_asset_type_size(Type);
-				constexpr auto new_pool_size = element_size * Size;
-				char* new_pool = reinterpret_cast<char*>(utils::hook::allocate_somewhere_near(
-					reinterpret_cast<char*>(game::base_address), new_pool_size));
-
-				assert(new_pool != nullptr);
-				assert(utils::hook::is_relatively_far(game::g_assetPool[Type], new_pool) == false);
-
+				static char new_pool[element_size * Size] = {0};
 				static_assert(element_size != 0);
 				assert(element_size == game::DB_GetXAssetTypeSize(Type));
 
-				std::memset(new_pool, 0, new_pool_size);
 				std::memmove(new_pool, game::g_assetPool[Type], game::g_poolSize[Type] * element_size);
 
 				game::g_assetPool[Type] = new_pool;
 				game::g_poolSize[Type] = Size;
 
-				new_pools[Type] = new_pool;
-
 				return new_pool;
-			}
-
-			template <game::XAssetType Type, float Multiplier>
-			char* reallocate_asset_pool_multiplier()
-			{
-				constexpr auto pool_size = get_pool_type_size(Type);
-				return reallocate_asset_pool<Type, static_cast<size_t>(pool_size * Multiplier)>();
 			}
 
 			template <game::XAssetType Type, size_t Multiplier>
 			char* reallocate_asset_pool_multiplier()
 			{
-				return reallocate_asset_pool_multiplier<Type, static_cast<float>(Multiplier)>();
+				constexpr auto pool_size = get_pool_type_size(Type);
+				return reallocate_asset_pool<Type, pool_size * Multiplier>();
 			}
 
 #define RVA(ptr) static_cast<uint32_t>(reinterpret_cast<size_t>(ptr) - 0_b)
@@ -1053,25 +1036,29 @@ namespace fastfiles
 				reallocate_attachment_pool();
 			}
 
+			void reallocate_sound_pool()
+			{
+				constexpr auto original_pool_size = get_pool_type_size(game::ASSET_TYPE_SOUND);
+				constexpr auto multiplier = 2;
+				constexpr auto pool_size = original_pool_size * multiplier;
+
+				const auto pool = reallocate_asset_pool<game::ASSET_TYPE_SOUND, pool_size>();
+				utils::hook::inject(0x39621D_b + 3, reinterpret_cast<void*>(reinterpret_cast<size_t>(pool) + 8));
+
+				static unsigned short net_const_string_sound_map[pool_size]{};
+				utils::hook::inject(0x2B0CEA_b + 3, net_const_string_sound_map);
+				utils::hook::inject(0x2B0F52_b + 3, net_const_string_sound_map);
+				utils::hook::inject(0x2B1866_b + 3, net_const_string_sound_map);
+				utils::hook::inject(0x2B1CC7_b + 3, net_const_string_sound_map);
+			}
+
 			void reallocate_asset_pools()
 			{
 				reallocate_attachment_and_weapon();
-				reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIM, 1.5f>();
-				reallocate_asset_pool_multiplier<game::ASSET_TYPE_SOUND, 1.5f>();
-				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOADED_SOUND, 1.5f>();
-				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOCALIZE, 1.5f>();
-			}
-
-			void free_reallocated_asset_pools()
-			{
-				for (auto* pool : new_pools)
-				{
-					if (pool)
-					{
-						VirtualFree(pool, 0, MEM_RELEASE);
-						pool = nullptr;
-					}
-				}
+				reallocate_sound_pool();
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIM, 2>();
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOADED_SOUND, 2>();
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOCALIZE, 2>();
 			}
 		}
 
@@ -1080,14 +1067,6 @@ namespace fastfiles
 			if (!game::environment::is_sp())
 			{
 				mp::reallocate_asset_pools();
-			}
-		}
-
-		void free_reallocated_asset_pools()
-		{
-			if (!game::environment::is_sp())
-			{
-				mp::free_reallocated_asset_pools();
 			}
 		}
 
@@ -1347,11 +1326,6 @@ namespace fastfiles
 
 				console::info("assets: %i / %i\n", count, 155000);
 			});
-		}
-
-		void pre_destroy() override
-		{
-			free_reallocated_asset_pools();
 		}
 	};
 }
