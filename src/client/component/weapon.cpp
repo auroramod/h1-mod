@@ -45,21 +45,32 @@ namespace weapon
 		}
 
 		utils::hook::detour xmodel_get_bone_index_hook;
-		__int64 xmodel_get_bone_index_stub(game::XModel* model, game::scr_string_t name, unsigned int offset, char* index)
+		int xmodel_get_bone_index_stub(game::XModel* model, game::scr_string_t name, unsigned int offset, char* index)
 		{
-			auto result = xmodel_get_bone_index_hook.invoke<__int64>(model, name, offset, index);
-			if (!result)
+			auto result = xmodel_get_bone_index_hook.invoke<int>(model, name, offset, index);
+			if (result)
 			{
-				if (name == game::SL_GetString("tag_weapon_right", 0) ||
-					name == game::SL_GetString("tag_knife_attach", 0))
+				return result;
+			}
+
+			const auto original_index = *index;
+			const auto original_result = result;
+
+			if (name == game::SL_FindString("tag_weapon_right") ||
+				name == game::SL_FindString("tag_knife_attach"))
+			{
+				const auto tag_weapon = game::SL_FindString("tag_weapon");
+				result = xmodel_get_bone_index_hook.invoke<int>(model, tag_weapon, offset, index);
+				if (result)
 				{
-					result = xmodel_get_bone_index_hook.invoke<__int64>(model, game::SL_GetString("tag_weapon", 0), offset, index);
-					if (result)
-					{
-						console::debug("using tag_weapon instead of %s (%s, %d)\n", game::SL_ConvertToString(name), model->name, offset);
-					}
+					console::debug("using tag_weapon instead of %s (%s, %d, %d)\n", game::SL_ConvertToString(name), model->name, offset, *index);
+					return result;
 				}
 			}
+
+			*index = original_index;
+			result = original_result;
+
 			return result;
 		}
 
