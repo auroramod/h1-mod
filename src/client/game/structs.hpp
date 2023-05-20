@@ -1931,16 +1931,20 @@ namespace game
 		{
 			char __pad0[2];
 			char pm_type; // 2
-			char __pad1[18573];
+			char __pad1[297];
+			float angles[3]; // 300 304 308
+			char __pad2[18264];
 			sessionState_t sessionState;
-			char __pad2[220]; // 254
+			char __pad3[220]; // 254
 			team_t team;
-			char __pad3[30];
+			char __pad4[30];
 			char name[32]; // 18834
-			char __pad4[622];
+			char __pad5[622];
 			int flags; // 19488 
 		}; // size = ?
 
+		static_assert(offsetof(gclient_s, angles) == 300);
+		static_assert(offsetof(gclient_s, sessionState) == 18576);
 		static_assert(offsetof(gclient_s, team) == 18800);
 		static_assert(offsetof(gclient_s, name) == 18834);
 		static_assert(offsetof(gclient_s, flags) == 19488);
@@ -1974,13 +1978,57 @@ namespace game
 
 		struct playerState_s
 		{
-			int clientNum;
-			char __pad0[116];
+			char clientNum;
+			char __pad0[1];
+			char pm_type;
+			char __pad1[44];
+			int otherFlags;
+			char __pad2[28];
+			int pm_time;
+			int pm_flags;
+			int eFlags;
+			int linkFlags;
+			char __pad3[24];
 			vec3_t origin;
 			vec3_t velocity;
-			char __pad1[312];
+			char __pad4[312];
 			int sprintButtonUpRequired;
 		};
+
+		static_assert(offsetof(playerState_s, pm_type) == 2);
+		//static_assert(offsetof(playerState_s, groundEntityNum) == 34);
+		static_assert(offsetof(playerState_s, otherFlags) == 48);
+		static_assert(offsetof(playerState_s, pm_time) == 80);
+		static_assert(offsetof(playerState_s, pm_flags) == 84);
+		static_assert(offsetof(playerState_s, eFlags) == 88);
+		static_assert(offsetof(playerState_s, linkFlags) == 92);
+		static_assert(offsetof(playerState_s, origin) == 120);
+		static_assert(offsetof(playerState_s, velocity) == 132);
+		static_assert(offsetof(playerState_s, sprintButtonUpRequired) == 456);
+
+		struct snapshot_s
+		{
+			playerState_s ps;
+		};
+
+		struct cg_s
+		{
+			char __pad0[18680];
+			snapshot_s* nextSnap;
+			char __pad1[582400];
+			int unk1;
+			int renderingThirdPerson;
+			char __pad2[378580];
+			int unk2;
+			char __pad3[16];
+			int unk3;
+		};
+
+		static_assert(offsetof(cg_s, nextSnap) == 18680);
+		static_assert(offsetof(cg_s, unk1) == 601088);
+		static_assert(offsetof(cg_s, renderingThirdPerson) == 601092);
+		static_assert(offsetof(cg_s, unk2) == 979676);
+		static_assert(offsetof(cg_s, unk3) == 979696);
 
 		struct pmove_t
 		{
