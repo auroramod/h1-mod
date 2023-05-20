@@ -2016,19 +2016,19 @@ namespace game
 			char __pad0[18680];
 			snapshot_s* nextSnap;
 			char __pad1[582400];
-			int unk1;
+			int unk_601088;
 			int renderingThirdPerson;
 			char __pad2[378580];
-			int unk2;
+			int unk_979676;
 			char __pad3[16];
-			int unk3;
+			int unk_979696;
 		};
 
 		static_assert(offsetof(cg_s, nextSnap) == 18680);
-		static_assert(offsetof(cg_s, unk1) == 601088);
+		static_assert(offsetof(cg_s, unk_601088) == 601088);
 		static_assert(offsetof(cg_s, renderingThirdPerson) == 601092);
-		static_assert(offsetof(cg_s, unk2) == 979676);
-		static_assert(offsetof(cg_s, unk3) == 979696);
+		static_assert(offsetof(cg_s, unk_979676) == 979676);
+		static_assert(offsetof(cg_s, unk_979696) == 979696);
 
 		struct pmove_t
 		{

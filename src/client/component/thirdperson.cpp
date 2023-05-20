@@ -27,19 +27,19 @@ namespace thirdperson
 					if ((link_flags & 2) == 0 && (next_snap->ps.otherFlags & 4) == 0)
 					{
 						auto client_globals = a2;
-						if (!client_globals->unk2 || !client_globals->unk3)
+						if (!client_globals->unk_979676 || !client_globals->unk_979696)
 						{
 							if (cg_thirdPerson && cg_thirdPerson->current.enabled)
 							{
 								return 1;
 							}
 
-							if (!(link_flags & (1 << 0xE)) || client_globals->unk3)
+							if (!(link_flags & (1 << 0xE)) || client_globals->unk_979696)
 								return (link_flags >> 27) & 1;
 							if (link_flags & (1 << 0x1D))
 								return 0;
 							if (!(link_flags & (1 << 0x1C)))
-								return a2->unk1;
+								return a2->unk_601088;
 						}
 					}
 				}
