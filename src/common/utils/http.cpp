@@ -77,6 +77,8 @@ namespace utils::http
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
 
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 2);
+
 		if (!fields.empty())
 		{
 			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, fields.data());
