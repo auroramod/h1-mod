@@ -35,7 +35,7 @@ namespace gsc
 		std::unordered_map<std::string, std::uint32_t> init_handles;
 
 		utils::memory::allocator scriptfile_allocator;
-		std::unordered_map<std::string, game::ScriptFile*> loaded_scripts;
+		std::unordered_map<const char*, game::ScriptFile*> loaded_scripts;
 
 		struct
 		{
@@ -108,7 +108,7 @@ namespace gsc
 
 		game::ScriptFile* load_custom_script(const char* file_name, const std::string& real_name)
 		{
-			if (const auto itr = loaded_scripts.find(real_name); itr != loaded_scripts.end())
+			if (const auto itr = loaded_scripts.find(file_name); itr != loaded_scripts.end())
 			{
 				return itr->second;
 			}
@@ -170,7 +170,7 @@ namespace gsc
 
 				script_file_ptr->compressedLen = 0;
 
-				loaded_scripts[real_name] = script_file_ptr;
+				loaded_scripts[file_name] = script_file_ptr;
 
 				return script_file_ptr;
 			}
