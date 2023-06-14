@@ -78,12 +78,14 @@ namespace gsc
 			{
 				const auto& pos = function.value();
 				unknown_function_error = std::format(
-					"while processing function '{}' in script '{}':\nunknown script '{}'", pos.first, pos.second, scripting::current_file
+					"while processing function '{}' in script '{}':\nunknown script '{}' ({})", 
+					pos.first, pos.second, scripting::current_file, scripting::current_file_id
 				);
 			}
 			else
 			{
-				unknown_function_error = std::format("unknown script '{}'", scripting::current_file);
+				unknown_function_error = std::format("unknown script '{}' ({})", 
+					scripting::current_file, scripting::current_file_id);
 			}
 		}
 
@@ -93,7 +95,8 @@ namespace gsc
 			const auto name = scripting::get_token(thread_name);
 
 			unknown_function_error = std::format(
-				"while processing script '{}':\nunknown function '{}::{}'", scripting::current_file, filename, name
+				"while processing script '{}':\nunknown function '{}::{}'", 
+				scripting::current_file, filename, name
 			);
 		}
 

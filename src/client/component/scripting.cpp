@@ -28,6 +28,7 @@ namespace scripting
 	utils::concurrency::container<shared_table_t> shared_table;
 
 	std::string current_file;
+	unsigned int current_file_id{};
 
 	namespace
 	{
@@ -46,8 +47,7 @@ namespace scripting
 
 		utils::hook::detour db_find_xasset_header_hook;
 
-		std::string current_script_file;
-		unsigned int current_file_id{};
+		const char* current_script_file_name;
 
 		game::dvar_t* g_dump_scripts;
 
@@ -153,7 +153,7 @@ namespace scripting
 
 		void process_script_stub(const char* filename)
 		{
-			current_script_file = filename;
+			current_script_file_name = filename;
 			
 			const auto file_id = atoi(filename);
 			if (file_id)
@@ -176,7 +176,7 @@ namespace scripting
 
 			if (!script_function_table_sort.contains(filename))
 			{
-				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_script_file.data(), false);
+				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_script_file_name, false);
 				if (script)
 				{
 					const auto end = &script->bytecode[script->bytecodeLen];

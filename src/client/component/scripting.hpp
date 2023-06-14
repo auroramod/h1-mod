@@ -13,6 +13,7 @@ namespace scripting
 	extern utils::concurrency::container<shared_table_t> shared_table;
 
 	extern std::string current_file;
+	extern unsigned int current_file_id;
 
 	void on_shutdown(const std::function<void(bool, bool)>& callback);
 	std::optional<std::string> get_canonical_string(const unsigned int id);

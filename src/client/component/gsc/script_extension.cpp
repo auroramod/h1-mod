@@ -102,7 +102,7 @@ namespace gsc
 
 			if (func == nullptr)
 			{
-				scr_error("function doesn't exist");
+				scr_error(utils::string::va("builtin function \"%s\" doesn't exist", gsc_ctx->func_name(function_id).data()), true);
 				return;
 			}
 
@@ -140,7 +140,7 @@ namespace gsc
 
 			if (meth == nullptr)
 			{
-				scr_error("function doesn't exist");
+				scr_error(utils::string::va("builtin method \"%s\" doesn't exist", gsc_ctx->meth_name(method_id).data()), true);
 				return;
 			}
 
@@ -252,9 +252,9 @@ namespace gsc
 		}
 	}
 
-	void scr_error(const char* error)
+	void scr_error(const char* error, const bool force_print)
 	{
-		force_error_print = true;
+		force_error_print = force_print;
 		gsc_error_msg = error;
 
 		game::Scr_ErrorInternal();
