@@ -92,7 +92,7 @@ namespace mapents
 
 				std::regex expr(R"~((.+) "(.*)")~");
 				std::smatch match{};
-				if (!std::regex_search(line, match, expr))
+				if (!std::regex_search(line, match, expr) && !line.empty())
 				{
 					console::warn("[map_ents parser] Failed to parse line %i (%s)\n", i, line.data());
 					continue;

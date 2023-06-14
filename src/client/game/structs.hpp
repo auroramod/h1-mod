@@ -1976,6 +1976,15 @@ namespace game
 
 		static_assert(sizeof(gentity_s) == 736);
 
+		struct SprintState
+		{
+			int sprintButtonUpRequired;
+			int sprintDelay;
+			int lastSprintStart;
+			int lastSprintEnd;
+			int sprintStartMaxLength;
+		};
+
 		struct playerState_s
 		{
 			char clientNum;
@@ -1992,7 +2001,11 @@ namespace game
 			vec3_t origin;
 			vec3_t velocity;
 			char __pad4[312];
-			int sprintButtonUpRequired;
+			SprintState sprintState;
+			char __pad5[88];
+			int weaponState0;
+			char __pad6[7040];
+			int perks[2];
 		};
 
 		static_assert(offsetof(playerState_s, pm_type) == 2);
@@ -2004,7 +2017,9 @@ namespace game
 		static_assert(offsetof(playerState_s, linkFlags) == 92);
 		static_assert(offsetof(playerState_s, origin) == 120);
 		static_assert(offsetof(playerState_s, velocity) == 132);
-		static_assert(offsetof(playerState_s, sprintButtonUpRequired) == 456);
+		static_assert(offsetof(playerState_s, sprintState) == 456);
+		static_assert(offsetof(playerState_s, weaponState0) == 564);
+		static_assert(offsetof(playerState_s, perks) == 7608);
 
 		struct snapshot_s
 		{

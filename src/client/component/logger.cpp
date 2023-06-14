@@ -114,11 +114,14 @@ namespace logger
 				// lua stuff
 				utils::hook::jump(SELECT_VALUE(0x106010_b, 0x27CBB0_b), print_dev);   // debug
 				utils::hook::jump(SELECT_VALUE(0x107680_b, 0x27E210_b), print_error); // error
-				utils::hook::jump(SELECT_VALUE(0x0E6E30_b, 0x1F6140_b), printf);      // print
+				utils::hook::jump(SELECT_VALUE(0x0E6E30_b, 0x1F6140_b), print);      // print
 
 				if (game::environment::is_mp())
 				{
 					utils::hook::call(0x6BBB81_b, r_warn_once_per_frame_vsnprintf_stub);
+
+					utils::hook::jump(0x498BD0_b, print_warning); // dmWarn
+					utils::hook::jump(0x498AD0_b, print); // dmLog
 				}
 			}
 
