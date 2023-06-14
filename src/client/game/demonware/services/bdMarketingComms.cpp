@@ -16,7 +16,33 @@ namespace demonware
 	{
 		auto reply = server->create_reply(this->task_id());
 
-		const auto motd_content = utils::http::get_data("https://h1.gg/data/motd.json");
+		const int timeout = 7; // seconds
+
+		std::optional<utils::http::result> motd_content;
+		std::optional<utils::http::result> featured_content;
+		std::optional<utils::http::result> featured2_content;
+
+		auto get_motd = [&motd_content]()
+		{
+			motd_content = utils::http::get_data("https://h1.gg/data/motd.json", {}, {}, {}, timeout);
+		};
+		auto get_featured = [&featured_content]()
+		{
+			featured_content = utils::http::get_data("https://h1.gg/data/featured.json", {}, {}, {}, timeout);
+		};
+		auto get_featured2 = [&featured2_content]()
+		{
+			featured2_content = utils::http::get_data("https://h1.gg/data/featured2.json", {}, {}, {}, timeout);
+		};
+
+		std::thread get_motd_thread(get_motd);
+		std::thread get_featured_thread(get_featured);
+		std::thread get_featured2_thread(get_featured2);
+
+		get_motd_thread.join();
+		get_featured_thread.join();
+		get_featured2_thread.join();
+
 		if (motd_content.has_value())
 		{
 			const auto motd = new bdMarketingMessage;
@@ -27,7 +53,6 @@ namespace demonware
 			reply->add(motd);
 		}
 
-		const auto featured_content = utils::http::get_data("https://h1.gg/data/featured.json");
 		if (featured_content.has_value())
 		{
 			const auto featured = new bdMarketingMessage;
@@ -38,7 +63,6 @@ namespace demonware
 			reply->add(featured);
 		}
 
-		const auto featured2_content = utils::http::get_data("https://h1.gg/data/featured2.json");
 		if (featured2_content.has_value())
 		{
 			const auto featured2 = new bdMarketingMessage;
