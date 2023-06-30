@@ -1,7 +1,7 @@
 #pragma once
 #include <d3d11.h>
 
-#define PROTOCOL 1
+#define PROTOCOL 2
 
 #ifdef DEBUG
 #define assert_sizeof(__ASSET__, __SIZE__) static_assert(sizeof(__ASSET__) == __SIZE__)
