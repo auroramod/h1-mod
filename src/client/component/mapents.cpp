@@ -3,6 +3,7 @@
 
 #include "game/game.hpp"
 #include "console.hpp"
+#include "filesystem.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
@@ -135,16 +136,48 @@ namespace mapents
 			return {out_buffer};
 		}
 
+		std::string raw_ents;
+		bool load_raw_mapents()
+		{
+			auto mapents_name = utils::string::va("%s.ents", **reinterpret_cast<const char***>(0xA975F40_b));
+			if (filesystem::exists(mapents_name))
+			{
+				try
+				{
+					console::debug("Reading raw ents file \"%s\"\n", mapents_name);
+					raw_ents = filesystem::read_file(mapents_name);
+					if (!raw_ents.empty())
+					{
+						return true;
+					}
+				}
+				catch (const std::exception& ex)
+				{
+					console::error("Failed to read raw ents file \"%s\"\n%s\n", mapents_name, ex.what());
+				}
+			}
+			return false;
+		}
+
 		std::string entity_string;
 		const char* cm_entity_string_stub()
 		{
-			if (!entity_string.empty())
+			const char* ents = nullptr;
+			if (load_raw_mapents())
 			{
-				return entity_string.data();
+				ents = raw_ents.data();
+			}
+			else
+			{
+				if (!entity_string.empty())
+				{
+					return entity_string.data();
+				}
+
+				ents = utils::hook::invoke<const char*>(SELECT_VALUE(0x3685C0_b, 0x4CD140_b));
 			}
 
-			const auto original = utils::hook::invoke<const char*>(SELECT_VALUE(0x3685C0_b, 0x4CD140_b));
-			const auto parsed = parse_mapents(original);
+			const auto parsed = parse_mapents(ents);
 			if (parsed.has_value())
 			{
 				entity_string = parsed.value();
@@ -152,13 +185,14 @@ namespace mapents
 			}
 			else
 			{
-				return original;
+				return ents;
 			}
 		}
 
 		void cm_unload_stub(void* clip_map)
 		{
 			entity_string.clear();
+			raw_ents.clear();
 			utils::hook::invoke<void>(SELECT_VALUE(0x368560_b, 0x4CD0E0_b), clip_map);
 		}
 	}
