@@ -1159,6 +1159,13 @@ namespace party
 				saved_info_response.host = target;
 				saved_info_response.info_string = info;
 
+				const auto protocl = info.get("protocol");
+				if (std::atoi(protocl.data()) != PROTOCOL)
+				{
+					menu_error("Connection failed: Invalid protocol.");
+					return;
+				}
+
 				if (info.get("challenge") != connect_state.challenge)
 				{
 					menu_error("Connection failed: Invalid challenge.");
