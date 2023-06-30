@@ -1159,8 +1159,8 @@ namespace party
 				saved_info_response.host = target;
 				saved_info_response.info_string = info;
 
-				const auto protocl = info.get("protocol");
-				if (std::atoi(protocl.data()) != PROTOCOL)
+				const auto protocol = info.get("protocol");
+				if (std::atoi(protocol.data()) != PROTOCOL)
 				{
 					menu_error("Connection failed: Invalid protocol.");
 					return;
