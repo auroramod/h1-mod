@@ -197,7 +197,7 @@ namespace party
 		}
 
 		std::unordered_map<std::string, std::string> hash_cache;
-
+		std::mutex hash_mutex;
 		std::string get_file_hash(const std::string& file)
 		{
 			if (!utils::io::file_exists(file))
@@ -205,16 +205,113 @@ namespace party
 				return {};
 			}
 
-			const auto iter = hash_cache.find(file);
-			if (iter != hash_cache.end())
 			{
-				return iter->second;
+				std::lock_guard<std::mutex> lock(hash_mutex);
+				const auto iter = hash_cache.find(file);
+				if (iter != hash_cache.end())
+				{
+					return iter->second;
+				}
 			}
 
-			const auto data = utils::io::read_file(file);
-			const auto sha = utils::cryptography::sha1::compute(data, true);
-			hash_cache[file] = sha;
-			return sha;
+			console::debug("[HASH::%s]: getting hash...\n", file.data());
+
+			std::ifstream file_stream(file, std::ios::binary);
+			if (!file_stream)
+			{
+				return {};
+			}
+
+			constexpr std::size_t max_chunk_size = 1024 * 1024; // 1MB max chunk size
+
+			std::ostringstream hash_stream;
+
+			std::streamsize file_size = 0;
+			file_stream.seekg(0, std::ios::end);
+			file_size = file_stream.tellg();
+			file_stream.seekg(0, std::ios::beg);
+
+			std::size_t num_threads = std::thread::hardware_concurrency();
+			if (num_threads == 0)
+			{
+				num_threads = 1; // Fallback to a single thread if hardware_concurrency() is not available
+			}
+
+			std::vector<std::string> hash_results(num_threads);  // Initialize hash_results vector
+			std::streamsize chunk_size = std::min(max_chunk_size, file_size / num_threads);
+
+			std::vector<std::thread> threads(num_threads);
+
+			console::debug("[HASH::%s]: computing...\n", file.data());
+
+			for (std::size_t i = 0; i < hash_results.size(); ++i)
+			{
+				std::streampos start_pos = i * chunk_size;
+				std::streamsize read_size = std::min(chunk_size, file_size - start_pos);
+				std::string chunk;
+				chunk.resize(read_size);
+
+				file_stream.seekg(start_pos);
+				file_stream.read(&chunk[0], read_size);
+				chunk.resize(file_stream.gcount());
+
+				threads[i] = std::thread([chunk, &hash_results, i]()
+				{
+					hash_state ctx;
+					sha256_init(&ctx);
+					sha256_process(&ctx, reinterpret_cast<const unsigned char*>(chunk.data()), static_cast<unsigned long>(chunk.size()));
+
+					unsigned char hash[32];
+					sha256_done(&ctx, hash);
+
+					std::ostringstream result_stream;
+					for (int j = 0; j < 32; ++j) {
+						result_stream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[j]);
+					}
+
+					{
+						std::lock_guard<std::mutex> lock(hash_mutex);  // Protect the critical section
+						hash_results.at(i) = result_stream.str();
+					}
+				});
+			}
+
+			for (auto& thread : threads)
+			{
+				thread.join();
+			}
+
+			std::ostringstream combined_hash_stream;
+			for (const auto& result : hash_results)
+			{
+				combined_hash_stream << result;
+			}
+
+			std::string combined_hash_data = combined_hash_stream.str();
+
+			hash_state final_ctx;
+			sha256_init(&final_ctx);
+			sha256_process(&final_ctx, reinterpret_cast<const unsigned char*>(combined_hash_data.data()), static_cast<unsigned long>(combined_hash_data.size()));
+
+			unsigned char final_hash[32];
+			sha256_done(&final_ctx, final_hash);
+
+			std::ostringstream final_hash_stream;
+			for (int i = 0; i < 32; ++i)
+			{
+				final_hash_stream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(final_hash[i]);
+			}
+
+			std::string final_hash_str = final_hash_stream.str();
+
+			{
+				std::lock_guard<std::mutex> lock(hash_mutex);
+				hash_cache[file] = final_hash_str;
+			}
+
+			console::debug("[HASH::%s]: done. (%s)\n", file.data(), final_hash_str.data());
+
+			return final_hash_str;
 		}
 
 		std::string get_usermap_file_path(const std::string& mapname, const std::string& extension)
@@ -306,9 +403,7 @@ namespace party
 
 				if (!has_to_download)
 				{
-					const auto data = utils::io::read_file(file_path);
-					const auto hash = utils::cryptography::sha1::compute(data, true);
-
+					const auto hash = get_file_hash(file_path);
 					has_to_download = source_hash != hash;
 				}
 
@@ -467,6 +562,10 @@ namespace party
 					buffer, static_cast<unsigned int>(sizeof(buffer)));
 
 				const auto path = get_usermap_file_path(mapname, file.extension);
+
+				// clear cache for the file, since user might have edited the file?
+				hash_cache.erase(path);
+
 				const auto hash = get_file_hash(path);
 
 				if ((!source_hash.empty() && hash != source_hash) || (source_hash.empty() && !file.optional))
