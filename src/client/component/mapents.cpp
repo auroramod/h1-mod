@@ -139,7 +139,7 @@ namespace mapents
 		std::string raw_ents;
 		bool load_raw_mapents()
 		{
-			auto mapents_name = utils::string::va("%s.ents", **reinterpret_cast<const char***>(0xA975F40_b));
+			auto mapents_name = utils::string::va("%s.ents", **reinterpret_cast<const char***>(SELECT_VALUE(0xB489D40_b, 0xA975F40_b)));
 			if (filesystem::exists(mapents_name))
 			{
 				try
