@@ -74,16 +74,30 @@ namespace fastfiles
 				dump_gsc_script(name, result);
 			}
 
+			const std::string override_asset_name = "override/"s + name;
+
 			if (type == game::XAssetType::ASSET_TYPE_RAWFILE)
 			{
 				if (result.rawfile)
 				{
-					const std::string override_rawfile_name = "override/"s + name;
-					const auto override_rawfile = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_rawfile_name.data(), 0);
+					const auto override_rawfile = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
 					if (override_rawfile.rawfile)
 					{
 						result.rawfile = override_rawfile.rawfile;
 						console::debug("using override asset for rawfile: \"%s\"\n", name);
+					}
+				}
+			}
+
+			if (type == game::XAssetType::ASSET_TYPE_STRINGTABLE)
+			{
+				if (result.stringTable)
+				{
+					const auto override_stringtable = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
+					if (override_stringtable.stringTable)
+					{
+						result.stringTable = override_stringtable.stringTable;
+						console::debug("using override asset for stringtable: \"%s\"\n", name);
 					}
 				}
 			}
