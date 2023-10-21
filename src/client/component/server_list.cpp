@@ -410,7 +410,7 @@ namespace server_list
 				scheduler::once([]()
 				{
 					// add dvars to change destination master server ip/port
-					master_server_ip = dvars::register_string("masterServerIP", "h1.fed0001.xyz", game::DVAR_FLAG_NONE,
+					master_server_ip = dvars::register_string("masterServerIP", "h1.fed.cat", game::DVAR_FLAG_NONE,
 						"IP of the destination master server to connect to");
 					master_server_port = dvars::register_string("masterServerPort", "20810", game::DVAR_FLAG_NONE,
 						"Port of the destination master server to connect to");

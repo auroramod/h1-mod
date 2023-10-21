@@ -16,11 +16,11 @@ namespace motd
 		{
 			std::thread([]
 			{
-				auto data = utils::http::get_data("https://h1.gg/data/motd.png");
-				if (data.has_value())
-				{
-					materials::add("motd_image", data.value().buffer);
-				}
+				//auto data = utils::http::get_data("https://h1.gg/data/motd.png");
+				//if (data.has_value())
+				//{
+				//	materials::add("motd_image", data.value().buffer);
+				//}
 			}).detach();
 		}
 

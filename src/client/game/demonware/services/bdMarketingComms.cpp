@@ -14,7 +14,7 @@ namespace demonware
 
 	void bdMarketingComms::getMessages(service_server* server, byte_buffer* /*buffer*/) const
 	{
-		auto reply = server->create_reply(this->task_id());
+		/*auto reply = server->create_reply(this->task_id());
 
 		const int timeout = 7; // seconds
 
@@ -73,6 +73,8 @@ namespace demonware
 			reply->add(featured2);
 		}
 
+		reply->send();*/
+		auto reply = server->create_reply(this->task_id());
 		reply->send();
 	}
 
