@@ -24,6 +24,8 @@
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
 
+#include <zlib.h>
+
 namespace party
 {
 	namespace
@@ -197,16 +199,9 @@ namespace party
 		}
 
 		std::unordered_map<std::string, std::string> hash_cache;
-		std::mutex hash_mutex;
-		std::string get_file_hash(const std::string& file)
+		std::string get_file_hash(const std::string& file, bool use_threads = false)
 		{
-			if (!utils::io::file_exists(file))
 			{
-				return {};
-			}
-
-			{
-				std::lock_guard<std::mutex> lock(hash_mutex);
 				const auto iter = hash_cache.find(file);
 				if (iter != hash_cache.end())
 				{
@@ -214,109 +209,82 @@ namespace party
 				}
 			}
 
-			console::debug("[HASH::%s]: getting hash...\n", file.data());
+			constexpr std::streamsize max_block_size = 1 * 1024 * 1024; // 1MB
 
 			std::ifstream file_stream(file, std::ios::binary);
-			if (!file_stream)
+
+			if (!file_stream.good())
 			{
 				return {};
 			}
 
-			constexpr std::size_t max_chunk_size = 1024 * 1024; // 1MB max chunk size
+			console::debug("[HASH::%s]: computing hash...\n", file.data());
 
-			std::ostringstream hash_stream;
-
-			std::streamsize file_size = 0;
 			file_stream.seekg(0, std::ios::end);
-			file_size = file_stream.tellg();
+			std::streampos file_size = file_stream.tellg();
 			file_stream.seekg(0, std::ios::beg);
 
-			std::size_t num_threads = std::thread::hardware_concurrency();
-			if (num_threads == 0)
+			uLong crc = crc32(0L, Z_NULL, 0);
+
+			if (file_size <= max_block_size)
 			{
-				num_threads = 1; // Fallback to a single thread if hardware_concurrency() is not available
+				std::string buffer(file_size, '\0');
+				file_stream.read(&buffer[0], file_size);
+				crc = crc32(crc, reinterpret_cast<const Bytef*>(buffer.data()), static_cast<uInt>(file_size));
 			}
-
-			std::vector<std::string> hash_results(num_threads);  // Initialize hash_results vector
-			std::streamsize chunk_size = std::min(max_chunk_size, file_size / num_threads);
-
-			std::vector<std::thread> threads(num_threads);
-
-			console::debug("[HASH::%s]: computing...\n", file.data());
-
-			for (std::size_t i = 0; i < hash_results.size(); ++i)
+			else
 			{
-				std::streampos start_pos = i * chunk_size;
-				std::streamsize read_size = std::min(chunk_size, file_size - start_pos);
-				std::string chunk;
-				chunk.resize(read_size);
+				constexpr std::streamsize buffer_size = max_block_size;
+				std::vector<char> buffer(buffer_size);
 
-				file_stream.seekg(start_pos);
-				file_stream.read(&chunk[0], read_size);
-				chunk.resize(file_stream.gcount());
-
-				threads[i] = std::thread([chunk, &hash_results, i]()
+				std::streamsize remaining_size = file_size;
+				while (remaining_size > 0)
 				{
-					hash_state ctx;
-					sha256_init(&ctx);
-					sha256_process(&ctx, reinterpret_cast<const unsigned char*>(chunk.data()), static_cast<unsigned long>(chunk.size()));
-
-					unsigned char hash[32];
-					sha256_done(&ctx, hash);
-
-					std::ostringstream result_stream;
-					for (int j = 0; j < 32; ++j) {
-						result_stream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(hash[j]);
-					}
-
-					{
-						std::lock_guard<std::mutex> lock(hash_mutex);  // Protect the critical section
-						hash_results.at(i) = result_stream.str();
-					}
-				});
+					std::streamsize block_size = std::min(remaining_size, buffer_size);
+					file_stream.read(buffer.data(), block_size);
+					crc = crc32(crc, reinterpret_cast<const Bytef*>(buffer.data()), static_cast<uInt>(block_size));
+					remaining_size -= block_size;
+				}
 			}
 
-			for (auto& thread : threads)
-			{
-				thread.join();
-			}
+			file_stream.close();
 
-			std::ostringstream combined_hash_stream;
-			for (const auto& result : hash_results)
-			{
-				combined_hash_stream << result;
-			}
-
-			std::string combined_hash_data = combined_hash_stream.str();
-
-			hash_state final_ctx;
-			sha256_init(&final_ctx);
-			sha256_process(&final_ctx, reinterpret_cast<const unsigned char*>(combined_hash_data.data()), static_cast<unsigned long>(combined_hash_data.size()));
-
-			unsigned char final_hash[32];
-			sha256_done(&final_ctx, final_hash);
-
-			std::ostringstream final_hash_stream;
-			for (int i = 0; i < 32; ++i)
-			{
-				final_hash_stream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(final_hash[i]);
-			}
-
-			std::string final_hash_str = final_hash_stream.str();
+			// Convert the hash to a string
+			std::string hash = std::to_string(crc);
 
 			{
-				std::lock_guard<std::mutex> lock(hash_mutex);
-				hash_cache[file] = final_hash_str;
+				hash_cache[file] = hash;
 			}
 
-			console::debug("[HASH::%s]: done. (%s)\n", file.data(), final_hash_str.data());
+			console::debug("[HASH::%s]: done. (%s)\n", file.data(), hash.data());
 
-			return final_hash_str;
+			return hash;
 		}
 
 		std::string get_usermap_file_path(const std::string& mapname, const std::string& extension)
 		{
 			return utils::string::va("usermaps\\%s\\%s%s", mapname.data(), mapname.data(), extension.data());
+		}
+
+		// generate hashes so they are cached
+		void generate_hashes(const std::string& mapname)
+		{
+			// usermap
+			for (const auto& file : usermap_files)
+			{
+				const auto path = get_usermap_file_path(mapname, file.extension);
+				get_file_hash(path);
+			}
+
+			// mod
+			const auto fs_game = get_dvar_string("fs_game");
+			if (!fs_game.empty())
+			{
+				for (const auto& file : mod_files)
+				{
+					get_file_hash(utils::string::va("%s/mod%s", fs_game.data(), file.extension.data()));
+				}
+			}
 		}
 
 		void check_download_map(const utils::info_string& info, std::vector<download::file_t>& files)
@@ -562,10 +530,6 @@ namespace party
 					buffer, static_cast<unsigned int>(sizeof(buffer)));
 
 				const auto path = get_usermap_file_path(mapname, file.extension);
-
-				// clear cache for the file, since user might have edited the file?
-				hash_cache.erase(path);
-
 				const auto hash = get_file_hash(path);
 
 				if ((!source_hash.empty() && hash != source_hash) || (source_hash.empty() && !file.optional))
@@ -604,6 +568,12 @@ namespace party
 
 			hash_cache.clear();
 			current_sv_mapname = map;
+
+			if (game::environment::is_dedi())
+			{
+				generate_hashes(map);
+			}
+
 			utils::hook::invoke<void>(0x54BBB0_b, map, a2, a3, a4, a5);
 		}
 
@@ -1095,6 +1065,17 @@ namespace party
 				game::SV_GameSendServerCommand(-1, game::SV_CMD_CAN_IGNORE,
 				                               utils::string::va("%c \"%s\"", 84, message.data()));
 				console::info("%s\n", message.data());
+			});
+
+			command::add("hash", [](const command::params& params)
+			{
+				if (params.size() < 2)
+				{
+					return;
+				}
+
+				auto hash = get_file_hash(params.get(1), std::atoi(params.get(2)));
+				console::info("hash output: %s\n", hash.data());
 			});
 
 			network::on("getInfo", [](const game::netadr_s& target, const std::string& data)
