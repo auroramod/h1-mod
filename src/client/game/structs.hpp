@@ -2401,6 +2401,25 @@ namespace game
 	assert_offsetof(GfxWorld, mdaoVolumes, 2792);
 	assert_offsetof(GfxWorld, buildInfo, 2832);
 
+	struct DB_AuthSignature
+	{
+		unsigned char bytes[256];
+	};
+
+	struct DB_AuthHash
+	{
+		unsigned char bytes[32];
+	};
+
+	struct XPakHeader
+	{
+		char header[8];
+		std::int32_t version;
+		unsigned char unknown[16];
+		DB_AuthHash hash;
+		DB_AuthSignature signature;
+	};
+
 	namespace hks
 	{
 		struct lua_State;

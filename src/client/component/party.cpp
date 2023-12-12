@@ -17,6 +17,8 @@
 
 #include "steam/steam.hpp"
 
+#include "utils/hash.hpp"
+
 #include <utils/properties.hpp>
 #include <utils/string.hpp>
 #include <utils/info_string.hpp>
@@ -50,17 +52,17 @@ namespace party
 		// snake case these names before release
 		std::vector<usermap_file> usermap_files =
 		{
-			{".ff", "usermaphash", false},
-			{"_load.ff", "usermaploadhash", true},
-			{".arena", "usermaparenahash", true},
-			{".pak", "usermappakhash", true},
+			{".ff", "usermap_hash", false},
+			{"_load.ff", "usermap_load_hash", true},
+			{".arena", "usermap_arena_hash", true},
+			{".pak", "usermap_pak_hash", true},
 		};
 
 		std::vector<usermap_file> mod_files =
 		{
-			{".ff", "modHash", false},
-			{"_pre_gfx.ff", "modpregfxhash", true},
-			{".pak", "modpakhash", true},
+			{".ff", "mod_hash", false},
+			{"_pre_gfx.ff", "mod_pre_gfx_hash", true},
+			{".pak", "mod_pak_hash", true},
 		};
 
 		struct
@@ -199,71 +201,23 @@ namespace party
 		}
 
 		std::unordered_map<std::string, std::string> hash_cache;
-		std::string get_file_hash(const std::string& file, bool use_threads = false)
+
+		std::string get_file_hash(const std::string& file)
 		{
+			const auto iter = hash_cache.find(file);
+			if (iter != hash_cache.end())
 			{
-				const auto iter = hash_cache.find(file);
-				if (iter != hash_cache.end())
-				{
-					return iter->second;
-				}
+				return iter->second;
 			}
 
-			constexpr std::streamsize max_block_size = 1 * 1024 * 1024; // 1MB
-
-			std::ifstream file_stream(file, std::ios::binary);
-
-			if (!file_stream.good())
-			{
-				return {};
-			}
-
-			console::debug("[HASH::%s]: computing hash...\n", file.data());
-
-			file_stream.seekg(0, std::ios::end);
-			std::streampos file_size = file_stream.tellg();
-			file_stream.seekg(0, std::ios::beg);
-
-			uLong crc = crc32(0L, Z_NULL, 0);
-
-			if (file_size <= max_block_size)
-			{
-				std::string buffer(file_size, '\0');
-				file_stream.read(&buffer[0], file_size);
-				crc = crc32(crc, reinterpret_cast<const Bytef*>(buffer.data()), static_cast<uInt>(file_size));
-			}
-			else
-			{
-				constexpr std::streamsize buffer_size = max_block_size;
-				std::vector<char> buffer(buffer_size);
-
-				std::streamsize remaining_size = file_size;
-				while (remaining_size > 0)
-				{
-					std::streamsize block_size = std::min(remaining_size, buffer_size);
-					file_stream.read(buffer.data(), block_size);
-					crc = crc32(crc, reinterpret_cast<const Bytef*>(buffer.data()), static_cast<uInt>(block_size));
-					remaining_size -= block_size;
-				}
-			}
-
-			file_stream.close();
-
-			// Convert the hash to a string
-			std::string hash = std::to_string(crc);
-
-			{
-				hash_cache[file] = hash;
-			}
-
-			console::debug("[HASH::%s]: done. (%s)\n", file.data(), hash.data());
-
+			const auto hash = utils::hash::get_file_hash(file);
+			hash_cache.insert(std::make_pair(file, hash));
 			return hash;
 		}
 
 		std::string get_usermap_file_path(const std::string& mapname, const std::string& extension)
 		{
-			return utils::string::va("usermaps\\%s\\%s%s", mapname.data(), mapname.data(), extension.data());
+			return std::format("usermaps\\{}\\{}{}", mapname, mapname, extension);
 		}
 
 		// generate hashes so they are cached
@@ -282,7 +236,8 @@ namespace party
 			{
 				for (const auto& file : mod_files)
 				{
-					get_file_hash(utils::string::va("%s/mod%s", fs_game.data(), file.extension.data()));
+					const auto path = std::format("{}\\mod{}", fs_game, file.extension);
+					get_file_hash(path);
 				}
 			}
 		}
@@ -1074,7 +1029,7 @@ namespace party
 					return;
 				}
 
-				auto hash = get_file_hash(params.get(1), std::atoi(params.get(2)));
+				const auto hash = get_file_hash(params.get(1));
 				console::info("hash output: %s\n", hash.data());
 			});
 
