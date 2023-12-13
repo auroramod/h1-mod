@@ -68,7 +68,7 @@ namespace patches
 
 		void cg_set_client_dvar_from_server_stub(void* clientNum, void* cgameGlob, const char* dvar_hash, const char* value)
 		{
-			int hash = atoi(dvar_hash);
+			const auto hash = std::atoi(dvar_hash);
 			auto* dvar = game::Dvar_FindMalleableVar(hash);
 
 			if (hash == game::generateHashValue("cg_fov") || 
@@ -223,7 +223,7 @@ namespace patches
 		utils::hook::detour init_network_dvars_hook;
 		void init_network_dvars_stub(game::dvar_t* dvar)
 		{
-			static const auto hash = game::generateHashValue("r_tonemapHighlightRange");
+			constexpr auto hash = dvars::generate_hash("r_tonemapHighlightRange");
 			if (dvar->hash == hash)
 			{
 				init_network_dvars_hook.invoke<void>(dvar);

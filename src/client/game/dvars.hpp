@@ -10,8 +10,10 @@ namespace dvars
 	{
 		std::string name;
 		std::string description;
-		int hash;
+		std::int32_t hash;
 	};
+
+	extern std::unordered_map<std::int32_t, dvar_info> dvar_map;
 
 	extern game::dvar_t* aimassist_enabled;
 
@@ -48,12 +50,57 @@ namespace dvars
 
 	extern game::dvar_t* cg_legacyCrashHandling;
 
-	extern std::vector<dvar_info> dvar_list;
+	constexpr int generate_hash(const char* string)
+	{
+		const char* v1;
+		char v2, v6;
+		int v4, v5, v7;
+		char* end_ptr;
+
+		v1 = string;
+		v2 = *string;
+
+		if (v2 == 48 && v1[1] == 120)
+		{
+			return strtoul(v1 + 2, &end_ptr, 16);
+		}
+
+		v4 = v2;
+
+		if ((v2 - 65) <= 0x19u)
+		{
+			v4 = v2 + 32;
+		}
+
+		v5 = 0xB3CB2E29 * static_cast<unsigned int>(v4 ^ 0x319712C3);
+
+		if (v2)
+		{
+			do
+			{
+				v6 = *++v1;
+				v7 = v6;
+				if ((v6 - 65) <= 0x19u)
+				{
+					v7 = v6 + 32;
+				}
+
+				v5 = 0xB3CB2E29 * static_cast<unsigned int>(v5 ^ v7);
+			} while (v6);
+		}
+
+		return v5;
+	}
+
+	std::int32_t generate_hash(const std::string& string);
+
+	void insert_dvar_info(const std::int32_t hash, const std::string& name, const std::string& description);
+	void insert_dvar_info(const std::string& name, const std::string& description);
 
 	std::string dvar_get_vector_domain(const int components, const game::dvar_limits& domain);
 	std::string dvar_get_domain(const game::dvar_type type, const game::dvar_limits& domain);
 	std::string dvar_get_description(const std::string& name);
-	std::optional<dvar_info> get_dvar_info_from_hash(const int hash);
+	std::optional<dvar_info> get_dvar_info_from_hash(const std::int32_t hash);
 
 	game::dvar_t* register_int(const std::string& name, int value, int min, int max,
 		unsigned int flags, const std::string& description);
