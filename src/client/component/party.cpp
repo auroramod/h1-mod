@@ -211,7 +211,11 @@ namespace party
 			}
 
 			const auto hash = utils::hash::get_file_hash(file);
-			hash_cache.insert(std::make_pair(file, hash));
+			if (!hash.empty())
+			{
+				hash_cache.insert(std::make_pair(file, hash));
+			}
+
 			return hash;
 		}
 
@@ -271,6 +275,7 @@ namespace party
 				}
 
 				const auto hash = get_file_hash(filename);
+				console::debug("hash != source_hash => %s != %s\n", source_hash.data(), hash.data());
 				if (hash != source_hash)
 				{
 					files.emplace_back(filename, source_hash);
@@ -327,6 +332,7 @@ namespace party
 				if (!has_to_download)
 				{
 					const auto hash = get_file_hash(file_path);
+					console::debug("has_to_download = %s != %s\n", source_hash.data(), hash.data());
 					has_to_download = source_hash != hash;
 				}
 

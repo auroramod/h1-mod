@@ -8,6 +8,8 @@
 
 #include "game/ui_scripting/execution.hpp"
 
+#include "utils/hash.hpp"
+
 #include <utils/concurrency.hpp>
 #include <utils/http.hpp>
 #include <utils/io.hpp>
@@ -165,7 +167,7 @@ namespace download
 
 					const auto url = utils::string::va("%s/%s", base.data(), file.name.data());
 					console::debug("Downloading %s from %s: %s\n", file.name.data(), base.data(), url);
-					const auto data = utils::http::get_data(url, {}, {}, &progress_callback);
+					auto data = utils::http::get_data(url, {}, {}, &progress_callback);
 					if (!data.has_value())
 					{
 						menu_error("Download failed: An unknown error occurred, please try again.");
@@ -177,7 +179,7 @@ namespace download
 						return;
 					}
 
-					const auto& result = data.value();
+					auto& result = data.value();
 					if (result.code != CURLE_OK)
 					{
 						menu_error(utils::string::va("Download failed: %s (%i)\n", 
@@ -192,7 +194,7 @@ namespace download
 						return;
 					}
 
-					const auto hash = utils::cryptography::sha1::compute(result.buffer, true);
+					const auto hash = utils::hash::get_buffer_hash(result.buffer, file.name);
 					if (hash != file.hash)
 					{
 						menu_error(utils::string::va("Download failed: file hash doesn't match the server's (%s: %s != %s)\n", 
