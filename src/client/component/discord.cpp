@@ -42,6 +42,8 @@ namespace discord
 				discord_presence.partyMax = 0;
 				discord_presence.startTimestamp = 0;
 				discord_presence.largeImageKey = SELECT_VALUE("menu_singleplayer", "menu_multiplayer");
+				discord_presence.largeImageText = "";
+				discord_presence.smallImageKey = "";
 
 				discord_presence.matchSecret = "";
 				discord_presence.joinSecret = "";
@@ -57,27 +59,25 @@ namespace discord
 			else
 			{
 				static char details[0x80] = {0};
-				const auto map = game::Dvar_FindVar("mapname")->current.string;
-				const auto key = utils::string::va("PRESENCE_%s%s", SELECT_VALUE("SP_", ""), map);
-				const char* mapname = map;
+				const auto mapname = game::Dvar_FindVar("mapname")->current.string;
+				const auto presence_key = utils::string::va("PRESENCE_%s%s", SELECT_VALUE("SP_", ""), mapname);
+				const char* clean_mapname = mapname;
 
-				if (game::DB_XAssetExists(game::ASSET_TYPE_LOCALIZE, key) && !game::DB_IsXAssetDefault(game::ASSET_TYPE_LOCALIZE, key))
+				if (game::DB_XAssetExists(game::ASSET_TYPE_LOCALIZE, presence_key) && !game::DB_IsXAssetDefault(game::ASSET_TYPE_LOCALIZE, presence_key))
 				{
-					mapname = game::UI_SafeTranslateString(key);
+					clean_mapname = game::UI_SafeTranslateString(presence_key);
 				}
 
 				if (game::environment::is_mp())
 				{
 					static char clean_gametype[0x80] = {0};
-					const auto gametype = game::UI_GetGameTypeDisplayName(
-						game::Dvar_FindVar("g_gametype")->current.string);
-					utils::string::strip(gametype,
-						clean_gametype, sizeof(clean_gametype));
-					strcpy_s(details, 0x80, utils::string::va("%s on %s", clean_gametype, mapname));
+					const auto gametype = game::UI_GetGameTypeDisplayName(game::Dvar_FindVar("g_gametype")->current.string);
+					utils::string::strip(gametype, clean_gametype, sizeof(clean_gametype));
+					strcpy_s(details, 0x80, utils::string::va("%s on %s", clean_gametype, clean_mapname));
 
 					static char clean_hostname[0x80] = {0};
-					utils::string::strip(game::Dvar_FindVar("sv_hostname")->current.string, 
-						clean_hostname, sizeof(clean_hostname));
+					utils::string::strip(game::Dvar_FindVar("sv_hostname")->current.string, clean_hostname, sizeof(clean_hostname));
+
 					auto max_clients = party::server_client_count();
 
 					if (game::SV_Loaded())
@@ -121,18 +121,38 @@ namespace discord
 
 					discord_presence.partyMax = max_clients;
 					discord_presence.state = clean_hostname;
-					discord_presence.largeImageKey = map;
 
-					if (!fastfiles::is_stock_map(map))
+					auto discord_map_image_asset = mapname;
+					if (!fastfiles::is_stock_map(mapname))
 					{
-						discord_presence.largeImageKey = "menu_multiplayer";
+						discord_map_image_asset = "menu_multiplayer";
+					}
+
+					auto discord_server_info = party::get_discord_server_image();
+					if (!discord_server_info.empty())
+					{
+						// prioritize server image as large image instead
+						discord_presence.smallImageKey = discord_map_image_asset;
+						discord_presence.largeImageKey = discord_server_info.data();
+						discord_server_info = party::get_discord_server_text();
+						if (!discord_server_info.empty())
+						{
+							discord_presence.largeImageText = discord_server_info.data();
+						}
+					}
+					else
+					{
+						discord_presence.smallImageKey = "";
+						discord_presence.largeImageKey = discord_map_image_asset;
+						discord_presence.largeImageText = "";
 					}
 				}
 				else if (game::environment::is_sp())
 				{
 					discord_presence.state = "";
-					discord_presence.largeImageKey = map;
-					strcpy_s(details, 0x80, mapname);
+					discord_presence.largeImageKey = mapname;
+					discord_presence.smallImageKey = "";
+					strcpy_s(details, 0x80, clean_mapname);
 				}
 
 				discord_presence.details = details;

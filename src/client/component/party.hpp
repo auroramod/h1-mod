@@ -16,6 +16,8 @@ namespace party
 	void clear_sv_motd();
 	game::netadr_s get_state_host();
 	int server_client_count();
+	std::string get_discord_server_image();
+	std::string get_discord_server_text();
 
 	int get_client_num_by_name(const std::string& name);
 

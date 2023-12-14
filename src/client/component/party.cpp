@@ -767,6 +767,16 @@ namespace party
 		return party::sv_maxclients;
 	}
 
+	std::string get_discord_server_image()
+	{
+		return saved_info_response.info_string.get("sv_discordImageUrl");
+	}
+
+	std::string get_discord_server_text()
+	{
+		return saved_info_response.info_string.get("sv_discordImageText");
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -777,7 +787,7 @@ namespace party
 				return;
 			}
 
-			// detour CL_Disconnect to clear motd
+			// clear motd & usermap
 			cl_disconnect_hook.create(0x12F080_b, cl_disconnect_stub);
 
 			if (game::environment::is_mp())
@@ -965,7 +975,7 @@ namespace party
 
 			scheduler::once([]()
 			{
-				sv_say_name = dvars::register_string("sv_sayName", "console", game::DvarFlags::DVAR_FLAG_NONE, "");
+				sv_say_name = dvars::register_string("sv_sayName", "console", game::DvarFlags::DVAR_FLAG_NONE, "Custom name for RCON console");
 			}, scheduler::pipeline::main);
 
 			command::add("tell", [](const command::params& params)
@@ -1060,6 +1070,8 @@ namespace party
 				info.set("sv_running", utils::string::va("%i", get_dvar_bool("sv_running") && !game::VirtualLobby_Loaded()));
 				info.set("dedicated", utils::string::va("%i", get_dvar_bool("dedicated")));
 				info.set("sv_wwwBaseUrl", get_dvar_string("sv_wwwBaseUrl"));
+				info.set("sv_discordImageUrl", get_dvar_string("sv_discordImageUrl"));
+				info.set("sv_discordImageText", get_dvar_string("sv_discordImageText"));
 
 				if (!fastfiles::is_stock_map(mapname))
 				{
