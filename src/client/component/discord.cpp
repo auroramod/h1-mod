@@ -125,7 +125,7 @@ namespace discord
 					auto discord_map_image_asset = mapname;
 					if (!fastfiles::is_stock_map(mapname))
 					{
-						discord_map_image_asset = "menu_multiplayer";
+						discord_map_image_asset = "menu_multiplayer"; // TODO: maybe add usermap images
 					}
 
 					auto discord_server_info = party::get_discord_server_image();
