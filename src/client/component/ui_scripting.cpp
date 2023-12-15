@@ -367,7 +367,7 @@ namespace ui_scripting
 			download_table["abort"] = download::stop_download;
 
 			download_table["userdownloadresponse"] = party::user_download_response;
-			download_table["getwwwurl"] = party::get_www_url;
+			download_table["getwwwurl"] = party::get_server_connection_state().base_url;
 		}
 
 		void start()

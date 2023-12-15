@@ -32,15 +32,8 @@ namespace party
 {
 	namespace
 	{
-		struct
-		{
-			game::netadr_s host{};
-			std::string challenge{};
-			bool hostDefined{false};
-		} connect_state;
-
-		std::string sv_motd;
-		int sv_maxclients;
+		connection_state server_connection_state{};
+		discord_information server_discord_information{};
 
 		struct usermap_file
 		{
@@ -165,11 +158,11 @@ namespace party
 
 		const char* get_didyouknow_stub(void* table, int row, int column)
 		{
-			if (party::sv_motd.empty())
+			if (server_connection_state.motd.empty())
 			{
 				return utils::hook::invoke<const char*>(0x5A0AC0_b, table, row, column);
 			}
-			return utils::string::va("%s", party::sv_motd.data());
+			return utils::string::va("%s", server_connection_state.motd.data());
 		}
 
 		void disconnect()
@@ -498,7 +491,7 @@ namespace party
 					command::execute("disconnect");
 					scheduler::once([]
 					{
-						connect(connect_state.host);
+						connect(server_connection_state.host);
 					}, scheduler::pipeline::main);
 					return;
 				}
@@ -614,7 +607,7 @@ namespace party
 
 	void clear_sv_motd()
 	{
-		party::sv_motd.clear();
+		server_connection_state.motd.clear();
 	}
 
 	int get_client_num_by_name(const std::string& name)
@@ -636,9 +629,9 @@ namespace party
 		return -1;
 	}
 
-	void reset_connect_state()
+	void reset_server_connection_state()
 	{
-		connect_state = {};
+		server_connection_state = {};
 	}
 
 	int get_client_count()
@@ -691,16 +684,11 @@ namespace party
 
 		command::execute("lui_open_popup popup_acceptinginvite", false);
 
-		connect_state.host = target;
-		connect_state.challenge = utils::cryptography::random::get_challenge();
-		connect_state.hostDefined = true;
+		server_connection_state.host = target;
+		server_connection_state.challenge = utils::cryptography::random::get_challenge();
+		server_connection_state.hostDefined = true;
 
-		network::send(target, "getInfo", connect_state.challenge);
-	}
-
-	game::netadr_s get_state_host()
-	{
-		return connect_state.host;
+		network::send(target, "getInfo", server_connection_state.challenge);
 	}
 
 	void start_map(const std::string& mapname, bool dev)
@@ -762,19 +750,14 @@ namespace party
 		}
 	}
 
-	int server_client_count()
+	connection_state get_server_connection_state()
 	{
-		return party::sv_maxclients;
+		return server_connection_state;
 	}
 
-	std::string get_discord_server_image()
+	discord_information get_server_discord_information()
 	{
-		return saved_info_response.info_string.get("sv_discordImageUrl");
-	}
-
-	std::string get_discord_server_text()
-	{
-		return saved_info_response.info_string.get("sv_discordImageText");
+		return server_discord_information;
 	}
 
 	class component final : public component_interface
@@ -859,7 +842,7 @@ namespace party
 
 			command::add("reconnect", [](const command::params& argument)
 			{
-				if (!connect_state.hostDefined)
+				if (!server_connection_state.hostDefined)
 				{
 					console::info("Cannot connect to server.\n");
 					return;
@@ -872,7 +855,7 @@ namespace party
 				}
 				else
 				{
-					connect(connect_state.host);
+					connect(server_connection_state.host);
 				}
 			});
 
@@ -1104,7 +1087,7 @@ namespace party
 				const utils::info_string info(data);
 				server_list::handle_info_response(target, info);
 
-				if (connect_state.host != target)
+				if (server_connection_state.host != target)
 				{
 					return;
 				}
@@ -1120,7 +1103,7 @@ namespace party
 					return;
 				}
 
-				if (info.get("challenge") != connect_state.challenge)
+				if (info.get("challenge") != server_connection_state.challenge)
 				{
 					menu_error("Connection failed: Invalid challenge.");
 					return;
@@ -1166,8 +1149,11 @@ namespace party
 					return;
 				}
 
-				party::sv_motd = info.get("sv_motd");
-				party::sv_maxclients = std::stoi(info.get("sv_maxclients"));
+				server_connection_state.motd = info.get("sv_motd");
+				server_connection_state.max_clients = std::stoi(info.get("sv_maxclients"));
+				server_connection_state.base_url = info.get("sv_wwwBaseUrl");
+				server_discord_information.image = info.get("sv_discordImageUrl");
+				server_discord_information.image_text = info.get("sv_discordImageText");
 
 				connect_to_party(target, mapname, gametype);
 			});
