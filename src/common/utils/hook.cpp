@@ -3,6 +3,13 @@
 
 #include <MinHook.h>
 
+Mem seg_ptr(const SReg& segment, const uint64_t off)
+{
+	auto mem = ptr_abs(off);
+	mem.setSegment(segment);
+	return mem;
+}
+
 namespace utils::hook
 {
 	namespace
