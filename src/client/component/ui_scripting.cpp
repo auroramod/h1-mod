@@ -9,6 +9,7 @@
 
 #include "localized_strings.hpp"
 #include "console.hpp"
+#include "discord.hpp"
 #include "download.hpp"
 #include "game_module.hpp"
 #include "fps.hpp"
@@ -32,6 +33,8 @@
 #include <utils/binary_resource.hpp>
 
 #include "steam/steam.hpp"
+
+#include <discord_rpc.h>
 
 namespace ui_scripting
 {
@@ -368,6 +371,16 @@ namespace ui_scripting
 
 			download_table["userdownloadresponse"] = party::user_download_response;
 			download_table["getwwwurl"] = party::get_server_connection_state().base_url;
+
+			auto discord_table = table();
+			lua["discord"] = discord_table;
+
+			discord_table["respond"] = discord::respond;
+			discord_table["getavatarmaterial"] = discord::get_avatar_material;
+			discord_table["reply"] = table();
+			discord_table["reply"]["yes"] = DISCORD_REPLY_YES;
+			discord_table["reply"]["ignore"] = DISCORD_REPLY_IGNORE;
+			discord_table["reply"]["no"] = DISCORD_REPLY_NO;
 		}
 
 		void start()
