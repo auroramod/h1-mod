@@ -143,8 +143,6 @@ namespace discord
 
 		void update_discord()
 		{
-			Discord_RunCallbacks();
-
 			// reset presence data
 			const auto saved_time = discord_presence.startTimestamp;
 			discord_presence = {};
@@ -314,7 +312,13 @@ namespace discord
 			Discord_Initialize("947125042930667530", &handlers, 1, nullptr);
 
 			scheduler::once(download_default_avatar, scheduler::pipeline::async);
-			scheduler::loop(update_discord, scheduler::pipeline::async, 5s);
+
+			scheduler::once([]()
+			{
+				scheduler::once(update_discord, scheduler::pipeline::async);
+				scheduler::loop(update_discord, scheduler::pipeline::async, 5s);
+				scheduler::loop(Discord_RunCallbacks, scheduler::pipeline::async, 1s);
+			}, scheduler::pipeline::main);
 
 			initialized_ = true;
 		}

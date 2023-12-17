@@ -18,9 +18,6 @@ function canasktojoin(userid)
     end
 
     history[userid] = true
-    game:ontimeout(function()
-        history[userid] = nil
-    end, 15000)
 
     return true
 end
@@ -206,6 +203,7 @@ function addrequest(request)
     invite:registerEventHandler("end_invite", function()
         close()
         discord.respond(request.userid, discord.reply.ignore)
+        history[request.userid] = nil
     end)
 
     local bar = LUI.UIImage.new({

@@ -36,7 +36,7 @@ namespace input
 
 		void cl_key_event_stub(const int local_client_num, const int key, const int down)
 		{
-			if (game::environment::is_sp() && ui_scripting::lui_running())
+			if (ui_scripting::lui_running())
 			{
 				ui_scripting::notify(down ? "keydown" : "keyup",
 				{
