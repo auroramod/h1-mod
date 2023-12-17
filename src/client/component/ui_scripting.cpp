@@ -376,7 +376,19 @@ namespace ui_scripting
 			lua["discord"] = discord_table;
 
 			discord_table["respond"] = discord::respond;
-			discord_table["getavatarmaterial"] = discord::get_avatar_material;
+
+			discord_table["getavatarmaterial"] = [](const std::string& id)
+				-> script_value
+			{
+				const auto material = discord::get_avatar_material(id);
+				if (material == nullptr)
+				{
+					return {};
+				}
+
+				return lightuserdata(material);
+			};
+
 			discord_table["reply"] = table();
 			discord_table["reply"]["yes"] = DISCORD_REPLY_YES;
 			discord_table["reply"]["ignore"] = DISCORD_REPLY_IGNORE;

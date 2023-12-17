@@ -4,9 +4,7 @@
 #include "console.hpp"
 #include "command.hpp"
 #include "discord.hpp"
-#include "fastfiles.hpp"
 #include "materials.hpp"
-#include "network.hpp"
 #include "party.hpp"
 #include "scheduler.hpp"
 
@@ -29,15 +27,39 @@ namespace discord
 {
 	namespace
 	{
-		DiscordRichPresence discord_presence;
+		struct discord_presence_state_t
+		{
+			int start_timestamp;
+			int party_size;
+			int party_max;
+		};
+
+		struct discord_presence_strings_t
+		{
+			std::string state;
+			std::string details;
+			std::string small_image_key;
+			std::string small_image_text;
+			std::string large_image_key;
+			std::string large_image_text;
+			std::string party_id;
+			std::string join_secret;
+		};
+
+		DiscordRichPresence discord_presence{};
+		discord_presence_strings_t discord_strings;
+
+		std::mutex avatar_map_mutex;
+		std::unordered_map<std::string, game::Material*> avatar_material_map;
+		game::Material* default_avatar_material{};
 
 		void update_discord_frontend()
 		{
 			discord_presence.details = SELECT_VALUE("Singleplayer", "Multiplayer");
 			discord_presence.startTimestamp = 0;
 
-			const auto in_firing_range = game::Dvar_FindVar("virtualLobbyInFiringRange");
-			if (in_firing_range && in_firing_range->current.enabled == 1)
+			static const auto in_firing_range = game::Dvar_FindVar("virtualLobbyInFiringRange");
+			if (in_firing_range != nullptr && in_firing_range->current.enabled == 1)
 			{
 				discord_presence.state = "Firing Range";
 				discord_presence.largeImageKey = "mp_vlobby_room";
@@ -56,7 +78,7 @@ namespace discord
 			static const auto mapname_dvar = game::Dvar_FindVar("mapname");
 			auto mapname = mapname_dvar->current.string;
 
-			discord_presence.largeImageKey = mapname;
+			discord_strings.large_image_key = mapname;
 
 			const auto presence_key = utils::string::va("PRESENCE_%s%s", SELECT_VALUE("SP_", ""), mapname);
 			if (game::DB_XAssetExists(game::ASSET_TYPE_LOCALIZE, presence_key) && 
@@ -67,17 +89,15 @@ namespace discord
 
 			if (game::environment::is_mp())
 			{
-				// setup Discord details (Free-for-all on Shipment)
-				static char gametype[0x80] = {0};
 				static const auto gametype_dvar = game::Dvar_FindVar("g_gametype");
+				static const auto max_clients_dvar = game::Dvar_FindVar("sv_maxclients");
+				static const auto hostname_dvar = game::Dvar_FindVar("sv_hostname");
+
 				const auto gametype_display_name = game::UI_GetGameTypeDisplayName(gametype_dvar->current.string);
-				utils::string::strip(gametype_display_name, gametype, sizeof(gametype));
+				const auto gametype = utils::string::strip(gametype_display_name);
 
-				static char details[0x80] = {0};
-				strcpy_s(details, 0x80, utils::string::va("%s on %s", gametype, mapname));
-				discord_presence.details = details;
+				discord_strings.details = std::format("{} on {}", gametype, mapname);
 
-				// setup Discord party (1 of 18)
 				const auto client_state = *game::mp::client_state;
 				if (client_state != nullptr)
 				{
@@ -86,21 +106,16 @@ namespace discord
 
 				if (game::SV_Loaded())
 				{
-					discord_presence.state = "Private Match";
-					static const auto maxclients_dvar = game::Dvar_FindVar("sv_maxclients");
-					discord_presence.partyMax = maxclients_dvar->current.integer;
+					discord_strings.state = "Private Match";
+					discord_presence.partyMax = max_clients_dvar->current.integer;
 					discord_presence.partyPrivacy = DISCORD_PARTY_PRIVATE;
 				}
 				else
 				{
-					static char hostname[0x80] = {0};
-					static const auto hostname_dvar = game::Dvar_FindVar("sv_hostname");
-					utils::string::strip(hostname_dvar->current.string, hostname, sizeof(hostname));
-					discord_presence.state = hostname;
+					discord_strings.state = utils::string::strip(hostname_dvar->current.string);
 
 					const auto server_connection_state = party::get_server_connection_state();
-
-					const auto server_ip_port = utils::string::va("%i.%i.%i.%i:%i",
+					const auto server_ip_port = std::format("{}.{}.{}.{}:{}",
 						static_cast<int>(server_connection_state.host.ip[0]),
 						static_cast<int>(server_connection_state.host.ip[1]),
 						static_cast<int>(server_connection_state.host.ip[2]),
@@ -108,28 +123,22 @@ namespace discord
 						static_cast<int>(ntohs(server_connection_state.host.port))
 					);
 
-					static char party_id[0x80] = {0};
-					const auto server_ip_port_hash = utils::cryptography::sha1::compute(server_ip_port, true).substr(0, 8);
-					strcpy_s(party_id, 0x80, server_ip_port_hash.data());
-					discord_presence.partyId = party_id;
+					discord_strings.party_id = utils::cryptography::sha1::compute(server_ip_port, true).substr(0, 8);
 					discord_presence.partyMax = server_connection_state.max_clients;
 					discord_presence.partyPrivacy = DISCORD_PARTY_PUBLIC;
-
-					static char join_secret[0x80] = { 0 };
-					strcpy_s(join_secret, 0x80, server_ip_port);
-					discord_presence.joinSecret = join_secret;
+					discord_strings.join_secret = server_ip_port;
 				}
 
-				auto server_discord_information = party::get_server_discord_information();
-				if (!server_discord_information.image.empty())
+				auto server_discord_info = party::get_server_discord_info();
+				if (server_discord_info.has_value())
 				{
-					discord_presence.smallImageKey = server_discord_information.image.data();
-					discord_presence.smallImageText = server_discord_information.image_text.data();
+					discord_strings.small_image_key = server_discord_info->image;
+					discord_strings.small_image_text = server_discord_info->image_text;
 				}
 			}
 			else if (game::environment::is_sp())
 			{
-				discord_presence.details = mapname;
+				discord_strings.details = mapname;
 			}
 
 			if (discord_presence.startTimestamp == 0)
@@ -138,12 +147,20 @@ namespace discord
 					std::chrono::system_clock::now().time_since_epoch()).count();
 			}
 
+			discord_presence.state = discord_strings.state.data();
+			discord_presence.details = discord_strings.details.data();
+			discord_presence.smallImageKey = discord_strings.small_image_key.data();
+			discord_presence.smallImageText = discord_strings.small_image_text.data();
+			discord_presence.largeImageKey = discord_strings.large_image_key.data();
+			discord_presence.largeImageText = discord_strings.large_image_text.data();
+			discord_presence.partyId = discord_strings.party_id.data();
+			discord_presence.joinSecret = discord_strings.join_secret.data();
+
 			Discord_UpdatePresence(&discord_presence);
 		}
 
 		void update_discord()
 		{
-			// reset presence data
 			const auto saved_time = discord_presence.startTimestamp;
 			discord_presence = {};
 			discord_presence.startTimestamp = saved_time;
@@ -156,6 +173,33 @@ namespace discord
 			{
 				update_discord_ingame();
 			}
+		}
+
+		game::Material* create_avatar_material(const std::string& name, const std::string& data)
+		{
+			const auto material = materials::create_material(name);
+			try
+			{
+				if (!materials::setup_material_image(material, data))
+				{
+					materials::free_material(material);
+					return nullptr;
+				}
+
+				{
+					std::lock_guard _0(avatar_map_mutex);
+					avatar_material_map.insert(std::make_pair(name, material));
+				}
+
+				return material;
+			}
+			catch (const std::exception& e)
+			{
+				materials::free_material(material);
+				console::error("Failed to load user avatar image: %s\n", e.what());
+			}
+
+			return nullptr;
 		}
 
 		void download_user_avatar(const std::string& id, const std::string& avatar)
@@ -173,10 +217,10 @@ namespace discord
 				return;
 			}
 
-			materials::add(utils::string::va(AVATAR, id.data()), value.buffer);
+			const auto name = utils::string::va(AVATAR, id.data());
+			create_avatar_material(name, value.buffer);
 		}
 
-		bool has_default_avatar = false;
 		void download_default_avatar()
 		{
 			const auto data = utils::http::get_data(DEFAULT_AVATAR_URL);
@@ -191,8 +235,7 @@ namespace discord
 				return;
 			}
 
-			has_default_avatar = true;
-			materials::add(DEFAULT_AVATAR, value.buffer);
+			default_avatar_material = create_avatar_material(DEFAULT_AVATAR, value.buffer);
 		}
 
 		void ready(const DiscordUser* request)
@@ -211,6 +254,8 @@ namespace discord
 
 		void join_game(const char* join_secret)
 		{
+			console::debug("Discord: join_game called with secret '%s'\n", join_secret);
+
 			scheduler::once([=]
 			{
 				game::netadr_s target{};
@@ -232,10 +277,30 @@ namespace discord
 				return;
 			}
 
-			std::string user_id = request->userId;
-			std::string avatar = request->avatar;
-			std::string discriminator = request->discriminator;
-			std::string username = request->username;
+			static std::unordered_map<std::string, std::chrono::high_resolution_clock::time_point> last_requests;
+
+			const std::string user_id = request->userId;
+			const std::string avatar = request->avatar;
+			const std::string discriminator = request->discriminator;
+			const std::string username = request->username;
+
+			const auto now = std::chrono::high_resolution_clock::now();
+			auto iter = last_requests.find(user_id);
+			if (iter != last_requests.end())
+			{
+				if ((now - iter->second) < 15s)
+				{
+					return;
+				}
+				else
+				{
+					iter->second = now;
+				}
+			}
+			else
+			{
+				last_requests.insert(std::make_pair(user_id, now));
+			}
 
 			scheduler::once([=]
 			{
@@ -251,27 +316,47 @@ namespace discord
 				});
 			}, scheduler::pipeline::lui);
 
-			if (!materials::exists(utils::string::va(AVATAR, user_id.data())))
+			const auto material_name = utils::string::va(AVATAR, user_id.data());
+			if (!avatar.empty() && !avatar_material_map.contains(material_name))
 			{
 				download_user_avatar(user_id, avatar);
 			}
 		}
+
+		void set_default_bindings()
+		{
+			const auto set_binding = [](const std::string& command, const game::keyNum_t key)
+			{
+				const auto binding = game::Key_GetBindingForCmd(command.data());
+				for (auto i = 0; i < 256; i++)
+				{
+					if (game::playerKeys[0].keys[i].binding == binding)
+					{
+						return;
+					}
+				}
+
+				if (game::playerKeys[0].keys[key].binding == 0)
+				{
+					game::Key_SetBinding(0, key, binding);
+				}
+			};
+
+			set_binding("discord_accept", game::K_F1);
+			set_binding("discord_deny", game::K_F2);
+		}
 	}
 
-	std::string get_avatar_material(const std::string& id)
+	game::Material* get_avatar_material(const std::string& id)
 	{
-		const auto avatar_name = utils::string::va(AVATAR, id.data());
-		if (materials::exists(avatar_name))
+		const auto material_name = utils::string::va(AVATAR, id.data());
+		const auto iter = avatar_material_map.find(material_name);
+		if (iter == avatar_material_map.end())
 		{
-			return avatar_name;
+			return default_avatar_material;
 		}
 
-		if (has_default_avatar)
-		{
-			return DEFAULT_AVATAR;
-		}
-
-		return "black";
+		return iter->second;
 	}
 
 	void respond(const std::string& id, int reply)
@@ -311,16 +396,29 @@ namespace discord
 
 			Discord_Initialize("947125042930667530", &handlers, 1, nullptr);
 
-			scheduler::once(download_default_avatar, scheduler::pipeline::async);
-
-			scheduler::once([]()
+			if (game::environment::is_mp())
 			{
-				scheduler::once(update_discord, scheduler::pipeline::async);
-				scheduler::loop(update_discord, scheduler::pipeline::async, 5s);
-				scheduler::loop(Discord_RunCallbacks, scheduler::pipeline::async, 1s);
-			}, scheduler::pipeline::main);
+				scheduler::on_game_initialized([]
+				{
+					scheduler::once(download_default_avatar, scheduler::async);
+					set_default_bindings();
+				}, scheduler::main);
+			}
+
+			scheduler::loop(Discord_RunCallbacks, scheduler::async, 500ms);
+			scheduler::loop(update_discord, scheduler::async, 5s);
 
 			initialized_ = true;
+
+			command::add("discord_accept", []()
+			{
+				ui_scripting::notify("discord_response", {{"accept", true}});
+			});
+
+			command::add("discord_deny", []()
+			{
+				ui_scripting::notify("discord_response", {{"accept", false}});
+			});
 		}
 
 		void pre_destroy() override

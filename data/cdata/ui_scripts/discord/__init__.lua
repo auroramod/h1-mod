@@ -2,7 +2,7 @@ if (game:issingleplayer() or Engine.InFrontend()) then
     return
 end
 
-local container = LUI.UIVerticalList.new({
+local container = LUI.UIElement.new({
     topAnchor = true,
     rightAnchor = true,
     top = 20,
@@ -10,18 +10,6 @@ local container = LUI.UIVerticalList.new({
     width = 200,
     spacing = 5
 })
-
-history = {}
-
-function canasktojoin(userid)
-    if (history[userid] ~= nil) then
-        return false
-    end
-
-    history[userid] = true
-
-    return true
-end
 
 function truncatename(name, length)
     if (#name <= length - 3) then
@@ -31,27 +19,57 @@ function truncatename(name, length)
     return name:sub(1, length - 3) .. "..."
 end
 
+local requestlist = {}
+local requestcount = 0
+
 function addrequest(request)
-    if (not canasktojoin(request.userid)) then
-        return
+    for i = 1, #requestlist do
+        if (requestlist[i].userid == request.userid or #requestlist > 5) then
+            return
+        end
     end
 
-    if (container.temp) then
-        container:removeElement(container.temp)
-        container.temp = nil
-    end
+    request.id = requestcount
+    requestcount = requestcount + 1
+    local yoffset = #requestlist * (75 + 5)
 
     local invite = LUI.UIElement.new({
         leftAnchor = true,
         rightAnchor = true,
-        height = 75
+        height = 75,
+        top = yoffset
     })
+
+    local getcurrentindex = function()
+        for i = 1, #requestlist do
+            if (requestlist[i].id == request.id) then
+                return i
+            end
+        end
+
+        return 0
+    end
+
+    invite:registerEventHandler("update_position", function()
+        yoffset = (getcurrentindex() - 1) * (75 + 5)
+        local state = {
+            leftAnchor = true,
+            height = 75,
+            width = 200,
+            left = -220,
+            top = yoffset
+        }
+
+        invite:registerAnimationState("default", state)
+        invite:animateToState("default", 50)
+    end)
 
     invite:registerAnimationState("move_in", {
         leftAnchor = true,
         height = 75,
         width = 200,
-        left = -220
+        left = -220,
+        top = yoffset
     })
 
     invite:animateToState("move_in", 100)
@@ -103,7 +121,7 @@ function addrequest(request)
         width = 32,
         height = 32,
         left = 1,
-        material = RegisterMaterial(avatarmaterial)
+        material = avatarmaterial
     })
 
     local username = LUI.UIText.new({
@@ -117,8 +135,14 @@ function addrequest(request)
         font = CoD.TextSettings.BodyFontBold.Font
     })
 
-    username:setText(string.format("%s^7#%s requested to join your game!", truncatename(request.username, 18),
-        request.discriminator))
+    local requesttext = nil
+    if (request.discriminator == "0") then
+        requesttext = Engine.Localize("LUA_MENU_DISCORD_REQUEST", truncatename(request.username, 18))
+    else
+        requesttext = Engine.Localize("LUA_MENU_DISCORD_REQUEST_DISCRIMINATOR", truncatename(request.username, 18), request.discriminator)
+    end
+
+    username:setText(requesttext)
 
     local buttons = LUI.UIElement.new({
         leftAnchor = true,
@@ -154,57 +178,59 @@ function addrequest(request)
         return button
     end
 
-    buttons:addElement(createbutton("[F1] Accept", true))
-    buttons:addElement(createbutton("[F2] Deny"))
+    local accepttext = Engine.Localize("LUA_MENU_DISCORD_ACCEPT", Engine.GetBinding("discord_accept"))
+    local denytext = Engine.Localize("LUA_MENU_DISCORD_DENY", Engine.GetBinding("discord_deny"))
+
+    buttons:addElement(createbutton(accepttext, true))
+    buttons:addElement(createbutton(denytext))
 
     local fadeouttime = 50
     local timeout = 10 * 1000 - fadeouttime
 
     local function close()
-        container:processEvent({
-            name = "update_navigation",
-            dispatchToChildren = true
+        table.remove(requestlist, getcurrentindex())
+
+        invite:registerAnimationState("fade_out", {
+            leftAnchor = true,
+            rightAnchor = true,
+            height = 75,
+            alpha = 0,
+            left = 0,
+            top = yoffset
         })
+
         invite:animateToState("fade_out", fadeouttime)
         invite:addElement(LUI.UITimer.new(fadeouttime + 50, "remove"))
 
         invite:registerEventHandler("remove", function()
             container:removeElement(invite)
-            if (container.temp) then
-                container:removeElement(container.temp)
-                container.temp = nil
-            end
-            local temp = LUI.UIElement.new({})
-            container.temp = temp
-            container:addElement(temp)
+            container:processEvent({
+                name = "update_position",
+                dispatchToChildren = true
+            })
         end)
     end
 
-    buttons:registerEventHandler("keydown_", function(element, event)
-        if (event.key == "F1") then
-            close()
-            discord.respond(request.userid, discord.reply.yes)
+    local closed = false
+    request.handleresponse = function(event)
+        if (closed) then
+            return
         end
 
-        if (event.key == "F2") then
-            close()
+        if (event.accept) then
+            discord.respond(request.userid, discord.reply.yes)
+        else
             discord.respond(request.userid, discord.reply.no)
         end
-    end)
 
-    invite:registerAnimationState("fade_out", {
-        leftAnchor = true,
-        rightAnchor = true,
-        height = 75,
-        alpha = 0,
-        left = 0
-    })
+        closed = true
+        close()
+    end
 
     invite:addElement(LUI.UITimer.new(timeout, "end_invite"))
     invite:registerEventHandler("end_invite", function()
         close()
         discord.respond(request.userid, discord.reply.ignore)
-        history[request.userid] = nil
     end)
 
     local bar = LUI.UIImage.new({
@@ -235,7 +261,7 @@ function addrequest(request)
 
     avatar:registerEventHandler("update", function()
         local avatarmaterial = discord.getavatarmaterial(request.userid)
-        avatar:setImage(RegisterMaterial(avatarmaterial))
+        avatar:setImage(avatarmaterial)
     end)
 
     avatar:addElement(LUI.UITimer.new(100, "update"))
@@ -249,19 +275,17 @@ function addrequest(request)
     padding:addElement(buttons)
 
     container:addElement(invite)
+
+    table.insert(requestlist, request)
 end
 
-container:registerEventHandler("keydown", function(element, event)
-    local first = container:getFirstChild()
-
-    if (not first) then
+LUI.roots.UIRoot0:registerEventHandler("discord_response", function(element, event)
+    if (#requestlist <= 0) then
         return
     end
 
-    first:processEvent({
-        name = "keydown_",
-        key = event.key
-    })
+    local request = requestlist[1]
+    request.handleresponse(event)
 end)
 
 LUI.roots.UIRoot0:registerEventHandler("discord_join_request", function(element, event)

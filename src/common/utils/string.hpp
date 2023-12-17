@@ -92,6 +92,7 @@ namespace utils::string
 	std::string get_clipboard_data();
 
 	void strip(const char* in, char* out, int max);
+	std::string strip(const std::string& string);
 
 	std::string convert(const std::wstring& wstr);
 	std::wstring convert(const std::string& str);

@@ -33,7 +33,7 @@ namespace party
 	namespace
 	{
 		connection_state server_connection_state{};
-		discord_information server_discord_information{};
+		std::optional<discord_information> server_discord_info{};
 
 		struct usermap_file
 		{
@@ -755,9 +755,9 @@ namespace party
 		return server_connection_state;
 	}
 
-	discord_information get_server_discord_information()
+	std::optional<discord_information> get_server_discord_info()
 	{
-		return server_discord_information;
+		return server_discord_info;
 	}
 
 	class component final : public component_interface
@@ -1152,8 +1152,14 @@ namespace party
 				server_connection_state.motd = info.get("sv_motd");
 				server_connection_state.max_clients = std::stoi(info.get("sv_maxclients"));
 				server_connection_state.base_url = info.get("sv_wwwBaseUrl");
-				server_discord_information.image = info.get("sv_discordImageUrl");
-				server_discord_information.image_text = info.get("sv_discordImageText");
+
+				discord_information discord_info{};
+				discord_info.image = info.get("sv_discordImageUrl");
+				discord_info.image_text = info.get("sv_discordImageText");
+				if (!discord_info.image.empty() || !discord_info.image_text.empty())
+				{
+					server_discord_info.emplace(discord_info);
+				}
 
 				connect_to_party(target, mapname, gametype);
 			});

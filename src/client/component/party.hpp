@@ -30,7 +30,7 @@ namespace party
 
 	void clear_sv_motd();
 	connection_state get_server_connection_state();
-	discord_information get_server_discord_information();
+	std::optional<discord_information> get_server_discord_info();
 
 	int get_client_num_by_name(const std::string& name);
 
