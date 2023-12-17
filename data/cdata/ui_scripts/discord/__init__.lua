@@ -11,8 +11,9 @@ local container = LUI.UIVerticalList.new({
     spacing = 5
 })
 
+history = {}
+
 function canasktojoin(userid)
-    history = history or {}
     if (history[userid] ~= nil) then
         return false
     end
