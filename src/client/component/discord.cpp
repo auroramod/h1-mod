@@ -73,7 +73,9 @@ namespace discord
 				const auto gametype_display_name = game::UI_GetGameTypeDisplayName(gametype_dvar->current.string);
 				utils::string::strip(gametype_display_name, gametype, sizeof(gametype));
 
-				discord_presence.details = utils::string::va("%s on %s", gametype, mapname);
+				static char details[0x80] = {0};
+				strcpy_s(details, 0x80, utils::string::va("%s on %s", gametype, mapname));
+				discord_presence.details = details;
 
 				// setup Discord party (1 of 18)
 				const auto client_state = *game::mp::client_state;
@@ -211,8 +213,6 @@ namespace discord
 
 		void join_game(const char* join_secret)
 		{
-			console::debug("Discord: join_game called with secret '%s'\n", join_secret);
-
 			scheduler::once([=]
 			{
 				game::netadr_s target{};
