@@ -77,7 +77,7 @@ namespace server_list
 				server_list_page = 0;
 			}
 
-			party::reset_connect_state();
+			party::reset_server_connection_state();
 
 			if (get_master_server(master_state.address))
 			{

@@ -21,7 +21,6 @@ namespace materials
 	namespace
 	{
 		utils::hook::detour db_material_streaming_fail_hook;
-		utils::hook::detour material_register_handle_hook;
 		utils::hook::detour db_get_material_index_hook;
 
 #ifdef DEBUG
@@ -31,120 +30,8 @@ namespace materials
 		const game::dvar_t* debug_materials = nullptr;
 #endif
 
-		struct material_data_t
-		{
-			std::unordered_map<std::string, game::Material*> materials;
-			std::unordered_map<std::string, std::string> images;
-		};
-
 		char constant_table[0x20] = {};
-
-		utils::concurrency::container<material_data_t> material_data;
-
-		game::GfxImage* setup_image(game::GfxImage* image, const utils::image& raw_image)
-		{
-			image->imageFormat = 0x1000003;
-			image->resourceSize = -1;
-
-			D3D11_SUBRESOURCE_DATA data{};
-			data.SysMemPitch = raw_image.get_width() * 4;
-			data.SysMemSlicePitch = data.SysMemPitch * raw_image.get_height();
-			data.pSysMem = raw_image.get_buffer();
-
-			game::Image_Setup(image, raw_image.get_width(), raw_image.get_height(), image->depth, image->numElements,
-				image->imageFormat, DXGI_FORMAT_R8G8B8A8_UNORM, image->name, &data);
-
-			return image;
-		}
-
-		game::Material* create_material(const std::string& name, const std::string& data)
-		{
-			const auto white = material_register_handle_hook.invoke<game::Material*>("white");
-			const auto material = utils::memory::get_allocator()->allocate<game::Material>();
-			const auto texture_table = utils::memory::get_allocator()->allocate<game::MaterialTextureDef>();
-			const auto image = utils::memory::get_allocator()->allocate<game::GfxImage>();
-
-			std::memcpy(material, white, sizeof(game::Material));
-			std::memcpy(texture_table, white->textureTable, sizeof(game::MaterialTextureDef));
-			std::memcpy(image, white->textureTable->u.image, sizeof(game::GfxImage));
-
-			material->constantTable = &constant_table;
-			material->name = utils::memory::get_allocator()->duplicate_string(name);
-			image->name = material->name;
-
-			material->textureTable = texture_table;
-			material->textureTable->u.image = setup_image(image, data);
-
-			return material;
-		}
-
-		void free_material(game::Material* material)
-		{
-			material->textureTable->u.image->textures.___u0.map->Release();
-			material->textureTable->u.image->textures.shaderView->Release();
-			utils::memory::get_allocator()->free(material->textureTable->u.image);
-			utils::memory::get_allocator()->free(material->textureTable);
-			utils::memory::get_allocator()->free(material->name);
-			utils::memory::get_allocator()->free(material);
-		}
-
-		game::Material* load_material(const std::string& name)
-		{
-			return material_data.access<game::Material*>([&](material_data_t& data_) -> game::Material*
-			{
-				if (const auto i = data_.materials.find(name); i != data_.materials.end())
-				{
-					return i->second;
-				}
-
-				std::string data{};
-				if (const auto i = data_.images.find(name); i != data_.images.end())
-				{
-					data = i->second;
-				}
-
-				if (data.empty() && !filesystem::read_file(utils::string::va("materials/%s.png", name.data()), &data))
-				{
-					data_.materials[name] = nullptr;
-					return nullptr;
-				}
-
-				const auto material = create_material(name, data);
-				data_.materials[name] = material;
-
-				return material;
-			});
-		}
-
-		game::Material* try_load_material(const std::string& name)
-		{
-			if (name == "white")
-			{
-				return nullptr;
-			}
-
-			try
-			{
-				return load_material(name);
-			}
-			catch (const std::exception& e)
-			{
-				console::error("Failed to load material %s: %s\n", name.data(), e.what());
-			}
-
-			return nullptr;
-		}
-
-		game::Material* material_register_handle_stub(const char* name)
-		{
-			auto result = try_load_material(name);
-			if (result == nullptr)
-			{
-				result = material_register_handle_hook.invoke<game::Material*>(name);
-			}
-			return result;
-		}
-
+		
 		int db_material_streaming_fail_stub(game::Material* material)
 		{
 			if (material->constantTable == &constant_table)
@@ -238,38 +125,73 @@ namespace materials
 #endif
 	}
 
-	void add(const std::string& name, const std::string& data)
+	bool setup_material_image(game::Material* material, const std::string& data)
 	{
-		material_data.access([&](material_data_t& data_)
+		if (*game::d3d11_device == nullptr)
 		{
-			data_.images[name] = data;
-		});
+			console::error("Tried to create texture while d3d11 device isn't initialized\n");
+			return false;
+		}
+
+		const auto image = material->textureTable->u.image;
+		image->imageFormat = 0x1000003;
+		image->resourceSize = -1;
+
+		auto raw_image = utils::image{data};
+
+		D3D11_SUBRESOURCE_DATA resource_data{};
+		resource_data.SysMemPitch = raw_image.get_width() * 4;
+		resource_data.SysMemSlicePitch = resource_data.SysMemPitch * raw_image.get_height();
+		resource_data.pSysMem = raw_image.get_buffer();
+
+		game::Image_Setup(image, raw_image.get_width(), raw_image.get_height(), image->depth, image->numElements,
+			image->imageFormat, DXGI_FORMAT_R8G8B8A8_UNORM, image->name, &resource_data);
+		return true;
 	}
 
-	bool exists(const std::string& name)
+	game::Material* create_material(const std::string& name)
 	{
-		return material_data.access<bool>([&](material_data_t& data_)
-		{
-			return data_.images.find(name) != data_.images.end();
-		});
+		const auto white = game::Material_RegisterHandle("$white");
+		const auto material = utils::memory::allocate<game::Material>();
+		const auto texture_table = utils::memory::allocate<game::MaterialTextureDef>();
+		const auto image = utils::memory::allocate<game::GfxImage>();
+
+		std::memcpy(material, white, sizeof(game::Material));
+		std::memcpy(texture_table, white->textureTable, sizeof(game::MaterialTextureDef));
+		std::memcpy(image, white->textureTable->u.image, sizeof(game::GfxImage));
+
+		material->constantTable = &constant_table;
+		material->name = utils::memory::duplicate_string(name);
+		image->name = material->name;
+
+		image->textures.map = nullptr;
+		image->textures.shaderView = nullptr;
+		image->textures.shaderViewAlternate = nullptr;
+
+		material->textureTable = texture_table;
+
+		return material;
 	}
 
-	void clear()
+	void free_material(game::Material* material)
 	{
-		material_data.access([&](material_data_t& data_)
+		const auto try_release = []<typename T>(T** resource)
 		{
-			for (auto& material : data_.materials)
+			if (*resource != nullptr)
 			{
-				if (material.second == nullptr)
-				{
-					continue;
-				}
-
-				free_material(material.second);
+				(*resource)->Release();
+				*resource = nullptr;
 			}
+		};
 
-			data_.materials.clear();
-		});
+		try_release(&material->textureTable->u.image->textures.map);
+		try_release(&material->textureTable->u.image->textures.shaderView);
+		try_release(&material->textureTable->u.image->textures.shaderViewAlternate);
+
+		utils::memory::free(material->textureTable->u.image);
+		utils::memory::free(material->textureTable);
+		utils::memory::free(material->name);
+		utils::memory::free(material);
 	}
 
 	class component final : public component_interface
@@ -282,7 +204,6 @@ namespace materials
 				return;
 			}
 
-			material_register_handle_hook.create(game::Material_RegisterHandle, material_register_handle_stub);
 			db_material_streaming_fail_hook.create(SELECT_VALUE(0x1FB400_b, 0x3A1600_b), db_material_streaming_fail_stub);
 			db_get_material_index_hook.create(SELECT_VALUE(0x1F1D80_b, 0x396000_b), db_get_material_index_stub);
 
@@ -296,7 +217,7 @@ namespace materials
 
 				scheduler::once([]
 				{
-					debug_materials = dvars::register_bool("debug_materials", 0, 0x0, "Print current material and images");
+					debug_materials = dvars::register_bool("debug_materials", false, game::DVAR_FLAG_NONE, "Print current material and images");
 				}, scheduler::main);
 			}
 #endif

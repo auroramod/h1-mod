@@ -170,7 +170,7 @@ namespace download
 					auto data = utils::http::get_data(url, {}, {}, &progress_callback);
 					if (!data.has_value())
 					{
-						menu_error("Download failed: An unknown error occurred, please try again.");
+						menu_error(utils::string::va("Download failed: An unknown error occurred when getting data from '%s', please try again.", url));
 						return;
 					}
 
@@ -182,6 +182,13 @@ namespace download
 					auto& result = data.value();
 					if (result.code != CURLE_OK)
 					{
+						if (result.code == CURLE_COULDNT_CONNECT)
+						{
+							menu_error(utils::string::va("Download failed: Couldn't connect to server '%s' (%i)\n", 
+								url, result.code));
+							return;
+						}
+
 						menu_error(utils::string::va("Download failed: %s (%i)\n", 
 							curl_easy_strerror(result.code), result.code));
 						return;
@@ -189,7 +196,7 @@ namespace download
 
 					if (result.response_code >= 400)
 					{
-						menu_error(utils::string::va("Download failed: Server returned bad response code %i\n", 
+						menu_error(utils::string::va("Download failed: Server returned bad response code (%i)\n", 
 							result.response_code));
 						return;
 					}
@@ -197,7 +204,7 @@ namespace download
 					const auto hash = utils::hash::get_buffer_hash(result.buffer, file.name);
 					if (hash != file.hash)
 					{
-						menu_error(utils::string::va("Download failed: file hash doesn't match the server's (%s: %s != %s)\n", 
+						menu_error(utils::string::va("Download failed: File hash doesn't match the server's (%s: %s != %s)\n", 
 							file.name.data(), hash.data(), file.hash.data()));
 						return;
 					}
@@ -233,7 +240,7 @@ namespace download
 		scheduler::once([]
 		{
 			ui_scripting::notify("mod_download_done", {});
-			party::menu_error("Download for server mod has been cancelled.");
+			party::menu_error("Download failed: Aborted");
 		}, scheduler::pipeline::lui);
 	}
 

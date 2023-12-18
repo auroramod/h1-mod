@@ -125,6 +125,8 @@ namespace game
 	WEAK symbol<char*(char* string)> I_CleanStr{0x4293E0, 0x5AF2E0};
 
 	WEAK symbol<const char*(int, int, int)> Key_KeynumToString{0x1AC410, 0x199990};
+	WEAK symbol<int(const char* cmd)> Key_GetBindingForCmd{0x377280, 0x1572B0};
+	WEAK symbol<void(int local_client_num, int keynum, int binding)> Key_SetBinding{0x1AC570, 0x199AE0};
 
 	WEAK symbol<unsigned int(int)> Live_SyncOnlineDataFlags{0x0, 0x1A5C10};
 
@@ -329,7 +331,7 @@ namespace game
 	WEAK symbol<XZoneInfoInternal> g_zoneInfo{0x0, 0x5F5A370};
 	WEAK symbol<unsigned short> g_zoneIndex{0x0, 0x3D1008C};
 
-	WEAK symbol< DB_FileSysInterface*> db_fs{0x25C1168, 0x1566C08};
+	WEAK symbol<DB_FileSysInterface*> db_fs{0x25C1168, 0x1566C08};
 
 	WEAK symbol<int> keyCatchers{0x252AF70, 0x2EC82C4};
 	WEAK symbol<PlayerKeyState> playerKeys{0x2395B0C, 0x2999E1C};
@@ -346,6 +348,8 @@ namespace game
 	WEAK symbol<int> level_time{0x56DBAA0, 0x7361F9C};
 
 	WEAK symbol<map_t> maps{0x7CE5A0, 0x926C80};
+
+	WEAK symbol<ID3D11Device*> d3d11_device{0x1163B98, 0x12DFBF8};
 
 	namespace mp
 	{
