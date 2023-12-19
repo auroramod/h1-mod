@@ -135,12 +135,7 @@ function addrequest(request)
         font = CoD.TextSettings.BodyFontBold.Font
     })
 
-    local requesttext = nil
-    if (request.discriminator == "0") then
-        requesttext = Engine.Localize("LUA_MENU_DISCORD_REQUEST", truncatename(request.username, 18))
-    else
-        requesttext = Engine.Localize("LUA_MENU_DISCORD_REQUEST_DISCRIMINATOR", truncatename(request.username, 18), request.discriminator)
-    end
+    local requesttext = Engine.Localize("LUA_MENU_DISCORD_REQUEST", truncatename(request.displayname, 18))
 
     username:setText(requesttext)
 
@@ -178,8 +173,8 @@ function addrequest(request)
         return button
     end
 
-    local accepttext = Engine.Localize("LUA_MENU_DISCORD_ACCEPT", Engine.GetBinding("discord_accept"))
-    local denytext = Engine.Localize("LUA_MENU_DISCORD_DENY", Engine.GetBinding("discord_deny"))
+    local accepttext = Engine.Localize("LUA_MENU_DISCORD_ACCEPT", game:getcommandbind("discord_accept"))
+    local denytext = Engine.Localize("LUA_MENU_DISCORD_DENY", game:getcommandbind("discord_deny"))
 
     buttons:addElement(createbutton(accepttext, true))
     buttons:addElement(createbutton(denytext))

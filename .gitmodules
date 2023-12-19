@@ -12,7 +12,7 @@
 	url = https://github.com/TsudaKageyu/minhook.git
 [submodule "deps/discord-rpc"]
 	path = deps/discord-rpc
-	url = https://github.com/discord/discord-rpc.git
+	url = https://github.com/fedddddd/discord-rpc.git
 [submodule "deps/asmjit"]
 	path = deps/asmjit
 	url = https://github.com/asmjit/asmjit.git

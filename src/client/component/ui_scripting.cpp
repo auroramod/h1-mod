@@ -335,6 +335,29 @@ namespace ui_scripting
 					material.data()));
 			};
 
+			game_type["getcommandbind"] = [](const game&, const std::string& cmd)
+			{
+				const auto binding = ::game::Key_GetBindingForCmd(cmd.data());
+				auto key = -1;
+				for (auto i = 0; i < 256; i++)
+				{
+					if (::game::playerKeys[0].keys[i].binding == binding)
+					{
+						key = i;
+					}
+				}
+
+				if (key == -1)
+				{
+					return ::game::UI_SafeTranslateString("KEY_UNBOUND");
+				}
+				else
+				{
+					const auto loc_string = ::game::Key_KeynumToString(key, 1, 0);
+					return ::game::UI_SafeTranslateString(loc_string);
+				}
+			};
+
 			auto server_list_table = table();
 			lua["serverlist"] = server_list_table;
 

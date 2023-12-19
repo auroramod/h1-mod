@@ -267,6 +267,22 @@ namespace discord
 			}, scheduler::pipeline::main);
 		}
 
+		std::string get_display_name(const DiscordUser* user)
+		{
+			if (user->discriminator != nullptr && user->discriminator != "0"s)
+			{
+				return std::format("{}#{}", user->username, user->discriminator);
+			}
+			else if (user->globalName[0] != 0)
+			{
+				return user->globalName;
+			}
+			else
+			{
+				return user->username;
+			}
+		}
+
 		void join_request(const DiscordUser* request)
 		{
 			console::debug("Discord: Join request from %s (%s)\n", request->username, request->userId);
@@ -283,6 +299,7 @@ namespace discord
 			const std::string avatar = request->avatar;
 			const std::string discriminator = request->discriminator;
 			const std::string username = request->username;
+			const auto display_name = get_display_name(request);
 
 			const auto now = std::chrono::high_resolution_clock::now();
 			auto iter = last_requests.find(user_id);
@@ -309,6 +326,7 @@ namespace discord
 				request_table.set("discriminator", discriminator);
 				request_table.set("userid", user_id);
 				request_table.set("username", username);
+				request_table.set("displayname", display_name);
 
 				ui_scripting::notify("discord_join_request",
 				{
