@@ -134,9 +134,9 @@ namespace utils::string
 	std::string strip(const std::string& string)
 	{
 		std::string new_string;
-		new_string.resize(string.size(), 0);
+		new_string.resize(string.size() + 1, 0);
 		strip(string.data(), new_string.data(), static_cast<int>(new_string.size()));
-		return new_string;
+		return new_string.data();
 	}
 
 	std::string convert(const std::wstring& wstr)

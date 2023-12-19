@@ -167,6 +167,7 @@ namespace materials
 		image->textures.map = nullptr;
 		image->textures.shaderView = nullptr;
 		image->textures.shaderViewAlternate = nullptr;
+		texture_table->u.image = image;
 
 		material->textureTable = texture_table;
 
