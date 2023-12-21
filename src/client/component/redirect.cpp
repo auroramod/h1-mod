@@ -21,10 +21,10 @@ namespace redirect
 			ZeroMemory(&process_info, sizeof(process_info));
 			startup_info.cb = sizeof(startup_info);
 
-			auto* arguments = const_cast<char*>(utils::string::va("%s%s%s", self.get_path().data(),
+			auto* arguments = const_cast<char*>(utils::string::va("%s%s%s", self.get_path().generic_string().data(),
 				(singleplayer ? " -singleplayer" : " -multiplayer"),
 				(mode.empty() ? "" : (" +"s + mode).data())));
-			CreateProcessA(self.get_path().data(), arguments, nullptr, nullptr, false, NULL, nullptr, nullptr,
+			CreateProcessA(self.get_path().generic_string().data(), arguments, nullptr, nullptr, false, NULL, nullptr, nullptr,
 				&startup_info, &process_info);
 
 			if (process_info.hThread && process_info.hThread != INVALID_HANDLE_VALUE)

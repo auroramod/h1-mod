@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/game.hpp"
+
 namespace dvars
 {
 	namespace disable
@@ -29,7 +31,7 @@ namespace dvars
 
 	namespace callback
 	{
-		void on_new_value(const std::string& name, const std::function<void()> callback);
+		void on_new_value(const std::string& name, const std::function<void(game::dvar_value* value)> callback);
 
 		void on_register(const std::string& name, const std::function<void()>& callback);
 	}

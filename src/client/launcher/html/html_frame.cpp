@@ -1,40 +1,117 @@
 #include <std_include.hpp>
 #include "html_frame.hpp"
-
-#include <utils/nt.hpp>
+#include "utils/nt.hpp"
+#include "utils/io.hpp"
+#include "utils/hook.hpp"
 
 std::atomic<int> html_frame::frame_count_ = 0;
+
+namespace
+{
+	void* original_func{};
+	GUID browser_emulation_guid{ 0xac969931, 0x3566, 0x4b50, {0xae, 0x48, 0x71, 0xb9, 0x6a, 0x75, 0xc8, 0x79} };
+
+	int WINAPI co_internet_feature_value_internal_stub(const GUID* guid, uint32_t* result)
+	{
+		const auto res = static_cast<decltype(co_internet_feature_value_internal_stub)*>(original_func)(guid, result);
+
+		if (IsEqualGUID(*guid, browser_emulation_guid))
+		{
+			*result = 11000;
+			return 0;
+		}
+
+		return res;
+	}
+
+	void patch_cached_browser_emulator(const utils::nt::library& urlmon)
+	{
+		std::string data{};
+		if (!utils::io::read_file(urlmon.get_path().generic_string(), &data))
+		{
+			return;
+		}
+
+		const utils::nt::library file_lib(reinterpret_cast<HMODULE>(data.data()));
+
+		auto translate_file_offset_to_rva = [&](const size_t file_offset) -> size_t
+		{
+			const auto sections = file_lib.get_section_headers();
+			for (const auto* section : sections)
+			{
+				if (section->PointerToRawData <= file_offset && section->PointerToRawData + section->SizeOfRawData > file_offset)
+				{
+					const auto section_va = file_offset - section->PointerToRawData;
+					return section_va + section->VirtualAddress;
+				}
+			}
+
+			return 0;
+		};
+
+		const auto guid_pos = data.find(std::string(reinterpret_cast<const char*>(&browser_emulation_guid), sizeof(browser_emulation_guid)));
+		if (guid_pos == std::string::npos)
+		{
+			return;
+		}
+
+		const auto guid_rva = translate_file_offset_to_rva(guid_pos);
+		const auto guid_va = reinterpret_cast<GUID*>(urlmon.get_ptr() + guid_rva);
+
+		if (!IsEqualGUID(*guid_va, browser_emulation_guid))
+		{
+			return;
+		}
+
+		const size_t unrelocated_guid_va = file_lib.get_optional_header()->ImageBase + guid_rva;
+		const auto guid_ptr_pos = data.find(std::string(reinterpret_cast<const char*>(&unrelocated_guid_va), sizeof(unrelocated_guid_va)));
+		if (guid_ptr_pos == std::string::npos)
+		{
+			return;
+		}
+
+		const auto guid_ptr_rva = translate_file_offset_to_rva(guid_ptr_pos);
+		*reinterpret_cast<GUID**>(urlmon.get_ptr() + guid_ptr_rva) = guid_va;
+	}
+
+	void setup_ie_hooks()
+	{
+		static const auto _ = []
+		{
+			const auto urlmon = utils::nt::library::load("urlmon.dll"s);
+			const auto target = urlmon.get_iat_entry("iertutil.dll", MAKEINTRESOURCEA(700));
+
+			original_func = *target;
+			utils::hook::set(target, co_internet_feature_value_internal_stub);
+
+			patch_cached_browser_emulator(urlmon);
+
+			return 0;
+		}();
+		(void)_;
+	}
+}
 
 html_frame::callback_params::callback_params(DISPPARAMS* params, VARIANT* res) : result(res)
 {
 	for (auto i = params->cArgs; i > 0; --i)
 	{
-		auto* param = &params->rgvarg[i - 1];
+		auto param = &params->rgvarg[i - 1];
 		this->arguments.emplace_back(param);
 	}
 }
 
-html_frame::html_frame()
-	: in_place_frame_(this)
-	  , in_place_site_(this)
-	  , ui_handler_(this)
-	  , client_site_(this)
-	  , html_dispatch_(this)
+html_frame::html_frame() : in_place_frame_(this), in_place_site_(this), ui_handler_(this), client_site_(this),
+html_dispatch_(this)
 {
+	setup_ie_hooks();
 	if (frame_count_++ == 0 && OleInitialize(nullptr) != S_OK)
 	{
 		throw std::runtime_error("Unable to initialize the OLE library");
 	}
 
-	auto needs_restart = false;
-	needs_restart |= set_browser_feature("FEATURE_BROWSER_EMULATION", 11000);
-	needs_restart |= set_browser_feature("FEATURE_GPU_RENDERING", 1);
-
-	if (needs_restart)
-	{
-		utils::nt::relaunch_self();
-		utils::nt::terminate(0);
-	}
+	set_browser_feature("FEATURE_BROWSER_EMULATION", 11000);
+	set_browser_feature("FEATURE_GPU_RENDERING", 1);
 }
 
 html_frame::~html_frame()

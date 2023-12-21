@@ -28,6 +28,7 @@ namespace scripting
 	utils::concurrency::container<shared_table_t> shared_table;
 
 	std::string current_file;
+	unsigned int current_file_id{};
 
 	namespace
 	{
@@ -46,8 +47,7 @@ namespace scripting
 
 		utils::hook::detour db_find_xasset_header_hook;
 
-		std::string current_script_file;
-		unsigned int current_file_id{};
+		const char* current_script_file_name;
 
 		game::dvar_t* g_dump_scripts;
 
@@ -63,7 +63,7 @@ namespace scripting
 				const auto* string = game::SL_ConvertToString(string_value);
 				if (string)
 				{
-					event e;
+					event e{};
 					e.name = string;
 					e.entity = notify_list_owner_id;
 
@@ -97,20 +97,16 @@ namespace scripting
 				game::G_LogPrintf("InitGame\n");
 
 				lua::engine::start();
-
-				gsc::load_main_handles();
 			}
+
+			gsc::load_main_handles();
 
 			g_load_structs_hook.invoke<void>();
 		}
 
 		void scr_load_level_stub()
 		{
-			if (!game::VirtualLobby_Loaded())
-			{
-				gsc::load_init_handles();
-			}
-
+			gsc::load_init_handles();
 			scr_load_level_hook.invoke<void>();
 		}
 
@@ -157,12 +153,13 @@ namespace scripting
 
 		void process_script_stub(const char* filename)
 		{
-			current_script_file = filename;
+			current_script_file_name = filename;
 			
 			const auto file_id = atoi(filename);
 			if (file_id)
 			{
 				current_file_id = static_cast<std::uint16_t>(file_id);
+				current_file = scripting::get_token(current_file_id);
 			}
 			else
 			{
@@ -176,14 +173,10 @@ namespace scripting
 		void add_function_sort(unsigned int id, const char* pos)
 		{
 			std::string filename = current_file;
-			if (current_file_id)
-			{
-				filename = scripting::get_token(current_file_id);
-			}
 
 			if (!script_function_table_sort.contains(filename))
 			{
-				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_script_file.data(), false);
+				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_script_file_name, false);
 				if (script)
 				{
 					const auto end = &script->bytecode[script->bytecodeLen];
@@ -207,15 +200,7 @@ namespace scripting
 		{
 			add_function_sort(thread_name, code_pos);
 
-			if (current_file_id)
-			{
-				const auto name = get_token(current_file_id);
-				add_function(name, thread_name, code_pos);
-			}
-			else
-			{
-				add_function(current_file, thread_name, code_pos);
-			}
+			add_function(current_file, thread_name, code_pos);
 
 			scr_set_thread_position_hook.invoke<void>(thread_name, code_pos);
 		}

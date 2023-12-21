@@ -2,8 +2,10 @@
 #include "loader/component_loader.hpp"
 
 #include "dvars.hpp"
+#include "console.hpp"
 
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 
 #include <utils/hook.hpp>
 
@@ -255,13 +257,13 @@ namespace dvars
 
 	namespace callback
 	{
-		static std::unordered_map<int, std::function<void()>> new_value_callbacks;
+		static std::unordered_map<int, std::function<void(game::dvar_value*)>> dvar_new_value_callbacks;
 
 		static std::unordered_map<int, std::function<void()>> dvar_on_register_function_map;
 
-		void on_new_value(const std::string& name, const std::function<void()> callback)
+		void on_new_value(const std::string& name, const std::function<void(game::dvar_value*)> callback)
 		{
-			new_value_callbacks[game::generateHashValue(name.data())] = callback;
+			dvar_new_value_callbacks[game::generateHashValue(name.data())] = callback;
 		}
 
 		void on_register(const std::string& name, const std::function<void()>& callback)
@@ -532,15 +534,34 @@ namespace dvars
 	{
 		dvar_set_variant_hook.invoke<void>(dvar, value, source);
 
-		if (callback::new_value_callbacks.find(dvar->hash) != callback::new_value_callbacks.end())
+		if (callback::dvar_new_value_callbacks.contains(dvar->hash))
 		{
-			callback::new_value_callbacks[dvar->hash]();
+			callback::dvar_new_value_callbacks[dvar->hash](value);
 		}
 	}
 
 	class component final : public component_interface
 	{
 	public:
+		void post_start() override
+		{
+			try
+			{
+				const auto list_json = utils::nt::load_resource(DVAR_LIST);
+				const auto list = nlohmann::json::parse(list_json);
+				for (const auto& [_0, dvar_info] : list.items())
+				{
+					const auto name = dvar_info[0].get<std::string>();
+					const auto description = dvar_info[1].get<std::string>();
+					dvars::insert_dvar_info(name, description);
+				}
+			}
+			catch (const std::exception& e)
+			{
+				console::error("Failed to parse dvar list: %s\n", e.what());
+			}
+		}
+
 		void post_unpack() override
 		{
 			dvar_register_bool_hook.create(SELECT_VALUE(0x419220_b, 0x182340_b), &dvar_register_bool);

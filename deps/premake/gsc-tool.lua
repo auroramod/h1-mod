@@ -1,5 +1,5 @@
 gsc_tool = {
-    source = path.join(dependencies.basePath, "gsc-tool/src")
+    source = path.join(dependencies.basePath, "gsc-tool")
 }
 
 function gsc_tool.import()
@@ -9,60 +9,54 @@ end
 
 function gsc_tool.includes()
     includedirs {
-        path.join(gsc_tool.source, "utils"), 
-        path.join(gsc_tool.source, "h1"),
-        path.join(dependencies.basePath, "extra/gsc-tool") -- https://github.com/GEEKiDoS/open-teknomw3/blob/master/deps/extra/gsc-tool
+        path.join(gsc_tool.source, "include")
     }
 end
 
--- https://github.com/xensik/gsc-tool/blob/dev/premake5.lua#L95
 function gsc_tool.project()
     project "xsk-gsc-utils"
-        kind "StaticLib"
-        language "C++"
+    kind "StaticLib"
+    language "C++"
+    warnings "Off"
 
-        pchheader "stdafx.hpp"
-        pchsource(path.join(gsc_tool.source, "utils/stdafx.cpp"))
+    files {
+        path.join(gsc_tool.source, "include/xsk/utils/*.hpp"), 
+        path.join(gsc_tool.source, "src/utils/*.cpp")
+    }
 
-        files {
-            path.join(gsc_tool.source, "utils/**.h"), 
-            path.join(gsc_tool.source, "utils/**.hpp"),
-            path.join(gsc_tool.source, "utils/**.cpp")
-        }
+    includedirs {
+        path.join(gsc_tool.source, "include")
+    }
 
-        includedirs {
-            path.join(gsc_tool.source, "utils"), 
-            gsc_tool.source
-        }
-
-        zlib.includes()
+    zlib.includes()
 
     project "xsk-gsc-h1"
-        kind "StaticLib"
-        language "C++"
+    kind "StaticLib"
+    language "C++"
+    warnings "Off"
 
-        pchheader "stdafx.hpp"
-        pchsource(path.join(gsc_tool.source, "h1/stdafx.cpp"))
-
-        files {
-            path.join(gsc_tool.source, "h1/**.h"), 
-            path.join(gsc_tool.source, "h1/**.hpp"),
-            path.join(gsc_tool.source, "h1/**.cpp"), 
-            path.join(dependencies.basePath, "extra/gsc-tool/interface.cpp")
-        }
-
-        includedirs {
-            path.join(gsc_tool.source, "h1"), 
-            gsc_tool.source, 
-            path.join(dependencies.basePath, "extra/gsc-tool")
-        }
-
-    -- https://github.com/xensik/gsc-tool/blob/dev/premake5.lua#L25
-	-- adding these build options fixes a bunch of parser stuff
     filter "action:vs*"
-        buildoptions "/bigobj"
         buildoptions "/Zc:__cplusplus"
     filter {}
+
+    files {
+        path.join(gsc_tool.source, "include/xsk/stdinc.hpp"),
+ 
+        path.join(gsc_tool.source, "include/xsk/gsc/engine/h1.hpp"),
+        path.join(gsc_tool.source, "src/gsc/engine/h1.cpp"),
+
+        path.join(gsc_tool.source, "src/gsc/engine/h1_code.cpp"),
+        path.join(gsc_tool.source, "src/gsc/engine/h1_func.cpp"),
+        path.join(gsc_tool.source, "src/gsc/engine/h1_meth.cpp"),
+        path.join(gsc_tool.source, "src/gsc/engine/h1_token.cpp"), path.join(gsc_tool.source, "src/gsc/*.cpp"),
+
+        path.join(gsc_tool.source, "src/gsc/common/*.cpp"),
+        path.join(gsc_tool.source, "include/xsk/gsc/common/*.hpp")
+    }
+
+    includedirs {
+        path.join(gsc_tool.source, "include")
+    }
 end
 
 table.insert(dependencies, gsc_tool)

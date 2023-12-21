@@ -4,11 +4,12 @@
 #include "command.hpp"
 #include "console.hpp"
 #include "dvars.hpp"
-#include "game_console.hpp"
 #include "fastfiles.hpp"
 #include "filesystem.hpp"
-#include "scheduler.hpp"
+#include "game_console.hpp"
 #include "logfile.hpp"
+#include "mods.hpp"
+#include "scheduler.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -27,8 +28,6 @@ namespace command
 
 		std::unordered_map<std::string, std::function<void(params&)>> handlers;
 		std::unordered_map<std::string, std::function<void(int, params_sv&)>> handlers_sv;
-
-		std::optional<std::string> saved_fs_game;
 
 		void main_handler()
 		{
@@ -557,43 +556,11 @@ namespace command
 		}
 	}
 
-	void register_fs_game_path()
-	{
-		const auto* fs_game = game::Dvar_FindVar("fs_game");
-		const auto new_mod_path = fs_game->current.string;
-
-		// check if the last saved fs_game value isn't empty and if it doesn't equal the new fs_game
-		if (saved_fs_game.has_value() && saved_fs_game != new_mod_path)
-		{
-			// unregister path to be used as a fs directory
-			filesystem::unregister_path(saved_fs_game.value());
-		}
-
-		if (new_mod_path && !new_mod_path[0])
-		{
-			return;
-		}
-
-		// register fs_game value as a fs directory used for many things
-		filesystem::register_path(new_mod_path);
-		saved_fs_game = new_mod_path;
-	}
-
 	class component final : public component_interface
 	{
 	public:
 		void post_unpack() override
 		{
-			// it might be overdone to change the filesystem path on every new value change, but to be fair,
-			// for the mods that don't need full restarts, this is good because it'll adjust and work like so
-			// in my opinion, this is fine. if a user tries to modify the dvar themselves, they'll have problems
-			// but i seriously doubt it'll be bad.
-			dvars::callback::on_new_value("fs_game", []()
-			{
-				console::warn("fs_game value changed, filesystem paths will be adjusted to new dvar value.");
-				register_fs_game_path();
-			});
-
 			if (game::environment::is_sp())
 			{
 				add_commands_sp();
@@ -702,7 +669,6 @@ namespace command
 
 				const auto name = params.get(1);
 				const auto dvar = game::Dvar_FindVar(name);
-
 				if (dvar == nullptr)
 				{
 					console::info("%s doesn't exist\n", name);

@@ -2,7 +2,7 @@
     "LUA_MENU_SERVERLIST": "伺服器列表",
     "PLATFORM_SYSTEM_LINK_TITLE": "伺服器列表",
     "MENU_NUMPLAYERS": "玩家",
-    "MENU_PING": "網路延遲",
+    "MENU_PING": "延遲",
     "MENU_TYPE1": "類型",
     "LOCALE_ENGLISH": "英文",
     "LOCALE_ENGLISH_SAFE": "英文 (審查制度)",
@@ -17,6 +17,7 @@
     "LOCALE_SIMPLIFIED_CHINESE": "簡體中文",
     "LOCALE_SPANISH": "西班牙文",
     "LOCALE_TRADITIONAL_CHINESE": "繁體中文",
+    "MENU_QUIT_TO_DESKTOP": "返回桌面",
 
     "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "解鎖所有任務",
     "LUA_MENU_CANCEL_UNLOCK_CAPS": "取消解鎖"

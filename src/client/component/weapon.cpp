@@ -6,8 +6,10 @@
 #include "fastfiles.hpp"
 
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 
 #include <utils/hook.hpp>
+#include <utils/memory.hpp>
 
 namespace weapon
 {
@@ -37,27 +39,38 @@ namespace weapon
 			// precache items
 			for (std::size_t i = 0; i < weapons.size(); i++)
 			{
-				console::debug("precaching weapon \"%s\"\n", weapons[i]->name);
+				//console::debug("precaching weapon \"%s\"\n", weapons[i]->name);
 				game::G_GetWeaponForName(weapons[i]->name);
 			}
 		}
 
 		utils::hook::detour xmodel_get_bone_index_hook;
-		__int64 xmodel_get_bone_index_stub(game::XModel* model, game::scr_string_t name, unsigned int offset, char* index)
+		int xmodel_get_bone_index_stub(game::XModel* model, game::scr_string_t name, unsigned int offset, char* index)
 		{
-			auto result = xmodel_get_bone_index_hook.invoke<__int64>(model, name, offset, index);
-			if (!result)
+			auto result = xmodel_get_bone_index_hook.invoke<int>(model, name, offset, index);
+			if (result)
 			{
-				if (name == game::SL_GetString("tag_weapon_right", 0) ||
-					name == game::SL_GetString("tag_knife_attach", 0))
+				return result;
+			}
+
+			const auto original_index = *index;
+			const auto original_result = result;
+
+			if (name == game::SL_FindString("tag_weapon_right") ||
+				name == game::SL_FindString("tag_knife_attach"))
+			{
+				const auto tag_weapon = game::SL_FindString("tag_weapon");
+				result = xmodel_get_bone_index_hook.invoke<int>(model, tag_weapon, offset, index);
+				if (result)
 				{
-					result = xmodel_get_bone_index_hook.invoke<__int64>(model, game::SL_GetString("tag_weapon", 0), offset, index);
-					if (result)
-					{
-						console::debug("using tag_weapon instead of %s (%s, %d)\n", game::SL_ConvertToString(name), model->name, offset);
-					}
+					console::debug("using tag_weapon instead of %s (%s, %d, %d)\n", game::SL_ConvertToString(name), model->name, offset, *index);
+					return result;
 				}
 			}
+
+			*index = original_index;
+			result = original_result;
+
 			return result;
 		}
 
@@ -116,6 +129,131 @@ namespace weapon
 		{
 			set_weapon_field<bool>(weapon_name, field, value);
 		}
+
+		int compare_hash(const void* a, const void* b)
+		{
+			const auto hash_a = reinterpret_cast<game::DDLHash*>(
+				reinterpret_cast<size_t>(a))->hash;
+			const auto hash_b = reinterpret_cast<game::DDLHash*>(
+				reinterpret_cast<size_t>(b))->hash;
+
+			if (hash_a < hash_b)
+			{
+				return -1;
+			}
+			else if (hash_a > hash_b)
+			{
+				return 1;
+			}
+
+			return 0;
+		}
+
+		utils::memory::allocator ddl_allocator;
+		std::unordered_set<void*> modified_enums;
+
+		std::vector<const char*> get_stringtable_entries(const std::string& name)
+		{
+			std::vector<const char*> entries;
+
+			const auto string_table = game::DB_FindXAssetHeader(
+				game::ASSET_TYPE_STRINGTABLE, name.data(), false).stringTable;
+
+			if (string_table == nullptr)
+			{
+				return entries;
+			}
+
+			for (auto row = 0; row < string_table->rowCount; row++)
+			{
+				if (string_table->columnCount <= 0)
+				{
+					continue;
+				}
+
+				const auto index = (row * string_table->columnCount);
+				const auto weapon = string_table->values[index].string;
+				entries.push_back(ddl_allocator.duplicate_string(weapon));
+			}
+
+			return entries;
+		}
+
+		void add_entries_to_enum(game::DDLEnum* enum_, const std::vector<const char*> entries)
+		{
+			if (entries.size() <= 0)
+			{
+				return;
+			}
+
+			const auto new_size = enum_->memberCount + entries.size();
+			const auto members = ddl_allocator.allocate_array<const char*>(new_size);
+			const auto hash_list = ddl_allocator.allocate_array<game::DDLHash>(new_size);
+
+			std::memcpy(members, enum_->members, 8 * enum_->memberCount);
+			std::memcpy(hash_list, enum_->hashTable.list, 8 * enum_->hashTable.count);
+
+			for (auto i = 0; i < entries.size(); i++)
+			{
+				const auto hash = utils::hook::invoke<unsigned int>(0x794FB0_b, entries[i], 0);
+				const auto index = enum_->memberCount + i;
+				hash_list[index].index = index;
+				hash_list[index].hash = hash;
+				members[index] = entries[i];
+			}
+
+			std::qsort(hash_list, new_size, sizeof(game::DDLHash), compare_hash);
+
+			enum_->members = members;
+			enum_->hashTable.list = hash_list;
+			enum_->memberCount = static_cast<int>(new_size);
+			enum_->hashTable.count = static_cast<int>(new_size);
+		}
+
+		void load_ddl_asset_stub(game::DDLRoot** asset)
+		{
+			const auto root = *asset;
+			if (!root->ddlDef)
+			{
+				return utils::hook::invoke<void>(0x39BE20_b, root);
+			}
+
+			auto ddl_def = root->ddlDef;
+			while (ddl_def)
+			{
+				for (auto i = 0; i < ddl_def->enumCount; i++)
+				{
+					const auto enum_ = &ddl_def->enumList[i];
+					if (modified_enums.contains(enum_))
+					{
+						continue;
+					}
+
+					if ((enum_->name == "WeaponStats"s || enum_->name == "Weapon"s))
+					{
+						const auto weapons = get_stringtable_entries("mp/customweapons.csv");
+						add_entries_to_enum(enum_, weapons);
+						modified_enums.insert(enum_);
+					}
+
+					if (enum_->name == "AttachmentBase"s)
+					{
+						const auto attachments = get_stringtable_entries("mp/customattachments.csv");
+						add_entries_to_enum(enum_, attachments);
+						modified_enums.insert(enum_);
+					}
+				}
+
+				ddl_def = ddl_def->next;
+			}
+
+			utils::hook::invoke<void>(0x39BE20_b, asset);
+		}
+	}
+
+	void clear_modifed_enums()
+	{
+		modified_enums.clear();
 	}
 
 	class component final : public component_interface
@@ -137,6 +275,11 @@ namespace weapon
 
 				// patch attachment configstring so it will create if not found
 				utils::hook::call(0x41C595_b, g_find_config_string_index_stub);
+
+				utils::hook::call(0x36B4D4_b, load_ddl_asset_stub);
+
+				dvars::register_bool("sv_disableCustomClasses", 
+					false, game::DVAR_FLAG_REPLICATED, "Disable custom classes on server");
 			}
 
 #ifdef DEBUG

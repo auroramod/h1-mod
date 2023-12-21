@@ -132,6 +132,21 @@ namespace renderer
 				a.jmp(0x1C4136_b);
 			});
 		}
+
+		void r_preload_shaders_stub(utils::hook::assembler& a)
+		{
+			const auto is_zero = a.newLabel();
+
+			a.mov(rax, qword_ptr(SELECT_VALUE(0x123FFF30_b, 0x111DC230_b)));
+			a.test(rax, rax);
+			a.jz(is_zero);
+
+			a.mov(rcx, qword_ptr(rax, 0x540C68));
+			a.jmp(SELECT_VALUE(0x5CF1FF_b, 0x6E76FF_b));
+
+			a.bind(is_zero);
+			a.jmp(SELECT_VALUE(0x5CF20A_b, 0x6E7722_b));
+		}
 	}
 	
 	class component final : public component_interface
@@ -166,6 +181,10 @@ namespace renderer
 				r_use_custom_red_dot_brightness = dvars::register_bool("r_useCustomRedDotBrightness",
 					true, game::DVAR_FLAG_SAVED, "Use custom red-dot brightness values");
 			}
+
+			// patch r_preloadShaders crash at init
+			utils::hook::jump(SELECT_VALUE(0x5CF1F1_b, 0x6E76F1_b), utils::hook::assemble(r_preload_shaders_stub), true);
+			dvars::override::register_bool("r_preloadShaders", false, game::DVAR_FLAG_SAVED);
 		}
 	};
 }

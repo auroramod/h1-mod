@@ -2,8 +2,12 @@
 
 #define CLIENT_DATA_FOLDER "cdata"
 
+#include <utils/http.hpp>
+
 namespace updater
 {
+	std::optional<utils::http::result> get_server_file(const std::string& endpoint);
+
 	void relaunch();
 
 	void set_has_tried_update(bool tried);

@@ -1,8 +1,10 @@
 #pragma once
 
+#include "game/game.hpp"
+
 namespace materials
 {
-	void add(const std::string& name, const std::string& data);
-	bool exists(const std::string& name);
-	void clear();
+	bool setup_material_image(game::Material* material, const std::string& data);
+	game::Material* create_material(const std::string& name);
+	void free_material(game::Material* material);
 }

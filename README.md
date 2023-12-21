@@ -10,9 +10,7 @@
   <img src="assets/github/banner.png?raw=true" />
 </p>
 
-A client for Call of Duty: Modern Warfare Remastered.
-
-[This project is based on S1x.](https://github.com/XLabsProject/s1x-client)
+NOTE: You must legally own Call of Duty®: Modern Warfare Remastered to run this mod. Cracked/Pirated versions of the game are **NOT** supported.
 
 ## Compile from source
 
@@ -27,13 +25,11 @@ A client for Call of Duty: Modern Warfare Remastered.
 | `--copy-to=PATH`            | Optional, copy the EXE to a custom folder after build, define the path here if wanted. |
 | `--dev-build`               | Enable development builds of the client. |
 
-## Credits:
+## Credits
 
-- [XLabsProject](https://github.com/XLabsProject) - codebase and iw6x/s1x research
-- [quaK](https://github.com/Joelrau) - lots of insight and help
-- [fed](https://github.com/fedddddd) - fixed DW/networking, work from [h2-mod](https://github.com/fedddddd/h2-mod)
-- [Skull](https://github.com/skkuull) + [mjkzy](https://github.com/mjkzy) - porting code from s1x
-- [momo5502](https://github.com/momo5502) - Arxan/Steam research, developer of XLabsProject :D
+- [S1x](https://github.com/XLabsProject/s1x-client) - codebase and research (predecessor of MWR)
+- [h2-mod](https://github.com/fedddddd/h2-mod) - research (successor of MWR)
+- [momo5502](https://github.com/momo5502) - Arxan/Steam research, developer of [XLabsProject](https://github.com/XLabsProject)
 
 ## Disclaimer
 

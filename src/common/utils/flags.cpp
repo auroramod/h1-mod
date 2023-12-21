@@ -6,42 +6,110 @@
 
 namespace utils::flags
 {
-	void parse_flags(std::vector<std::string>& flags)
+	namespace
 	{
-		int num_args;
-		auto* const argv = CommandLineToArgvW(GetCommandLineW(), &num_args);
+		bool parsed = false;
 
-		flags.clear();
+		using flag_map_t = std::unordered_map<std::string, std::optional<std::string>>;
 
-		if (argv)
+		flag_map_t& get_flags()
 		{
-			for (auto i = 0; i < num_args; ++i)
-			{
-				std::wstring wide_flag(argv[i]);
-				if (wide_flag[0] == L'-')
-				{
-					wide_flag.erase(wide_flag.begin());
-					const auto flag = string::convert(wide_flag);
-					flags.emplace_back(string::to_lower(flag));
-				}
-			}
+			static flag_map_t map = {};
+			return map;
+		}
 
-			LocalFree(argv);
+		void parse_flags(flag_map_t& flags)
+		{
+			int num_args;
+			auto* const argv = CommandLineToArgvW(GetCommandLineW(), &num_args);
+
+			flags.clear();
+
+			if (argv)
+			{
+				std::optional<std::string> last_flag{};
+				for (auto i = 0; i < num_args; ++i)
+				{
+					std::wstring wide_flag(argv[i]);
+					if (wide_flag[0] == L'-')
+					{
+						wide_flag.erase(wide_flag.begin());
+						const auto flag = string::convert(wide_flag);
+
+						last_flag = flag;
+						flags[flag] = {};
+					}
+					else if (last_flag.has_value())
+					{
+						const auto& flag = last_flag.value();
+
+						flags[flag] = string::convert(wide_flag);
+						last_flag = {};
+					}
+				}
+
+				LocalFree(argv);
+			}
+		}
+
+		void check_parse_flags()
+		{
+			if (!parsed)
+			{
+				parse_flags(get_flags());
+				parsed = true;
+			}
 		}
 	}
 
 	bool has_flag(const std::string& flag)
 	{
-		static auto parsed = false;
-		static std::vector<std::string> enabled_flags;
+		check_parse_flags();
 
-		if (!parsed)
+		for (const auto& [name, value] : get_flags())
 		{
-			parse_flags(enabled_flags);
-			parsed = true;
+			if (string::to_lower(name) == string::to_lower(flag))
+			{
+				return true;
+			}
 		}
 
-		return std::ranges::any_of(enabled_flags.cbegin(), enabled_flags.cend(),
-			[flag](const auto& elem) { return elem == string::to_lower(flag); });
+		return false;
+	}
+
+	std::optional<std::string> get_flag(const std::string& flag)
+	{
+		check_parse_flags();
+
+		for (const auto& [name, value] : get_flags())
+		{
+			if (string::to_lower(name) == string::to_lower(flag))
+			{
+				return value;
+			}
+		}
+
+		return {};
+	}
+
+	std::optional<std::string> get_flag(const std::string& flag, const std::string& shortname)
+	{
+		auto value = get_flag(flag);
+		if (!value.has_value())
+		{
+			value = get_flag(shortname);
+		}
+		return value;
+	}
+
+	std::string get_flag(const std::string& flag, const std::string& shortname,
+		const std::string& default_)
+	{
+		const auto value = get_flag(flag, shortname);
+		if (!value.has_value())
+		{
+			return default_;
+		}
+		return value.value();
 	}
 }

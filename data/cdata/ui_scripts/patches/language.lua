@@ -49,8 +49,8 @@ LUI.MenuBuilder.registerType("choose_language_menu", function(a1)
             menu:AddButton(Engine.Localize(string.format("MENU_%s", available_languages[i])), function()
                 LUI.yesnopopup({
                     title = Engine.Localize("@MENU_NOTICE"),
-                    text = Engine.Localize("MENU_" .. current_language) .. " → " ..
-                        Engine.Localize("MENU_" .. available_languages[i]) .. "\n\n" ..
+                    text = "^2" .. Engine.Localize("MENU_" .. current_language) .. "^7 → ^5" ..
+                        Engine.Localize("MENU_" .. available_languages[i]) .. "\n\n^7" ..
                         Engine.Localize("@LUA_MENU_CONFIRM_LANGUAGE") .. " " ..
                         Engine.Localize("@MENU_APPLY_LANGUAGE_SETTINGS"),
                     callback = function(result)

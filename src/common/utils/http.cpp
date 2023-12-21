@@ -43,7 +43,7 @@ namespace utils::http
 	}
 
 	std::optional<result> get_data(const std::string& url, const std::string& fields,
-		const headers& headers, const std::function<int(size_t, size_t)>& callback)
+		const headers& headers, const std::function<int(size_t, size_t)>& callback, int timeout)
 	{
 		curl_slist* header_list = nullptr;
 		auto* curl = curl_easy_init();
@@ -76,6 +76,8 @@ namespace utils::http
 		curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &helper);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
 
 		if (!fields.empty())
 		{

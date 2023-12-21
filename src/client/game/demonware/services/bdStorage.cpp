@@ -7,8 +7,16 @@
 
 #include "game/game.hpp"
 
+#include "../../../component/mods.hpp"
+
 namespace demonware
 {
+	std::string storage_path;
+	void set_storage_path(const std::string& path)
+	{
+		storage_path = path;
+	}
+
 	bdStorage::bdStorage() : service(10, "bdStorage")
 	{
 		this->register_task(20, &bdStorage::list_publisher_files);
@@ -162,7 +170,31 @@ namespace demonware
 
 	std::string bdStorage::get_user_file_path(const std::string& name)
 	{
-		return "players2/user/" + name;
+		const auto regular_path = "players2/user/";
+		if (storage_path.empty())
+		{
+			return regular_path + name;
+		}
+
+		const auto custom_path = regular_path + storage_path + "/";
+		if (!utils::io::directory_exists(custom_path))
+		{
+			utils::io::create_directory(custom_path);
+			const auto copy_file = [&](const std::string& name)
+			{
+				const auto file_path = regular_path + name;
+				if (utils::io::file_exists(file_path))
+				{
+					const auto data = utils::io::read_file(file_path);
+					utils::io::write_file(custom_path + name, data, false);
+				}
+			};
+
+			copy_file("commondata");
+			copy_file("mpdata");
+		}
+
+		return custom_path + name;
 	}
 
 	void bdStorage::upload_and_validate_files(service_server* server, byte_buffer* buffer) const

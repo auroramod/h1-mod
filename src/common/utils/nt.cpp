@@ -15,7 +15,8 @@ namespace utils::nt
 	library library::get_by_address(void* address)
 	{
 		HMODULE handle = nullptr;
-		GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, static_cast<LPCSTR>(address), &handle);
+		GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+			static_cast<LPCSTR>(address), &handle);
 		return library(handle);
 	}
 
@@ -117,29 +118,29 @@ namespace utils::nt
 	{
 		if (!this->is_valid()) return "";
 
-		auto path = this->get_path();
-		const auto pos = path.find_last_of("/\\");
-		if (pos == std::string::npos) return path;
+		const auto path = this->get_path();
+		const auto pos = path.generic_string().find_last_of("/\\");
+		if (pos == std::string::npos) return path.generic_string();
 
-		return path.substr(pos + 1);
+		return path.generic_string().substr(pos + 1);
 	}
 
-	std::string library::get_path() const
+	std::filesystem::path library::get_path() const
 	{
-		if (!this->is_valid()) return "";
+		if (!this->is_valid()) return {};
 
-		char name[MAX_PATH] = {0};
-		GetModuleFileNameA(this->module_, name, sizeof name);
+		wchar_t name[MAX_PATH] = { 0 };
+		GetModuleFileNameW(this->module_, name, MAX_PATH);
 
-		return name;
+		return { name };
 	}
 
-	std::string library::get_folder() const
-	{
-		if (!this->is_valid()) return "";
 
-		const auto path = std::filesystem::path(this->get_path());
-		return path.parent_path().generic_string();
+	std::filesystem::path library::get_folder() const
+	{
+		if (!this->is_valid()) return {};
+
+		return this->get_path().parent_path().generic_string();
 	}
 
 	void library::free()
@@ -156,7 +157,12 @@ namespace utils::nt
 		return this->module_;
 	}
 
-	void** library::get_iat_entry(const std::string& module_name, const std::string& proc_name) const
+	void** library::get_iat_entry(const std::string& module_name, std::string proc_name) const
+	{
+		return this->get_iat_entry(module_name, proc_name.data());
+	}
+
+	void** library::get_iat_entry(const std::string& module_name, const char* proc_name) const
 	{
 		if (!this->is_valid()) return nullptr;
 
@@ -166,7 +172,7 @@ namespace utils::nt
 		auto* const target_function = other_module.get_proc<void*>(proc_name);
 		if (!target_function) return nullptr;
 
-		auto* header = this->get_optional_header();
+		const auto* header = this->get_optional_header();
 		if (!header) return nullptr;
 
 		auto* import_descriptor = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(this->get_ptr() + header->DataDirectory
@@ -183,14 +189,20 @@ namespace utils::nt
 
 				while (original_thunk_data->u1.AddressOfData)
 				{
-					const size_t ordinal_number = original_thunk_data->u1.AddressOfData & 0xFFFFFFF;
-
-					if (ordinal_number > 0xFFFF) continue;
-
-					if (GetProcAddress(other_module.module_, reinterpret_cast<char*>(ordinal_number)) ==
-						target_function)
+					if (thunk_data->u1.Function == reinterpret_cast<uint64_t>(target_function))
 					{
 						return reinterpret_cast<void**>(&thunk_data->u1.Function);
+					}
+
+					const size_t ordinal_number = original_thunk_data->u1.AddressOfData & 0xFFFFFFF;
+
+					if (ordinal_number <= 0xFFFF)
+					{
+						auto* proc = GetProcAddress(other_module.module_, reinterpret_cast<char*>(ordinal_number));
+						if (reinterpret_cast<void*>(proc) == target_function)
+						{
+							return reinterpret_cast<void**>(&thunk_data->u1.Function);
+						}
 					}
 
 					++original_thunk_data;
@@ -208,15 +220,13 @@ namespace utils::nt
 
 	bool is_wine()
 	{
-		static std::optional<bool> is_wine = {};
-
-		if (!is_wine.has_value())
+		static const auto has_wine_export = []() -> bool
 		{
-			const utils::nt::library ntdll("ntdll.dll");
-			is_wine = ntdll.get_proc<void*>("wine_get_version") != nullptr;
-		}
+			const library ntdll("ntdll.dll");
+			return ntdll.get_proc<void*>("wine_get_version");
+		}();
 
-		return is_wine.value();
+		return has_wine_export;
 	}
 
 	void raise_hard_exception()
@@ -265,8 +275,8 @@ namespace utils::nt
 			}
 		}
 
-		CreateProcessA(self.get_path().data(), command_line.data(), nullptr, nullptr, false, NULL, nullptr, current_dir,
-		               &startup_info, &process_info);
+		CreateProcessA(self.get_path().generic_string().data(), command_line.data(), nullptr, nullptr, false, 
+			CREATE_NEW_CONSOLE, nullptr, current_dir, &startup_info, &process_info);
 
 		if (process_info.hThread && process_info.hThread != INVALID_HANDLE_VALUE) CloseHandle(process_info.hThread);
 		if (process_info.hProcess && process_info.hProcess != INVALID_HANDLE_VALUE) CloseHandle(process_info.hProcess);
@@ -275,5 +285,6 @@ namespace utils::nt
 	void terminate(const uint32_t code)
 	{
 		TerminateProcess(GetCurrentProcess(), code);
+		_Exit(code);
 	}
 }

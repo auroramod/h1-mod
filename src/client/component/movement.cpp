@@ -112,7 +112,7 @@ namespace movement
 
 			const auto ps = pm->ps;
 
-			ps->sprintButtonUpRequired = 1;
+			ps->sprintState.sprintButtonUpRequired = 1;
 
 			float fmove{}, smove{}, wishspeed{};
 			game::vec3_t wishvel{}, wishdir{};

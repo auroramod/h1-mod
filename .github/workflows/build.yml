@@ -8,6 +8,9 @@ on:
     branches:
       - "*"
     types: [opened, synchronize, reopened]
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   build:
     name: Build binaries
@@ -18,17 +21,6 @@ jobs:
           - Debug
           - Release
     steps:
-      - name: Wait for previous workflows
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-        uses: softprops/turnstyle@v1
-        with:
-          poll-interval-seconds: 10
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up git config
-        run: git config --global url."https://".insteadOf git://
-
       - name: Check out files
         uses: actions/checkout@v3
         with:
@@ -38,10 +30,9 @@ jobs:
           lfs: false
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
+        uses: microsoft/setup-msbuild@v1.1.3
 
       - name: Generate project files
-        #run: tools/premake5 vs2022 --ci-build
         run: tools/premake5 vs2022
 
       - name: Set up problem matching
@@ -51,7 +42,7 @@ jobs:
         run: msbuild /m /v:minimal /p:Configuration=${{matrix.configuration}} /p:Platform=x64 build/h1-mod.sln
 
       - name: Upload ${{matrix.configuration}} binaries
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.0
         with:
           name: ${{matrix.configuration}} binaries
           path: |
@@ -59,7 +50,7 @@ jobs:
             build/bin/x64/${{matrix.configuration}}/h1-mod.pdb
             
       - name: Upload ${{matrix.configuration}} data artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.0
         with:
           name: ${{matrix.configuration}} data artifacts
           path: |
@@ -79,12 +70,12 @@ jobs:
         run: echo "H1_MOD_MASTER_PATH=${{ secrets.H1_MOD_MASTER_SSH_PATH_DEV }}" >> $GITHUB_ENV
 
       - name: Download Release binaries
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Release binaries
           
       - name: Download Release data artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Release data artifacts
           path: data
@@ -97,13 +88,6 @@ jobs:
 
       - name: Add known hosts
         run: ssh-keyscan -H ${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }} >> ~/.ssh/known_hosts
-
-      - name: Wait for previous workflows
-        uses: softprops/turnstyle@v1
-        with:
-          poll-interval-seconds: 10
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Remove old data files
         run: ssh ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }} rm -rf ${{ env.H1_MOD_MASTER_PATH }}/h1-mod/*

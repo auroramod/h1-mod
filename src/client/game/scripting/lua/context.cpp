@@ -11,8 +11,7 @@
 #include "component/fastfiles.hpp"
 #include "component/scheduler.hpp"
 
-#include <xsk/gsc/types.hpp>
-#include <xsk/resolver.hpp>
+#include "component/gsc/script_loading.hpp"
 
 #include <utils/string.hpp>
 #include <utils/io.hpp>
@@ -217,7 +216,7 @@ namespace scripting::lua
 
 			auto entity_type = state.new_usertype<entity>("entity");
 
-			for (const auto& func : xsk::gsc::h1::resolver::get_methods())
+			for (auto const& func : gsc::gsc_ctx->meth_map())
 			{
 				const auto name = std::string(func.first);
 				entity_type[name] = [name](const entity& entity, const sol::this_state s, sol::variadic_args va)
@@ -336,7 +335,7 @@ namespace scripting::lua
 			auto game_type = state.new_usertype<game>("game_");
 			state["game"] = game();
 
-			for (const auto& func : xsk::gsc::h1::resolver::get_functions())
+			for (auto const& func : gsc::gsc_ctx->func_map())
 			{
 				const auto name = std::string(func.first);
 				game_type[name] = [name](const game&, const sol::this_state s, sol::variadic_args va)

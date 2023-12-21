@@ -48,6 +48,8 @@
 #include <atlbase.h>
 #include <iphlpapi.h>
 #include <wincrypt.h>
+#include <shellscalingapi.h>
+#include <dwmapi.h>
 
 // min and max is required by gdi, therefore NOMINMAX won't work
 #ifdef max
@@ -83,12 +85,17 @@
 #include <optional>
 #include <unordered_set>
 #include <variant>
+#include <random>
 
 #include <gsl/gsl>
 #include <udis86.h>
 #include <MinHook.h>
 #include <tomcrypt.h>
+
+#pragma warning(push)
+#pragma warning(disable: 4459)
 #include <json.hpp>
+#pragma warning(pop)
 
 #define RAPIDJSON_NOEXCEPT
 #define RAPIDJSON_ASSERT(cond) if(cond); else throw std::runtime_error("rapidjson assert fail");

@@ -8,6 +8,8 @@
 
 #include "game/ui_scripting/execution.hpp"
 
+#include "utils/hash.hpp"
+
 #include <utils/concurrency.hpp>
 #include <utils/http.hpp>
 #include <utils/io.hpp>
@@ -23,10 +25,16 @@ namespace download
 			bool active{};
 		};
 
+		std::atomic_bool kill_downloads = false;
 		utils::concurrency::container<globals_t> globals;
 
 		bool download_aborted()
 		{
+			if (kill_downloads)
+			{
+				return true;
+			}
+
 			return globals.access<bool>([](globals_t& globals_)
 			{
 				return globals_.abort;
@@ -159,10 +167,10 @@ namespace download
 
 					const auto url = utils::string::va("%s/%s", base.data(), file.name.data());
 					console::debug("Downloading %s from %s: %s\n", file.name.data(), base.data(), url);
-					const auto data = utils::http::get_data(url, {}, {}, &progress_callback);
+					auto data = utils::http::get_data(url, {}, {}, &progress_callback);
 					if (!data.has_value())
 					{
-						menu_error("Download failed: An unknown error occurred, please try again.");
+						menu_error(utils::string::va("Download failed: An unknown error occurred when getting data from '%s', please try again.", url));
 						return;
 					}
 
@@ -171,9 +179,16 @@ namespace download
 						return;
 					}
 
-					const auto& result = data.value();
+					auto& result = data.value();
 					if (result.code != CURLE_OK)
 					{
+						if (result.code == CURLE_COULDNT_CONNECT)
+						{
+							menu_error(utils::string::va("Download failed: Couldn't connect to server '%s' (%i)\n", 
+								url, result.code));
+							return;
+						}
+
 						menu_error(utils::string::va("Download failed: %s (%i)\n", 
 							curl_easy_strerror(result.code), result.code));
 						return;
@@ -181,15 +196,15 @@ namespace download
 
 					if (result.response_code >= 400)
 					{
-						menu_error(utils::string::va("Download failed: Server returned bad response code %i\n", 
+						menu_error(utils::string::va("Download failed: Server returned bad response code (%i)\n", 
 							result.response_code));
 						return;
 					}
 
-					const auto hash = utils::cryptography::sha1::compute(result.buffer, true);
+					const auto hash = utils::hash::get_buffer_hash(result.buffer, file.name);
 					if (hash != file.hash)
 					{
-						menu_error(utils::string::va("Download failed: file hash doesn't match the server's (%s: %s != %s)\n", 
+						menu_error(utils::string::va("Download failed: File hash doesn't match the server's (%s: %s != %s)\n", 
 							file.name.data(), hash.data(), file.hash.data()));
 						return;
 					}
@@ -225,7 +240,18 @@ namespace download
 		scheduler::once([]
 		{
 			ui_scripting::notify("mod_download_done", {});
-			party::menu_error("Download for server mod has been cancelled.");
+			party::menu_error("Download failed: Aborted");
 		}, scheduler::pipeline::lui);
 	}
+
+	class component final : public component_interface
+	{
+	public:
+		void pre_destroy() override
+		{
+			kill_downloads = true;
+		}
+	};
 }
+
+REGISTER_COMPONENT(download::component)

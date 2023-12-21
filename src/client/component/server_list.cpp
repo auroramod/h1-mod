@@ -33,6 +33,7 @@ namespace server_list
 			std::string host_name;
 			std::string map_name;
 			std::string game_type;
+			std::string mod_name;
 			game::CodPlayMode play_mode;
 			char in_game;
 			game::netadr_s address;
@@ -76,7 +77,7 @@ namespace server_list
 				server_list_page = 0;
 			}
 
-			party::reset_connect_state();
+			party::reset_server_connection_state();
 
 			if (get_master_server(master_state.address))
 			{
@@ -131,39 +132,29 @@ namespace server_list
 				return "";
 			}
 
-			if (column == 0)
+			switch (column)
 			{
-				return servers[i].host_name.empty() ? "" : utils::string::va("%s", servers[i].host_name.data());
-			}
-
-			if (column == 1)
-			{
-				return servers[i].map_name.empty() ? "Unknown" : utils::string::va("%s", servers[i].map_name.data());
-			}
-
-			if (column == 2)
+			case 0:
+				return servers[i].host_name.empty() ? "" : servers[i].host_name.data();
+			case 1:
+				return servers[i].map_name.empty() ? "Unknown" : servers[i].map_name.data();
+			case 2:
 			{
 				const auto client_count = servers[i].clients - servers[i].bots;
 				return utils::string::va("%d/%d [%d]", client_count, servers[i].max_clients,
 					servers[i].clients);
 			}
-
-			if (column == 3)
-			{
-				return servers[i].game_type.empty() ? "" : utils::string::va("%s", servers[i].game_type.data());
-			}
-
-			if (column == 4)
-			{
-				return servers[i].game_type.empty() ? "" : utils::string::va("%i", servers[i].ping);
-			}
-
-			if (column == 5)
-			{
+			case 3:
+				return servers[i].game_type.empty() ? "" : servers[i].game_type.data();
+			case 4:
+				return servers[i].ping ? utils::string::va("%i", servers[i].ping) : "999";
+			case 5:
 				return servers[i].is_private ? "1" : "0";
+			case 6:
+				return servers[i].mod_name.empty() ? "" : servers[i].mod_name.data();
+			default:
+				return "";
 			}
-
-			return "";
 		}
 
 		void sort_serverlist()
@@ -325,6 +316,13 @@ namespace server_list
 
 	void handle_info_response(const game::netadr_s& address, const utils::info_string& info)
 	{
+		// Don't show servers that aren't using the same protocol!
+		const auto protocol = std::atoi(info.get("protocol").data());
+		if (protocol != PROTOCOL)
+		{
+			return;
+		}
+
 		// Don't show servers that aren't dedicated!
 		const auto dedicated = std::atoi(info.get("dedicated").data());
 		if (!dedicated)
@@ -372,6 +370,7 @@ namespace server_list
 		server.host_name = info.get("hostname");
 		server.map_name = game::UI_GetMapDisplayName(info.get("mapname").data());
 		server.game_type = game::UI_GetGameTypeDisplayName(info.get("gametype").data());
+		server.mod_name = info.get("fs_game");
 		server.play_mode = playmode;
 		server.clients = atoi(info.get("clients").data());
 		server.max_clients = atoi(info.get("sv_maxclients").data());
@@ -411,7 +410,7 @@ namespace server_list
 				scheduler::once([]()
 				{
 					// add dvars to change destination master server ip/port
-					master_server_ip = dvars::register_string("masterServerIP", "h1.fed0001.xyz", game::DVAR_FLAG_NONE,
+					master_server_ip = dvars::register_string("masterServerIP", "h1.fed.cat", game::DVAR_FLAG_NONE,
 						"IP of the destination master server to connect to");
 					master_server_port = dvars::register_string("masterServerPort", "20810", game::DVAR_FLAG_NONE,
 						"Port of the destination master server to connect to");

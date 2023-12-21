@@ -16,6 +16,7 @@
     "LOCALE_SIMPLIFIED_CHINESE": "Chino simplificado",
     "LOCALE_SPANISH": "Español",
     "LOCALE_TRADITIONAL_CHINESE": "Chino tradicional",
+    "MENU_QUIT_TO_DESKTOP": "Salir al escritorio",
 
     "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "Desbloquear todas las misiones",
     "LUA_MENU_CANCEL_UNLOCK_CAPS": "Cancelar desbloqueo"

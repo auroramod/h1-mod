@@ -11,7 +11,7 @@
     "LUA_MENU_CHOOSE_LANGUAGE": "Выбор языка",
     "LUA_MENU_CHOOSE_LANGUAGE_DESC": "Поменять язык интерфейса и озвучки.",
 
-    "MENU_MODS": "МОДЫ",
+    "MENU_MODS": "Моды",
     "MENU_MODS_DESC": "Запуск установленных модов.",
     "LUA_MENU_MOD_DESC_DEFAULT": "Запустить &&1.",
     "LUA_MENU_MOD_DESC": "&&1\nАвтор: &&2\nВерсия: &&3.",
@@ -24,9 +24,9 @@
     "MENU_NO_DONT_ASK": "Нет, больше не спрашивать",
 
     "UPDATER_POPUP_NO_UPDATES_AVAILABLE": "У вас установлены все последние обновления",
-    "UPDATER_POPUP_AVAILABLE_UPDATE_TEXT": "Доступно обновление клиента игры,\nначать установку сейчас?",
+    "MENU_CCS_NEW_PATCH_NOTICE": "Доступно обновление клиента игры,\nначать установку сейчас?",
     "UPDATER_POPUP_SUCCESSFUL": "Обновление завершено",
-    "UPDATER_POPUP_RESTART_POPUP_TEXT": "Для применения изменений необходим перезапуск игры",
+    "MENU_CCS_RESTART_CONFIRMATION_TEXT": "Для применения изменений необходим перезапуск игры",
     "UPDATER_POPUP_CHECKING_FOR_UPDATES": "Проверка наличия обновлений...",
 
     "MPHUD_FPS": "К/С: ",
@@ -48,6 +48,7 @@
     "LOCALE_SPANISH": "Испанский",
     "LOCALE_TRADITIONAL_CHINESE": "Китайский традиционный",
     "LUA_MENU_DOWNLOAD": "Скачать",
+    "MENU_QUIT_TO_DESKTOP": "Выйти на рабочий стол",
 
     "MPUI_MP44": "MP-44",
     "WEAPON_AT4": "AT4",

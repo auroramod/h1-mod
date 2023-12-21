@@ -31,6 +31,7 @@
     "PLATFORM_SYSTEM_LINK_TITLE": "SERVER LIST",
     "MENU_NUMPLAYERS": "Players",
     "MENU_PING": "Ping",
+    "MENU_MOD": "Mod",
     "SERVERLIST_PLAYER_COUNT": "&&1 Players",
     "SERVERLIST_SERVER_COUNT": "&&1 Servers",
     "EXE_SAY": "^3Match^7",
@@ -55,9 +56,10 @@
     "LUA_MENU_EDIT_STATS": "Edit Stats",
 
     "UPDATER_POPUP_NO_UPDATES_AVAILABLE": "No updates available",
-    "UPDATER_POPUP_AVAILABLE_UPDATE_TEXT": "An update is available, proceed with installation?",
+    "MENU_CCS_NEW_PATCH_NOTICE": "An update is available, proceed with installation?",
+    "MENU_DOWNLOAD_AUTOUPDATE_PATCH": " ",
     "UPDATER_POPUP_SUCCESSFUL": "Update successful",
-    "UPDATER_POPUP_RESTART_POPUP_TEXT": "Update requires restart",
+    "MENU_CCS_RESTART_CONFIRMATION_TEXT": "Update requires restart",
     "UPDATER_POPUP_CHECKING_FOR_UPDATES": "Checking for updates...",
 
     "MPHUD_FPS": "FPS: ",
@@ -93,5 +95,6 @@
     "LOCALE_RUSSIAN": "Russian",
     "LOCALE_SIMPLIFIED_CHINESE": "Simplified Chinese",
     "LOCALE_SPANISH": "Spanish",
-    "LOCALE_TRADITIONAL_CHINESE": "Traditional Chinese"
+    "LOCALE_TRADITIONAL_CHINESE": "Traditional Chinese",
+    "MENU_QUIT_TO_DESKTOP": "Quit to Desktop"
 }

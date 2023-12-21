@@ -9,7 +9,7 @@
     "LUA_MENU_CAMPAIGN_UNLOCKED_ALL_TITLE": "Débloquer toutes les missions",
     "LUA_MENU_CANCEL_UNLOCK_CAPS": "Annuler déblocage",
 
-    "MENU_MODS": "MODS",
+    "MENU_MODS": "Mods",
     "MENU_MODS_DESC": "Charger les mods installés.",
     "LUA_MENU_MOD_DESC_DEFAULT": "Charger &&1.",
     "LUA_MENU_MOD_DESC": "&&1\nAuteur: &&2\nVersion: &&3",
@@ -22,9 +22,9 @@
     "MENU_NO_DONT_ASK": "Non, ne plus me le demander",
 
     "UPDATER_POPUP_NO_UPDATES_AVAILABLE": "Aucune mise à jour disponible",
-    "UPDATER_POPUP_AVAILABLE_UPDATE_TEXT": "Une mise à jour est disponible,\npoursuivre l'installation ?",
+    "MENU_CCS_NEW_PATCH_NOTICE": "Une mise à jour est disponible,\npoursuivre l'installation ?",
     "UPDATER_POPUP_SUCCESSFUL": "Mise à jour réussie",
-    "UPDATER_POPUP_RESTART_POPUP_TEXT": "La mise à jour nécessite un redémarrage",
+    "MENU_CCS_RESTART_CONFIRMATION_TEXT": "La mise à jour nécessite un redémarrage",
     "UPDATER_POPUP_CHECKING_FOR_UPDATES": "Vérification des mises à jour...",
 
     "MPHUD_FPS": "IPS: ",
@@ -45,6 +45,7 @@
     "LOCALE_SIMPLIFIED_CHINESE": "Chinois simplifié",
     "LOCALE_SPANISH": "Espagnol",
     "LOCALE_TRADITIONAL_CHINESE": "Chinois traditionnel",
+    "MENU_QUIT_TO_DESKTOP": "Retour au bureau",
 
     "LUA_MENU_CHOOSE_LANGUAGE": "Choisissez la langue",
     "LUA_MENU_CHOOSE_LANGUAGE_DESC": "Choisissez la langue."

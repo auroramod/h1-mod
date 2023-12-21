@@ -5,6 +5,7 @@
 #include "console.hpp"
 #include "filesystem.hpp"
 #include "localized_strings.hpp"
+#include "mods.hpp"
 #include "updater.hpp"
 
 #include "game/game.hpp"
@@ -39,11 +40,10 @@ namespace filesystem
 
 		void fs_startup_stub(const char* name)
 		{
-			console::debug("[FS] Startup\n");
+			console::info("[FS] Startup\n");
 
 			initialized = true;
 
-			// hardcoded paths
 			filesystem::register_path(utils::properties::get_appdata_path() / CLIENT_DATA_FOLDER);
 			filesystem::register_path(L".");
 			filesystem::register_path(L"h1-mod");
@@ -53,9 +53,13 @@ namespace filesystem
 			filesystem::register_path(L"raw");
 			filesystem::register_path(L"main");
 
-			fs_startup_hook.invoke<void>(name);
+			const auto mod_path = utils::flags::get_flag("mod");
+			if (mod_path.has_value())
+			{
+				mods::set_mod(mod_path.value());
+			}
 
-			command::register_fs_game_path();
+			fs_startup_hook.invoke<void>(name);
 		}
 
 		std::vector<std::filesystem::path> get_paths(const std::filesystem::path& path)
@@ -175,7 +179,7 @@ namespace filesystem
 		{
 			if (can_insert_path(path_))
 			{
-				console::debug("[FS] Registering path '%s'\n", path_.generic_string().data());
+				console::info("[FS] Registering path '%s'\n", path_.generic_string().data());
 				get_search_paths_internal().push_front(path_);
 			}
 		}

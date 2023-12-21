@@ -181,12 +181,12 @@ namespace game_console
 		{
 			input = utils::string::to_lower(input);
 
-			for (const auto& dvar : dvars::dvar_list)
+			for (const auto& [hash, dvar] : dvars::dvar_map)
 			{
 				auto name = utils::string::to_lower(dvar.name);
 				if (game::Dvar_FindVar(name.data()) && utils::string::match_compare(input, name, exact))
 				{
-					suggestions.push_back(dvar);
+					suggestions.emplace_back(dvar);
 				}
 
 				if (exact && suggestions.size() > 1)
@@ -197,7 +197,7 @@ namespace game_console
 
 			if (suggestions.size() == 0 && game::Dvar_FindVar(input.data()))
 			{
-				suggestions.push_back({input, ""});
+				suggestions.emplace_back(input, "");
 			}
 
 			game::cmd_function_s* cmd = (*game::cmd_functions);
@@ -209,7 +209,7 @@ namespace game_console
 
 					if (utils::string::match_compare(input, name, exact))
 					{
-						suggestions.push_back({cmd->name, ""});
+						suggestions.emplace_back(cmd->name, "");
 					}
 
 					if (exact && suggestions.size() > 1)
@@ -269,17 +269,13 @@ namespace game_console
 			if (matches.size() > 24)
 			{
 				draw_hint_box(1, dvars::con_inputHintBoxColor->current.vector);
-				draw_hint_text(0, utils::string::va("%i matches (too many to show here). Press SHIFT + TAB to show more", matches.size()),
-					dvars::con_inputDvarMatchColor->current.vector);
-
-				if (game::playerKeys[0].keys[game::keyNum_t::K_SHIFT].down && game::playerKeys[0].keys[game::keyNum_t::K_TAB].down)
-				{
-					console::info("]%s\n", con.buffer);
-					for (size_t i = 0; i < matches.size(); i++)
-					{
-						console::info("\t%s\n", matches[i].name.data());
-					}
-				}
+				draw_hint_text(0, 
+					utils::string::va(
+						"%i matches (too many to show here, "
+						"press shift+tilde to open full console, "
+						"press tab to print them all)",
+						matches.size()
+					), dvars::con_inputDvarMatchColor->current.vector);
 			}
 			else if (matches.size() == 1)
 			{
@@ -716,6 +712,15 @@ namespace game_console
 					history_index = -1;
 
 					clear();
+				}
+
+				if (key == game::keyNum_t::K_TAB && std::strlen(con.buffer) >= 2 && matches.size() > 24)
+				{
+					console::info("]%s\n", con.buffer);
+					for (const auto& match : matches)
+					{
+						console::info("\t%s\n", match.name.data());
+					}
 				}
 			}
 		}

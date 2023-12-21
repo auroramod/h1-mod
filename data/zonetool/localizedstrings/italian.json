@@ -26,5 +26,6 @@
     "LOCALE_RUSSIAN": "Russo",
     "LOCALE_SIMPLIFIED_CHINESE": "Cinese semplificato",
     "LOCALE_SPANISH": "Spagnolo",
-    "LOCALE_TRADITIONAL_CHINESE": "Cinese tradizionale"
+    "LOCALE_TRADITIONAL_CHINESE": "Cinese tradizionale",
+    "MENU_QUIT_TO_DESKTOP": "Esci e torna al desktop"
 }

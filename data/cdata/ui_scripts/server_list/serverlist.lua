@@ -10,19 +10,23 @@ local columns = {{
     text = "@MENU_HOST_NAME",
     dataindex = 0
 }, {
-    offset = 500,
+    offset = 440,
     text = "@MENU_MAP",
     dataindex = 1
 }, {
-    offset = 725,
+    offset = 615,
     text = "@MENU_TYPE1",
     dataindex = 3
 }, {
-    offset = 920,
+    offset = 780,
+    text = "@EXE_SV_INFO_MOD",
+    dataindex = 6
+}, {
+    offset = 980,
     text = "@MENU_NUMPLAYERS",
     dataindex = 2
 }, {
-    offset = 1070,
+    offset = 1100,
     text = "@MENU_PING",
     dataindex = 4
 }, {

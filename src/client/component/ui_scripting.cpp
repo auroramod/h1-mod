@@ -9,6 +9,7 @@
 
 #include "localized_strings.hpp"
 #include "console.hpp"
+#include "discord.hpp"
 #include "download.hpp"
 #include "game_module.hpp"
 #include "fps.hpp"
@@ -32,6 +33,8 @@
 #include <utils/binary_resource.hpp>
 
 #include "steam/steam.hpp"
+
+#include <discord_rpc.h>
 
 namespace ui_scripting
 {
@@ -318,7 +321,7 @@ namespace ui_scripting
 
 			game_type["virtuallobbypresentable"] = [](const game&)
 			{
-				::game::Dvar_SetFromStringByNameFromSource("virtualLobbyPresentable", "1", ::game::DvarSetSource::DVAR_SOURCE_INTERNAL);
+				::game::Dvar_SetFromStringByNameFromSource("virtualLobbyPresentable", "1", ::game::DVAR_SOURCE_INTERNAL);
 			};
 
 			game_type["getcurrentgamelanguage"] = [](const game&)
@@ -330,6 +333,29 @@ namespace ui_scripting
 			{
 				return static_cast<bool>(::game::DB_IsXAssetDefault(::game::ASSET_TYPE_MATERIAL,
 					material.data()));
+			};
+
+			game_type["getcommandbind"] = [](const game&, const std::string& cmd)
+			{
+				const auto binding = ::game::Key_GetBindingForCmd(cmd.data());
+				auto key = -1;
+				for (auto i = 0; i < 256; i++)
+				{
+					if (::game::playerKeys[0].keys[i].binding == binding)
+					{
+						key = i;
+					}
+				}
+
+				if (key == -1)
+				{
+					return ::game::UI_SafeTranslateString("KEY_UNBOUND");
+				}
+				else
+				{
+					const auto loc_string = ::game::Key_KeynumToString(key, 1, 0);
+					return ::game::UI_SafeTranslateString(loc_string);
+				}
 			};
 
 			auto server_list_table = table();
@@ -367,7 +393,29 @@ namespace ui_scripting
 			download_table["abort"] = download::stop_download;
 
 			download_table["userdownloadresponse"] = party::user_download_response;
-			download_table["getwwwurl"] = party::get_www_url;
+			download_table["getwwwurl"] = party::get_server_connection_state().base_url;
+
+			auto discord_table = table();
+			lua["discord"] = discord_table;
+
+			discord_table["respond"] = discord::respond;
+
+			discord_table["getavatarmaterial"] = [](const std::string& id)
+				-> script_value
+			{
+				const auto material = discord::get_avatar_material(id);
+				if (material == nullptr)
+				{
+					return {};
+				}
+
+				return lightuserdata(material);
+			};
+
+			discord_table["reply"] = table();
+			discord_table["reply"]["yes"] = DISCORD_REPLY_YES;
+			discord_table["reply"]["ignore"] = DISCORD_REPLY_IGNORE;
+			discord_table["reply"]["no"] = DISCORD_REPLY_NO;
 		}
 
 		void start()
@@ -379,7 +427,26 @@ namespace ui_scripting
 
 			setup_functions();
 
-			lua["print"] = function(reinterpret_cast<game::hks::lua_function>(SELECT_VALUE(0x93490_b, 0x209EB0_b)));
+			lua["print"] = [](const variadic_args& va)
+			{
+				std::string buffer{};
+				const auto to_string = get_globals()["tostring"];
+
+				for (auto i = 0; i < va.size(); i++)
+				{
+					const auto& arg = va[i];
+					const auto str = to_string(arg)[0].as<std::string>();
+					buffer.append(str);
+
+					if (i < va.size() - 1)
+					{
+						buffer.append("\t");
+					}
+				}
+
+				console::info("%s\n", buffer.data());
+			};
+
 			lua["table"]["unpack"] = lua["unpack"];
 			lua["luiglobals"] = lua;
 
@@ -552,6 +619,8 @@ namespace ui_scripting
 			{
 				return;
 			}
+
+			dvars::register_bool("r_preloadShadersFrontendAllow", true, game::DVAR_FLAG_SAVED, "Allow shader popup on startup");
 
 			utils::hook::call(SELECT_VALUE(0xE7419_b, 0x25E809_b), db_find_x_asset_header_stub);
 			utils::hook::call(SELECT_VALUE(0xE72CB_b, 0x25E6BB_b), db_find_x_asset_header_stub);
