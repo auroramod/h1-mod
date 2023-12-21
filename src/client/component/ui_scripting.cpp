@@ -620,6 +620,8 @@ namespace ui_scripting
 				return;
 			}
 
+			dvars::register_bool("r_preloadShadersFrontendAllow", true, game::DVAR_FLAG_SAVED, "Allow shader popup on startup");
+
 			utils::hook::call(SELECT_VALUE(0xE7419_b, 0x25E809_b), db_find_x_asset_header_stub);
 			utils::hook::call(SELECT_VALUE(0xE72CB_b, 0x25E6BB_b), db_find_x_asset_header_stub);
 

@@ -25,6 +25,7 @@ namespace mapents
 
 			for (auto i = 0; i < lines.size(); i++)
 			{
+				auto line_num = i+1;
 				auto line = lines[i];
 				if (line.ends_with('\r'))
 				{
@@ -62,7 +63,7 @@ namespace mapents
 
 				if (line[0] == '{' && in_map_ent)
 				{
-					console::error("[map_ents parser] Unexpected '{' on line %i\n", i);
+					console::error("[map_ents parser] Unexpected '{' on line %i\n", line_num);
 					return {};
 				}
 
@@ -87,7 +88,7 @@ namespace mapents
 
 				if (line[0] == '}' && !in_map_ent)
 				{
-					console::error("[map_ents parser] Unexpected '}' on line %i\n", i);
+					console::error("[map_ents parser] Unexpected '}' on line %i\n", line_num);
 					return {};
 				}
 
@@ -95,7 +96,7 @@ namespace mapents
 				std::smatch match{};
 				if (!std::regex_search(line, match, expr) && !line.empty())
 				{
-					console::warn("[map_ents parser] Failed to parse line %i (%s)\n", i, line.data());
+					console::warn("[map_ents parser] Failed to parse line %i (%s)\n", line_num, line.data());
 					continue;
 				}
 
@@ -104,7 +105,7 @@ namespace mapents
 
 				if (key.size() <= 0)
 				{
-					console::warn("[map_ents parser] Invalid key ('%s') on line %i (%s)\n", key.data(), i, line.data());
+					console::warn("[map_ents parser] Invalid key ('%s') on line %i (%s)\n", key.data(), line_num, line.data());
 					continue;
 				}
 
@@ -126,7 +127,7 @@ namespace mapents
 				const auto id = gsc::gsc_ctx->token_id(key_);
 				if (id == 0)
 				{
-					console::warn("[map_ents parser] Key '%s' not found, on line %i (%s)\n", key_.data(), i, line.data());
+					console::warn("[map_ents parser] Key '%s' not found, on line %i (%s)\n", key_.data(), line_num, line.data());
 					continue;
 				}
 
