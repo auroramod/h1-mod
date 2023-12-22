@@ -393,7 +393,11 @@ namespace ui_scripting
 			download_table["abort"] = download::stop_download;
 
 			download_table["userdownloadresponse"] = party::user_download_response;
-			download_table["getwwwurl"] = party::get_server_connection_state().base_url;
+			download_table["getwwwurl"] = []
+			{
+				const auto state = party::get_server_connection_state();
+				return state.base_url;
+			};
 
 			auto discord_table = table();
 			lua["discord"] = discord_table;
