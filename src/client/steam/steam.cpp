@@ -5,6 +5,7 @@
 
 #include <utils/nt.hpp>
 #include <utils/string.hpp>
+#include <utils/io.hpp>
 
 #define GENERIC_RETURN_IF_FAIL(condition) \
 	if (condition != S_OK) \
@@ -220,6 +221,13 @@ namespace steam
 		char path[MAX_PATH] = {0};
 		DWORD length = sizeof(path);
 
+		std::string path_str;
+		if (::utils::io::read_file("steam_path.txt", &path_str))
+		{
+			install_path = path_str;
+			return install_path.data();
+		}
+
 		HKEY reg_key;
 
 		// check if Steam contains information in registry for the install path
@@ -252,12 +260,9 @@ namespace steam
 						return "";
 					}
 
-					// create a pointer to our path variable to use in our open_folder function
-					char* directory_ptr = path;
-
-					// open a file explorer prompt to find the Steam directory (user input)
+					auto directory_ptr = path;
 					open_folder_prompt(directory_ptr);
-					while (!strcmp(directory_ptr, "")) // if this while statement goes, this means that the operation was cancelled
+					while (!strcmp(directory_ptr, ""))
 					{
 						MSG_BOX_ERROR("You must select a valid Steam directory before you can continue.");
 						open_folder_prompt(directory_ptr);
