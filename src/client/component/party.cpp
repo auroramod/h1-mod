@@ -1144,11 +1144,6 @@ namespace party
 					return;
 				}
 
-				if (download_files(target, info, false))
-				{
-					return;
-				}
-
 				server_connection_state.motd = info.get("sv_motd");
 				server_connection_state.max_clients = std::stoi(info.get("sv_maxclients"));
 				server_connection_state.base_url = info.get("sv_wwwBaseUrl");
@@ -1159,6 +1154,11 @@ namespace party
 				if (!discord_info.image.empty() || !discord_info.image_text.empty())
 				{
 					server_discord_info.emplace(discord_info);
+				}
+
+				if (download_files(target, info, false))
+				{
+					return;
 				}
 
 				connect_to_party(target, mapname, gametype);
