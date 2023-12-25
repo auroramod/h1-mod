@@ -22,6 +22,8 @@ set_team(team)
         self suicide();
     }
 
-    maps\mp\gametypes\_menus::addtoteam(team);
-    maps\mp\gametypes\_menus::endrespawnnotify();
+    self maps\mp\gametypes\_menus::addtoteam(team);
+    self maps\mp\gametypes\_menus::endrespawnnotify();
+
+    self maps\mp\gametypes\_teams::updateteamtime(); // defines pers["teamTime"] for balancing
 }
