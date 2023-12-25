@@ -46,6 +46,11 @@ namespace lui
 	public:
 		void post_unpack() override
 		{
+			if (game::environment::is_dedi())
+			{
+				return;
+			}
+
 			if (game::environment::is_mp())
 			{
 				// Patch game message overflow

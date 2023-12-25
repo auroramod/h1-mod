@@ -136,8 +136,10 @@ namespace imagefiles
 		}
 
 		void* pakfile_open_stub(void* /*handles*/, unsigned int count, int is_imagefile, 
-			unsigned int index, int is_localized)
+			unsigned int index, short is_localized)
 		{
+			console::debug("Opening %s%d.pak (localized:%d)\n", is_imagefile ? "imagefile" : "soundfile", index, is_localized);
+
 			if (index != CUSTOM_IMAGE_FILE_INDEX)
 			{
 				return utils::hook::invoke<void*>(
