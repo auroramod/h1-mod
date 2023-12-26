@@ -1144,6 +1144,8 @@ namespace party
 					return;
 				}
 
+				server_connection_state.base_url = info.get("sv_wwwBaseUrl");
+
 				if (download_files(target, info, false))
 				{
 					return;
@@ -1151,7 +1153,6 @@ namespace party
 
 				server_connection_state.motd = info.get("sv_motd");
 				server_connection_state.max_clients = std::stoi(info.get("sv_maxclients"));
-				server_connection_state.base_url = info.get("sv_wwwBaseUrl");
 
 				discord_information discord_info{};
 				discord_info.image = info.get("sv_discordImageUrl");
