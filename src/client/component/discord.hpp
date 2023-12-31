@@ -1,7 +1,9 @@
 #pragma once
 
+#include "game/game.hpp"
+
 namespace discord
 {
-	std::string get_avatar_material(const std::string& id);
+	game::Material* get_avatar_material(const std::string& id);
 	void respond(const std::string& id, int reply);
 }

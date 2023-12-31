@@ -96,6 +96,7 @@ namespace game
 	WEAK symbol<void(const char* gameName)> FS_Startup{0x40D890, 0x0};
 	WEAK symbol<void(const char* path, const char* dir)> FS_AddLocalizedGameDirectory{0x40B1E0, 0x1878F0};
 
+	WEAK symbol<unsigned int(unsigned int)> GetObjectType{0x3C3680, 0x50A810};
 	WEAK symbol<unsigned int(unsigned int, unsigned int)> GetVariable{0x3C3740, 0x50A8D0};
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int unsignedValue)> GetNewVariable{0x3C3360, 0x50A4F0};
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int unsignedValue)> GetNewArrayVariable{0x3C31E0, 0x50A370};
@@ -124,6 +125,8 @@ namespace game
 	WEAK symbol<char*(char* string)> I_CleanStr{0x4293E0, 0x5AF2E0};
 
 	WEAK symbol<const char*(int, int, int)> Key_KeynumToString{0x1AC410, 0x199990};
+	WEAK symbol<int(const char* cmd)> Key_GetBindingForCmd{0x377280, 0x1572B0};
+	WEAK symbol<void(int local_client_num, int keynum, int binding)> Key_SetBinding{0x1AC570, 0x199AE0};
 
 	WEAK symbol<unsigned int(int)> Live_SyncOnlineDataFlags{0x0, 0x1A5C10};
 
@@ -177,6 +180,7 @@ namespace game
 	WEAK symbol<float(int index)> Scr_GetFloat{0x3C87D0, 0x50F870};
 	WEAK symbol<const char*(int index)> Scr_GetString{0x3C8CC0, 0x50FCB0};
 	WEAK symbol<int()> Scr_GetNumParam{0x3C89E0, 0x50F9D0};
+	WEAK symbol<bool(VariableValue* value)> Scr_CastString{0x3C4450, 0x50B4B0};
 	WEAK symbol<void()> Scr_ClearOutParams{0x3C7EF0, 0x50F070};
 	WEAK symbol<scr_entref_t(unsigned int entId)> Scr_GetEntityIdRef{0x3C6760, 0x50D8E0};
 	WEAK symbol<unsigned int(int classnum, unsigned int entnum)> Scr_GetEntityId{0x3C66B0, 0x50D830};
@@ -307,7 +311,15 @@ namespace game
 	WEAK symbol<scrVmPub_t> scr_VmPub{0xC3F4E20, 0xB7AE3C0};
 	WEAK symbol<function_stack_t> scr_function_stack{0xC4015C0, 0xB7B8940};
 
-	WEAK symbol<physical_memory> g_scriptmem{0xD5F3140, 0xC92EC40};
+	WEAK game::symbol<unsigned __int64> pmem_size{0xD5F26D8, 0xC92E1D8};
+	WEAK game::symbol<unsigned char*> pmem_buffer{0xD5F26D0, 0xC92E1D0};
+
+	WEAK game::symbol<PhysicalMemory> g_mem{0xD5F26E0, 0xC92E1E0};
+	WEAK game::symbol<PhysicalMemory> g_scriptmem{0xD5F3140, 0xC92EC40};
+	WEAK game::symbol<PhysicalMemory> g_physmem{0xD5F3BA0, 0xC92F6A0};
+
+	WEAK game::symbol<unsigned __int64> stream_size{0x1DAD810, 0x258AA10};
+	WEAK game::symbol<unsigned char*> stream_buffer{0x1DAD808, 0x258AA08};
 
 	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0xF7530B0, 0xE9213F0};
 
@@ -319,7 +331,7 @@ namespace game
 	WEAK symbol<XZoneInfoInternal> g_zoneInfo{0x0, 0x5F5A370};
 	WEAK symbol<unsigned short> g_zoneIndex{0x0, 0x3D1008C};
 
-	WEAK symbol< DB_FileSysInterface*> db_fs{0x25C1168, 0x1566C08};
+	WEAK symbol<DB_FileSysInterface*> db_fs{0x25C1168, 0x1566C08};
 
 	WEAK symbol<int> keyCatchers{0x252AF70, 0x2EC82C4};
 	WEAK symbol<PlayerKeyState> playerKeys{0x2395B0C, 0x2999E1C};
@@ -336,6 +348,8 @@ namespace game
 	WEAK symbol<int> level_time{0x56DBAA0, 0x7361F9C};
 
 	WEAK symbol<map_t> maps{0x7CE5A0, 0x926C80};
+
+	WEAK symbol<ID3D11Device*> d3d11_device{0x1163B98, 0x12DFBF8};
 
 	namespace mp
 	{

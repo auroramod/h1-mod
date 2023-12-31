@@ -12,7 +12,7 @@
 	url = https://github.com/TsudaKageyu/minhook.git
 [submodule "deps/discord-rpc"]
 	path = deps/discord-rpc
-	url = https://github.com/discord/discord-rpc.git
+	url = https://github.com/fedddddd/discord-rpc.git
 [submodule "deps/asmjit"]
 	path = deps/asmjit
 	url = https://github.com/asmjit/asmjit.git
@@ -50,7 +50,7 @@
 [submodule "deps/gsc-tool"]
 	path = deps/gsc-tool
 	url = https://github.com/xensik/gsc-tool.git
-	branch = xlabs
+	branch = dev
 [submodule "deps/stb"]
 	path = deps/stb
 	url = https://github.com/nothings/stb.git

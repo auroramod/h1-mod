@@ -10,9 +10,7 @@
   <img src="assets/github/banner.png?raw=true" />
 </p>
 
-A client for Call of Duty: Modern Warfare Remastered.
-
-[This project is based on S1x.](https://github.com/XLabsProject/s1x-client)
+NOTE: You must legally own Call of Duty®: Modern Warfare Remastered to run this mod. Cracked/Pirated versions of the game are **NOT** supported.
 
 ## Compile from source
 

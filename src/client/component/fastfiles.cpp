@@ -22,18 +22,24 @@ namespace fastfiles
 
 	namespace
 	{
+		utils::hook::detour db_init_load_x_file_hook;
 		utils::hook::detour db_try_load_x_file_internal_hook;
 		utils::hook::detour db_find_xasset_header_hook;
 
 		game::dvar_t* g_dump_scripts;
 		game::dvar_t* db_print_default_assets;
 
-		std::vector<HANDLE> fastfile_handles;
+		utils::concurrency::container<std::vector<HANDLE>> fastfile_handles;
 		bool is_mod_pre_gfx = false;
+
+		void db_init_load_x_file_stub(game::DBFile* file, std::uint64_t offset)
+		{
+			console::info("Loading fastfile %s\n", file->name);
+			return db_init_load_x_file_hook.invoke<void>(file, offset);
+		}
 
 		void db_try_load_x_file_internal(const char* zone_name, const int flags)
 		{
-			console::info("Loading fastfile %s\n", zone_name);
 			is_mod_pre_gfx = zone_name == "mod_pre_gfx"s;
 			current_fastfile.access([&](std::string& fastfile)
 			{
@@ -74,16 +80,32 @@ namespace fastfiles
 				dump_gsc_script(name, result);
 			}
 
-			if (type == game::XAssetType::ASSET_TYPE_RAWFILE)
 			{
-				if (result.rawfile)
+				const std::string override_asset_name = "override/"s + name;
+
+				if (type == game::XAssetType::ASSET_TYPE_RAWFILE)
 				{
-					const std::string override_rawfile_name = "override/"s + name;
-					const auto override_rawfile = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_rawfile_name.data(), 0);
-					if (override_rawfile.rawfile)
+					if (result.rawfile)
 					{
-						result.rawfile = override_rawfile.rawfile;
-						console::debug("using override asset for rawfile: \"%s\"\n", name);
+						const auto override_rawfile = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
+						if (override_rawfile.rawfile)
+						{
+							result.rawfile = override_rawfile.rawfile;
+							console::debug("using override asset for rawfile: \"%s\"\n", name);
+						}
+					}
+				}
+
+				if (type == game::XAssetType::ASSET_TYPE_STRINGTABLE)
+				{
+					if (result.stringTable)
+					{
+						const auto override_stringtable = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
+						if (override_stringtable.stringTable)
+						{
+							result.stringTable = override_stringtable.stringTable;
+							console::debug("using override asset for stringtable: \"%s\"\n", name);
+						}
 					}
 				}
 			}
@@ -226,7 +248,10 @@ namespace fastfiles
 					FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING, nullptr);
 			if (handle != INVALID_HANDLE_VALUE)
 			{
-				fastfile_handles.push_back(handle);
+				fastfile_handles.access([&](std::vector<HANDLE>& handles)
+				{
+					handles.push_back(handle);
+				});
 			}
 
 			return handle;
@@ -584,7 +609,7 @@ namespace fastfiles
 			char* reallocate_asset_pool_multiplier()
 			{
 				constexpr auto pool_size = get_pool_type_size(Type);
-				return reallocate_asset_pool<Type, pool_size* Multiplier>();
+				return reallocate_asset_pool<Type, pool_size * Multiplier>();
 			}
 
 #define RVA(ptr) static_cast<uint32_t>(reinterpret_cast<size_t>(ptr) - 0_b)
@@ -1033,11 +1058,27 @@ namespace fastfiles
 				reallocate_attachment_pool();
 			}
 
+			void reallocate_sound_pool()
+			{
+				constexpr auto original_pool_size = get_pool_type_size(game::ASSET_TYPE_SOUND);
+				constexpr auto multiplier = 2;
+				constexpr auto pool_size = original_pool_size * multiplier;
+
+				const auto pool = reallocate_asset_pool<game::ASSET_TYPE_SOUND, pool_size>();
+				utils::hook::inject(0x39621D_b + 3, reinterpret_cast<void*>(reinterpret_cast<size_t>(pool) + 8));
+
+				static unsigned short net_const_string_sound_map[pool_size]{};
+				utils::hook::inject(0x2B0CEA_b + 3, net_const_string_sound_map);
+				utils::hook::inject(0x2B0F52_b + 3, net_const_string_sound_map);
+				utils::hook::inject(0x2B1866_b + 3, net_const_string_sound_map);
+				utils::hook::inject(0x2B1CC7_b + 3, net_const_string_sound_map);
+			}
+
 			void reallocate_asset_pools()
 			{
 				reallocate_attachment_and_weapon();
+				reallocate_sound_pool();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIM, 2>();
-				reallocate_asset_pool_multiplier<game::ASSET_TYPE_SOUND, 2>();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOADED_SOUND, 2>();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOCALIZE, 2>();
 			}
@@ -1105,10 +1146,14 @@ namespace fastfiles
 
 	void close_fastfile_handles()
 	{
-		for (const auto& handle : fastfile_handles)
+		fastfile_handles.access([&](std::vector<HANDLE>& handles)
 		{
-			CloseHandle(handle);
-		}
+			for (const auto& handle : handles)
+			{
+				CloseHandle(handle);
+			}
+		});
+		
 	}
 
 	void set_usermap(const std::string& usermap)
@@ -1156,8 +1201,8 @@ namespace fastfiles
 	public:
 		void post_unpack() override
 		{
-			db_try_load_x_file_internal_hook.create(
-				SELECT_VALUE(0x1F5700_b, 0x39A620_b), &db_try_load_x_file_internal);
+			db_try_load_x_file_internal_hook.create(SELECT_VALUE(0x1F5700_b, 0x39A620_b), db_try_load_x_file_internal);
+			db_init_load_x_file_hook.create(SELECT_VALUE(0x1C46E0_b, 0x3681E0_b), db_init_load_x_file_stub);
 			db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
 
 			db_unload_x_zones_hook.create(SELECT_VALUE(0x1F6040_b, 

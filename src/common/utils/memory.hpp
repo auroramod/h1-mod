@@ -69,6 +69,8 @@ namespace utils
 		static bool is_bad_code_ptr(const void* ptr);
 		static bool is_rdata_ptr(void* ptr);
 
+		static void* allocate_near(const size_t address, const size_t size, const std::uint32_t protect);
+
 		static allocator* get_allocator();
 
 	private:

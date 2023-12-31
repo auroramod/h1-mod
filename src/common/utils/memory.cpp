@@ -43,7 +43,7 @@ namespace utils
 	{
 		std::lock_guard _(this->mutex_);
 
-		const auto data = memory::allocate(length);
+		auto* data = memory::allocate(length);
 		this->pool_.push_back(data);
 		return data;
 	}
@@ -57,7 +57,7 @@ namespace utils
 	{
 		std::lock_guard _(this->mutex_);
 
-		const auto data = memory::duplicate_string(string);
+		auto* data = memory::duplicate_string(string);
 		this->pool_.push_back(data);
 		return data;
 	}
@@ -164,6 +164,33 @@ namespace utils
 		}
 
 		return false;
+	}
+
+	void* memory::allocate_near(const size_t address, const size_t size, const std::uint32_t protect)
+	{
+		SYSTEM_INFO system_info{};
+		GetSystemInfo(&system_info);
+
+		const auto page_size = system_info.dwPageSize;
+		const auto aligned_size = size + (~size & (page_size - 1));
+		auto current_address = address;
+
+		while (true)
+		{
+			current_address -= page_size;
+
+			if (current_address <= reinterpret_cast<size_t>(system_info.lpMinimumApplicationAddress))
+			{
+				return nullptr;
+			}
+
+			const auto result = VirtualAlloc(reinterpret_cast<void*>(current_address), aligned_size, MEM_RESERVE | MEM_COMMIT, protect);
+			if (result != nullptr)
+			{
+				std::memset(result, 0, aligned_size);
+				return result;
+			}
+		}
 	}
 
 	memory::allocator* memory::get_allocator()

@@ -158,7 +158,6 @@ FARPROC load_binary(const launcher::mode mode, uint64_t* base_address)
 void remove_crash_file()
 {
 	utils::io::remove_file("__h1Exe");
-	utils::io::remove_file("h1-mod\\h1_mp64_ship.exe"); // remove this at some point
 }
 
 void enable_dpi_awareness()

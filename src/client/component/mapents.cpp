@@ -3,17 +3,12 @@
 
 #include "game/game.hpp"
 #include "console.hpp"
+#include "filesystem.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 
-#include <xsk/gsc/types.hpp>
-#include <xsk/gsc/interfaces/compiler.hpp>
-#include <xsk/gsc/interfaces/decompiler.hpp>
-#include <xsk/gsc/interfaces/assembler.hpp>
-#include <xsk/gsc/interfaces/disassembler.hpp>
-#include <xsk/resolver.hpp>
-#include <interface.hpp>
+#include "gsc/script_loading.hpp"
 
 namespace mapents
 {
@@ -30,6 +25,7 @@ namespace mapents
 
 			for (auto i = 0; i < lines.size(); i++)
 			{
+				auto line_num = i+1;
 				auto line = lines[i];
 				if (line.ends_with('\r'))
 				{
@@ -67,7 +63,7 @@ namespace mapents
 
 				if (line[0] == '{' && in_map_ent)
 				{
-					console::error("[map_ents parser] Unexpected '{' on line %i\n", i);
+					console::error("[map_ents parser] Unexpected '{' on line %i\n", line_num);
 					return {};
 				}
 
@@ -92,15 +88,15 @@ namespace mapents
 
 				if (line[0] == '}' && !in_map_ent)
 				{
-					console::error("[map_ents parser] Unexpected '}' on line %i\n", i);
+					console::error("[map_ents parser] Unexpected '}' on line %i\n", line_num);
 					return {};
 				}
 
 				std::regex expr(R"~((.+) "(.*)")~");
 				std::smatch match{};
-				if (!std::regex_search(line, match, expr))
+				if (!std::regex_search(line, match, expr) && !line.empty())
 				{
-					console::warn("[map_ents parser] Failed to parse line %i (%s)\n", i, line.data());
+					console::warn("[map_ents parser] Failed to parse line %i (%s)\n", line_num, line.data());
 					continue;
 				}
 
@@ -109,7 +105,7 @@ namespace mapents
 
 				if (key.size() <= 0)
 				{
-					console::warn("[map_ents parser] Invalid key ('%s') on line %i (%s)\n", key.data(), i, line.data());
+					console::warn("[map_ents parser] Invalid key ('%s') on line %i (%s)\n", key.data(), line_num, line.data());
 					continue;
 				}
 
@@ -128,10 +124,10 @@ namespace mapents
 				}
 
 				const auto key_ = key.substr(1, key.size() - 2);
-				const auto id = xsk::gsc::h1::resolver::token_id(key_);
+				const auto id = gsc::gsc_ctx->token_id(key_);
 				if (id == 0)
 				{
-					console::warn("[map_ents parser] Key '%s' not found, on line %i (%s)\n", key_.data(), i, line.data());
+					console::warn("[map_ents parser] Key '%s' not found, on line %i (%s)\n", key_.data(), line_num, line.data());
 					continue;
 				}
 
@@ -141,16 +137,48 @@ namespace mapents
 			return {out_buffer};
 		}
 
+		std::string raw_ents;
+		bool load_raw_mapents()
+		{
+			auto mapents_name = utils::string::va("%s.ents", **reinterpret_cast<const char***>(SELECT_VALUE(0xB489D40_b, 0xA975F40_b)));
+			if (filesystem::exists(mapents_name))
+			{
+				try
+				{
+					console::debug("Reading raw ents file \"%s\"\n", mapents_name);
+					raw_ents = filesystem::read_file(mapents_name);
+					if (!raw_ents.empty())
+					{
+						return true;
+					}
+				}
+				catch (const std::exception& ex)
+				{
+					console::error("Failed to read raw ents file \"%s\"\n%s\n", mapents_name, ex.what());
+				}
+			}
+			return false;
+		}
+
 		std::string entity_string;
 		const char* cm_entity_string_stub()
 		{
-			if (!entity_string.empty())
+			const char* ents = nullptr;
+			if (load_raw_mapents())
 			{
-				return entity_string.data();
+				ents = raw_ents.data();
+			}
+			else
+			{
+				if (!entity_string.empty())
+				{
+					return entity_string.data();
+				}
+
+				ents = utils::hook::invoke<const char*>(SELECT_VALUE(0x3685C0_b, 0x4CD140_b));
 			}
 
-			const auto original = utils::hook::invoke<const char*>(SELECT_VALUE(0x3685C0_b, 0x4CD140_b));
-			const auto parsed = parse_mapents(original);
+			const auto parsed = parse_mapents(ents);
 			if (parsed.has_value())
 			{
 				entity_string = parsed.value();
@@ -158,13 +186,14 @@ namespace mapents
 			}
 			else
 			{
-				return original;
+				return ents;
 			}
 		}
 
 		void cm_unload_stub(void* clip_map)
 		{
 			entity_string.clear();
+			raw_ents.clear();
 			utils::hook::invoke<void>(SELECT_VALUE(0x368560_b, 0x4CD0E0_b), clip_map);
 		}
 	}

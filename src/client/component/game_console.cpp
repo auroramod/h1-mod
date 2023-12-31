@@ -181,12 +181,12 @@ namespace game_console
 		{
 			input = utils::string::to_lower(input);
 
-			for (const auto& dvar : dvars::dvar_list)
+			for (const auto& [hash, dvar] : dvars::dvar_map)
 			{
 				auto name = utils::string::to_lower(dvar.name);
 				if (game::Dvar_FindVar(name.data()) && utils::string::match_compare(input, name, exact))
 				{
-					suggestions.push_back(dvar);
+					suggestions.emplace_back(dvar);
 				}
 
 				if (exact && suggestions.size() > 1)
@@ -197,7 +197,7 @@ namespace game_console
 
 			if (suggestions.size() == 0 && game::Dvar_FindVar(input.data()))
 			{
-				suggestions.push_back({input, ""});
+				suggestions.emplace_back(input, "");
 			}
 
 			game::cmd_function_s* cmd = (*game::cmd_functions);
@@ -209,7 +209,7 @@ namespace game_console
 
 					if (utils::string::match_compare(input, name, exact))
 					{
-						suggestions.push_back({cmd->name, ""});
+						suggestions.emplace_back(cmd->name, "");
 					}
 
 					if (exact && suggestions.size() > 1)

@@ -68,7 +68,7 @@ namespace patches
 
 		void cg_set_client_dvar_from_server_stub(void* clientNum, void* cgameGlob, const char* dvar_hash, const char* value)
 		{
-			int hash = atoi(dvar_hash);
+			const auto hash = std::atoi(dvar_hash);
 			auto* dvar = game::Dvar_FindMalleableVar(hash);
 
 			if (hash == game::generateHashValue("cg_fov") || 
@@ -192,7 +192,7 @@ namespace patches
 
 		void sv_execute_client_message_stub(game::mp::client_t* client, game::msg_t* msg)
 		{
-			if (client->reliableAcknowledge < 0)
+			if ((client->reliableSequence - client->reliableAcknowledge) < 0)
 			{
 				client->reliableAcknowledge = client->reliableSequence;
 				console::info("Negative reliableAcknowledge from %s - cl->reliableSequence is %i, reliableAcknowledge is %i\n",
@@ -223,7 +223,7 @@ namespace patches
 		utils::hook::detour init_network_dvars_hook;
 		void init_network_dvars_stub(game::dvar_t* dvar)
 		{
-			static const auto hash = game::generateHashValue("r_tonemapHighlightRange");
+			constexpr auto hash = dvars::generate_hash("r_tonemapHighlightRange");
 			if (dvar->hash == hash)
 			{
 				init_network_dvars_hook.invoke<void>(dvar);
@@ -242,26 +242,6 @@ namespace patches
 			{
 				cl_gamepad_scrolling_buttons_hook.invoke<void>(local_client_num, a2);
 			}
-		}
-
-		int out_of_memory_text_stub(char* dest, int size, const char* fmt, ...)
-		{
-			fmt = "%s (%d)\n\n"
-				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.\n\n"
-				"If this still occurs, try using the '-memoryfix' parameter to generate the 'players2' folder.";
-
-			char buffer[2048];
-
-			{
-				va_list ap;
-				va_start(ap, fmt);
-
-				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
-
-				va_end(ap);
-			}
-
-			return utils::hook::invoke<int>(SELECT_VALUE(0x429200_b, 0x5AF0F0_b), dest, size, "%s", buffer);
 		}
 
 		void create_2d_texture_stub_1(const char* fmt, ...)
@@ -360,6 +340,9 @@ namespace patches
 			// Makes mis_cheat saved dvar
 			dvars::override::register_bool("mis_cheat", 0, game::DVAR_FLAG_SAVED);
 
+			// Fix speaker config bug
+			dvars::override::register_int("snd_detectedSpeakerConfig", 0, 0, 100, 0);
+
 			// Allow kbam input when gamepad is enabled
 			utils::hook::nop(SELECT_VALUE(0x1AC0CE_b, 0x135EFB_b), 2);
 			utils::hook::nop(SELECT_VALUE(0x1A9DDC_b, 0x13388F_b), 6);
@@ -374,18 +357,6 @@ namespace patches
 			utils::hook::call(SELECT_VALUE(0x55E919_b, 0x681A69_b), create_2d_texture_stub_1); 	// Sys_Error for "Create2DTexture( %s, %i, %i, %i, %i ) failed"
 			utils::hook::call(SELECT_VALUE(0x55EACB_b, 0x681C1B_b), create_2d_texture_stub_2); 	// Com_Error for ^
 			utils::hook::call(SELECT_VALUE(0x5B35BA_b, 0x6CB1BC_b), swap_chain_stub); 			// Com_Error for "IDXGISwapChain::Present failed: %s"
-			utils::hook::call(SELECT_VALUE(0x457BC9_b, 0x1D8E09_b), out_of_memory_text_stub); 	// Com_sprintf for "Out of memory. You are probably low on disk space."
-
-			// "fix" for rare 'Out of memory error' error
-			// this will *at least* generate the configs for mp/sp, which is the #1 issue
-			if (utils::flags::has_flag("memoryfix"))
-			{
-				utils::hook::jump(SELECT_VALUE(0x5110D0_b, 0x6200C0_b), malloc);
-				utils::hook::jump(SELECT_VALUE(0x510FF0_b, 0x61FFE0_b), _aligned_malloc);
-				utils::hook::jump(SELECT_VALUE(0x511130_b, 0x620120_b), free);
-				utils::hook::jump(SELECT_VALUE(0x511220_b, 0x620210_b), realloc);
-				utils::hook::jump(SELECT_VALUE(0x511050_b, 0x620040_b), _aligned_realloc);
-			}
 
 			// Uncheat protect gamepad-related dvars
 			dvars::override::register_float("gpad_button_deadzone", 0.13f, 0, 1, game::DVAR_FLAG_SAVED);

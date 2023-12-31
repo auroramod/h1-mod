@@ -61,17 +61,14 @@ namespace branding
 	class component final : public component_interface
 	{
 	public:
-		void post_start() override
-		{
-			scheduler::loop(draw_branding, scheduler::pipeline::renderer);
-		}
-
 		void post_unpack() override
 		{
 			if (game::environment::is_dedi())
 			{
 				return;
 			}
+
+			scheduler::loop(draw_branding, scheduler::pipeline::renderer);
 
 			ui_get_formatted_build_number_hook.create(
 				SELECT_VALUE(0x406EC0_b, 0x1DF300_b), ui_get_formatted_build_number_stub);

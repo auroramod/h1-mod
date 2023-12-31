@@ -17,6 +17,8 @@
 
 #include "steam/steam.hpp"
 
+#include "utils/hash.hpp"
+
 #include <utils/properties.hpp>
 #include <utils/string.hpp>
 #include <utils/info_string.hpp>
@@ -24,19 +26,14 @@
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
 
+#include <zlib.h>
+
 namespace party
 {
 	namespace
 	{
-		struct
-		{
-			game::netadr_s host{};
-			std::string challenge{};
-			bool hostDefined{false};
-		} connect_state;
-
-		std::string sv_motd;
-		int sv_maxclients;
+		connection_state server_connection_state{};
+		std::optional<discord_information> server_discord_info{};
 
 		struct usermap_file
 		{
@@ -48,17 +45,17 @@ namespace party
 		// snake case these names before release
 		std::vector<usermap_file> usermap_files =
 		{
-			{".ff", "usermaphash", false},
-			{"_load.ff", "usermaploadhash", true},
-			{".arena", "usermaparenahash", true},
-			{".pak", "usermappakhash", true},
+			{".ff", "usermap_hash", false},
+			{"_load.ff", "usermap_load_hash", true},
+			{".arena", "usermap_arena_hash", true},
+			{".pak", "usermap_pak_hash", true},
 		};
 
 		std::vector<usermap_file> mod_files =
 		{
-			{".ff", "modHash", false},
-			{"_pre_gfx.ff", "modpregfxhash", true},
-			{".pak", "modpakhash", true},
+			{".ff", "mod_hash", false},
+			{"_pre_gfx.ff", "mod_pre_gfx_hash", true},
+			{".pak", "mod_pak_hash", true},
 		};
 
 		struct
@@ -161,11 +158,11 @@ namespace party
 
 		const char* get_didyouknow_stub(void* table, int row, int column)
 		{
-			if (party::sv_motd.empty())
+			if (server_connection_state.motd.empty())
 			{
 				return utils::hook::invoke<const char*>(0x5A0AC0_b, table, row, column);
 			}
-			return utils::string::va("%s", party::sv_motd.data());
+			return utils::string::va("%s", server_connection_state.motd.data());
 		}
 
 		void disconnect()
@@ -200,26 +197,46 @@ namespace party
 
 		std::string get_file_hash(const std::string& file)
 		{
-			if (!utils::io::file_exists(file))
-			{
-				return {};
-			}
-
 			const auto iter = hash_cache.find(file);
 			if (iter != hash_cache.end())
 			{
 				return iter->second;
 			}
 
-			const auto data = utils::io::read_file(file);
-			const auto sha = utils::cryptography::sha1::compute(data, true);
-			hash_cache[file] = sha;
-			return sha;
+			const auto hash = utils::hash::get_file_hash(file);
+			if (!hash.empty())
+			{
+				hash_cache.insert(std::make_pair(file, hash));
+			}
+
+			return hash;
 		}
 
 		std::string get_usermap_file_path(const std::string& mapname, const std::string& extension)
 		{
-			return utils::string::va("usermaps\\%s\\%s%s", mapname.data(), mapname.data(), extension.data());
+			return std::format("usermaps\\{}\\{}{}", mapname, mapname, extension);
+		}
+
+		// generate hashes so they are cached
+		void generate_hashes(const std::string& mapname)
+		{
+			// usermap
+			for (const auto& file : usermap_files)
+			{
+				const auto path = get_usermap_file_path(mapname, file.extension);
+				get_file_hash(path);
+			}
+
+			// mod
+			const auto fs_game = get_dvar_string("fs_game");
+			if (!fs_game.empty())
+			{
+				for (const auto& file : mod_files)
+				{
+					const auto path = std::format("{}\\mod{}", fs_game, file.extension);
+					get_file_hash(path);
+				}
+			}
 		}
 
 		void check_download_map(const utils::info_string& info, std::vector<download::file_t>& files)
@@ -251,6 +268,7 @@ namespace party
 				}
 
 				const auto hash = get_file_hash(filename);
+				console::debug("hash != source_hash => %s != %s\n", source_hash.data(), hash.data());
 				if (hash != source_hash)
 				{
 					files.emplace_back(filename, source_hash);
@@ -290,7 +308,7 @@ namespace party
 			for (const auto& file : mod_files)
 			{
 				const auto source_hash = info.get(file.name);
-				if (source_hash.empty() && !file.optional)
+				if (source_hash.empty())
 				{
 					if (file.optional)
 					{
@@ -306,9 +324,8 @@ namespace party
 
 				if (!has_to_download)
 				{
-					const auto data = utils::io::read_file(file_path);
-					const auto hash = utils::cryptography::sha1::compute(data, true);
-
+					const auto hash = get_file_hash(file_path);
+					console::debug("has_to_download = %s != %s\n", source_hash.data(), hash.data());
 					has_to_download = source_hash != hash;
 				}
 
@@ -474,7 +491,7 @@ namespace party
 					command::execute("disconnect");
 					scheduler::once([]
 					{
-						connect(connect_state.host);
+						connect(server_connection_state.host);
 					}, scheduler::pipeline::main);
 					return;
 				}
@@ -505,6 +522,12 @@ namespace party
 
 			hash_cache.clear();
 			current_sv_mapname = map;
+
+			if (game::environment::is_dedi())
+			{
+				generate_hashes(map);
+			}
+
 			utils::hook::invoke<void>(0x54BBB0_b, map, a2, a3, a4, a5);
 		}
 
@@ -584,7 +607,7 @@ namespace party
 
 	void clear_sv_motd()
 	{
-		party::sv_motd.clear();
+		server_connection_state.motd.clear();
 	}
 
 	int get_client_num_by_name(const std::string& name)
@@ -606,9 +629,9 @@ namespace party
 		return -1;
 	}
 
-	void reset_connect_state()
+	void reset_server_connection_state()
 	{
-		connect_state = {};
+		server_connection_state = {};
 	}
 
 	int get_client_count()
@@ -661,16 +684,11 @@ namespace party
 
 		command::execute("lui_open_popup popup_acceptinginvite", false);
 
-		connect_state.host = target;
-		connect_state.challenge = utils::cryptography::random::get_challenge();
-		connect_state.hostDefined = true;
+		server_connection_state.host = target;
+		server_connection_state.challenge = utils::cryptography::random::get_challenge();
+		server_connection_state.hostDefined = true;
 
-		network::send(target, "getInfo", connect_state.challenge);
-	}
-
-	game::netadr_s get_state_host()
-	{
-		return connect_state.host;
+		network::send(target, "getInfo", server_connection_state.challenge);
 	}
 
 	void start_map(const std::string& mapname, bool dev)
@@ -732,9 +750,14 @@ namespace party
 		}
 	}
 
-	int server_client_count()
+	connection_state get_server_connection_state()
 	{
-		return party::sv_maxclients;
+		return server_connection_state;
+	}
+
+	std::optional<discord_information> get_server_discord_info()
+	{
+		return server_discord_info;
 	}
 
 	class component final : public component_interface
@@ -747,7 +770,7 @@ namespace party
 				return;
 			}
 
-			// detour CL_Disconnect to clear motd
+			// clear motd & usermap
 			cl_disconnect_hook.create(0x12F080_b, cl_disconnect_stub);
 
 			if (game::environment::is_mp())
@@ -819,7 +842,7 @@ namespace party
 
 			command::add("reconnect", [](const command::params& argument)
 			{
-				if (!connect_state.hostDefined)
+				if (!server_connection_state.hostDefined)
 				{
 					console::info("Cannot connect to server.\n");
 					return;
@@ -832,7 +855,7 @@ namespace party
 				}
 				else
 				{
-					connect(connect_state.host);
+					connect(server_connection_state.host);
 				}
 			});
 
@@ -935,7 +958,7 @@ namespace party
 
 			scheduler::once([]()
 			{
-				sv_say_name = dvars::register_string("sv_sayName", "console", game::DvarFlags::DVAR_FLAG_NONE, "");
+				sv_say_name = dvars::register_string("sv_sayName", "console", game::DvarFlags::DVAR_FLAG_NONE, "Custom name for RCON console");
 			}, scheduler::pipeline::main);
 
 			command::add("tell", [](const command::params& params)
@@ -998,6 +1021,17 @@ namespace party
 				console::info("%s\n", message.data());
 			});
 
+			command::add("hash", [](const command::params& params)
+			{
+				if (params.size() < 2)
+				{
+					return;
+				}
+
+				const auto hash = get_file_hash(params.get(1));
+				console::info("hash output: %s\n", hash.data());
+			});
+
 			network::on("getInfo", [](const game::netadr_s& target, const std::string& data)
 			{
 				const auto mapname = get_dvar_string("mapname");
@@ -1019,6 +1053,8 @@ namespace party
 				info.set("sv_running", utils::string::va("%i", get_dvar_bool("sv_running") && !game::VirtualLobby_Loaded()));
 				info.set("dedicated", utils::string::va("%i", get_dvar_bool("dedicated")));
 				info.set("sv_wwwBaseUrl", get_dvar_string("sv_wwwBaseUrl"));
+				info.set("sv_discordImageUrl", get_dvar_string("sv_discordImageUrl"));
+				info.set("sv_discordImageText", get_dvar_string("sv_discordImageText"));
 
 				if (!fastfiles::is_stock_map(mapname))
 				{
@@ -1051,7 +1087,7 @@ namespace party
 				const utils::info_string info(data);
 				server_list::handle_info_response(target, info);
 
-				if (connect_state.host != target)
+				if (server_connection_state.host != target)
 				{
 					return;
 				}
@@ -1060,7 +1096,14 @@ namespace party
 				saved_info_response.host = target;
 				saved_info_response.info_string = info;
 
-				if (info.get("challenge") != connect_state.challenge)
+				const auto protocol = info.get("protocol");
+				if (std::atoi(protocol.data()) != PROTOCOL)
+				{
+					menu_error("Connection failed: Invalid protocol.");
+					return;
+				}
+
+				if (info.get("challenge") != server_connection_state.challenge)
 				{
 					menu_error("Connection failed: Invalid challenge.");
 					return;
@@ -1101,13 +1144,23 @@ namespace party
 					return;
 				}
 
+				server_connection_state.base_url = info.get("sv_wwwBaseUrl");
+
 				if (download_files(target, info, false))
 				{
 					return;
 				}
 
-				party::sv_motd = info.get("sv_motd");
-				party::sv_maxclients = std::stoi(info.get("sv_maxclients"));
+				server_connection_state.motd = info.get("sv_motd");
+				server_connection_state.max_clients = std::stoi(info.get("sv_maxclients"));
+
+				discord_information discord_info{};
+				discord_info.image = info.get("sv_discordImageUrl");
+				discord_info.image_text = info.get("sv_discordImageText");
+				if (!discord_info.image.empty() || !discord_info.image_text.empty())
+				{
+					server_discord_info.emplace(discord_info);
+				}
 
 				connect_to_party(target, mapname, gametype);
 			});

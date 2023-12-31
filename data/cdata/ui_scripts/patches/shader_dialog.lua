@@ -15,7 +15,7 @@ local function dialog(...)
         yes_text = Engine.Localize("@MENU_YES"),
         no_text = Engine.Localize("@MENU_NO_DONT_ASK"),
         no_action = function()
-            Engine.SetDvarInt("r_preloadShadersFrontendAllow", 0)
+            Engine.SetDvarBool("r_preloadShadersFrontendAllow", false)
         end,
         default_focus_index = 2,
         cancel_will_close = false

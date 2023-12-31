@@ -1,7 +1,7 @@
 #pragma once
 #include <d3d11.h>
 
-#define PROTOCOL 1
+#define PROTOCOL 2
 
 #ifdef DEBUG
 #define assert_sizeof(__ASSET__, __SIZE__) static_assert(sizeof(__ASSET__) == __SIZE__)
@@ -1542,18 +1542,16 @@ namespace game
 		char data[1];
 	};
 
-	union $3FA29451CE6F1FA138A5ABAB84BE9676
-	{
-		ID3D11Texture1D* linemap;
-		ID3D11Texture2D* map;
-		ID3D11Texture3D* volmap;
-		ID3D11Texture2D* cubemap;
-		GfxImageLoadDef* loadDef;
-	};
-
 	struct GfxTexture
 	{
-		$3FA29451CE6F1FA138A5ABAB84BE9676 ___u0;
+		union
+		{
+			ID3D11Texture1D* linemap;
+			ID3D11Texture2D* map;
+			ID3D11Texture3D* volmap;
+			ID3D11Texture2D* cubemap;
+			GfxImageLoadDef* loadDef;
+		};
 		ID3D11ShaderResourceView* shaderView;
 		ID3D11ShaderResourceView* shaderViewAlternate;
 	};
@@ -1844,6 +1842,13 @@ namespace game
 		int ingame_cursor_visible;
 	};
 
+	enum PMem_Direction
+	{
+		PHYS_ALLOC_LOW = 0x0,
+		PHYS_ALLOC_HIGH = 0x1,
+		PHYS_ALLOC_COUNT = 0x2,
+	};
+
 	enum PMem_Source
 	{
 		PMEM_SOURCE_EXTERNAL = 0x0,
@@ -1852,19 +1857,38 @@ namespace game
 		PMEM_SOURCE_DEFAULT_HIGH = 0x3,
 		PMEM_SOURCE_MOVIE = 0x4,
 		PMEM_SOURCE_SCRIPT = 0x5,
+		PMEM_SOURCE_UNK5 = 0x5,
+		PMEM_SOURCE_UNK6 = 0x6,
+		PMEM_SOURCE_UNK7 = 0x7,
+		PMEM_SOURCE_UNK8 = 0x8,
+		PMEM_SOURCE_CUSTOMIZATION = 0x9,
 	};
 
-	struct physical_memory
+	struct PhysicalMemoryAllocation
 	{
-		char __pad0[0x10];
-		char* buf;
-		char __pad1[0x8];
-		int unk1;
-		size_t size;
-		char __pad2[0x500];
-	};
+		const char* name;
+		char __pad0[16];
+		unsigned __int64 pos;
+		char __pad1[8];
+	}; static_assert(sizeof(PhysicalMemoryAllocation) == 40);
 
-	static_assert(sizeof(physical_memory) == 0x530);
+	struct PhysicalMemoryPrim
+	{
+		const char* name;
+		unsigned int allocListCount;
+		char __pad0[4];
+		unsigned char* buf;
+		char __pad1[8];
+		int unk1;
+		char __pad2[4];
+		unsigned __int64 pos;
+		PhysicalMemoryAllocation allocList[32];
+	}; static_assert(sizeof(PhysicalMemoryPrim) == 1328);
+
+	struct PhysicalMemory
+	{
+		PhysicalMemoryPrim prim[2];
+	}; static_assert(sizeof(PhysicalMemory) == 0xA60);
 
 	namespace mp
 	{
@@ -1905,16 +1929,20 @@ namespace game
 		{
 			char __pad0[2];
 			char pm_type; // 2
-			char __pad1[18573];
+			char __pad1[297];
+			float angles[3]; // 300 304 308
+			char __pad2[18264];
 			sessionState_t sessionState;
-			char __pad2[220]; // 254
+			char __pad3[220]; // 254
 			team_t team;
-			char __pad3[30];
+			char __pad4[30];
 			char name[32]; // 18834
-			char __pad4[622];
+			char __pad5[622];
 			int flags; // 19488 
 		}; // size = ?
 
+		static_assert(offsetof(gclient_s, angles) == 300);
+		static_assert(offsetof(gclient_s, sessionState) == 18576);
 		static_assert(offsetof(gclient_s, team) == 18800);
 		static_assert(offsetof(gclient_s, name) == 18834);
 		static_assert(offsetof(gclient_s, flags) == 19488);
@@ -1946,15 +1974,74 @@ namespace game
 
 		static_assert(sizeof(gentity_s) == 736);
 
+		struct SprintState
+		{
+			int sprintButtonUpRequired;
+			int sprintDelay;
+			int lastSprintStart;
+			int lastSprintEnd;
+			int sprintStartMaxLength;
+		};
+
 		struct playerState_s
 		{
-			int clientNum;
-			char __pad0[116];
+			char clientNum;
+			char __pad0[1];
+			char pm_type;
+			char __pad1[44];
+			int otherFlags;
+			char __pad2[28];
+			int pm_time;
+			int pm_flags;
+			int eFlags;
+			int linkFlags;
+			char __pad3[24];
 			vec3_t origin;
 			vec3_t velocity;
-			char __pad1[312];
-			int sprintButtonUpRequired;
+			char __pad4[312];
+			SprintState sprintState;
+			char __pad5[88];
+			int weaponState0;
+			char __pad6[7040];
+			int perks[2];
 		};
+
+		static_assert(offsetof(playerState_s, pm_type) == 2);
+		//static_assert(offsetof(playerState_s, groundEntityNum) == 34);
+		static_assert(offsetof(playerState_s, otherFlags) == 48);
+		static_assert(offsetof(playerState_s, pm_time) == 80);
+		static_assert(offsetof(playerState_s, pm_flags) == 84);
+		static_assert(offsetof(playerState_s, eFlags) == 88);
+		static_assert(offsetof(playerState_s, linkFlags) == 92);
+		static_assert(offsetof(playerState_s, origin) == 120);
+		static_assert(offsetof(playerState_s, velocity) == 132);
+		static_assert(offsetof(playerState_s, sprintState) == 456);
+		static_assert(offsetof(playerState_s, weaponState0) == 564);
+		static_assert(offsetof(playerState_s, perks) == 7608);
+
+		struct snapshot_s
+		{
+			playerState_s ps;
+		};
+
+		struct cg_s
+		{
+			char __pad0[18680];
+			snapshot_s* nextSnap;
+			char __pad1[582400];
+			int unk_601088;
+			int renderingThirdPerson;
+			char __pad2[378580];
+			int unk_979676;
+			char __pad3[16];
+			int unk_979696;
+		};
+
+		static_assert(offsetof(cg_s, nextSnap) == 18680);
+		static_assert(offsetof(cg_s, unk_601088) == 601088);
+		static_assert(offsetof(cg_s, renderingThirdPerson) == 601092);
+		static_assert(offsetof(cg_s, unk_979676) == 979676);
+		static_assert(offsetof(cg_s, unk_979696) == 979696);
 
 		struct pmove_t
 		{
@@ -2311,6 +2398,31 @@ namespace game
 	assert_offsetof(GfxWorld, mdaoVolumes, 2792);
 	assert_offsetof(GfxWorld, mdaoVolumes, 2792);
 	assert_offsetof(GfxWorld, buildInfo, 2832);
+
+	struct DB_AuthSignature
+	{
+		unsigned char bytes[256];
+	};
+
+	struct DB_AuthHash
+	{
+		unsigned char bytes[32];
+	};
+
+	struct XPakHeader
+	{
+		char header[8];
+		std::int32_t version;
+		unsigned char unknown[16];
+		DB_AuthHash hash;
+		DB_AuthSignature signature;
+	};
+
+	struct DBFile
+	{
+		char __pad0[32];
+		char name[64];
+	};
 
 	namespace hks
 	{

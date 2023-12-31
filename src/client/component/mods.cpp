@@ -30,7 +30,6 @@ namespace mods
 		{
 			if (release_assets)
 			{
-				materials::clear();
 				fonts::clear();
 			}
 

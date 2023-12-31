@@ -14,13 +14,12 @@
 
 #include <utils/concurrency.hpp>
 #include <utils/cryptography.hpp>
-#include <utils/http.hpp>
 #include <utils/io.hpp>
 #include <utils/nt.hpp>
 #include <utils/properties.hpp>
 #include <utils/string.hpp>
 
-#define MASTER "https://master.fed0001.xyz/h1-mod/"
+#define MASTER "https://h1-mod.fed.cat/"
 
 #define FILES_PATH "files.json"
 #define FILES_PATH_DEV "files-dev.json"
@@ -161,10 +160,17 @@ namespace updater
 		{
 			return utils::string::va("%i", uint32_t(time(nullptr)));
 		}
-
-		std::optional<utils::http::result> download_file(const std::string& name)
+		
+		std::optional<utils::http::result> download_data_file(const std::string& name)
 		{
-			return utils::http::get_data(MASTER + select(DATA_PATH, DATA_PATH_DEV) + name + "?" + get_time_str());
+			const auto file = std::format("{}{}?{}", select(DATA_PATH, DATA_PATH_DEV), name, get_time_str());
+			return updater::get_server_file(file);
+		}
+
+		std::optional<utils::http::result> download_file_list()
+		{
+			const auto file = std::format("{}?{}", select(FILES_PATH, FILES_PATH_DEV), get_time_str());
+			return updater::get_server_file(file);
 		}
 
 		bool has_old_data_files()
@@ -301,6 +307,34 @@ namespace updater
 		}
 	}
 
+	std::optional<utils::http::result> get_server_file(const std::string& endpoint)
+	{
+		static std::vector<std::string> server_urls =
+		{
+			{"https://h1-mod.fed.cat/"},
+			{"https://master.fed0001.xyz/h1-mod/"}, // remove this at some point
+		};
+
+		const auto try_url = [&](const std::string& base_url)
+		{
+			const auto url = base_url + endpoint;
+			console::debug("[HTTP] GET file \"%s\"\n", url.data());
+			const auto result = utils::http::get_data(url);
+			return result;
+		};
+
+		for (const auto& url : server_urls)
+		{
+			const auto result = try_url(url);
+			if (result.has_value())
+			{
+				return result;
+			}
+		}
+
+		return {};
+	}
+
 	void relaunch()
 	{
 		const auto mode = game::environment::is_mp() ? "-multiplayer" : "-singleplayer";
@@ -406,7 +440,7 @@ namespace updater
 
 		scheduler::once([]()
 		{
-			const auto files_data = utils::http::get_data(MASTER + select(FILES_PATH, FILES_PATH_DEV) + "?" + get_time_str());
+			const auto files_data = download_file_list();
 
 			if (is_update_cancelled())
 			{
@@ -546,7 +580,7 @@ namespace updater
 
 				console::debug("[Updater] downloading file %s\n", file.data());
 
-				const auto data = download_file(file);
+				const auto data = download_data_file(file);
 
 				if (is_update_cancelled())
 				{
