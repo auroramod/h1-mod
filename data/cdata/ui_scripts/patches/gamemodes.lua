@@ -5,7 +5,8 @@ Cac.GameModes.Data = {
         List = 
         {
             "dm", "war", "sd", "dom", "conf", "sab", "koth", "hp", "gun", 
-            "dd", "ctf" -- missing gamemodes from UI
+            "dd", "ctf", -- missing gamemodes from UI
+            "twar" -- needs support
         }
     }
 }
