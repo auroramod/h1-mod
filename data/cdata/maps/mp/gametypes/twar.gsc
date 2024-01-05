@@ -4,7 +4,9 @@
     - MWR maps do not have Momentum points at the moment
     - "Minion" AI doesn't exist at all (used for lobbies not full?)
 
-    * Requires yoyo's AW patches
+    *** requires yoyo's AW patches for sounds
+
+    by mjkzy
 
 */
 
@@ -45,8 +47,7 @@ main()
     //level.onspawnplayer = ::onspawnplayer;
     level.ontimelimit = ::ontimelimit;
     level.onplayerkilled = ::onplayerkilled;
-    //level.onplayerscore = ::onplayerscore; // not used?
-    level.allowboostingabovetriggerradius = 1;
+    //level.allowboostingabovetriggerradius = 1;
     //level.ai_game_mode = 1;
     //level.modifyplayerdamage = ::minion_damage;
     //level.on_agent_player_killed = ::on_minion_killed;
