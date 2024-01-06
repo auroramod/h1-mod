@@ -1,3 +1,5 @@
 localize,english
 ttf,fonts/bank_h1.ttf
 ttf,fonts/default.otf
+
+rawfile,override/maps/mp/gametypes/_gametypes.txt

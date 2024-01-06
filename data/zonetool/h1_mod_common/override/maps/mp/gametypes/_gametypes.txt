@@ -1,0 +1,13 @@
+dm
+dom
+sd
+war
+conf
+vlobby
+koth
+sab
+ctf
+dd
+hp
+gun
+twar
