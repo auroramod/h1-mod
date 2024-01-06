@@ -35,7 +35,7 @@ namespace gsc
 		std::unordered_map<std::string, std::uint32_t> init_handles;
 
 		utils::memory::allocator scriptfile_allocator;
-		std::unordered_map<const char*, game::ScriptFile*> loaded_scripts;
+		std::unordered_map<std::string, game::ScriptFile*> loaded_scripts;
 
 		struct
 		{

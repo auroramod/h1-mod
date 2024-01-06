@@ -2418,6 +2418,12 @@ namespace game
 		DB_AuthSignature signature;
 	};
 
+	struct DBFile
+	{
+		char __pad0[32];
+		char name[64];
+	};
+
 	namespace hks
 	{
 		struct lua_State;

@@ -22,6 +22,7 @@ namespace fastfiles
 
 	namespace
 	{
+		utils::hook::detour db_init_load_x_file_hook;
 		utils::hook::detour db_try_load_x_file_internal_hook;
 		utils::hook::detour db_find_xasset_header_hook;
 
@@ -31,9 +32,14 @@ namespace fastfiles
 		utils::concurrency::container<std::vector<HANDLE>> fastfile_handles;
 		bool is_mod_pre_gfx = false;
 
+		void db_init_load_x_file_stub(game::DBFile* file, std::uint64_t offset)
+		{
+			console::info("Loading fastfile %s\n", file->name);
+			return db_init_load_x_file_hook.invoke<void>(file, offset);
+		}
+
 		void db_try_load_x_file_internal(const char* zone_name, const int flags)
 		{
-			console::info("Loading fastfile %s\n", zone_name);
 			is_mod_pre_gfx = zone_name == "mod_pre_gfx"s;
 			current_fastfile.access([&](std::string& fastfile)
 			{
@@ -74,30 +80,32 @@ namespace fastfiles
 				dump_gsc_script(name, result);
 			}
 
-			const std::string override_asset_name = "override/"s + name;
-
-			if (type == game::XAssetType::ASSET_TYPE_RAWFILE)
 			{
-				if (result.rawfile)
+				const std::string override_asset_name = "override/"s + name;
+
+				if (type == game::XAssetType::ASSET_TYPE_RAWFILE)
 				{
-					const auto override_rawfile = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
-					if (override_rawfile.rawfile)
+					if (result.rawfile)
 					{
-						result.rawfile = override_rawfile.rawfile;
-						console::debug("using override asset for rawfile: \"%s\"\n", name);
+						const auto override_rawfile = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
+						if (override_rawfile.rawfile)
+						{
+							result.rawfile = override_rawfile.rawfile;
+							console::debug("using override asset for rawfile: \"%s\"\n", name);
+						}
 					}
 				}
-			}
 
-			if (type == game::XAssetType::ASSET_TYPE_STRINGTABLE)
-			{
-				if (result.stringTable)
+				if (type == game::XAssetType::ASSET_TYPE_STRINGTABLE)
 				{
-					const auto override_stringtable = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
-					if (override_stringtable.stringTable)
+					if (result.stringTable)
 					{
-						result.stringTable = override_stringtable.stringTable;
-						console::debug("using override asset for stringtable: \"%s\"\n", name);
+						const auto override_stringtable = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
+						if (override_stringtable.stringTable)
+						{
+							result.stringTable = override_stringtable.stringTable;
+							console::debug("using override asset for stringtable: \"%s\"\n", name);
+						}
 					}
 				}
 			}
@@ -1193,8 +1201,8 @@ namespace fastfiles
 	public:
 		void post_unpack() override
 		{
-			db_try_load_x_file_internal_hook.create(
-				SELECT_VALUE(0x1F5700_b, 0x39A620_b), &db_try_load_x_file_internal);
+			db_try_load_x_file_internal_hook.create(SELECT_VALUE(0x1F5700_b, 0x39A620_b), db_try_load_x_file_internal);
+			db_init_load_x_file_hook.create(SELECT_VALUE(0x1C46E0_b, 0x3681E0_b), db_init_load_x_file_stub);
 			db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
 
 			db_unload_x_zones_hook.create(SELECT_VALUE(0x1F6040_b, 
