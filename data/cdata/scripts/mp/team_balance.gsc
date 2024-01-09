@@ -18,7 +18,7 @@ balance_teams_stub()
         {
             handle_lowest_score_player(allied_players, "axis");
         }
-        else if (is_team_bigger_than(axis_players, team))
+        else if (is_team_bigger_than(axis_players, allied_players))
         {
             handle_lowest_score_player(axis_players, "allies");
         }
@@ -41,7 +41,7 @@ get_valid_team_array(team)
         if (isdefined(players[i].pers["team"]) && players[i].pers["team"] == team)
             team_array[team_array.size] = players[i];
     }
-    return team_arary;
+    return team_array;
 }
 
 is_team_bigger_than(team_one, team_two)
@@ -56,13 +56,13 @@ handle_lowest_score_player(team, new_team)
     // move the player that has the lowest score (highest teamTime value)
     for (i = 0; i < team.size; i++)
     {
-        if (isdefined(team[j].dont_auto_balance))
+        if (isdefined(team[i].dont_auto_balance))
             continue;
 
         if (!isdefined(lowest_score_player))
-            lowest_score_player = team[j];
-        else if (team[j].pers["score"] < lowest_score_player.pers["score"])
-            lowest_score_player = team[j];
+            lowest_score_player = team[i];
+        else if (team[i].pers["score"] < lowest_score_player.pers["score"])
+            lowest_score_player = team[i];
     }
 
     lowest_score_player set_team(new_team);
