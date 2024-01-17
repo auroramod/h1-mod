@@ -38,6 +38,9 @@ namespace ranked
 			utils::hook::set(0x2C0E60_b, 0xC301B0); // BG_AISystemEnabled
 			utils::hook::set(0x2C1040_b, 0xC301B0); // BG_BotFastFileEnabled
 			utils::hook::set(0x2C11B0_b, 0xC301B0); // BG_BotsUsingTeamDifficulty
+
+			// Fix sessionteam always returning none (SV_ClientMP_HasAssignedTeam_Internal)
+			utils::hook::set(0x1CB5E0_b , 0xC300B0);
 		}
 	};
 }
