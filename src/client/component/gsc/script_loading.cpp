@@ -137,7 +137,7 @@ namespace gsc
 				}
 			}
 
-			console::debug("Loading custom gsc '%s.gsc'", real_name.data());
+			console::info("Loading custom gsc '%s.gsc'", real_name.data());
 
 			try
 			{
@@ -171,6 +171,8 @@ namespace gsc
 				script_file_ptr->compressedLen = 0;
 
 				loaded_scripts[file_name] = script_file_ptr;
+
+				console::info("Loaded custom gsc '%s.gsc'", real_name.data());
 
 				return script_file_ptr;
 			}
@@ -237,13 +239,13 @@ namespace gsc
 
 			if (main_handle)
 			{
-				console::debug("Loaded '%s::main'\n", name.data());
+				console::info("Loaded '%s::main'\n", name.data());
 				main_handles[name] = main_handle;
 			}
 
 			if (init_handle)
 			{
-				console::debug("Loaded '%s::init'\n", name.data());
+				console::info("Loaded '%s::init'\n", name.data());
 				init_handles[name] = init_handle;
 			}
 		}
@@ -369,7 +371,7 @@ namespace gsc
 	{
 		for (auto& function_handle : main_handles)
 		{
-			console::debug("Executing '%s::main'\n", function_handle.first.data());
+			console::info("Executing '%s::main'\n", function_handle.first.data());
 			game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
 		}
 	}
@@ -378,7 +380,7 @@ namespace gsc
 	{
 		for (auto& function_handle : init_handles)
 		{
-			console::debug("Executing '%s::init'\n", function_handle.first.data());
+			console::info("Executing '%s::init'\n", function_handle.first.data());
 			game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
 		}
 	}
