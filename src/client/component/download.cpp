@@ -88,7 +88,7 @@ namespace download
 				}, scheduler::pipeline::lui);
 			}
 
-			console::debug("Download progress: %lli/%lli\n", progress, total);
+			//console::debug("Download progress: %lli/%lli\n", progress, total);
 			if (download_aborted())
 			{
 				return -1;

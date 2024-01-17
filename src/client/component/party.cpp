@@ -249,7 +249,7 @@ namespace party
 
 			if (mapname.contains('.') || mapname.contains("::"))
 			{
-				throw std::runtime_error(utils::string::va("Invalid server mapname value %s\n", mapname.data()));
+				throw std::runtime_error(utils::string::va("Invalid server mapname value '%s'", mapname.data()));
 			}
 
 			const auto check_file = [&](const usermap_file& file)
@@ -261,10 +261,10 @@ namespace party
 				{
 					if (!file.optional)
 					{
-						std::string missing_value = "Server %s is empty";
+						std::string missing_value = "Server '%s' is empty";
 						if (file.name == "usermap_hash"s)
 						{
-							missing_value += " (or you are missing content for map '%s')\n";
+							missing_value += " (or you are missing content for map '%s')";
 						}
 						throw std::runtime_error(utils::string::va(missing_value.data(), file.name.data(), mapname.data()));
 					}
@@ -306,7 +306,7 @@ namespace party
 
 			if (!server_fs_game.starts_with("mods/") || server_fs_game.contains('.') || server_fs_game.contains("::"))
 			{
-				throw std::runtime_error(utils::string::va("Invalid server fs_game value %s\n", server_fs_game.data()));
+				throw std::runtime_error(utils::string::va("Invalid server fs_game value '%s'", server_fs_game.data()));
 			}
 
 			auto needs_restart = false;
@@ -321,7 +321,7 @@ namespace party
 					}
 
 					throw std::runtime_error(
-						utils::string::va("Connection failed: Server %s is empty.", file.name.data()));
+						utils::string::va("Server '%s' is empty", file.name.data()));
 				}
 
 				const auto file_path = server_fs_game + "/mod" + file.extension;
