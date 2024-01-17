@@ -596,6 +596,7 @@ namespace demonware
 			utils::hook::nop(0x19BB67_b, 5); // LiveStorage_SendMatchDataComplete (crashes at the end of match)
 			utils::hook::nop(0x19BC3F_b, 5); // LiveStorage_GettingStoreConfigComplete probably (crashes randomly)
 			utils::hook::nop(0x19BC48_b, 5); // similar to above (crashes in killcam)
+			utils::hook::nop(0x19BBA3_b, 5); // LiveStorage_LogComplete (crashes when prestiging, LiveStorage_LogPrestige?)
 			utils::hook::set<uint8_t>(0x1A3340_b, 0xC3); // Live_CheckForFullDisconnect
 
 			// Remove some while loop that freezes the rendering for a few secs while connecting
