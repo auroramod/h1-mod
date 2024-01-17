@@ -261,7 +261,12 @@ namespace party
 				{
 					if (!file.optional)
 					{
-						throw std::runtime_error(utils::string::va("Server %s is empty", file.name.data()));
+						std::string missing_value = "Server %s is empty";
+						if (file.name == "usermap_hash"s)
+						{
+							missing_value += " (or you are missing content for map '%s')\n";
+						}
+						throw std::runtime_error(utils::string::va(missing_value.data(), file.name.data(), mapname.data()));
 					}
 
 					return;

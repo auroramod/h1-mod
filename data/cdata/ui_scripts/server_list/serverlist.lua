@@ -18,7 +18,7 @@ local columns = {{
     text = "@MENU_TYPE1",
     dataindex = 3
 }, {
-    offset = 780,
+    offset = 790,
     text = "@EXE_SV_INFO_MOD",
     dataindex = 6
 }, {

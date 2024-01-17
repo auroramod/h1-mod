@@ -1,13 +1,14 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "server_list.hpp"
+#include "command.hpp"
+#include "console.hpp"
+#include "fastfiles.hpp"
 #include "localized_strings.hpp"
 #include "network.hpp"
-#include "scheduler.hpp"
 #include "party.hpp"
-#include "console.hpp"
-#include "command.hpp"
+#include "scheduler.hpp"
+#include "server_list.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -137,7 +138,20 @@ namespace server_list
 			case 0:
 				return servers[i].host_name.empty() ? "" : servers[i].host_name.data();
 			case 1:
-				return servers[i].map_name.empty() ? "Unknown" : servers[i].map_name.data();
+			{
+				const auto& map_name = servers[i].map_name;
+				if (map_name.empty())
+				{
+					return "Unknown";
+				}
+
+				auto map_display_name = game::UI_GetMapDisplayName(map_name.data());
+				if (!fastfiles::exists(map_name, false))
+				{
+					map_display_name = utils::string::va("^1%s", map_display_name);
+				}
+				return map_display_name;
+			}
 			case 2:
 			{
 				const auto client_count = servers[i].clients - servers[i].bots;
@@ -147,7 +161,18 @@ namespace server_list
 			case 3:
 				return servers[i].game_type.empty() ? "" : servers[i].game_type.data();
 			case 4:
-				return servers[i].ping ? utils::string::va("%i", servers[i].ping) : "999";
+			{
+				const auto ping = servers[i].ping ? servers[i].ping : 999;
+				if (ping < 75)
+				{
+					return utils::string::va("^2%d", ping);
+				}
+				else if (ping < 150)
+				{
+					return utils::string::va("^3%d", ping);
+				}
+				return utils::string::va("^1%d", ping);
+			}
 			case 5:
 				return servers[i].is_private ? "1" : "0";
 			case 6:
@@ -368,7 +393,7 @@ namespace server_list
 		server_info server{};
 		server.address = address;
 		server.host_name = info.get("hostname");
-		server.map_name = game::UI_GetMapDisplayName(info.get("mapname").data());
+		server.map_name = info.get("mapname");
 		server.game_type = game::UI_GetGameTypeDisplayName(info.get("gametype").data());
 		server.mod_name = info.get("fs_game");
 		server.play_mode = playmode;
