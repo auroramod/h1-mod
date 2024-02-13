@@ -27,9 +27,9 @@ NOTE: You must legally own Call of Duty®: Modern Warfare Remastered to run this
 
 ## Credits
 
-- [S1x](https://github.com/XLabsProject/s1x-client) - codebase and research (predecessor of MWR)
+- [s1x-client](https://github.com/HeartbeatingForCenturies/s1x-client) - codebase and research (predecessor of MWR)
 - [h2-mod](https://github.com/fedddddd/h2-mod) - research (successor of MWR)
-- [momo5502](https://github.com/momo5502) - Arxan/Steam research, developer of [XLabsProject](https://github.com/XLabsProject)
+- [momo5502](https://github.com/momo5502) - Arxan/Steam research, former lead developer of [XLabsProject](https://github.com/XLabsProject)
 
 ## Disclaimer
 
