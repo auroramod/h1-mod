@@ -37,13 +37,13 @@ namespace branding
 			}
 
 #ifdef DEBUG
-			const auto text = "h1-mod: " VERSION " (" __DATE__ " " __TIME__ ")";
+			const auto text = "h1-mod (Aurora): " VERSION " (" __DATE__ " " __TIME__ ")";
 #else
-			const auto text = "h1-mod: " VERSION;
+			const auto text = "h1-mod (Aurora): " VERSION;
 #endif
 
 			const auto placement = game::ScrPlace_GetViewPlacement();
-			float text_color[4] = {0.6f, 0.6f, 0.6f, 0.6f};
+			float text_color[4] = {0.860f, 0.459f, 0.925f, 0.800f};
 
 			game::rectDef_s rect{};
 			rect.x = 0;
@@ -68,7 +68,7 @@ namespace branding
 				return;
 			}
 
-			scheduler::loop(draw_branding, scheduler::pipeline::renderer);
+			scheduler::loop(draw_branding, scheduler::renderer);
 
 			ui_get_formatted_build_number_hook.create(
 				SELECT_VALUE(0x406EC0_b, 0x1DF300_b), ui_get_formatted_build_number_stub);
