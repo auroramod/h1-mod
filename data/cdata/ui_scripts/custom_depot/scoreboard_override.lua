@@ -3,8 +3,21 @@ local ending_reasons = {"MP_DRAW", "LUA_MENU_REPORT_DRAW", "MP_ROUND_WIN", "MP_R
                         "LUA_MENU_REPORT_DEFEAT", "MP_HALFTIME", "MP_OVERTIME", "MP_ROUNDEND", "MP_INTERMISSION",
                         "MP_SWITCHING_SIDES", "MP_MATCH_BONUS_IS", "MP_MATCH_TIE", "MP_GAME_END", "SPLASHES_BLANK"}
 
+-- score gamemodes
+local score_var_gamemodes = {"conf", "war", "hp", "koth", "dom", "sab"}
+
 local function starts_with(str, start)
     return str:sub(1, #start) == start
+end
+
+local function has_value(tab, val)
+    for index, value in ipairs(tab) do
+        if value == val then
+            return true
+        end
+    end
+
+    return false
 end
 
 local player_old_score = 0
@@ -28,7 +41,7 @@ local scoreboard = function(unk1, unk2)
             local unlocalized_string = ending_reasons[Game.GetOmnvar("ui_round_end_title")]
             local is_round_based = starts_with(unlocalized_string, "MP_ROUND") or IsGameTypeRoundBased(gamemode)
 
-            if is_round_based or gamemode == "conf" or gamemode == "war" then
+            if is_round_based or has_value(score_var_gamemodes, gamemode) then
                 player_score = player_stats.score
             else
                 player_score = player_stats.extrascore0
