@@ -132,6 +132,11 @@ namespace network
 			closesocket(sock);
 			return 0;
 		}
+
+		void* memmove_stub(void* dst, void* src, size_t size)
+		{
+			return std::memmove(dst, src, std::min(size, 1262ull));
+		}
 	}
 
 	void on(const std::string& command, const callback& callback)
@@ -304,14 +309,13 @@ namespace network
 
 				// ignore built in "print" oob command and add in our own
 				utils::hook::set<std::uint8_t>(0x12F817_b, 0xEB);
-				on("print", [](const game::netadr_s&, const std::string& data)
-				{
-					console::info("%s\n", data.data());
-				});
 
 				// Use our own socket since the game's socket doesn't work with non localhost addresses
 				// why? no idea
 				utils::hook::jump(0x5BD210_b, create_socket);
+
+				// patch buffer overflow
+				utils::hook::call(0x4F19A7_b, memmove_stub); // NET_DeferPacketToClient
 			}
 		}
 	};
