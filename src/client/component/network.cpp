@@ -104,15 +104,12 @@ namespace network
 			game::NET_OutOfBandPrint(game::NS_SERVER, from, "error\nYou are already connected to the server.");
 		}
 
+
+		//Sys_StringToSockAddr @ 0x59E810 has essentially the same functionality as this function, 
+		//but breaks with multiple clients from the same IP address. Thus, we use this instead.
 		SOCKET create_socket(const char* net_interface, int port, int protocol)
 		{
 			sockaddr_in address{};
-
-			if (net_interface && net_interface != "localhost"s)
-			{
-				// Sys_StringToSockaddr
-				utils::hook::invoke<void>(0x59E810_b, net_interface, &address);
-			}
 
 			address.sin_family = AF_INET;
 			address.sin_port = ntohs(static_cast<short>(port));
