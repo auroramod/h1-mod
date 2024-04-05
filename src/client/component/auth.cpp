@@ -63,6 +63,7 @@ namespace auth
 		std::string get_key_entropy()
 		{
 			std::string entropy{};
+			entropy.append(std::to_string(static_cast<int>(utils::cryptography::random::get_integer())));
 			entropy.append(utils::smbios::get_uuid());
 			entropy.append(get_hw_profile_guid());
 			entropy.append(get_protected_data());
