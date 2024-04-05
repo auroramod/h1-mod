@@ -235,7 +235,7 @@ namespace game
 	WEAK symbol<const char*(scr_string_t stringValue)> SL_ConvertToString{0x3C0C50, 0x507CD0};
 	WEAK symbol<unsigned int(const char* str)> SL_GetCanonicalString{0x3BDA20, 0x504A00};
 
-	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{0x0, 0x54DBF0};
+	WEAK symbol<void(netadr_s* from)> SV_DirectConnectExternal{0x0, 0x54DBF0};
 	WEAK symbol<void(int arg, char* buffer, int bufferLength)> SV_Cmd_ArgvBuffer{0x377D40, 0x1CAC60};
 	WEAK symbol<void(const char* text_in)> SV_Cmd_TokenizeString{0x377DC0, 0x1CACE0};
 	WEAK symbol<void()> SV_Cmd_EndTokenizedString{0x377D80, 0x1CACA0};

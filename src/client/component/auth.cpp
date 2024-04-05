@@ -175,7 +175,7 @@ namespace auth
 				return;
 			}
 
-			game::SV_DirectConnect(from);
+			game::SV_DirectConnectExternal(from);
 		}
 
 		void* get_direct_connect_stub()
