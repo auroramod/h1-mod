@@ -95,7 +95,7 @@ namespace network
 			return net_compare_base_address(a, b) && a->port == b->port;
 		}
 
-		void reconnect_migratated_client(void*, game::netadr_s* from, const int, const int, const char*,
+		void reconnect_migrated_client(void*, game::netadr_s* from, const int, const int, const char*,
 			const char*, bool)
 		{
 			// This happens when a client tries to rejoin after being recently disconnected, OR by a duplicated guid
@@ -242,7 +242,7 @@ namespace network
 				utils::hook::nop(0x554222_b, 6);
 
 				utils::hook::jump(0x4F1800_b, net_compare_address);
-				utils::hook::jump(0x4F1850_b, net_compare_base_address);
+				utils::hook::jump(0x4F1850_b, net_compare_address);
 
 				// don't establish secure conenction
 				utils::hook::set<uint8_t>(0x358C8D_b, 0xEB);
@@ -290,7 +290,7 @@ namespace network
 				utils::hook::set(0x59E8B0_b, 0xC301B0);
 
 				// don't try to reconnect client
-				utils::hook::jump(0x54D220_b, reconnect_migratated_client);
+				utils::hook::jump(0x54D220_b, reconnect_migrated_client);
 				utils::hook::nop(0x54E168_b, 4); // this crashes when reconnecting for some reason
 
 				// allow server owner to modify net_port before the socket bind
