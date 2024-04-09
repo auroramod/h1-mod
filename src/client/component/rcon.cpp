@@ -20,6 +20,7 @@ namespace rcon
 		bool is_redirecting_ = false;
 		bool has_redirected_ = false;
 		game::netadr_s redirect_target_ = {};
+		std::string redirect_buffer = {};
 		std::recursive_mutex redirect_lock;
 
 		void setup_redirect(const game::netadr_s& target)
@@ -29,15 +30,20 @@ namespace rcon
 			has_redirected_ = false;
 			is_redirecting_ = true;
 			redirect_target_ = target;
+			redirect_buffer.clear();
 		}
 
 		void clear_redirect()
 		{
 			std::lock_guard<std::recursive_mutex> $(redirect_lock);
 
+			// Finally, send out the buffer we accumulated when we executed the RCon request
+			network::send(redirect_target_, "print", redirect_buffer, '\n');
+
 			has_redirected_ = false;
 			is_redirecting_ = false;
 			redirect_target_ = {};
+			redirect_buffer.clear();
 		}
 
 		void send_rcon_command(const std::string& password, const std::string& data)
@@ -123,9 +129,10 @@ namespace rcon
 		if (is_redirecting_)
 		{
 			has_redirected_ = true;
-			network::send(redirect_target_, "print", message, '\n');
+			redirect_buffer.append(message);
 			return true;
 		}
+
 		return false;
 	}
 
@@ -220,6 +227,7 @@ namespace rcon
 					if (!has_redirected_)
 					{
 						network::send(redirect_target_, "print", "", '\n');
+						return;
 					}
 
 					clear_redirect();

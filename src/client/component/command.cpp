@@ -167,8 +167,8 @@ namespace command
 			{
 				if (args.size() == 1)
 				{
-					const auto current = game::Dvar_ValueToString(dvar, true, dvar->current);
-					const auto reset = game::Dvar_ValueToString(dvar, true, dvar->reset);
+					const std::string current = game::Dvar_ValueToString(dvar, true, dvar->current);
+					const std::string reset = game::Dvar_ValueToString(dvar, true, dvar->reset);
 
 					const auto info = dvars::get_dvar_info_from_hash(dvar->hash);
 					std::string desc{};
@@ -181,7 +181,7 @@ namespace command
 					}
 
 					console::info("\"%s\" is: \"%s\" default: \"%s\" hash: 0x%08lX type: %i\n",
-						name.data(), current, reset, dvar->hash, dvar->type);
+						name.data(), current.data(), reset.data(), dvar->hash, dvar->type);
 
 					console::info("%s\n", desc.data());
 					console::info("   %s\n", dvars::dvar_get_domain(dvar->type, dvar->domain).data());
