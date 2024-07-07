@@ -265,7 +265,7 @@ namespace reflection_probes
 			disableDvars();
 
 			auto cg = game::CG_GetLocalClientGlobals();
-			auto ent = &game::mp::g_entities[0];
+			[[maybe_unused]] auto ent = &game::mp::g_entities[0];
 			assert(ent->client);
 
 			for (auto probe_index = 0u; probe_index < count; probe_index++)
