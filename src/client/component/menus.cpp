@@ -31,7 +31,7 @@ namespace menus
 		game::XAssetHeader load_script_menu_internal(const char* menu)
 		{
 			const char* menu_file = utils::string::va("ui_mp/scriptmenus/%s.menu", menu);
-			return game::DB_FindXAssetHeader(game::ASSET_TYPE_MENUFILE, menu_file, 1);
+			return game::DB_FindXAssetHeader(game::ASSET_TYPE_MENULIST, menu_file, 1);
 		}
 
 		bool load_script_menu(int client_num, const char* menu)

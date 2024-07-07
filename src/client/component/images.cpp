@@ -59,8 +59,12 @@ namespace images
 				return false;
 			}
 
-			image->imageFormat = 0x1000003;
-			image->resourceSize = -1;
+			image->imageFormat = DXGI_FORMAT_R32G32B32A32_UINT;
+			image->flags = game::IMAGE_FLAG_USE_SRGB_READS;
+			image->picmip.platform[0] = -1;
+			image->picmip.platform[1] = -1;
+			image->cardMemory.platform[0] = -1;
+			image->cardMemory.platform[1] = -1;
 
 			D3D11_SUBRESOURCE_DATA data{};
 			data.SysMemPitch = raw_image->get_width() * 4;
@@ -68,7 +72,7 @@ namespace images
 			data.pSysMem = raw_image->get_buffer();
 
 			game::Image_Setup(image, raw_image->get_width(), raw_image->get_height(), image->depth, image->numElements,
-				image->imageFormat, DXGI_FORMAT_R8G8B8A8_UNORM, image->name, &data);
+				*(int*)&image->mapType, DXGI_FORMAT_R8G8B8A8_UNORM, image->name, &data);
 
 			return true;
 		}
@@ -92,7 +96,7 @@ namespace images
 
 		int setup_texture_stub(game::GfxImage* image, void* a2, void* a3)
 		{
-			if (image->resourceSize == -1)
+			if (*(int*)&image->picmip == -1)
 			{
 				return 0;
 			}

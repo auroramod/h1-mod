@@ -30,7 +30,7 @@ namespace materials
 		const game::dvar_t* debug_materials = nullptr;
 #endif
 
-		char constant_table[0x20] = {};
+		game::MaterialConstantDef constant_table{};
 		
 		int db_material_streaming_fail_stub(game::Material* material)
 		{
@@ -134,8 +134,8 @@ namespace materials
 		}
 
 		const auto image = material->textureTable->u.image;
-		image->imageFormat = 0x1000003;
-		image->resourceSize = -1;
+		*(int*)&image->mapType = 0x1000003;
+		*(int*)&image->picmip = -1;
 
 		auto raw_image = utils::image{data};
 
@@ -145,7 +145,7 @@ namespace materials
 		resource_data.pSysMem = raw_image.get_buffer();
 
 		game::Image_Setup(image, raw_image.get_width(), raw_image.get_height(), image->depth, image->numElements,
-			image->imageFormat, DXGI_FORMAT_R8G8B8A8_UNORM, image->name, &resource_data);
+			image->mapType, DXGI_FORMAT_R8G8B8A8_UNORM, image->name, &resource_data);
 		return true;
 	}
 
@@ -164,9 +164,9 @@ namespace materials
 		material->name = utils::memory::duplicate_string(name);
 		image->name = material->name;
 
-		image->textures.map = nullptr;
-		image->textures.shaderView = nullptr;
-		image->textures.shaderViewAlternate = nullptr;
+		image->texture.map = nullptr;
+		image->texture.shaderView = nullptr;
+		image->texture.shaderViewAlternate = nullptr;
 		texture_table->u.image = image;
 
 		material->textureTable = texture_table;
@@ -185,9 +185,9 @@ namespace materials
 			}
 		};
 
-		try_release(&material->textureTable->u.image->textures.map);
-		try_release(&material->textureTable->u.image->textures.shaderView);
-		try_release(&material->textureTable->u.image->textures.shaderViewAlternate);
+		try_release(&material->textureTable->u.image->texture.map);
+		try_release(&material->textureTable->u.image->texture.shaderView);
+		try_release(&material->textureTable->u.image->texture.shaderViewAlternate);
 
 		utils::memory::free(material->textureTable->u.image);
 		utils::memory::free(material->textureTable);
