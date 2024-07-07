@@ -176,8 +176,9 @@ namespace reflection_probes
 		{
 			"cg_draw2d",
 			"cg_drawgun",
+			"branding",
 		};
-		int dvar_values[2];
+		int dvar_values[3];
 
 		void disableDvars()
 		{
