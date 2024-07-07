@@ -61,10 +61,7 @@ namespace images
 
 			image->imageFormat = DXGI_FORMAT_R32G32B32A32_UINT;
 			image->flags = game::IMAGE_FLAG_USE_SRGB_READS;
-			image->picmip.platform[0] = -1;
-			image->picmip.platform[1] = -1;
-			image->cardMemory.platform[0] = -1;
-			image->cardMemory.platform[1] = -1;
+			*(int*)&image->picmip.platform = -1;
 
 			D3D11_SUBRESOURCE_DATA data{};
 			data.SysMemPitch = raw_image->get_width() * 4;
