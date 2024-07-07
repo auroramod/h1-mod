@@ -50,6 +50,8 @@ namespace dvars
 
 	extern game::dvar_t* cg_legacyCrashHandling;
 
+	extern game::dvar_t* r_reflectionProbeGenerate;
+
 	constexpr int generate_hash(const char* string)
 	{
 		const char* v1;
