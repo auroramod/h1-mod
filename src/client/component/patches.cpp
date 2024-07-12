@@ -335,7 +335,14 @@ namespace patches
 			dvars::override::register_int("marketing_active", 1, 1, 1, game::DVAR_FLAG_WRITE);
 
 			// Makes com_maxfps saved dvar
-			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
+			if (game::environment::is_dedi())
+			{
+				dvars::override::register_int("com_maxfps", 85, 0, 100, game::DVAR_FLAG_NONE);
+			}
+			else
+			{
+				dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
+			}
 
 			// Makes mis_cheat saved dvar
 			dvars::override::register_bool("mis_cheat", 0, game::DVAR_FLAG_SAVED);

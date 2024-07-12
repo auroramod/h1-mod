@@ -355,6 +355,7 @@ namespace game
 	WEAK symbol<ui_info> ui_info_array{0x0, 0x352E580};
 
 	WEAK symbol<int> level_time{0x56DBAA0, 0x7361F9C};
+	WEAK symbol<int> com_frameTime{0x0, 0x2E6EE34};
 
 	WEAK symbol<map_t> maps{0x7CE5A0, 0x926C80};
 

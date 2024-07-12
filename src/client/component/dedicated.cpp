@@ -106,7 +106,11 @@ namespace dedicated
 
 		void sync_gpu_stub()
 		{
-			std::this_thread::sleep_for(1ms);
+			const auto frame_time = *game::com_frameTime;
+			const auto sys_msec = game::Sys_Milliseconds();
+			const auto msec = frame_time - sys_msec;
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(msec));
 		}
 
 		void kill_server()
