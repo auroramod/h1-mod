@@ -97,8 +97,7 @@ namespace memory
 		int out_of_memory_text_stub(char* dest, int size, const char* fmt, ...)
 		{
 			fmt = "%s (%d)\n\n"
-				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.\n\n"
-				"If this still occurs, try using the '-memoryfix' parameter to generate the 'players2' folder.";
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.\n\n";
 
 			char buffer[2048];
 
@@ -125,17 +124,6 @@ namespace memory
 
 			// Com_sprintf for "Out of memory. You are probably low on disk space."
 			utils::hook::call(SELECT_VALUE(0x457BC9_b, 0x1D8E09_b), out_of_memory_text_stub);
-
-			// "fix" for rare 'Out of memory error' error
-			// this will *at least* generate the configs for mp/sp, which is the #1 issue
-			if (utils::flags::has_flag("memoryfix"))
-			{
-				utils::hook::jump(SELECT_VALUE(0x5110D0_b, 0x6200C0_b), malloc);
-				utils::hook::jump(SELECT_VALUE(0x510FF0_b, 0x61FFE0_b), _aligned_malloc);
-				utils::hook::jump(SELECT_VALUE(0x511130_b, 0x620120_b), free);
-				utils::hook::jump(SELECT_VALUE(0x511220_b, 0x620210_b), realloc);
-				utils::hook::jump(SELECT_VALUE(0x511050_b, 0x620040_b), _aligned_realloc);
-			}
 		}
 	};
 }

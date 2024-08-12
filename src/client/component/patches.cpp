@@ -300,6 +300,32 @@ namespace patches
 
 			game::Com_Error(code, "%s", buffer);
 		}
+
+		void dvar_set_bool(game::dvar_t* dvar, bool value)
+		{
+			game::dvar_value dvar_value{};
+			dvar_value.enabled = value;
+			game::Dvar_SetVariant(dvar, &dvar_value, game::DVAR_SOURCE_INTERNAL);
+		}
+
+		void sub_157FA0_stub()
+		{
+			const auto dvar_706663C2 = *reinterpret_cast<game::dvar_t**>(0x3426B90_b);
+			const auto dvar_617FB3B4 = *reinterpret_cast<game::dvar_t**>(0x3426BA0_b);
+
+			if (!dvar_706663C2->current.enabled || utils::hook::invoke<bool>(0x15B2F0_b))
+			{
+				utils::hook::invoke<void>(0x17D8D0_b, 0, 0);
+				dvar_set_bool(dvar_706663C2, true);
+				dvar_set_bool(dvar_617FB3B4, true);
+			}
+
+			if (utils::hook::invoke<bool>(0x5B7AB0_b))
+			{
+				utils::hook::invoke<void>(0x17D8D0_b, 0, 0);
+				dvar_set_bool(dvar_617FB3B4, true);
+			}
+		}
 	}
 
 	class component final : public component_interface
@@ -477,6 +503,9 @@ namespace patches
 			utils::hook::set<uint8_t>(0x5BEEA0_b, 0xC3); // Mixer_SetWaveInRecordLevels
 
 			utils::hook::set<uint8_t>(0x556250_b, 0xC3); // disable host migration
+
+			// Fix 'out of memory' error
+			utils::hook::call(0x15C7EE_b, sub_157FA0_stub);
 		}
 	};
 }
