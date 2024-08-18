@@ -74,7 +74,7 @@ namespace images
 			return true;
 		}
 
-		void load_texture_stub(game::GfxImage* image, void* a2, int* a3)
+		void load_texture_stub(void* a1, game::GfxImage* image)
 		{
 			try
 			{
@@ -88,7 +88,7 @@ namespace images
 				console::error("Failed to load image %s: %s\n", image->name, e.what());
 			}
 
-			load_texture_hook.invoke<void>(image, a2, a3);
+			load_texture_hook.invoke<void>(a1, image);
 		}
 
 		int setup_texture_stub(game::GfxImage* image, void* a2, void* a3)
@@ -121,7 +121,7 @@ namespace images
 			}
 
 			setup_texture_hook.create(SELECT_VALUE(0x83300_b, 0xA4AA0_b), setup_texture_stub);
-			load_texture_hook.create(SELECT_VALUE(0x82050_b, 0xA37A0_b), load_texture_stub);
+			load_texture_hook.create(SELECT_VALUE(0x55F870_b, 0x6829C0_b), load_texture_stub);
 		}
 	};
 }
