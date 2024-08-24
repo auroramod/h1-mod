@@ -311,8 +311,7 @@ namespace updater
 	{
 		static std::vector<std::string> server_urls =
 		{
-			{"https://h1-mod.fed.cat/"},
-			{"https://master.fed0001.xyz/h1-mod/"}, // remove this at some point
+			{"https://h1-mod.auroramod.dev/"},
 		};
 
 		const auto try_url = [&](const std::string& base_url)
