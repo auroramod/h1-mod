@@ -19,8 +19,6 @@
 #include <utils/properties.hpp>
 #include <utils/string.hpp>
 
-#define MASTER "https://h1-mod.fed.cat/"
-
 #define FILES_PATH "files.json"
 #define FILES_PATH_DEV "files-dev.json"
 
