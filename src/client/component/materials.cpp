@@ -154,9 +154,9 @@ namespace materials
 			{
 				auto world = (*game::s_world);
 				auto index = *(draw_stream->bspSurfIter->current - 1);
-				auto material = world->dpvs.surfaces[index];
 				auto surf = &world->dpvs.surfaces[index];
-				console::error("R_DrawTrianglesLit: %s\n", material.material->name);
+				auto material = surf->material;
+				console::error("R_DrawTrianglesLit: %s\n", material->name);
 			}
 		}
 #endif

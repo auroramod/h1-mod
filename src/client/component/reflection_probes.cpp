@@ -319,7 +319,7 @@ namespace reflection_probes
 					auto old_data = &pixel_buffer[pixels_size * (shot - 1)];
 					auto new_data = allocator.allocate_array<unsigned char>(pixels_size);
 					auto ii = 0;
-					for (auto i = 0; i < 3 * size * size;)
+					for (auto i = 0u; i < 3 * size * size;)
 					{
 						new_data[ii + 0] = old_data[i + 0];
 						new_data[ii + 1] = old_data[i + 1];
