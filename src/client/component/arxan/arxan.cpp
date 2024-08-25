@@ -8,6 +8,7 @@
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
+#include <utils/concurrency.hpp>
 
 #include "integrity.hpp"
 #include "breakpoints.hpp"
@@ -428,7 +429,7 @@ namespace arxan
 
 		namespace breakpoints
 		{
-			std::unordered_map<PVOID, void*> handle_handler;
+			utils::concurrency::container<std::unordered_map<PVOID, void*>> handle_handler;
 
 			void fake_breakpoint_trigger(void* address, _CONTEXT* fake_context)
 			{
@@ -440,7 +441,7 @@ namespace arxan
 				fake_record.ExceptionAddress = reinterpret_cast<void*>(reinterpret_cast<std::uint64_t>(address) + 3);
 				fake_record.ExceptionCode = EXCEPTION_BREAKPOINT;
 
-				for (auto handler : handle_handler)
+				for (auto handler : handle_handler.get_raw())
 				{
 					if (handler.second)
 					{
@@ -523,14 +524,19 @@ namespace arxan
 				breakpoints::patch_breakpoints();
 
 				auto handle = AddVectoredExceptionHandler(first, handler);
-				handle_handler[handle] = handler;
-
+				handle_handler.access([&](std::unordered_map<PVOID, void*>& p)
+				{
+					p[handle] = handler;
+				});
 				return handle;
 			}
 
 			ULONG WINAPI remove_vectored_exception_handler_stub(PVOID handle)
 			{
-				handle_handler[handle] = nullptr;
+				handle_handler.access([&](std::unordered_map<PVOID, void*>& p)
+				{
+					p[handle] = nullptr;
+				});
 				return RemoveVectoredExceptionHandler(handle);
 			}
 		}
