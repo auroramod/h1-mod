@@ -26,6 +26,7 @@ namespace materials
 #ifdef DEBUG
 		utils::hook::detour material_compare_hook;
 		utils::hook::detour set_pixel_texture_hook;
+		utils::hook::detour r_draw_triangles_lit_hook;
 
 		const game::dvar_t* debug_materials = nullptr;
 #endif
@@ -65,7 +66,7 @@ namespace materials
 			{
 				const auto* material_a = utils::hook::invoke<game::Material*>(0x395FE0_b, index_a);
 				const auto* material_b = utils::hook::invoke<game::Material*>(0x395FE0_b, index_b);
-				console::error("Material_Compare: %s - %s (%d - %d)", 
+				console::error("Material_Compare: %s - %s (%d - %d)\n", 
 					material_a->name, material_b->name, material_a->info.sortKey, material_b->info.sortKey);
 			}
 
@@ -121,6 +122,42 @@ namespace materials
 			}
 
 			set_pixel_texture_hook.invoke<void>(cmd_buf_state, a2, image);
+		}
+
+		struct GfxBspSurfIter
+		{
+			const unsigned int* current;
+			const unsigned int* end;
+			const unsigned int* mark;
+		};
+
+		struct GfxTrianglesDrawStream
+		{
+			void* viewProjectionMatrix;
+			void* projectionMatrix;
+			float viewOrigin[3];
+			int needSubdomain;
+			GfxBspSurfIter* bspSurfIter;
+			const game::GfxTexture* reflectionProbeTexture;
+			const game::GfxTexture* lightmapPrimaryTexture;
+			const game::GfxTexture* lightmapSecondaryTexture;
+			unsigned int customSamplerFlags;
+		};
+
+		void r_draw_triangles_lit_stub(GfxTrianglesDrawStream* draw_stream, void* context)
+		{
+			__try
+			{
+				r_draw_triangles_lit_hook.invoke<void>(draw_stream, context);
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER)
+			{
+				auto world = (*game::s_world);
+				auto index = *(draw_stream->bspSurfIter->current - 1);
+				auto material = world->dpvs.surfaces[index];
+				auto surf = &world->dpvs.surfaces[index];
+				console::error("R_DrawTrianglesLit: %s\n", material.material->name);
+			}
 		}
 #endif
 	}
@@ -220,6 +257,8 @@ namespace materials
 				{
 					debug_materials = dvars::register_bool("debug_materials", false, game::DVAR_FLAG_NONE, "Print current material and images");
 				}, scheduler::main);
+
+				r_draw_triangles_lit_hook.create(0x666870_b, r_draw_triangles_lit_stub);
 			}
 #endif
 		}
