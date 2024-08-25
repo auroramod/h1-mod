@@ -174,6 +174,7 @@ namespace reflection_probes
 
 		std::vector<std::string> dvar_names =
 		{
+			"fx_enable",
 			"cg_draw2d",
 			"cg_drawgun",
 			"branding",
@@ -313,7 +314,23 @@ namespace reflection_probes
 
 					generate_fixed();
 
-					game::R_TakeScreenshot(0, 1, 0, 0, size, size, 4, &pixel_buffer[pixels_size * (shot - 1)]);
+					game::R_TakeScreenshot(0, 1, 0, 0, size, size, 3, &pixel_buffer[pixels_size * (shot - 1)]);
+
+					auto old_data = &pixel_buffer[pixels_size * (shot - 1)];
+					auto new_data = allocator.allocate_array<unsigned char>(pixels_size);
+					auto ii = 0;
+					for (auto i = 0; i < 3 * size * size;)
+					{
+						new_data[ii + 0] = old_data[i + 0];
+						new_data[ii + 1] = old_data[i + 1];
+						new_data[ii + 2] = old_data[i + 2];
+						new_data[ii + 3] = 255;
+
+						ii += 4;
+						i += 3;
+					}
+					memcpy(old_data, new_data, pixels_size);
+					allocator.free(new_data);
 				}
 
 #ifdef DUMP_DDS
