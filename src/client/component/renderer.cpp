@@ -10,8 +10,6 @@
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 
-#define MONO_FONT game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25)
-
 namespace renderer
 {
 	namespace
@@ -215,7 +213,11 @@ namespace renderer
 						game::vec2_t screen{};
 						if (game::CG_WorldPosToScreenPosReal(0, screenPlace, scene.sceneModel[i].placement.base.origin, screen))
 						{
-							game::R_AddCmdDrawText(scene.sceneModel[i].model->name, 0x7FFFFFFF, MONO_FONT, screen[0], screen[1], 1.f, 1.f, 0.0f, sceneModelsColor, 6);
+							const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
+							if (font)
+							{
+								game::R_AddCmdDrawText(scene.sceneModel[i].model->name, 0x7FFFFFFF, font, screen[0], screen[1], 1.f, 1.f, 0.0f, sceneModelsColor, 6);
+							}
 						}
 					}
 				}
@@ -234,7 +236,11 @@ namespace renderer
 							game::vec2_t screen{};
 							if (game::CG_WorldPosToScreenPosReal(0, screenPlace, staticModel.placement.origin, screen))
 							{
-								game::R_AddCmdDrawText(staticModel.model->name, 0x7FFFFFFF, MONO_FONT, screen[0], screen[1], 1.f, 1.f, 0.0f, staticModelsColor, 6);
+								const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
+								if (font)
+								{
+									game::R_AddCmdDrawText(staticModel.model->name, 0x7FFFFFFF, font, screen[0], screen[1], 1.f, 1.f, 0.0f, staticModelsColor, 6);
+								}
 							}
 						}
 					}
