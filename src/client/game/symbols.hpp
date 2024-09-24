@@ -120,6 +120,7 @@ namespace game
 	WEAK symbol<void(playerState_s* ps, unsigned int weapon, int hadWeapon)> G_InitializeAmmo{0x29D9E0, 0x41C170};
 	WEAK symbol<void(const char* fmt, ...)> G_LogPrintf{0x5FEF0, 0x4215C0};
 	WEAK symbol<void(int clientNum, unsigned int weapon)> G_SelectWeapon{0x2F2EA0, 0x462560};
+	WEAK symbol<int(const char* buffer, int entity, int type)> G_SetFog{0x0, 0x413160};
 	WEAK symbol<int(playerState_s* ps, unsigned int weapon)> G_TakePlayerWeapon{0x2F3050, 0x462770};
 	WEAK symbol<void(mp::gentity_s*, float* origin)> G_SetOrigin{0x0, 0x45F5C0};
 
@@ -202,9 +203,12 @@ namespace game
 	WEAK symbol<unsigned int(int handle, int num_param)> Scr_ExecThread{0x3C7FE0, 0x50F150};
 	WEAK symbol<unsigned int(void* func, int type, unsigned int name)> Scr_RegisterFunction{0x3BD860, 0x504840};
 
+	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetActivePlacement{0x0, 0x362810};
 	WEAK symbol<ScreenPlacement*()> ScrPlace_GetViewPlacement{0x1BCED0, 0x362840};
 	WEAK symbol<float()> ScrPlace_HiResGetScaleX{0x0, 0x362910};
 	WEAK symbol<float()> ScrPlace_HiResGetScaleY{0x0, 0x362930};
+
+	WEAK symbol<bool(int localClient, ScreenPlacement* scrPlace, vec3_t& WorldLocation, vec2_t& Screen)> CG_WorldPosToScreenPosReal{0x0, 0x307AD0};
 
 	WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)>
 	DB_EnumXAssets_Internal{0x1F0BF0, 0x394C60};
@@ -370,6 +374,7 @@ namespace game
 		WEAK symbol<client_t*> svs_clients{0x0, 0x2DC3390};
 		WEAK symbol<int> svs_numclients{0x0, 0x2DC338C};
 		WEAK symbol<int> gameTime{0x0, 0x7361F9C};
+		WEAK symbol<int> num_entities{0x0, 0x7361A40};
 
 		WEAK symbol<int> sv_serverId_value{0x0, 0xB7F9630};
 
@@ -379,7 +384,19 @@ namespace game
 		WEAK symbol<connect_state_t*> connect_state{0x0, 0x2EC8510};
 
 		WEAK symbol<XZone> g_zones{0x0, 0x5F292B0};
+		WEAK symbol<unsigned int> g_zoneCount{0x0, 0x3D10088};
+
+		WEAK symbol<int> db_hashTable{0x0, 0x3C54FC0};
+		WEAK symbol<XAssetEntry> g_assetEntryPool{0x0, 0x5A6E3B0};
+
+		WEAK symbol<playerState_s*> playerState{0x0, 0x2DE3600};
 	}
+
+	WEAK symbol<int64_t(ID3D11Buffer**)> R_DestroyComputeBuffers{0x0, 0xAA5B0};
+	WEAK symbol<mp::refdef_t*> refdef{0x0, 0x390B580};
+	WEAK symbol<PathData> pathdata{0x0, 0x71AF210};
+	WEAK symbol<unsigned __int64(pathnode_t* node, float* pos)> WorldifyPosFromParent{0x0, 0x3FD7D0};
+	WEAK symbol<GfxScene> scene{0x0, 0x33E4290};
 
 	namespace sp
 	{

@@ -105,6 +105,22 @@ namespace utils::string
 		return {};
 	}
 
+	void set_clipboard_data(const std::string& text)
+	{
+		const auto len = text.size() + 1;
+		const auto mem = GlobalAlloc(GMEM_MOVEABLE, len);
+
+		memcpy(GlobalLock(mem), text.data(), len);
+		GlobalUnlock(mem);
+
+		if (OpenClipboard(nullptr))
+		{
+			EmptyClipboard();
+			SetClipboardData(CF_TEXT, mem);
+			CloseClipboard();
+		}
+	}
+
 	void strip(const char* in, char* out, int max)
 	{
 		if (!in || !out) return;
@@ -192,5 +208,32 @@ namespace utils::string
 	bool is_numeric(const std::string& text)
 	{
 		return std::to_string(atoi(text.data())) == text;
+	}
+
+	bool find_lower(const std::string& a, const std::string& b)
+	{
+		return to_lower(a).find(to_lower(b)) != std::string::npos;
+	}
+
+	bool strstr_lower(const char* a, const char* b)
+	{
+		const char* a_ = a;
+		const char* b_ = b;
+
+		while (*a_ != '\0' && *b_ != '\0')
+		{
+			if (*b_ == '*' || std::tolower(*a_) == std::tolower(*b_))
+			{
+				b_++;
+			}
+			else
+			{
+				b_ = b;
+			}
+
+			a_++;
+		}
+
+		return *b_ == '\0';
 	}
 }

@@ -2,11 +2,15 @@
 #include "loader/component_loader.hpp"
 
 #include "dvars.hpp"
+#include "scheduler.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
 #include <utils/hook.hpp>
+#include <utils/string.hpp>
+
+#define MONO_FONT game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25)
 
 namespace renderer
 {
@@ -20,6 +24,11 @@ namespace renderer
 		game::dvar_t* r_red_dot_brightness_scale;
 		game::dvar_t* r_use_custom_red_dot_brightness;
 		float tonemap_highlight_range = 16.f;
+
+#ifdef DEBUG
+		game::dvar_t* r_drawModelNames;
+		game::dvar_t* r_playerDrawDebugDistance;
+#endif
 
 		std::unordered_map<std::string, float> tonemap_highlight_range_overrides =
 		{
@@ -147,6 +156,93 @@ namespace renderer
 			a.bind(is_zero);
 			a.jmp(SELECT_VALUE(0x5CF20A_b, 0x6E7722_b));
 		}
+
+#ifdef DEBUG
+		void VectorSubtract(const float va[3], const float vb[3], float out[3])
+		{
+			out[0] = va[0] - vb[0];
+			out[1] = va[1] - vb[1];
+			out[2] = va[2] - vb[2];
+		}
+
+		float Vec3SqrDistance(const float v1[3], const float v2[3])
+		{
+			float out[3];
+
+			VectorSubtract(v2, v1, out);
+
+			return (out[0] * out[0]) + (out[1] * out[1]) + (out[2] * out[2]);
+		}
+
+		void debug_draw_model_names()
+		{
+			if (!r_drawModelNames || r_drawModelNames->current.integer == 0)
+				return;
+
+			auto player = *game::mp::playerState;
+			float playerPosition[3]{ player->origin[0], player->origin[1], player->origin[2] };
+
+			auto mapname = game::Dvar_FindVar("mapname");
+			auto gfxAsset = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_GFX_MAP, utils::string::va("maps/mp/%s.d3dbsp", mapname->current.string), 0).gfxWorld;
+			if (gfxAsset == nullptr)
+			{
+				gfxAsset = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_GFX_MAP, utils::string::va("maps/%s.d3dbsp", mapname->current.string), 0).gfxWorld;
+				if (gfxAsset == nullptr)
+				{
+					return;
+				}
+			}
+
+			auto distance = r_playerDrawDebugDistance->current.integer;
+			auto sqrDist = distance * static_cast<float>(distance);
+
+			float staticModelsColor[4] = { 1.0f, 0.0f, 1.0f, 1.0f };
+			float sceneModelsColor[4] = { 1.0f, 1.0f, 0.0f, 1.0f };
+			float dobjsColor[4] = { 0.0f, 1.0f, 1.0f, 1.0f };
+			auto scene = *game::scene;
+
+			switch (r_drawModelNames->current.integer)
+			{
+			case 1:
+				for (auto i = 0; i < scene.sceneModelCount; i++)
+				{
+					if (!scene.sceneModel[i].model)
+						continue;
+
+					if (Vec3SqrDistance(playerPosition, scene.sceneModel[i].placement.base.origin) < static_cast<float>(sqrDist))
+					{
+						auto screenPlace = game::ScrPlace_GetActivePlacement();
+						game::vec2_t screen{};
+						if (game::CG_WorldPosToScreenPosReal(0, screenPlace, scene.sceneModel[i].placement.base.origin, screen))
+						{
+							game::R_AddCmdDrawText(scene.sceneModel[i].model->name, 0x7FFFFFFF, MONO_FONT, screen[0], screen[1], 1.f, 1.f, 0.0f, sceneModelsColor, 6);
+						}
+					}
+				}
+				break;
+			case 2:
+				for (size_t i = 0; i < gfxAsset->dpvs.smodelCount; i++)
+				{
+					auto staticModel = gfxAsset->dpvs.smodelDrawInsts[i];
+					if (staticModel.model)
+					{
+						const auto dist = Vec3SqrDistance(playerPosition, staticModel.placement.origin);
+						if (dist < static_cast<float>(sqrDist))
+						{
+
+							auto screenPlace = game::ScrPlace_GetActivePlacement();
+							game::vec2_t screen{};
+							if (game::CG_WorldPosToScreenPosReal(0, screenPlace, staticModel.placement.origin, screen))
+							{
+								game::R_AddCmdDrawText(staticModel.model->name, 0x7FFFFFFF, MONO_FONT, screen[0], screen[1], 1.f, 1.f, 0.0f, staticModelsColor, 6);
+							}
+						}
+					}
+				}
+				break;
+			}
+		}
+#endif
 	}
 	
 	class component final : public component_interface
@@ -185,6 +281,30 @@ namespace renderer
 			// patch r_preloadShaders crash at init
 			utils::hook::jump(SELECT_VALUE(0x5CF1F1_b, 0x6E76F1_b), utils::hook::assemble(r_preload_shaders_stub), true);
 			dvars::override::register_bool("r_preloadShaders", false, game::DVAR_FLAG_SAVED);
+
+#ifdef DEBUG
+			if (!game::environment::is_mp())
+			{
+				return;
+			}
+
+			r_drawModelNames = dvars::register_int("r_drawModelNames", 0, 0, 2, game::DVAR_FLAG_CHEAT, "Draw all model names");
+			r_playerDrawDebugDistance = dvars::register_int("r_drawDebugDistance", 1000, 0, 50000, game::DVAR_FLAG_SAVED, "r_draw debug functions draw distance relative to the player");
+
+			scheduler::loop([]
+			{
+				static const auto* in_firing_range = game::Dvar_FindVar("virtualLobbyInFiringRange");
+				if (!in_firing_range)
+				{
+					return;
+				}
+
+				if ( game::CL_IsCgameInitialized() || (game::VirtualLobby_Loaded() && in_firing_range->current.enabled) )
+				{
+					debug_draw_model_names();
+				}
+			}, scheduler::renderer);
+#endif
 		}
 	};
 }

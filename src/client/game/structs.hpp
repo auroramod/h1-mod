@@ -1087,6 +1087,22 @@ namespace game
 		char __pad1[0x2C]; // not correct
 	};
 
+	enum scriptType_e
+	{
+		SCRIPT_NONE = 0,
+		SCRIPT_OBJECT = 1,
+		SCRIPT_STRING = 2,
+		SCRIPT_ISTRING = 3,
+		SCRIPT_VECTOR = 4,
+		SCRIPT_FLOAT = 5,
+		SCRIPT_INTEGER = 6,
+		SCRIPT_END = 8,
+		SCRIPT_FUNCTION = 9,
+		SCRIPT_STRUCT = 19,
+		SCRIPT_ENTITY = 21,
+		SCRIPT_ARRAY = 22,
+	};
+
 	struct Bounds
 	{
 		float midPoint[3];
@@ -1317,11 +1333,24 @@ namespace game
 		struct gentity_s
 		{
 			EntityState s;
-			char __pad0[342];
+			char _padding[106];
+			vec3_t trBase;
+			vec3_t trDelta;
+			char _padding1[12];
+			vec3_t currentAngles;
+			char pad_0008[108];
+			Bounds box;
+			Bounds absBox;
+			vec3_t origin;
+			char pad_0144[12];
+			short owner;
+			char _pad0[6];
 			gclient_s* client;
-			char __pad1[80];
+			char _pad1[56];
+			scr_string_t script_classname;
+			char _pad2[20];
 			int flags;
-			char __pad2[300];
+			char __pad3[300];
 		}; // size = 736
 #pragma pack(pop)
 
@@ -2003,4 +2032,52 @@ namespace game
 			HksError m_error;
 		};
 	}
+
+	union SoundFlags
+	{
+		struct
+		{
+			std::uint32_t looping : 1;
+			std::uint32_t master : 1;
+			std::uint32_t slave : 1;
+			std::uint32_t full_dry_level : 1;
+			std::uint32_t no_wet_level : 1;
+			std::uint32_t is_3d : 1;
+			std::uint32_t channel : 10;
+			std::uint32_t type : 2;
+			std::uint32_t unk2 : 14; // shape? random_looping?
+		} u;
+
+		std::uint32_t packed;
+	};
+
+	struct GfxPlacement
+	{
+		float quat[4];
+		float origin[3];
+	};
+
+	struct GfxScaledPlacement
+	{
+		GfxPlacement base;
+		float scale;
+	};
+
+	struct GfxSceneModel
+	{
+		char _pad0[8];
+		XModel* model;
+		void* obj;
+		GfxScaledPlacement placement;
+		char _pad1[74];
+	};
+
+	struct __declspec(align(64)) GfxScene
+	{
+		int _pad0;
+		volatile int sceneModelCount;
+		int sceneModelCountAtMark;
+		int sceneDObjModelCount;
+		GfxSceneModel sceneModel[2046];
+	};
 }

@@ -1231,6 +1231,11 @@ namespace fastfiles
 		
 	}
 
+	std::string get_zone_name(const unsigned int index)
+	{
+		return game::mp::g_zones[index].name;
+	}
+
 	void set_usermap(const std::string& usermap)
 	{
 		current_usermap.access([&](std::optional<std::string>& current_usermap_)
@@ -1269,6 +1274,39 @@ namespace fastfiles
 	bool is_stock_map(const std::string& name)
 	{
 		return fastfiles::exists(name, true);
+	}
+
+	void enum_asset_entries(const game::XAssetType type, const std::function<void(game::XAssetEntry*)>& callback, bool include_override)
+	{
+		constexpr auto max_asset_count = 0x25D78;
+		auto hash = &game::mp::db_hashTable[0];
+		for (auto c = 0; c < max_asset_count; c++)
+		{
+			for (auto i = *hash; i; )
+			{
+				const auto entry = &game::mp::g_assetEntryPool[i];
+
+				if (entry->asset.type == type)
+				{
+					callback(entry);
+
+					if (include_override && entry->nextOverride)
+					{
+						auto next_ovveride = entry->nextOverride;
+						while (next_ovveride)
+						{
+							const auto override = &game::mp::g_assetEntryPool[next_ovveride];
+							callback(override);
+							next_ovveride = override->nextOverride;
+						}
+					}
+				}
+
+				i = entry->nextHash;
+			}
+
+			++hash;
+		}
 	}
 
 	class component final : public component_interface
