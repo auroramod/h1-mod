@@ -1294,13 +1294,59 @@ namespace game
 			TEAM_NUM_TEAMS = 0x4,
 		};
 
+		struct SprintState
+		{
+			int sprintButtonUpRequired;
+			int sprintDelay;
+			int lastSprintStart;
+			int lastSprintEnd;
+			int sprintStartMaxLength;
+		};
+
+		struct playerState_s
+		{
+			char clientNum;
+			char __pad0[1];
+			char pm_type;
+			char __pad1[44];
+			int otherFlags;
+			char __pad2[28];
+			int pm_time;
+			int pm_flags;
+			int eFlags;
+			int linkFlags;
+			char __pad3[24];
+			vec3_t origin;
+			vec3_t velocity;
+			char __pad7[156];
+			vec3_t delta_angles;
+			char __pad4[144];
+			SprintState sprintState;
+			char __pad5[88];
+			int weaponState0;
+			char __pad6[7040];
+			int perks[2];
+			char __pad10[10960];
+		};
+
+		static_assert(sizeof(playerState_s) == 18576);
+		static_assert(offsetof(playerState_s, pm_type) == 2);
+		//static_assert(offsetof(playerState_s, groundEntityNum) == 34);
+		static_assert(offsetof(playerState_s, otherFlags) == 48);
+		static_assert(offsetof(playerState_s, pm_time) == 80);
+		static_assert(offsetof(playerState_s, pm_flags) == 84);
+		static_assert(offsetof(playerState_s, eFlags) == 88);
+		static_assert(offsetof(playerState_s, linkFlags) == 92);
+		static_assert(offsetof(playerState_s, origin) == 120);
+		static_assert(offsetof(playerState_s, velocity) == 132);
+		static_assert(offsetof(playerState_s, delta_angles) == 300);
+		static_assert(offsetof(playerState_s, sprintState) == 456);
+		static_assert(offsetof(playerState_s, weaponState0) == 564);
+		static_assert(offsetof(playerState_s, perks) == 7608);
+
 		struct gclient_s
 		{
-			char __pad0[2];
-			char pm_type; // 2
-			char __pad1[297];
-			float angles[3]; // 300 304 308
-			char __pad2[18264];
+			playerState_s ps;
 			sessionState_t sessionState;
 			char __pad3[220]; // 254
 			team_t team;
@@ -1310,7 +1356,8 @@ namespace game
 			int flags; // 19488 
 		}; // size = ?
 
-		static_assert(offsetof(gclient_s, angles) == 300);
+		static_assert(offsetof(gclient_s, ps.origin) == 120);
+		static_assert(offsetof(gclient_s, ps.delta_angles) == 300);
 		static_assert(offsetof(gclient_s, sessionState) == 18576);
 		static_assert(offsetof(gclient_s, team) == 18800);
 		static_assert(offsetof(gclient_s, name) == 18834);
@@ -1355,51 +1402,6 @@ namespace game
 #pragma pack(pop)
 
 		static_assert(sizeof(gentity_s) == 736);
-
-		struct SprintState
-		{
-			int sprintButtonUpRequired;
-			int sprintDelay;
-			int lastSprintStart;
-			int lastSprintEnd;
-			int sprintStartMaxLength;
-		};
-
-		struct playerState_s
-		{
-			char clientNum;
-			char __pad0[1];
-			char pm_type;
-			char __pad1[44];
-			int otherFlags;
-			char __pad2[28];
-			int pm_time;
-			int pm_flags;
-			int eFlags;
-			int linkFlags;
-			char __pad3[24];
-			vec3_t origin;
-			vec3_t velocity;
-			char __pad4[312];
-			SprintState sprintState;
-			char __pad5[88];
-			int weaponState0;
-			char __pad6[7040];
-			int perks[2];
-		};
-
-		static_assert(offsetof(playerState_s, pm_type) == 2);
-		//static_assert(offsetof(playerState_s, groundEntityNum) == 34);
-		static_assert(offsetof(playerState_s, otherFlags) == 48);
-		static_assert(offsetof(playerState_s, pm_time) == 80);
-		static_assert(offsetof(playerState_s, pm_flags) == 84);
-		static_assert(offsetof(playerState_s, eFlags) == 88);
-		static_assert(offsetof(playerState_s, linkFlags) == 92);
-		static_assert(offsetof(playerState_s, origin) == 120);
-		static_assert(offsetof(playerState_s, velocity) == 132);
-		static_assert(offsetof(playerState_s, sprintState) == 456);
-		static_assert(offsetof(playerState_s, weaponState0) == 564);
-		static_assert(offsetof(playerState_s, perks) == 7608);
 
 		struct snapshot_s
 		{
@@ -2032,24 +2034,6 @@ namespace game
 			HksError m_error;
 		};
 	}
-
-	union SoundFlags
-	{
-		struct
-		{
-			std::uint32_t looping : 1;
-			std::uint32_t master : 1;
-			std::uint32_t slave : 1;
-			std::uint32_t full_dry_level : 1;
-			std::uint32_t no_wet_level : 1;
-			std::uint32_t is_3d : 1;
-			std::uint32_t channel : 10;
-			std::uint32_t type : 2;
-			std::uint32_t unk2 : 14; // shape? random_looping?
-		} u;
-
-		std::uint32_t packed;
-	};
 
 	struct GfxPlacement
 	{

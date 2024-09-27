@@ -24,6 +24,7 @@ namespace renderer
 		float tonemap_highlight_range = 16.f;
 
 #ifdef DEBUG
+		game::dvar_t* r_drawLightOrigins;
 		game::dvar_t* r_drawModelNames;
 		game::dvar_t* r_playerDrawDebugDistance;
 #endif
@@ -172,6 +173,52 @@ namespace renderer
 			return (out[0] * out[0]) + (out[1] * out[1]) + (out[2] * out[2]);
 		}
 
+		void debug_draw_light_origins()
+		{
+			if (!r_drawLightOrigins || r_drawLightOrigins->current.integer == 0)
+				return;
+
+			auto player = *game::mp::playerState;
+			float playerPosition[3]{ player->origin[0], player->origin[1], player->origin[2] };
+
+			auto mapname = game::Dvar_FindVar("mapname");
+			auto comWorld = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_COMWORLD, utils::string::va("maps/mp/%s.d3dbsp", mapname->current.string), 0).comWorld;
+			if (comWorld == nullptr)
+			{
+				comWorld = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_COMWORLD, utils::string::va("maps/%s.d3dbsp", mapname->current.string), 0).comWorld;
+				if (comWorld == nullptr)
+				{
+					return;
+				}
+			}
+
+			auto distance = r_playerDrawDebugDistance->current.integer;
+			auto sqrDist = distance * static_cast<float>(distance);
+
+			float textColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+			auto scene = *game::scene;
+
+			for (size_t i = 0; i < comWorld->primaryLightCount; i++)
+			{
+				auto light = comWorld->primaryLights[i];
+				const auto dist = Vec3SqrDistance(playerPosition, light.origin);
+				if (dist < static_cast<float>(sqrDist))
+				{
+					auto screenPlace = game::ScrPlace_GetActivePlacement();
+					game::vec2_t screen{};
+					if (game::CG_WorldPosToScreenPosReal(0, screenPlace, light.origin, screen))
+					{
+						const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
+						if (font)
+						{
+							const auto text = utils::string::va("%f, %f, %f (%d)", light.origin[0], light.origin[1], light.origin[1], i);
+							game::R_AddCmdDrawText(text, 0x7FFFFFFF, font, screen[0], screen[1], 1.f, 1.f, 0.0f, textColor, 6);
+						}
+					}
+				}
+			}
+		}
+
 		void debug_draw_model_names()
 		{
 			if (!r_drawModelNames || r_drawModelNames->current.integer == 0)
@@ -181,10 +228,10 @@ namespace renderer
 			float playerPosition[3]{ player->origin[0], player->origin[1], player->origin[2] };
 
 			auto mapname = game::Dvar_FindVar("mapname");
-			auto gfxAsset = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_GFX_MAP, utils::string::va("maps/mp/%s.d3dbsp", mapname->current.string), 0).gfxWorld;
+			auto gfxAsset = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_GFXWORLD, utils::string::va("maps/mp/%s.d3dbsp", mapname->current.string), 0).gfxWorld;
 			if (gfxAsset == nullptr)
 			{
-				gfxAsset = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_GFX_MAP, utils::string::va("maps/%s.d3dbsp", mapname->current.string), 0).gfxWorld;
+				gfxAsset = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_GFXWORLD, utils::string::va("maps/%s.d3dbsp", mapname->current.string), 0).gfxWorld;
 				if (gfxAsset == nullptr)
 				{
 					return;
@@ -294,6 +341,7 @@ namespace renderer
 				return;
 			}
 
+			r_drawLightOrigins = dvars::register_int("r_drawLightOrigins", 0, 0, 2, game::DVAR_FLAG_CHEAT, "Draw comworld light origins");
 			r_drawModelNames = dvars::register_int("r_drawModelNames", 0, 0, 2, game::DVAR_FLAG_CHEAT, "Draw all model names");
 			r_playerDrawDebugDistance = dvars::register_int("r_drawDebugDistance", 1000, 0, 50000, game::DVAR_FLAG_SAVED, "r_draw debug functions draw distance relative to the player");
 
@@ -307,6 +355,7 @@ namespace renderer
 
 				if ( game::CL_IsCgameInitialized() || (game::VirtualLobby_Loaded() && in_firing_range->current.enabled) )
 				{
+					debug_draw_light_origins();
 					debug_draw_model_names();
 				}
 			}, scheduler::renderer);

@@ -872,6 +872,44 @@ namespace command
 
 				cmd_kill(client_num);
 			});
+
+			add_sv("setviewpos", [](const int client_num, const params_sv& params)
+			{
+				if (!check_cheats(client_num))
+				{
+					return;
+				}
+
+				if (params.size() < 4)
+				{
+					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+						"f \"You did not specify the correct number of coordinates\"");
+					return;
+				}
+
+				game::mp::g_entities[client_num].client->ps.origin[0] = std::strtof(params.get(1), nullptr);
+				game::mp::g_entities[client_num].client->ps.origin[1] = std::strtof(params.get(2), nullptr);
+				game::mp::g_entities[client_num].client->ps.origin[2] = std::strtof(params.get(3), nullptr);
+			});
+
+			add_sv("setviewang", [](const int client_num, const params_sv& params)
+			{
+				if (!check_cheats(client_num))
+				{
+					return;
+				}
+
+				if (params.size() < 4)
+				{
+					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+						"f \"You did not specify the correct number of coordinates\"");
+					return;
+				}
+
+				game::mp::g_entities[client_num].client->ps.delta_angles[0] = std::strtof(params.get(1), nullptr);
+				game::mp::g_entities[client_num].client->ps.delta_angles[1] = std::strtof(params.get(2), nullptr);
+				game::mp::g_entities[client_num].client->ps.delta_angles[2] = std::strtof(params.get(3), nullptr);
+			});
 		}
 	};
 }

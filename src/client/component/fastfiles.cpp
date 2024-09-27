@@ -1078,7 +1078,7 @@ namespace fastfiles
 			{
 				reallocate_attachment_and_weapon();
 				reallocate_sound_pool();
-				reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIM, 2>();
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIMPARTS, 2>();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOADED_SOUND, 2>();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOCALIZE_ENTRY, 2>();
 			}
