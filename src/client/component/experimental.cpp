@@ -152,7 +152,7 @@ namespace experimental
 				return;
 			}
 
-			if (!cg_draw_material || !cg_draw_material->current.integer)
+			if (!cg_draw_material || !cg_draw_material->current.enabled)
 			{
 				return;
 			}
