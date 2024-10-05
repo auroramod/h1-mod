@@ -94,6 +94,7 @@ namespace game
 		unsigned int flags)> Dvar_RegisterString{0x4197E0, 0x182BD0};
 	WEAK symbol<dvar_t*(int dvarName, const char* a2, float x, float y, float z, 
 		float w, float min, float max, unsigned int flags)> Dvar_RegisterVec4{0x419C60, 0x183010};
+	WEAK symbol<dvar_t*(int hash, const char* dvarName, const char** valueList, int defaultIndex, unsigned int flags)> Dvar_RegisterEnum{0x0, 0x182700};
 
 	WEAK symbol<long long(const char* qpath, char** buffer)> FS_ReadFile{0x40E280, 0x1EC690};
 	WEAK symbol<void(void* buffer)> FS_FreeFile{0x40E270, 0x59E2F0};

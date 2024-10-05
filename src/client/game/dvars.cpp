@@ -279,4 +279,12 @@ namespace dvars
 		insert_dvar_info(hash, name, description);
 		return game::Dvar_RegisterVec4(hash, "", x, y, z, w, min, max, flags);
 	}
+
+	game::dvar_t* register_enum(const std::string& name, const char** value_list, int default_index,
+		unsigned int flags, const std::string& description)
+	{
+		const auto hash = generate_hash(name);
+		insert_dvar_info(hash, name, description);
+		return game::Dvar_RegisterEnum(hash, "", value_list, default_index, flags);
+	}
 }

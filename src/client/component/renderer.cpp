@@ -175,8 +175,10 @@ namespace renderer
 
 		void debug_draw_light_origins()
 		{
-			if (!r_drawLightOrigins || r_drawLightOrigins->current.integer == 0)
+			if (!r_drawLightOrigins || !r_drawLightOrigins->current.enabled)
+			{
 				return;
+			}
 
 			auto player = *game::mp::playerState;
 			float playerPosition[3]{ player->origin[0], player->origin[1], player->origin[2] };
@@ -219,10 +221,25 @@ namespace renderer
 			}
 		}
 
+		inline void draw_light_text(const char* name, game::vec3_t& origin, game::vec4_t& color)
+		{
+			game::vec2_t screen{};
+			if (game::CG_WorldPosToScreenPosReal(0, game::ScrPlace_GetActivePlacement(), origin, screen))
+			{
+				const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
+				if (font)
+				{
+					game::R_AddCmdDrawText(name, 0x7FFFFFFF, font, screen[0], screen[1], 1.f, 1.f, 0.0f, color, 6);
+				}
+			}
+		}
+
 		void debug_draw_model_names()
 		{
 			if (!r_drawModelNames || r_drawModelNames->current.integer == 0)
+			{
 				return;
+			}
 
 			auto player = *game::mp::playerState;
 			float playerPosition[3]{ player->origin[0], player->origin[1], player->origin[2] };
@@ -241,9 +258,9 @@ namespace renderer
 			auto distance = r_playerDrawDebugDistance->current.integer;
 			auto sqrDist = distance * static_cast<float>(distance);
 
-			float staticModelsColor[4] = { 1.0f, 0.0f, 1.0f, 1.0f };
-			float sceneModelsColor[4] = { 1.0f, 1.0f, 0.0f, 1.0f };
-			float dobjsColor[4] = { 0.0f, 1.0f, 1.0f, 1.0f };
+			static float staticModelsColor[4] = { 1.0f, 0.0f, 1.0f, 1.0f };
+			static float sceneModelsColor[4] = { 1.0f, 1.0f, 0.0f, 1.0f };
+			static float dobjsColor[4] = { 0.0f, 1.0f, 1.0f, 1.0f };
 			auto scene = *game::scene;
 
 			switch (r_drawModelNames->current.integer)
@@ -256,42 +273,24 @@ namespace renderer
 
 					if (Vec3SqrDistance(playerPosition, scene.sceneModel[i].placement.base.origin) < static_cast<float>(sqrDist))
 					{
-						auto screenPlace = game::ScrPlace_GetActivePlacement();
-						game::vec2_t screen{};
-						if (game::CG_WorldPosToScreenPosReal(0, screenPlace, scene.sceneModel[i].placement.base.origin, screen))
-						{
-							const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
-							if (font)
-							{
-								game::R_AddCmdDrawText(scene.sceneModel[i].model->name, 0x7FFFFFFF, font, screen[0], screen[1], 1.f, 1.f, 0.0f, sceneModelsColor, 6);
-							}
-						}
+						draw_light_text(scene.sceneModel[i].model->name, scene.sceneModel[i].placement.base.origin, sceneModelsColor);
 					}
 				}
 				break;
 			case 2:
-				for (size_t i = 0; i < gfxAsset->dpvs.smodelCount; i++)
+				for (auto i = 0; i < gfxAsset->dpvs.smodelCount; i++)
 				{
 					auto staticModel = gfxAsset->dpvs.smodelDrawInsts[i];
-					if (staticModel.model)
-					{
-						const auto dist = Vec3SqrDistance(playerPosition, staticModel.placement.origin);
-						if (dist < static_cast<float>(sqrDist))
-						{
+					if (!staticModel.model)
+						continue;
 
-							auto screenPlace = game::ScrPlace_GetActivePlacement();
-							game::vec2_t screen{};
-							if (game::CG_WorldPosToScreenPosReal(0, screenPlace, staticModel.placement.origin, screen))
-							{
-								const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
-								if (font)
-								{
-									game::R_AddCmdDrawText(staticModel.model->name, 0x7FFFFFFF, font, screen[0], screen[1], 1.f, 1.f, 0.0f, staticModelsColor, 6);
-								}
-							}
-						}
+					if (Vec3SqrDistance(playerPosition, staticModel.placement.origin) < static_cast<float>(sqrDist))
+					{
+						draw_light_text(staticModel.model->name, staticModel.placement.origin, staticModelsColor);
 					}
 				}
+				break;
+			default:
 				break;
 			}
 		}
@@ -341,8 +340,16 @@ namespace renderer
 				return;
 			}
 
-			r_drawLightOrigins = dvars::register_int("r_drawLightOrigins", 0, 0, 2, game::DVAR_FLAG_CHEAT, "Draw comworld light origins");
-			r_drawModelNames = dvars::register_int("r_drawModelNames", 0, 0, 2, game::DVAR_FLAG_CHEAT, "Draw all model names");
+			static const char* values[] =
+			{
+				"off",
+				"map/temporary entities",
+				"map models",
+				nullptr
+			};
+
+			r_drawLightOrigins = dvars::register_bool("r_drawLightOrigins", false, game::DVAR_FLAG_CHEAT, "Draw comworld light origins");
+			r_drawModelNames = dvars::register_enum("r_drawModelNames", values, 0, game::DVAR_FLAG_CHEAT, "Draw all model names");
 			r_playerDrawDebugDistance = dvars::register_int("r_drawDebugDistance", 1000, 0, 50000, game::DVAR_FLAG_SAVED, "r_draw debug functions draw distance relative to the player");
 
 			scheduler::loop([]
