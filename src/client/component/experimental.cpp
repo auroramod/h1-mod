@@ -1,4 +1,6 @@
 #include <std_include.hpp>
+
+#ifdef DEBUG
 #include "loader/component_loader.hpp"
 
 #include "dvars.hpp"
@@ -141,9 +143,6 @@ namespace experimental
 			}
 		}
 
-		int frames_passed = 0; // 20 then resets to 0
-		std::optional<std::string> current_material;
-
 		void render_draw_material()
 		{
 			static const auto* sv_running = game::Dvar_FindVar("sv_running");
@@ -187,56 +186,42 @@ namespace experimental
 				return;
 			}
 
-			/*
-			if (frames_passed > 5)
-			{
-				frames_passed = 0;
-				current_material = {};
-			}
-			else
-			{
-				frames_passed = frames_passed + 1;
-			}
-
-			if (current_material.has_value())
-			{
-				game::UI_DrawWrappedText(placement, current_material.value().data(), &rect, font,
-					8.0, 240.0f, 0.2f, text_color, 0, 0, &text_rect, 0);
-				return;
-			}
-			*/
-
 			game::vec3_t origin{};
 			const auto client = game::mp::g_entities[0].client;
-			const auto angles = client->ps.delta_angles;
 			utils::hook::invoke<void>(0x4057F0_b, client, origin); // G_GetPlayerViewOrigin
 
 			game::vec3_t forward{};
-			utils::hook::invoke<void>(0x59C600_b, angles, forward, nullptr, nullptr); // AngleVectors
+			utils::hook::invoke<void>(0x59C600_b, client->ps.delta_angles, forward, nullptr, nullptr); // AngleVectors
 
 			float min_distance = -1.f;
 			float second_min_distance = -1.f;
 			float third_min_distance = -1.f;
+
 			game::vec3_t target_center{}, target_triangle[3]{};
 			game::vec3_t secondary_target_center{}, secondary_target_triangle[3]{};
 			game::vec3_t third_target_center{}, third_target_triangle[3]{};
+
 			game::GfxSurface* target_surface = nullptr;
 			game::GfxSurface* secondary_surface = nullptr;
 			game::GfxSurface* third_surface = nullptr;
 
-			for (auto i = 0u; i < gfx_map->surfaceCount; i++) {
+			for (auto i = 0u; i < gfx_map->surfaceCount; i++) 
+			{
 				const auto surface = &gfx_map->dpvs.surfaces[i];
 				const auto indices = &gfx_map->draw.indices[surface->tris.baseIndex];
 				bool too_far = false;
 
-				for (auto o = 0; o < surface->tris.triCount && !too_far; o++) {
+				for (auto o = 0; o < surface->tris.triCount && !too_far; o++) 
+				{
 					game::vec3_t triangle[3]{};
 
-					for (auto j = 0; j < 3; j++) {
+					for (auto j = 0; j < 3; j++) 
+					{
 						const auto index = indices[o * 3 + j] + surface->tris.firstVertex;
 						const auto vertex = &gfx_map->draw.vd.vertices[index];
 
-						if (distance_2d(vertex->xyz, origin) > 1000.f) {
+						if (distance_2d(vertex->xyz, origin) > 1000.f) 
+						{
 							too_far = true;
 							break;
 						}
@@ -244,45 +229,44 @@ namespace experimental
 						std::memcpy(&triangle[j], vertex->xyz, sizeof(float[3]));
 					}
 
-					if (!too_far && lineTriangleIntersection(triangle, origin, forward)) {
+					if (!too_far && lineTriangleIntersection(triangle, origin, forward)) 
+					{
 						game::vec3_t center{};
 						getCenterPoint(triangle, center);
 						const auto dist = distance_3d(center, origin);
 
-						if (dist < min_distance || min_distance == -1.f) {
-							// Shift second to third
+						// a messy if statement of gross shifting between mats
+						if (dist < min_distance || min_distance == -1.f) 
+						{
 							third_surface = secondary_surface;
 							third_min_distance = second_min_distance;
 							std::memcpy(&third_target_triangle, &secondary_target_triangle, sizeof(third_target_triangle));
 							std::memcpy(&third_target_center, &secondary_target_center, sizeof(game::vec3_t));
 
-							// Shift closest to second
 							secondary_surface = target_surface;
 							second_min_distance = min_distance;
 							std::memcpy(&secondary_target_triangle, &target_triangle, sizeof(secondary_target_triangle));
 							std::memcpy(&secondary_target_center, &target_center, sizeof(game::vec3_t));
 
-							// Update closest surface
 							target_surface = surface;
 							min_distance = dist;
 							std::memcpy(&target_triangle, &triangle, sizeof(target_triangle));
 							std::memcpy(&target_center, &center, sizeof(game::vec3_t));
 						}
-						else if (dist < second_min_distance || second_min_distance == -1.f) {
-							// Shift second to third
+						else if (dist < second_min_distance || second_min_distance == -1.f) 
+						{
 							third_surface = secondary_surface;
 							third_min_distance = second_min_distance;
 							std::memcpy(&third_target_triangle, &secondary_target_triangle, sizeof(third_target_triangle));
 							std::memcpy(&third_target_center, &secondary_target_center, sizeof(game::vec3_t));
 
-							// Update second closest surface
 							secondary_surface = surface;
 							second_min_distance = dist;
 							std::memcpy(&secondary_target_triangle, &triangle, sizeof(secondary_target_triangle));
 							std::memcpy(&secondary_target_center, &center, sizeof(game::vec3_t));
 						}
-						else if (dist < third_min_distance || third_min_distance == -1.f) {
-							// Update third closest surface
+						else if (dist < third_min_distance || third_min_distance == -1.f) 
+						{
 							third_surface = surface;
 							third_min_distance = dist;
 							std::memcpy(&third_target_triangle, &triangle, sizeof(third_target_triangle));
@@ -292,36 +276,30 @@ namespace experimental
 				}
 			}
 
-			if (min_distance == -1.f) {
+			if (min_distance == -1.f)
+			{
 				return;
 			}
 
 			// Surface materials info
 			const char* text = nullptr;
 
-			auto format_material_info = [](const game::GfxSurface* surface) {
-				if (!surface || !surface->material || !surface->material->name) return "";
+			auto format_material_info = [](const game::GfxSurface* surface) 
+			{
+				if (!surface || !surface->material || !surface->material->name)
+				{
+					return "";
+				}
+
 				auto techniqueset_name = surface->material->techniqueSet && surface->material->techniqueSet->name ?
 					utils::string::va("^3%s^7", surface->material->techniqueSet->name) : "^1null^7";
-				return utils::string::va("%s (%s)", surface->material->name, techniqueset_name);
+				return utils::string::va("%s (%s)\n", surface->material->name, techniqueset_name);
 			};
 
-			// Build the material display string
-			std::string material1 = format_material_info(target_surface);
-			std::string material2 = format_material_info(secondary_surface);
-			std::string material3 = format_material_info(third_surface);
-
-			if (!material1.empty() && !material2.empty() && !material3.empty()) {
-				text = utils::string::va("%s\n%s\n%s", material1.c_str(), material2.c_str(), material3.c_str());
-			}
-			else if (!material1.empty() && !material2.empty()) {
-				text = utils::string::va("%s\n%s", material1.c_str(), material2.c_str());
-			}
-			else if (!material1.empty()) {
-				text = material1.c_str();
-			}
-
-			current_material = text;
+			text = utils::string::va("%s%s%s",
+				format_material_info(target_surface),
+				format_material_info(secondary_surface),
+				format_material_info(third_surface));
 
 			game::UI_DrawWrappedText(placement, text, &rect, font,
 				8.0, 240.0f, 0.2f, text_color, 6, 0, &text_rect, 0);
@@ -353,6 +331,5 @@ namespace experimental
 	};
 }
 
-#ifdef DEBUG
 REGISTER_COMPONENT(experimental::component)
 #endif
