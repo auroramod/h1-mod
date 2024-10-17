@@ -492,6 +492,8 @@ namespace map_patches
 			R_GetLightGridSampleEntryQuad(lightGrid, pos, cornerEntryOut + 4, defaultGridEntry);
 			--pos[lightGrid->rowAxis];
 
+			fixup_entries(lightGrid, const_cast<game::GfxLightGridEntry**>(cornerEntryOut));
+
 			// Evaluate light grid entries at each corner
 			for (int i = 0; i < 8; ++i) {
 				const game::GfxLightGridEntry* entry = *(cornerEntryOut + i);
