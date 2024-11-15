@@ -322,6 +322,11 @@ namespace experimental
 	public:
 		void post_unpack() override
 		{
+			if (!game::environment::is_mp())
+			{
+				return;
+			}
+
 			// change minimum cap to -2000 instead of -1000 (culling issue)
 			dvars::override::register_float("r_lodBiasRigid", 0, -2000, 0, game::DVAR_FLAG_SAVED);
 
