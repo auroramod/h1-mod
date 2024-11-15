@@ -103,11 +103,11 @@ namespace map_patches
 		};
 
 		//WEAK game::symbol<bool(const game::GfxLightGrid* lightGrid, const game::GfxLightGridEntry* entry, int cornerIndex, const unsigned int* pos, const float* samplePos)> R_IsValidLightGridSample{ 0x0, 0x6D7E40 };
-		WEAK game::symbol<void(float*)> Vec3Normalize{ 0x0, 0x68D20 };
-		WEAK game::symbol<int(int, float const* const, float const* const, struct game::Bounds const*, unsigned int, int)> SV_BrushModelSightTrace{ 0x0, 0x3370A0 };
+		WEAK game::symbol<void(float*)> Vec3Normalize{ 0x5E090, 0x68D20 };
+		WEAK game::symbol<int(int, float const* const, float const* const, struct game::Bounds const*, unsigned int, int)> SV_BrushModelSightTrace{ 0x19F830, 0x3370A0 };
 
-		game::symbol<game::ComWorld> comWorld{ 0x0, 0xA97C0E0 };
-		game::symbol<game::GfxWorld*> s_world{ 0x0, 0xE973AE0 };
+		game::symbol<game::ComWorld> comWorld{ 0xB49E518, 0xA97C0E0 };
+		game::symbol<game::GfxWorld*> s_world{ 0xF7A2BE0, 0xE973AE0 };
 
 		game::dvar_t* r_lightGridNonCompressed;
 
@@ -535,7 +535,7 @@ namespace map_patches
 			
 			bool effect_callback = false;
 			auto address = _ReturnAddress();
-			if (address == (void*)0x6D6EE5_b)
+			if (address == (void*)SELECT_VALUE(0x5BF0B5_b, 0x6D6EE5_b))
 			{
 				effect_callback = true;
 				//return primaryLightIndex;
@@ -906,27 +906,25 @@ namespace map_patches
 	public:
 		void post_unpack() override
 		{
-			if (game::environment::is_sp())
-			{
-				return;
-			}
-
 			// skip fx name prefix checks
-			utils::hook::set<uint8_t>(0x2F377D_b, 0xEB); // createfx parse
-			utils::hook::set<uint8_t>(0x4444E0_b, 0xEB); // scr_loadfx
+			if (game::environment::is_mp())
+			{
+				utils::hook::set<uint8_t>(0x2F377D_b, 0xEB); // createfx parse
+				utils::hook::set<uint8_t>(0x4444E0_b, 0xEB); // scr_loadfx
 
-			// patch iw6 leafTable decoding
-			r_decode_light_grid_block_hook.create(0x69E7D0_b, r_decode_light_grid_block_stub);
+				// patch iw6 leafTable decoding
+				r_decode_light_grid_block_hook.create(0x69E7D0_b, r_decode_light_grid_block_stub);
+			}
 
 			r_lightGridNonCompressed = dvars::register_bool("r_lightGridNonCompressed", false, game::DVAR_FLAG_REPLICATED, "Use old lightgrid data, if available.");
 
-			r_lightgrid_lookup_hook.create(0x6D8120_b, r_lightgrid_lookup_stub);
+			r_lightgrid_lookup_hook.create(SELECT_VALUE(0x5C02F0_b, 0x6D8120_b), r_lightgrid_lookup_stub);
 
-			r_get_lightgrid_colors_from_indices_hook.create(0x6D66A0_b, r_get_lightgrid_colors_from_indices_stub);
+			r_get_lightgrid_colors_from_indices_hook.create(SELECT_VALUE(0x5BE870_b, 0x6D66A0_b), r_get_lightgrid_colors_from_indices_stub);
 
-			r_get_lightgrid_average_color_hook.create(0x6D65E0_b, r_get_lightgrid_average_color_stub);
+			r_get_lightgrid_average_color_hook.create(SELECT_VALUE(0x5BE7B0_b, 0x6D65E0_b), r_get_lightgrid_average_color_stub);
 
-			r_get_lighting_info_for_effects_hook.create(0x6D6D50_b, r_get_lighting_info_for_effects_stub);
+			r_get_lighting_info_for_effects_hook.create(SELECT_VALUE(0x5BEF20_b, 0x6D6D50_b), r_get_lighting_info_for_effects_stub);
 		}
 	};
 }
