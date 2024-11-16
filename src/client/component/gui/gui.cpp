@@ -403,7 +403,7 @@ namespace gui
 	public:
 		void* load_import(const std::string& library, const std::string& function) override
 		{
-			if (function == "D3D11CreateDevice" && !game::environment::is_mp())
+			if (function == "D3D11CreateDevice" && !game::environment::is_dedi())
 			{
 				return d3d11_create_device_stub;
 			}
