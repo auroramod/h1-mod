@@ -87,7 +87,7 @@ namespace colors
 
 			game::I_strncpyz(out, in, std::min<int>(out_size, sizeof(name)));
 
-			utils::string::strip(out, name, std::strlen(out) + 1);
+			utils::string::strip(out, name, std::min<int>(out_size, sizeof(name)));
 			if (std::strlen(name) < 3)
 			{
 				game::I_strncpyz(out, "UnnamedPlayer", std::min<int>(out_size, sizeof(name)));
