@@ -130,6 +130,7 @@ namespace game
 	WEAK symbol<char*(const size_t size)> Hunk_AllocateTempMemoryHigh{0x415DB0, 0x59DEC0};
 
 	WEAK symbol<char*(char* string)> I_CleanStr{0x4293E0, 0x5AF2E0};
+	WEAK symbol<char*(char* dest, const char* src, int dest_size)> I_strncpyz{0x0, 0x5AF8B0};
 
 	WEAK symbol<const char*(int, int, int)> Key_KeynumToString{0x1AC410, 0x199990};
 	WEAK symbol<int(const char* cmd)> Key_GetBindingForCmd{0x377280, 0x1572B0};
