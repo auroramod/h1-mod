@@ -70,12 +70,12 @@ jobs:
         run: echo "H1_MOD_MASTER_PATH=${{ secrets.H1_MOD_MASTER_SSH_PATH_DEV }}" >> $GITHUB_ENV
 
       - name: Download Release binaries
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Release binaries
           
       - name: Download Release data artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Release data artifacts
           path: data
@@ -93,7 +93,7 @@ jobs:
         run: ssh ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }} rm -rf ${{ env.H1_MOD_MASTER_PATH }}/h1-mod/*
 
       - name: Upload h1-mod binary
-        run: rsync -avz ${{ matrix.configuration == 'Debug' && 'h1-mod_dev.exe' || 'h1-mod.exe' }} ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
+        run: rsync -avz h1-mod${{ github.ref == 'refs/heads/develop' && '_dev' || '' }}.exe ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
 
       - name: Upload data files
         run: rsync -avz ./data/ ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/

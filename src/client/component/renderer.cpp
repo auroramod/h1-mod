@@ -278,7 +278,7 @@ namespace renderer
 				}
 				break;
 			case 2:
-				for (auto i = 0; i < gfxAsset->dpvs.smodelCount; i++)
+				for (unsigned int i = 0; i < gfxAsset->dpvs.smodelCount; i++)
 				{
 					auto staticModel = gfxAsset->dpvs.smodelDrawInsts[i];
 					if (!staticModel.model)
