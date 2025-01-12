@@ -106,7 +106,7 @@ namespace map_patches
 		WEAK game::symbol<void(float*)> Vec3Normalize{ 0x5E090, 0x68D20 };
 		WEAK game::symbol<int(int, float const* const, float const* const, struct game::Bounds const*, unsigned int, int)> SV_BrushModelSightTrace{ 0x19F830, 0x3370A0 };
 
-		game::symbol<game::ComWorld> comWorld{ 0xB49E518, 0xA97C0E0 };
+		game::symbol<game::ComWorld*> comWorld{ 0xECA078, 0x10B4528 };
 		game::symbol<game::GfxWorld*> s_world{ 0xF7A2BE0, 0xE973AE0 };
 
 		game::dvar_t* r_lightGridNonCompressed;
@@ -181,14 +181,16 @@ namespace map_patches
 				return true;
 			if (!newPrimaryLightEnvIndex)
 				return false;
-			if (comWorld->primaryLightEnvs[oldPrimaryLightEnvIndex].numIndices == 1
-				&& comWorld->primaryLightEnvs[oldPrimaryLightEnvIndex].primaryLightIndices[0] >= 2048
+
+			auto comWorld_ptr = *comWorld;
+			if (comWorld_ptr->primaryLightEnvs[oldPrimaryLightEnvIndex].numIndices == 1
+				&& comWorld_ptr->primaryLightEnvs[oldPrimaryLightEnvIndex].primaryLightIndices[0] >= 2048
 				- (*s_world)->lastSunPrimaryLightIndex)
 			{
 				return true;
 			}
-			if (comWorld->primaryLightEnvs[newPrimaryLightEnvIndex].numIndices == 1
-				&& comWorld->primaryLightEnvs[newPrimaryLightEnvIndex].primaryLightIndices[0] >= 2048
+			if (comWorld_ptr->primaryLightEnvs[newPrimaryLightEnvIndex].numIndices == 1
+				&& comWorld_ptr->primaryLightEnvs[newPrimaryLightEnvIndex].primaryLightIndices[0] >= 2048
 				- (*s_world)->lastSunPrimaryLightIndex)
 			{
 				return false;
