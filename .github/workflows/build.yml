@@ -46,8 +46,8 @@ jobs:
         with:
           name: ${{matrix.configuration}} binaries
           path: |
-            build/bin/x64/${{matrix.configuration}}/h1-mod.exe
-            build/bin/x64/${{matrix.configuration}}/h1-mod.pdb
+            build/bin/x64/${{matrix.configuration}}/${{ matrix.configuration == 'Debug' && 'h1-mod_dev.exe' || 'h1-mod.exe' }}
+            build/bin/x64/${{matrix.configuration}}/${{ matrix.configuration == 'Debug' && 'h1-mod_dev.pdb' || 'h1-mod.pdb' }}
             
       - name: Upload ${{matrix.configuration}} data artifacts
         uses: actions/upload-artifact@v3.1.0
@@ -93,7 +93,11 @@ jobs:
         run: ssh ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }} rm -rf ${{ env.H1_MOD_MASTER_PATH }}/h1-mod/*
 
       - name: Upload h1-mod binary
-        run: rsync -avz h1-mod.exe ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+            rsync -avz h1-mod_dev.exe ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
+          else
+            rsync -avz h1-mod.exe ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
 
       - name: Upload data files
         run: rsync -avz ./data/ ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
