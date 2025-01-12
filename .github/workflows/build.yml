@@ -42,7 +42,7 @@ jobs:
         run: msbuild /m /v:minimal /p:Configuration=${{matrix.configuration}} /p:Platform=x64 build/h1-mod.sln
 
       - name: Upload ${{matrix.configuration}} binaries
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.configuration}} binaries
           path: |
@@ -50,7 +50,7 @@ jobs:
             build/bin/x64/${{matrix.configuration}}/${{ matrix.configuration == 'Debug' && 'h1-mod_dev.pdb' || 'h1-mod.pdb' }}
             
       - name: Upload ${{matrix.configuration}} data artifacts
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.configuration}} data artifacts
           path: |
@@ -58,7 +58,7 @@ jobs:
   deploy:
     name: Deploy artifacts
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     steps:
       - name: Setup main environment
@@ -93,11 +93,7 @@ jobs:
         run: ssh ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }} rm -rf ${{ env.H1_MOD_MASTER_PATH }}/h1-mod/*
 
       - name: Upload h1-mod binary
-        run: |
-          if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
-            rsync -avz h1-mod_dev.exe ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
-          else
-            rsync -avz h1-mod.exe ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
+        run: rsync -avz ${{ matrix.configuration == 'Debug' && 'h1-mod_dev.exe' || 'h1-mod.exe' }} ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
 
       - name: Upload data files
         run: rsync -avz ./data/ ${{ secrets.H1_MOD_MASTER_SSH_USER }}@${{ secrets.H1_MOD_MASTER_SSH_ADDRESS }}:${{ env.H1_MOD_MASTER_PATH }}/h1-mod/
