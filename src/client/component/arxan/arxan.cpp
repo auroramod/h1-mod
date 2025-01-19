@@ -6,9 +6,10 @@
 #include "component/game_module.hpp"
 #include "component/scheduler.hpp"
 
-#include <utils/hook.hpp>
-#include <utils/string.hpp>
 #include <utils/concurrency.hpp>
+#include <utils/hook.hpp>
+#include <utils/nt.hpp>
+#include <utils/string.hpp>
 
 #include "integrity.hpp"
 #include "breakpoints.hpp"
@@ -548,17 +549,21 @@ namespace arxan
 	public:
 		void* load_import(const std::string& library, const std::string& function) override
 		{
-			if (function == "SetThreadContext")
+			static auto is_wine = utils::nt::is_wine();
+			if (!is_wine)
 			{
-				return set_thread_context_stub;
-			}
-			else if (function == "AddVectoredExceptionHandler")
-			{
-				return breakpoints::add_vectored_exception_handler_stub;
-			}
-			else if (function == "RemoveVectoredExceptionHandler")
-			{
-				return breakpoints::remove_vectored_exception_handler_stub;
+				if (function == "SetThreadContext")
+				{
+					return set_thread_context_stub;
+				}
+				else if (function == "AddVectoredExceptionHandler")
+				{
+					return breakpoints::add_vectored_exception_handler_stub;
+				}
+				else if (function == "RemoveVectoredExceptionHandler")
+				{
+					return breakpoints::remove_vectored_exception_handler_stub;
+				}
 			}
 
 			return nullptr;
@@ -566,10 +571,13 @@ namespace arxan
 
 		void post_load() override
 		{
-			remove_hardware_breakpoints();
-			hide_being_debugged();
-			scheduler::loop(hide_being_debugged, scheduler::pipeline::async);
-			store_debug_functions();
+			if (!utils::nt::is_wine())
+			{
+				remove_hardware_breakpoints();
+				hide_being_debugged();
+				scheduler::loop(hide_being_debugged, scheduler::pipeline::async);
+				store_debug_functions();
+			}
 
 			const utils::nt::library ntdll("ntdll.dll");
 			nt_close_hook.create(ntdll.get_proc<void*>("NtClose"), nt_close_stub);
@@ -583,9 +591,12 @@ namespace arxan
 
 		void post_unpack() override
 		{
-			remove_hardware_breakpoints();
-			search_and_patch_integrity_checks();
-			restore_debug_functions();
+			if (!utils::nt::is_wine())
+			{
+				remove_hardware_breakpoints();
+				search_and_patch_integrity_checks();
+				restore_debug_functions();
+			}
 		}
 	};
 }
