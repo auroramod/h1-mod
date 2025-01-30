@@ -131,25 +131,6 @@ namespace dedicated
 			com_quit_f_hook.invoke<void>();
 		}
 
-		void sys_error_stub(const char* msg, ...)
-		{
-			char buffer[2048]{};
-
-			va_list ap;
-			va_start(ap, msg);
-
-			vsnprintf_s(buffer, _TRUNCATE, msg, ap);
-
-			va_end(ap);
-
-			scheduler::once([]
-			{
-				command::execute("map_rotate");
-			}, scheduler::main, 3s);
-
-			game::Com_Error(game::ERR_DROP, "%s", buffer);
-		}
-
 		utils::hook::detour ui_set_active_menu_hook;
 		void ui_set_active_menu_stub(void* localClientNum, int menu)
 		{
@@ -205,9 +186,6 @@ namespace dedicated
 
 			// Disable r_preloadShaders
 			dvars::override::register_bool("r_preloadShaders", false, game::DVAR_FLAG_READ);
-
-			// Stop crashing from sys_errors
-			utils::hook::jump(0x1D8710_b, sys_error_stub, true);
 
 			// Hook R_SyncGpu
 			utils::hook::jump(0x688620_b, sync_gpu_stub, true);
