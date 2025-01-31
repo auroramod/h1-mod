@@ -36,8 +36,9 @@ namespace transient
 				return;
 			}
 
-#ifdef DEBUG
 			std::string asset_list_buffer;
+
+#ifdef DEBUG
 			if (filesystem::read_file(asset_name, &asset_list_buffer))
 			{
 				console::debug("reading \"%s\" from disk\n", asset_name);
