@@ -24,7 +24,7 @@
 
 namespace gsc
 {
-	std::unique_ptr<xsk::gsc::h1::context> gsc_ctx = std::make_unique<xsk::gsc::h1::context>();;
+	std::unique_ptr<xsk::gsc::h1::context> gsc_ctx = std::make_unique<xsk::gsc::h1::context>();
 
 	namespace
 	{
@@ -75,6 +75,7 @@ namespace gsc
 			init_handles.clear();
 			loaded_scripts.clear();
 			scriptfile_allocator.clear();
+			clear_devmap();
 			free_script_memory();
 		}
 
@@ -150,8 +151,8 @@ namespace gsc
 				const auto assembly_ptr = compiler.compile(real_name, data);
 				const auto output_script = assembler.assemble(*assembly_ptr);
 
-				const auto bytecode = output_script.first; // formerly named "script"
-				const auto stack = output_script.second;
+				const auto bytecode = std::get<0>(output_script);
+				const auto stack = std::get<1>(output_script);
 
 				const auto script_file_ptr = static_cast<game::ScriptFile*>(scriptfile_allocator.allocate(sizeof(game::ScriptFile)));
 				script_file_ptr->name = file_name;
@@ -171,6 +172,12 @@ namespace gsc
 				script_file_ptr->compressedLen = 0;
 
 				loaded_scripts[file_name] = script_file_ptr;
+
+				const auto devmap = std::get<2>(output_script);
+				if (devmap.size > 0 && (gsc_ctx->build() & xsk::gsc::build::dev_maps) != xsk::gsc::build::prod)
+				{
+					add_devmap_entry(reinterpret_cast<std::uint8_t*>(script_file_ptr->bytecode), byte_code_size, real_name, devmap);
+				}
 
 				console::info("Loaded custom gsc '%s.gsc'", real_name.data());
 
@@ -332,7 +339,7 @@ namespace gsc
 				xsk::gsc::build::dev:
 				xsk::gsc::build::prod;
 
-			gsc_ctx->init(comp_mode, [](const std::string& include_name)
+			gsc_ctx->init(comp_mode, []([[maybe_unused]] auto const* ctx, const std::string& include_name)
 				-> std::pair<xsk::gsc::buffer, std::vector<std::uint8_t>>
 			{
 				const auto real_name = get_raw_script_file_name(include_name);
