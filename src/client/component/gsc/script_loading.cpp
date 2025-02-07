@@ -24,7 +24,7 @@
 
 namespace gsc
 {
-	std::unique_ptr<xsk::gsc::h1::context> gsc_ctx = std::make_unique<xsk::gsc::h1::context>();
+	std::unique_ptr<xsk::gsc::h1::context> gsc_ctx = std::make_unique<xsk::gsc::h1::context>(xsk::gsc::instance::server);
 
 	namespace
 	{
