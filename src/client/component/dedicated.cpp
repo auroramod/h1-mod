@@ -16,9 +16,6 @@ namespace dedicated
 {
 	namespace
 	{
-		utils::hook::detour gscr_set_dynamic_dvar_hook;
-		utils::hook::detour com_quit_f_hook;
-
 		const game::dvar_t* sv_lanOnly = nullptr;
 
 		void init_dedicated_server()
@@ -29,6 +26,11 @@ namespace dedicated
 
 			// R_LoadGraphicsAssets
 			utils::hook::invoke<void>(0x686310_b);
+		}
+
+		void sv_kill_server_f()
+		{
+			game::Com_Shutdown("EXE_SERVERKILLED");
 		}
 
 		void send_heartbeat()
@@ -111,18 +113,6 @@ namespace dedicated
 			const auto msec = frame_time - sys_msec;
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(msec));
-		}
-
-		void kill_server()
-		{
-			const auto* svs_clients = *game::mp::svs_clients;
-			if (svs_clients != nullptr)
-			{
-				game::SV_GameSendServerCommand(-1, game::SV_CMD_CAN_IGNORE,
-					utils::string::va("r \"%s\"", "EXE_ENDOFGAME"));
-			}
-
-			com_quit_f_hook.invoke<void>();
 		}
 
 		utils::hook::detour ui_set_active_menu_hook;
@@ -303,7 +293,6 @@ namespace dedicated
 				console::info("Server started!\n");
 				console::info("==================================\n");
 
-				// remove disconnect command
 				game::Cmd_RemoveCommand("disconnect");
 
 				execute_startup_command_queue();
@@ -315,8 +304,7 @@ namespace dedicated
 				command::add("heartbeat", send_heartbeat);
 			}, scheduler::pipeline::main, 1s);
 
-			command::add("killserver", kill_server);
-			com_quit_f_hook.create(0x17CD00_b, kill_server);
+			command::add("killserver", sv_kill_server_f);
 		}
 	};
 }

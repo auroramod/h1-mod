@@ -705,54 +705,37 @@ namespace party
 				start_map(mapname, dev);
 			}, scheduler::pipeline::main, 1s);
 		}
-		else
+		
+		if (!game::SV_MapExists(mapname.data()))
 		{
-			if (!game::SV_MapExists(mapname.data()))
-			{
-				console::info("Map '%s' doesn't exist.\n", mapname.data());
-				return;
-			}
-
-			auto* current_mapname = game::Dvar_FindVar("mapname");
-			if (current_mapname && utils::string::to_lower(current_mapname->current.string) ==
-				utils::string::to_lower(mapname) && (game::SV_Loaded() && !game::VirtualLobby_Loaded()))
-			{
-				console::info("Restarting map: %s\n", mapname.data());
-				command::execute("map_restart", false);
-				return;
-			}
-
-			if (!game::environment::is_dedi())
-			{
-				if (game::SV_Loaded())
-				{
-					const auto* args = "Leave";
-					game::UI_RunMenuScript(0, &args);
-				}
-
-				perform_game_initialization();
-			}
-
-			console::info("Starting map: %s\n", mapname.data());
-			auto* gametype = game::Dvar_FindVar("g_gametype");
-			if (gametype && gametype->current.string)
-			{
-				command::execute(utils::string::va("ui_gametype %s", gametype->current.string), true);
-			}
-			command::execute(utils::string::va("ui_mapname %s", mapname.data()), true);
-
-			/*auto* maxclients = game::Dvar_FindVar("sv_maxclients");
-			if (maxclients)
-			{
-				command::execute(utils::string::va("ui_maxclients %i", maxclients->current.integer), true);
-				command::execute(utils::string::va("party_maxplayers %i", maxclients->current.integer), true);
-			}*/
-
-			command::execute((dev ? "sv_cheats 1" : "sv_cheats 0"), true);
-
-			const auto* args = "StartServer";
-			game::UI_RunMenuScript(0, &args);
+			console::info("Map '%s' doesn't exist.\n", mapname.data());
+			return;
 		}
+
+		auto* current_mapname = game::Dvar_FindVar("mapname");
+		if (current_mapname && 
+			utils::string::to_lower(current_mapname->current.string) == utils::string::to_lower(mapname) && 
+			(game::SV_Loaded() && !game::VirtualLobby_Loaded())
+			)
+		{
+			console::info("Restarting map: %s\n", mapname.data());
+			command::execute("map_restart", false);
+			return;
+		}
+
+		console::info("Starting map: %s\n", mapname.data());
+
+		auto* gametype = game::Dvar_FindVar("g_gametype");
+		if (gametype && gametype->current.string)
+		{
+			command::execute(utils::string::va("ui_gametype %s", gametype->current.string), true);
+		}
+
+		command::execute(utils::string::va("ui_mapname %s", mapname.data()), true);
+
+		command::execute((dev ? "sv_cheats 1" : "sv_cheats 0"), true);
+
+		game::SV_StartMapForParty(0, mapname.c_str(), false, false);
 	}
 
 	connection_state get_server_connection_state()

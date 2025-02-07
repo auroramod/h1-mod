@@ -268,6 +268,8 @@ namespace game
 	WEAK symbol<bool()> SV_Loaded{0x4C4810, 0x553970};
 	WEAK symbol<void(int clientNum, const char* reason)> SV_KickClientNum{0x0, 0x54C060};
 	WEAK symbol<bool(const char* map)> SV_MapExists{0x0, 0x54C0C0};
+	WEAK symbol<void(int localClientNum, const char* map, bool mapIsPreloaded, bool migrate)> SV_StartMapForParty{0, 0x54CCD0};
+
 	WEAK symbol<void(mp::client_t*, const char*, int)> SV_ExecuteClientCommand{0x0, 0x0};
 	WEAK symbol<void(int localClientNum)> SV_FastRestart{0x0, 0x54BE00};
 	WEAK symbol<void(void* cl, int type, const char* fmt, ...)> SV_SendServerCommand{0x0, 0x1CC040};
