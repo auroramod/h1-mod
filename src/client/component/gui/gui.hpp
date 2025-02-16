@@ -26,5 +26,8 @@ namespace gui
 		const std::function<void()>& callback, bool always = false);
 
 	void register_callback(const std::function<void()>& callback, bool always = false);
+
+	bool InputU8(const char* label, unsigned char* v, int step = 1, int step_fast = 100, ImGuiInputTextFlags flags = 0);
+	bool InputUInt6(const char* label, unsigned int v[6], ImGuiInputTextFlags flags = 0);
 }
 #endif

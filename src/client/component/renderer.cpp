@@ -26,7 +26,27 @@ namespace renderer
 #ifdef DEBUG
 		game::dvar_t* r_drawLightOrigins;
 		game::dvar_t* r_drawModelNames;
+		game::dvar_t* r_drawDynEntInfo;
 		game::dvar_t* r_playerDrawDebugDistance;
+
+		enum model_draw_e : int
+		{
+			off,
+			static_models,
+			dynent_models,
+			scene_models,
+			all,
+		};
+
+		static const char* model_draw_s[] =
+		{
+			"off",
+			"static models",
+			"dynent dynents",
+			"scene models",
+			"all",
+			nullptr
+		};
 #endif
 
 		std::unordered_map<std::string, float> tonemap_highlight_range_overrides =
@@ -173,6 +193,19 @@ namespace renderer
 			return (out[0] * out[0]) + (out[1] * out[1]) + (out[2] * out[2]);
 		}
 
+		inline void draw_text(const char* name, game::vec3_t& origin, game::vec4_t& color)
+		{
+			game::vec2_t screen{};
+			if (game::CG_WorldPosToScreenPosReal(0, game::ScrPlace_GetActivePlacement(), origin, screen))
+			{
+				const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
+				if (font)
+				{
+					game::R_AddCmdDrawText(name, 0x7FFFFFFF, font, screen[0], screen[1], 1.f, 1.f, 0.0f, color, 6);
+				}
+			}
+		}
+
 		void debug_draw_light_origins()
 		{
 			if (!r_drawLightOrigins || !r_drawLightOrigins->current.enabled)
@@ -206,37 +239,15 @@ namespace renderer
 				const auto dist = Vec3SqrDistance(playerPosition, light.origin);
 				if (dist < static_cast<float>(sqrDist))
 				{
-					auto screenPlace = game::ScrPlace_GetActivePlacement();
-					game::vec2_t screen{};
-					if (game::CG_WorldPosToScreenPosReal(0, screenPlace, light.origin, screen))
-					{
-						const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
-						if (font)
-						{
-							const auto text = utils::string::va("%f, %f, %f (%d)", light.origin[0], light.origin[1], light.origin[1], i);
-							game::R_AddCmdDrawText(text, 0x7FFFFFFF, font, screen[0], screen[1], 1.f, 1.f, 0.0f, textColor, 6);
-						}
-					}
-				}
-			}
-		}
-
-		inline void draw_light_text(const char* name, game::vec3_t& origin, game::vec4_t& color)
-		{
-			game::vec2_t screen{};
-			if (game::CG_WorldPosToScreenPosReal(0, game::ScrPlace_GetActivePlacement(), origin, screen))
-			{
-				const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
-				if (font)
-				{
-					game::R_AddCmdDrawText(name, 0x7FFFFFFF, font, screen[0], screen[1], 1.f, 1.f, 0.0f, color, 6);
+					const auto text = utils::string::va("%f, %f, %f (%d)", light.origin[0], light.origin[1], light.origin[2], i);
+					draw_text(text, light.origin, textColor);
 				}
 			}
 		}
 
 		void debug_draw_model_names()
 		{
-			if (!r_drawModelNames || r_drawModelNames->current.integer == 0)
+			if (!r_drawModelNames || r_drawModelNames->current.integer == model_draw_e::off)
 			{
 				return;
 			}
@@ -255,29 +266,29 @@ namespace renderer
 				}
 			}
 
+			auto clipMap = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_CLIPMAP, utils::string::va("maps/mp/%s.d3dbsp", mapname->current.string), 0).clipMap;
+			if (clipMap == nullptr)
+			{
+				clipMap = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_CLIPMAP, utils::string::va("maps/%s.d3dbsp", mapname->current.string), 0).clipMap;
+				if (clipMap == nullptr)
+				{
+					return;
+				}
+			}
+
 			auto distance = r_playerDrawDebugDistance->current.integer;
 			auto sqrDist = distance * static_cast<float>(distance);
 
 			static float staticModelsColor[4] = { 1.0f, 0.0f, 1.0f, 1.0f };
+			static float dynEntModelsColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
 			static float sceneModelsColor[4] = { 1.0f, 1.0f, 0.0f, 1.0f };
 			static float dobjsColor[4] = { 0.0f, 1.0f, 1.0f, 1.0f };
 			auto scene = *game::scene;
 
 			switch (r_drawModelNames->current.integer)
 			{
-			case 1:
-				for (auto i = 0; i < scene.sceneModelCount; i++)
-				{
-					if (!scene.sceneModel[i].model)
-						continue;
-
-					if (Vec3SqrDistance(playerPosition, scene.sceneModel[i].placement.base.origin) < static_cast<float>(sqrDist))
-					{
-						draw_light_text(scene.sceneModel[i].model->name, scene.sceneModel[i].placement.base.origin, sceneModelsColor);
-					}
-				}
-				break;
-			case 2:
+			case model_draw_e::all:
+			case model_draw_e::static_models:
 				for (unsigned int i = 0; i < gfxAsset->dpvs.smodelCount; i++)
 				{
 					auto staticModel = gfxAsset->dpvs.smodelDrawInsts[i];
@@ -286,12 +297,86 @@ namespace renderer
 
 					if (Vec3SqrDistance(playerPosition, staticModel.placement.origin) < static_cast<float>(sqrDist))
 					{
-						draw_light_text(staticModel.model->name, staticModel.placement.origin, staticModelsColor);
+						draw_text(staticModel.model->name, staticModel.placement.origin, staticModelsColor);
+					}
+				}
+				if (r_drawModelNames->current.integer != model_draw_e::all) break;
+			case model_draw_e::dynent_models:
+				for (unsigned short i = 0; i < clipMap->dynEntCount[0]; i++)
+				{
+					auto* dynent_client = &clipMap->dynEntClientList[0][i];
+					auto* dynent_pose = &clipMap->dynEntPoseList[0][i];
+
+					if (!dynent_client || !dynent_pose || !dynent_client->activeModel)
+						continue;
+
+					if (Vec3SqrDistance(playerPosition, dynent_pose->pose.origin) < static_cast<float>(sqrDist))
+					{
+						draw_text(dynent_client->activeModel->name, dynent_pose->pose.origin, dynEntModelsColor);
+					}
+				}
+				if (r_drawModelNames->current.integer != model_draw_e::all) break;
+			case model_draw_e::scene_models:
+				for (int i = 0; i < scene.sceneModelCount; i++)
+				{
+					if (!scene.sceneModel[i].model)
+						continue;
+
+					if (Vec3SqrDistance(playerPosition, scene.sceneModel[i].placement.base.origin) < static_cast<float>(sqrDist))
+					{
+						draw_text(scene.sceneModel[i].model->name, scene.sceneModel[i].placement.base.origin, sceneModelsColor);
 					}
 				}
 				break;
 			default:
 				break;
+			}
+		}
+
+		void debug_draw_dynent_info()
+		{
+			if (!r_drawDynEntInfo || r_drawDynEntInfo->current.enabled == 0)
+			{
+				return;
+			}
+
+			auto player = *game::mp::playerState;
+			float playerPosition[3]{ player->origin[0], player->origin[1], player->origin[2] };
+
+			auto mapname = game::Dvar_FindVar("mapname");
+
+			auto clipMap = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_CLIPMAP, utils::string::va("maps/mp/%s.d3dbsp", mapname->current.string), 0).clipMap;
+			if (clipMap == nullptr)
+			{
+				clipMap = game::DB_FindXAssetHeader(game::XAssetType::ASSET_TYPE_CLIPMAP, utils::string::va("maps/%s.d3dbsp", mapname->current.string), 0).clipMap;
+				if (clipMap == nullptr)
+				{
+					return;
+				}
+			}
+
+			auto distance = r_playerDrawDebugDistance->current.integer;
+			auto sqrDist = distance * static_cast<float>(distance);
+
+			static float dynEntInfoColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+			for (auto i = 0; i < clipMap->dynEntCount[0]; i++)
+			{
+				auto* dynent_def = &clipMap->dynEntDefList[0][i];
+				auto* dynent_pose = &clipMap->dynEntPoseList[0][i];
+
+				if (!dynent_def || !dynent_pose)
+					continue;
+
+				if (Vec3SqrDistance(playerPosition, dynent_pose->pose.origin) < static_cast<float>(sqrDist))
+				{
+					const auto text = utils::string::va("model: ^1%s^7\ndestroy fx: ^2%s^7\nsound: ^3%s^7\nphys preset: ^4%s^7\n",
+						dynent_def->baseModel ? dynent_def->baseModel->name : "",
+						dynent_def->destroyFx ? dynent_def->destroyFx->name : "",
+						dynent_def->sound ? dynent_def->sound->name : "",
+						dynent_def->physPreset ? dynent_def->physPreset->name : "");
+					draw_text(text, dynent_pose->pose.origin, dynEntInfoColor);
+				}
 			}
 		}
 #endif
@@ -340,16 +425,9 @@ namespace renderer
 				return;
 			}
 
-			static const char* values[] =
-			{
-				"off",
-				"map/temporary entities",
-				"map models",
-				nullptr
-			};
-
 			r_drawLightOrigins = dvars::register_bool("r_drawLightOrigins", false, game::DVAR_FLAG_CHEAT, "Draw comworld light origins");
-			r_drawModelNames = dvars::register_enum("r_drawModelNames", values, 0, game::DVAR_FLAG_CHEAT, "Draw all model names");
+			r_drawModelNames = dvars::register_enum("r_drawModelNames", model_draw_s, model_draw_e::off, game::DVAR_FLAG_CHEAT, "Draw all model names");
+			r_drawDynEntInfo = dvars::register_bool("r_drawDynEntInfo", false, game::DVAR_FLAG_CHEAT, "Draw dynent info");
 			r_playerDrawDebugDistance = dvars::register_int("r_drawDebugDistance", 1000, 0, 50000, game::DVAR_FLAG_SAVED, "r_draw debug functions draw distance relative to the player");
 
 			scheduler::loop([]

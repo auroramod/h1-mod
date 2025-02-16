@@ -258,6 +258,23 @@ namespace gui::asset_list::xmodel
 				ImGui::TreePop();
 			}
 
+			if (ImGui::TreeNode("lods"))
+			{
+				for (auto i = 0; i < asset->numLods; i++)
+				{
+					const auto lod = asset->lodInfo[i];
+					if (lod.modelSurfs)
+					{
+						if (ImGui::Button(lod.modelSurfs->name))
+						{
+							gui::copy_to_clipboard(lod.modelSurfs->name);
+						}
+					}
+				}
+
+				ImGui::TreePop();
+			}
+
 			if (ImGui::TreeNode("surface materials"))
 			{
 				game::Material* prev_material = nullptr;

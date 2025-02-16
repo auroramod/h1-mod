@@ -86,7 +86,7 @@ namespace gui::asset_list::material
 			{
 				for (auto i = 0; i < asset->textureCount; i++)
 				{
-					if (asset->textureTable && asset->textureTable->u.image && asset->textureTable->u.image->texture.shaderView)
+					if (asset->textureTable && asset->textureTable[i].u.image && asset->textureTable[i].u.image->texture.shaderView)
 					{
 						const auto type_name = get_image_type_name(asset->textureTable[i].semantic);
 
@@ -94,7 +94,7 @@ namespace gui::asset_list::material
 						ImGui::SameLine();
 						if (ImGui::Button(asset->textureTable[i].u.image->name))
 						{
-							gui::copy_to_clipboard(asset->textureTable->u.image->name);
+							gui::copy_to_clipboard(asset->textureTable[i].u.image->name);
 						}
 
 						const auto width = asset->textureTable[i].u.image->width;
@@ -111,6 +111,12 @@ namespace gui::asset_list::material
 				ImGui::TreePop();
 			}
 
+#define DRAW_ASSET_PROPERTY_INPUT_U8(__name__) \
+				InputU8(#__name__, &asset->__name__); \
+
+#define DRAW_ASSET_PROPERTY_INPUT_S32(__name__) \
+				ImGui::InputInt(#__name__, &asset->__name__); \
+
 #define DRAW_ASSET_PROPERTY(__name__, __fmt__) \
 				ImGui::Text(#__name__ ": " __fmt__, asset->__name__); \
 
@@ -124,6 +130,22 @@ namespace gui::asset_list::material
 
 			DRAW_ASSET_PROPERTY_COPY(name);
 			DRAW_ASSET_PROPERTY_COPY(techniqueSet->name);
+
+			ImGui::Separator();
+
+			static char buffer[64]{};
+			if (ImGui::InputText("techniqueSet", buffer, 64))
+			{
+				auto* tech = game::DB_FindXAssetHeader(game::ASSET_TYPE_TECHNIQUE_SET, buffer, 0).techniqueSet;
+				if (tech)
+				{
+					asset->techniqueSet = tech;
+					memset(buffer, 0, 64);
+				}
+			}
+
+			ImGui::Separator();
+
 			DRAW_ASSET_PROPERTY(textureCount, "%i");
 			DRAW_ASSET_PROPERTY(constantCount, "%i");
 			if (asset->constantCount > 0)
@@ -134,20 +156,46 @@ namespace gui::asset_list::material
 					char name[13]{};
 					memcpy(name, asset->constantTable[i].name, 12);
 					ImGui::Text(name);
+					ImGui::Text("%d", asset->constantTable[i].nameHash);
 
 					ImGui::PushID(i);
 					if (ImGui::DragFloat4("##constant", asset->constantTable[i].literal, 0.01f))
 					{
 						copy_constant_table_to_cbt(asset);
-						utils::hook::invoke<void>(0x691200_b, asset->constantBufferCount, asset); // refresh buffers
+						utils::hook::invoke<void>(SELECT_VALUE(0x691200_b, 0x691200_b), asset->constantBufferCount, asset); // refresh buffers
 					}
 					ImGui::PopID();
 				}
 				ImGui::Separator();
 			}
+
 			DRAW_ASSET_PROPERTY(stateBitsCount, "%i");
-			DRAW_ASSET_PROPERTY(stateFlags, "%i");
-			DRAW_ASSET_PROPERTY(cameraRegion, "%i");
+			if (asset->stateBitsCount > 0)
+			{
+				ImGui::Separator();
+				for (auto i = 0; i < asset->stateBitsCount; i++)
+				{
+					ImGui::PushID(i);
+					if (InputUInt6("##loadBits", asset->stateBitsTable[i].loadBits))
+					{
+						
+					}
+					ImGui::PopID();
+				}
+				ImGui::Separator();
+			}
+
+			if (InputU8("info.sortKey", &asset->info.sortKey))
+			{
+				utils::hook::invoke<void>(SELECT_VALUE(0x56E040_b, 0x6915B0_b)); // Material_DirtySort
+			}
+
+			DRAW_ASSET_PROPERTY_INPUT_U8(info.gameFlags);
+			DRAW_ASSET_PROPERTY_INPUT_U8(info.renderFlags);
+
+			DRAW_ASSET_PROPERTY_INPUT_U8(cameraRegion);
+			DRAW_ASSET_PROPERTY_INPUT_U8(stateFlags);
+
 			DRAW_ASSET_PROPERTY(materialType, "%i");
 			DRAW_ASSET_PROPERTY(layerCount, "%i");
 			DRAW_ASSET_PROPERTY(assetFlags, "%X");
