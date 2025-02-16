@@ -199,7 +199,7 @@ namespace gsc
 				return name;
 			}
 
-			return name + ".gsc";
+			return name;
 		}
 
 		std::string get_script_file_name(const std::string& name)
@@ -334,26 +334,32 @@ namespace gsc
 
 		void scr_begin_load_scripts_stub()
 		{
-			const bool dev_script = developer_script ? developer_script->current.enabled : false;
-			const auto comp_mode = dev_script ?
-				xsk::gsc::build::dev:
-				xsk::gsc::build::prod;
+			auto build = xsk::gsc::build::prod;
 
-			gsc_ctx->init(comp_mode, []([[maybe_unused]] auto const* ctx, const std::string& include_name)
-				-> std::pair<xsk::gsc::buffer, std::vector<std::uint8_t>>
+			//if (dvars::com_developer && dvars::com_developer->current.integer > 0)
+			//{
+			//	build = static_cast<xsk::gsc::build>(static_cast<unsigned int>(build) | static_cast<unsigned int>(xsk::gsc::build::dev_maps));
+			//}
+
+			if (developer_script && developer_script->current.enabled)
 			{
-				const auto real_name = get_raw_script_file_name(include_name);
+				build = static_cast<xsk::gsc::build>(static_cast<unsigned int>(build) | static_cast<unsigned int>(xsk::gsc::build::dev_blocks));
+			}
+
+			gsc_ctx->init(build, []([[maybe_unused]] auto const* ctx, const auto& included_path) -> std::pair<xsk::gsc::buffer, std::vector<std::uint8_t>>
+			{
+				const auto script_name = std::filesystem::path(included_path).replace_extension().string();
 
 				std::string file_buffer;
-				if (!read_raw_script_file(real_name, &file_buffer) || file_buffer.empty())
+				if (!read_raw_script_file(included_path, &file_buffer) || file_buffer.empty())
 				{
-					const auto name = get_script_file_name(include_name);
+					const auto name = get_script_file_name(script_name);
 					if (game::DB_XAssetExists(game::ASSET_TYPE_SCRIPTFILE, name.data()))
 					{
-						return read_compiled_script_file(name, real_name);
+						return read_compiled_script_file(name, script_name);
 					}
 
-					throw std::runtime_error(std::format("Could not load gsc file '{}'", real_name));
+					throw std::runtime_error(std::format("Could not load gsc file '{}'", script_name));
 				}
 
 				std::vector<std::uint8_t> script_data;

@@ -126,23 +126,18 @@ namespace patches
 			return true;
 		}
 
+		utils::hook::detour db_read_raw_file_hook;
 		const char* db_read_raw_file_stub(const char* filename, char* buf, const int size)
 		{
-			std::string file_name = filename;
-			if (file_name.find(".cfg") == std::string::npos)
-			{
-				file_name.append(".cfg");
-			}
-
 			std::string buffer{};
-			if (filesystem::read_file(file_name, &buffer))
+			if (filesystem::read_file(filename, &buffer))
 			{
 				snprintf(buf, size, "%s\n", buffer.data());
 				return buf;
 			}
 
 			// DB_ReadRawFile
-			return utils::hook::invoke<const char*>(SELECT_VALUE(0x1F4D00_b, 0x3994B0_b), filename, buf, size);
+			return db_read_raw_file_hook.invoke<const char*>(filename, buf, size);
 		}
 
 		void bsp_sys_error_stub(const char* error, const char* arg1)
@@ -326,20 +321,6 @@ namespace patches
 				dvar_set_bool(dvar_617FB3B4, true);
 			}
 		}
-
-		utils::hook::detour sv_shutdown_hook;
-		void sv_shutdown_stub(const char* finalmsg)
-		{
-			console::info("----- Server Shutdown -----\n");
-			sv_shutdown_hook.invoke<void>(finalmsg);
-		}
-
-		utils::hook::detour com_quit_f_hook;
-		void com_quit_f_stub()
-		{
-			console::info("Quitting...\n");
-			com_quit_f_hook.invoke<void>();
-		}
 	}
 
 	class component final : public component_interface
@@ -397,8 +378,8 @@ namespace patches
 			// Show missing fastfiles
 			utils::hook::call(SELECT_VALUE(0x1F588B_b, 0x39A78E_b), missing_content_error_stub);
 
-			// Allow executing custom cfg files with the "exec" command
-			utils::hook::call(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
+			// Allow loading of rawfiles from disk
+			db_read_raw_file_hook.create(game::DB_ReadRawFile, db_read_raw_file_stub);
 
 			// Remove useless information from errors + add additional help to common errors
 			utils::hook::call(SELECT_VALUE(0x55E919_b, 0x681A69_b), create_2d_texture_stub_1); 	// Sys_Error for "Create2DTexture( %s, %i, %i, %i, %i ) failed"
@@ -520,9 +501,6 @@ namespace patches
 
 			// Fix 'out of memory' error
 			utils::hook::call(0x15C7EE_b, sub_157FA0_stub);
-
-			com_quit_f_hook.create(0x1403D08C0, com_quit_f_stub);
-			sv_shutdown_hook.create(0x140440170, sv_shutdown_stub);
 		}
 	};
 }

@@ -20,12 +20,16 @@ namespace map_patches
 	void r_decode_light_grid_block_stub(game::GfxLightGridTree* p_tree, int child_mask,
 		char child_index, int encoded_node_address, char* p_node_raw, char* p_leaf_raw)
 	{
-		static const auto p_address = 0x6A032E_b + 1;
-		if (p_tree->unused[0] == leaf_table_version::iw6 && *(uint8_t*)p_address != 6)
+		static const auto p_address = SELECT_VALUE(0x57BCCE_b + 1, 0x6A032E_b + 1);
+		auto value = *(uint8_t*)p_address;
+		if (p_tree->unused[0] == leaf_table_version::iw6)
 		{
-			utils::hook::set<uint8_t>(p_address, 6); // iw6
+			if (value != 6)
+			{
+				utils::hook::set<uint8_t>(p_address, 6); // iw6
+			}
 		}
-		else if (*(uint8_t*)p_address != 7)
+		else if (value != 7)
 		{
 			utils::hook::set<uint8_t>(p_address, 7); // s1,h1,h2
 		}
@@ -534,19 +538,19 @@ namespace map_patches
 			game::GfxLightGridEntry* cornerEntry, unsigned short* defaultGridEntry, float* referencePos, unsigned int smoothFetch)
 		{
 			auto primaryLightIndex = r_lightgrid_lookup_hook.invoke<int>(lightGrid, samplePos, lightGridRaw, cornerWeight, cornerEntry, defaultGridEntry, referencePos, smoothFetch);
-			
-			bool effect_callback = false;
-			auto address = _ReturnAddress();
-			if (address == (void*)SELECT_VALUE(0x5BF0B5_b, 0x6D6EE5_b))
-			{
-				effect_callback = true;
-				//return primaryLightIndex;
-			}
 
 			if (r_lightGridNonCompressed && r_lightGridNonCompressed->current.enabled)
 			{
 				if (lightGrid->entryCount)
 				{
+					bool effect_callback = false;
+					auto address = _ReturnAddress();
+					if (address == (void*)SELECT_VALUE(0x5BF0B5_b, 0x6D6EE5_b))
+					{
+						effect_callback = true;
+						//return primaryLightIndex;
+					}
+
 					game::GfxLightGridEntry* entries[8] = { nullptr };
 					primaryLightIndex = R_LightGridLookup_IW(lightGrid, samplePos, cornerWeight, (const game::GfxLightGridEntry**)entries, defaultGridEntry);
 					for (auto i = 0; i < 8; i++)

@@ -226,7 +226,7 @@ namespace game
 
 	WEAK symbol<int(const RawFile* rawfile)> DB_GetRawFileLen{0x1F1F40, 0x3961B0};
 	WEAK symbol<int(const RawFile* rawfile, char* buf, int size)> DB_GetRawBuffer{0x1F1E00, 0x396080};
-	WEAK symbol<char*(const char* filename, char* buf, int size)> DB_ReadRawFile{0x0, 0x3994B0};
+	WEAK symbol<char*(const char* filename, char* buf, int size)> DB_ReadRawFile{0x1F4D00, 0x3994B0};
 
 	WEAK symbol<bool(const char* zone, int source)> DB_FileExists{0x1F0D50, 0x394DC0};
 	WEAK symbol<void(XZoneInfo* zoneInfo, unsigned int zoneCount, DBSyncMode syncMode)> DB_LoadXAssets{0x1F31E0, 0x397500};
