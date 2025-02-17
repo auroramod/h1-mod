@@ -321,6 +321,20 @@ namespace patches
 				dvar_set_bool(dvar_617FB3B4, true);
 			}
 		}
+
+		utils::hook::detour sv_shutdown_hook;
+		void sv_shutdown_stub(const char* finalmsg)
+		{
+			console::info("----- Server Shutdown -----\n");
+			sv_shutdown_hook.invoke<void>(finalmsg);
+		}
+
+		utils::hook::detour com_quit_f_hook;
+		void com_quit_f_stub()
+		{
+			console::info("quitting...\n");
+			com_quit_f_hook.invoke<void>();
+		}
 	}
 
 	class component final : public component_interface
@@ -501,6 +515,10 @@ namespace patches
 
 			// Fix 'out of memory' error
 			utils::hook::call(0x15C7EE_b, sub_157FA0_stub);
+
+			// Re-implement dev prints
+			com_quit_f_hook.create(0x17CD00_b, com_quit_f_stub);
+			sv_shutdown_hook.create(0x5543A0_b, sv_shutdown_stub);
 		}
 	};
 }

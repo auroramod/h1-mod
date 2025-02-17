@@ -334,17 +334,11 @@ namespace gsc
 
 		void scr_begin_load_scripts_stub()
 		{
-			auto build = xsk::gsc::build::prod;
-
-			//if (dvars::com_developer && dvars::com_developer->current.integer > 0)
-			//{
-			//	build = static_cast<xsk::gsc::build>(static_cast<unsigned int>(build) | static_cast<unsigned int>(xsk::gsc::build::dev_maps));
-			//}
-
-			if (developer_script && developer_script->current.enabled)
-			{
-				build = static_cast<xsk::gsc::build>(static_cast<unsigned int>(build) | static_cast<unsigned int>(xsk::gsc::build::dev_blocks));
-			}
+			// s1-mod reimplements this canonically, but for now, let all dev features be used in `developer_script 1`
+			const bool dev_script = developer_script ? developer_script->current.enabled : false;
+			const auto build = dev_script ?
+				xsk::gsc::build::dev :
+				xsk::gsc::build::prod;
 
 			gsc_ctx->init(build, []([[maybe_unused]] auto const* ctx, const auto& included_path) -> std::pair<xsk::gsc::buffer, std::vector<std::uint8_t>>
 			{
