@@ -735,7 +735,9 @@ namespace party
 
 		command::execute((dev ? "sv_cheats 1" : "sv_cheats 0"), true);
 
-		game::SV_StartMapForParty(0, mapname.c_str(), false, false);
+		// this basically calls SV_StartMapForParty, but handles shutting down vlobby and such first
+		const auto* args = "StartServer";
+		game::UI_RunMenuScript(0, &args);
 	}
 
 	connection_state get_server_connection_state()
@@ -803,7 +805,7 @@ namespace party
 					return;
 				}
 
-				party::start_map(argument[1], true);
+				start_map(argument[1], true);
 			});
 
 			command::add("map_restart", []()
