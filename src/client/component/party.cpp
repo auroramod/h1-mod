@@ -704,6 +704,7 @@ namespace party
 			{
 				start_map(mapname, dev);
 			}, scheduler::pipeline::main, 1s);
+			return;
 		}
 		
 		if (!game::SV_MapExists(mapname.data()))
@@ -713,14 +714,25 @@ namespace party
 		}
 
 		auto* current_mapname = game::Dvar_FindVar("mapname");
-		if (current_mapname && 
-			utils::string::to_lower(current_mapname->current.string) == utils::string::to_lower(mapname) && 
-			(game::SV_Loaded() && !game::VirtualLobby_Loaded())
-			)
+		if (current_mapname &&
+			utils::string::to_lower(current_mapname->current.string) == utils::string::to_lower(mapname) &&
+			(game::SV_Loaded() && !game::VirtualLobby_Loaded()))
 		{
 			console::info("Restarting map: %s\n", mapname.data());
 			command::execute("map_restart", false);
 			return;
+		}
+
+		if (!game::environment::is_dedi())
+		{
+			// if we are in a game, make sure we leave it
+			if (game::SV_Loaded())
+			{
+				const auto* args = "Leave";
+				game::UI_RunMenuScript(0, &args);
+			}
+
+			perform_game_initialization();
 		}
 
 		console::info("Starting map: %s\n", mapname.data());
@@ -735,7 +747,7 @@ namespace party
 
 		command::execute((dev ? "sv_cheats 1" : "sv_cheats 0"), true);
 
-		// this basically calls SV_StartMapForParty, but handles shutting down vlobby and such first
+		// calls SV_StartMapForParty, which handles shutting down virtuallobby first
 		const auto* args = "StartServer";
 		game::UI_RunMenuScript(0, &args);
 	}
