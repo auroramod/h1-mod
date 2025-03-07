@@ -442,6 +442,7 @@ namespace renderer
 				{
 					debug_draw_light_origins();
 					debug_draw_model_names();
+					debug_draw_dynent_info();
 				}
 			}, scheduler::renderer);
 #endif
