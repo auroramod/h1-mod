@@ -9,7 +9,8 @@ end
 
 function directxtex.includes()
 	includedirs {
-		directxtex.source
+		directxtex.source,
+		path.join(dependencies.basePath, "DirectXTex/Common"),
 	}
 end
 
