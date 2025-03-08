@@ -302,6 +302,19 @@ namespace game
 	WEAK symbol<void*(jmp_buf* Buf, int Value)> longjmp{0x6DCA90, 0x826710};
 	WEAK symbol<int(jmp_buf* Buf)> _setjmp{0x758980, 0x8A3190};
 
+	/*
+		transient
+	*/
+	WEAK symbol<__int64(const char* name, const std::uint64_t* tr_asset_count, const std::uint64_t* size_array, const unsigned int num_mem_types, char* out_pool_index, int* file_index_offset)> CL_TransientMem_RegisterPool{0x0, 0x749D0};
+	WEAK symbol<__int64(const char* filename, const char pool_index, __int64 file_index, const int dlc_or_patch)> CL_TransientMem_RegisterFile{0x0, 0x74820};
+	WEAK symbol<void(const unsigned int name_and_type_hash, const unsigned int file_index, const int dlc)> CL_RegisterTransientAsset{0x0, 0x75820};
+
+	WEAK symbol<void()> DB_InitTransientModelTextures{0x0, 0x3964A0};
+	WEAK symbol<void()> DB_MarkUsedAssetsInternal{0x0, 0x398700};
+	WEAK symbol<void(const char* pool_name, const int is_dlc)> DB_TryAllocTransientPoolsForParent{0x0, 0x39A3B0};
+
+	WEAK symbol<int> g_databaseReady{0x0, 0x3C54F9C};
+
 	/***************************************************************
 	 * Variables
 	 **************************************************************/
