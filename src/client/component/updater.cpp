@@ -19,8 +19,6 @@
 #include <utils/properties.hpp>
 #include <utils/string.hpp>
 
-#define MASTER "https://h1-mod.fed.cat/"
-
 #define FILES_PATH "files.json"
 #define FILES_PATH_DEV "files-dev.json"
 
@@ -311,8 +309,7 @@ namespace updater
 	{
 		static std::vector<std::string> server_urls =
 		{
-			{"https://h1-mod.fed.cat/"},
-			{"https://master.fed0001.xyz/h1-mod/"}, // remove this at some point
+			{"https://h1-mod.auroramod.dev/"},
 		};
 
 		const auto try_url = [&](const std::string& base_url)

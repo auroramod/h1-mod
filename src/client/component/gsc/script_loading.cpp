@@ -24,7 +24,7 @@
 
 namespace gsc
 {
-	std::unique_ptr<xsk::gsc::h1::context> gsc_ctx = std::make_unique<xsk::gsc::h1::context>();;
+	std::unique_ptr<xsk::gsc::h1::context> gsc_ctx = std::make_unique<xsk::gsc::h1::context>(xsk::gsc::instance::server);
 
 	namespace
 	{
@@ -75,6 +75,7 @@ namespace gsc
 			init_handles.clear();
 			loaded_scripts.clear();
 			scriptfile_allocator.clear();
+			clear_devmap();
 			free_script_memory();
 		}
 
@@ -137,7 +138,7 @@ namespace gsc
 				}
 			}
 
-			console::debug("Loading custom gsc '%s.gsc'", real_name.data());
+			console::info("Loading custom gsc '%s.gsc'", real_name.data());
 
 			try
 			{
@@ -150,8 +151,8 @@ namespace gsc
 				const auto assembly_ptr = compiler.compile(real_name, data);
 				const auto output_script = assembler.assemble(*assembly_ptr);
 
-				const auto bytecode = output_script.first; // formerly named "script"
-				const auto stack = output_script.second;
+				const auto bytecode = std::get<0>(output_script);
+				const auto stack = std::get<1>(output_script);
 
 				const auto script_file_ptr = static_cast<game::ScriptFile*>(scriptfile_allocator.allocate(sizeof(game::ScriptFile)));
 				script_file_ptr->name = file_name;
@@ -172,6 +173,14 @@ namespace gsc
 
 				loaded_scripts[file_name] = script_file_ptr;
 
+				const auto devmap = std::get<2>(output_script);
+				if (devmap.size > 0 && (gsc_ctx->build() & xsk::gsc::build::dev_maps) != xsk::gsc::build::prod)
+				{
+					add_devmap_entry(reinterpret_cast<std::uint8_t*>(script_file_ptr->bytecode), byte_code_size, real_name, devmap);
+				}
+
+				console::info("Loaded custom gsc '%s.gsc'", real_name.data());
+
 				return script_file_ptr;
 			}
 			catch (const std::exception& e)
@@ -190,7 +199,7 @@ namespace gsc
 				return name;
 			}
 
-			return name + ".gsc";
+			return name;
 		}
 
 		std::string get_script_file_name(const std::string& name)
@@ -237,13 +246,13 @@ namespace gsc
 
 			if (main_handle)
 			{
-				console::debug("Loaded '%s::main'\n", name.data());
+				console::info("Loaded '%s::main'\n", name.data());
 				main_handles[name] = main_handle;
 			}
 
 			if (init_handle)
 			{
-				console::debug("Loaded '%s::init'\n", name.data());
+				console::info("Loaded '%s::init'\n", name.data());
 				init_handles[name] = init_handle;
 			}
 		}
@@ -325,26 +334,26 @@ namespace gsc
 
 		void scr_begin_load_scripts_stub()
 		{
+			// s1-mod reimplements this canonically, but for now, let all dev features be used in `developer_script 1`
 			const bool dev_script = developer_script ? developer_script->current.enabled : false;
-			const auto comp_mode = dev_script ?
-				xsk::gsc::build::dev:
+			const auto build = dev_script ?
+				xsk::gsc::build::dev :
 				xsk::gsc::build::prod;
 
-			gsc_ctx->init(comp_mode, [](const std::string& include_name)
-				-> std::pair<xsk::gsc::buffer, std::vector<std::uint8_t>>
+			gsc_ctx->init(build, []([[maybe_unused]] auto const* ctx, const auto& included_path) -> std::pair<xsk::gsc::buffer, std::vector<std::uint8_t>>
 			{
-				const auto real_name = get_raw_script_file_name(include_name);
+				const auto script_name = std::filesystem::path(included_path).replace_extension().string();
 
 				std::string file_buffer;
-				if (!read_raw_script_file(real_name, &file_buffer) || file_buffer.empty())
+				if (!read_raw_script_file(included_path, &file_buffer) || file_buffer.empty())
 				{
-					const auto name = get_script_file_name(include_name);
+					const auto name = get_script_file_name(script_name);
 					if (game::DB_XAssetExists(game::ASSET_TYPE_SCRIPTFILE, name.data()))
 					{
-						return read_compiled_script_file(name, real_name);
+						return read_compiled_script_file(name, script_name);
 					}
 
-					throw std::runtime_error(std::format("Could not load gsc file '{}'", real_name));
+					throw std::runtime_error(std::format("Could not load gsc file '{}'", script_name));
 				}
 
 				std::vector<std::uint8_t> script_data;
@@ -369,7 +378,7 @@ namespace gsc
 	{
 		for (auto& function_handle : main_handles)
 		{
-			console::debug("Executing '%s::main'\n", function_handle.first.data());
+			console::info("Executing '%s::main'\n", function_handle.first.data());
 			game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
 		}
 	}
@@ -378,7 +387,7 @@ namespace gsc
 	{
 		for (auto& function_handle : init_handles)
 		{
-			console::debug("Executing '%s::init'\n", function_handle.first.data());
+			console::info("Executing '%s::init'\n", function_handle.first.data());
 			game::RemoveRefToObject(game::Scr_ExecThread(function_handle.second, 0));
 		}
 	}

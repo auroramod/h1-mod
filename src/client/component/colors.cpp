@@ -82,7 +82,16 @@ namespace colors
 
 		void com_clean_name_stub(const char* in, char* out, const int out_size)
 		{
-			strncpy_s(out, out_size, in, _TRUNCATE);
+			// check that the name is at least 3 char without colors
+			char name[32]{};
+
+			game::I_strncpyz(out, in, std::min<int>(out_size, sizeof(name)));
+
+			utils::string::strip(out, name, std::min<int>(out_size, sizeof(name)));
+			if (std::strlen(name) < 3)
+			{
+				game::I_strncpyz(out, "UnnamedPlayer", std::min<int>(out_size, sizeof(name)));
+			}
 		}
 
 		char* i_clean_str_stub(char* string)
@@ -146,8 +155,9 @@ namespace colors
 
 			if (!game::environment::is_sp())
 			{
-				// allows colored name in-game
-				utils::hook::jump(0x5AEDF0_b, com_clean_name_stub, true);
+				// allows colored name in-game (ClientUserinfoChanged)
+				utils::hook::call(0x404F77_b, com_clean_name_stub);
+				utils::hook::call(0x404FBA_b, com_clean_name_stub);
 
 				// don't apply colors to overhead names
 				utils::hook::call(0xF7B85_b, get_client_name_stub);

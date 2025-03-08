@@ -46,7 +46,6 @@ namespace game
 	WEAK symbol<bool()> Com_InFrontend{0xF6430, 0x76A40};
 	WEAK symbol<void(float, float, int)> Com_SetSlowMotion{0x0, 0x17E5F0};
 	WEAK symbol<void(errorParm code, const char* message, ...)> Com_Error{0x384820, 0x159860};
-	WEAK symbol<void()> Com_Quit_f{0x0, 0x1F9280};
 	WEAK symbol<void(char const* finalMessage)> Com_Shutdown{0x3A6A50, 0x157E10};
 	WEAK symbol<bool(const char* mapname, const char** base_mapname)> Com_IsAddonMap{0x40AED0, 0x17C100};
 	WEAK symbol<int(char* dest, int size, const char* fmt, ...)> Com_sprintf{0x429200, 0x5AF0F0};
@@ -59,6 +58,9 @@ namespace game
 		const char* dvar, const char* value)> CG_SetClientDvarFromServer{0x0, 0x0};
 	WEAK symbol<char*(const unsigned int weapon, 
 		bool isAlternate, char* outputBuffer, int bufferLen)> CG_GetWeaponDisplayName{0x192B80, 0x104B70};
+	WEAK symbol<mp::cg_s* ()> CG_GetLocalClientGlobals{0x0, 0x5CB80};
+	WEAK symbol<int(int localClientNum, int serverTime, int demoType, int cubemapShot, int cubemapSize, int renderScreen, 
+		unsigned int a7)> CG_DrawActiveFrame{0x0, 0xF5D40};
 
 	WEAK symbol<bool()> CL_IsCgameInitialized{0x1A3210, 0x33C640};
 	WEAK symbol<void(int a1)> CL_VirtualLobbyShutdown{0x0, 0x0};
@@ -77,6 +79,7 @@ namespace game
 	WEAK symbol<void(const char*, const char*, 
 		DvarSetSource)> Dvar_SetFromStringByNameFromSource{0x41BD90, 0x185BD0};
 	WEAK symbol<void(dvar_t* dvar, const char* string, DvarSetSource source)> Dvar_SetFromStringFromSource{0x0, 0x185C60};
+	WEAK symbol<void(dvar_t* dvar, dvar_value* value, DvarSetSource source)> Dvar_SetVariant{0x0, 0x186120};
 
 	WEAK symbol<dvar_t*(int hash, const char* name, bool value, 
 		unsigned int flags)> Dvar_RegisterBool{0x419220, 0x182340};
@@ -90,6 +93,7 @@ namespace game
 		unsigned int flags)> Dvar_RegisterString{0x4197E0, 0x182BD0};
 	WEAK symbol<dvar_t*(int dvarName, const char* a2, float x, float y, float z, 
 		float w, float min, float max, unsigned int flags)> Dvar_RegisterVec4{0x419C60, 0x183010};
+	WEAK symbol<dvar_t*(int hash, const char* dvarName, const char** valueList, int defaultIndex, unsigned int flags)> Dvar_RegisterEnum{0x0, 0x182700};
 
 	WEAK symbol<long long(const char* qpath, char** buffer)> FS_ReadFile{0x40E280, 0x1EC690};
 	WEAK symbol<void(void* buffer)> FS_FreeFile{0x40E270, 0x59E2F0};
@@ -116,13 +120,16 @@ namespace game
 	WEAK symbol<void(playerState_s* ps, unsigned int weapon, int hadWeapon)> G_InitializeAmmo{0x29D9E0, 0x41C170};
 	WEAK symbol<void(const char* fmt, ...)> G_LogPrintf{0x5FEF0, 0x4215C0};
 	WEAK symbol<void(int clientNum, unsigned int weapon)> G_SelectWeapon{0x2F2EA0, 0x462560};
+	WEAK symbol<int(const char* buffer, int entity, int type)> G_SetFog{0x0, 0x413160};
 	WEAK symbol<int(playerState_s* ps, unsigned int weapon)> G_TakePlayerWeapon{0x2F3050, 0x462770};
+	WEAK symbol<void(mp::gentity_s*, float* origin)> G_SetOrigin{0x0, 0x45F5C0};
 
 	WEAK symbol<int(const char* buf, int max, char** infos)> GameInfo_ParseArenas{0x0, 0x4DE0B0};
 
 	WEAK symbol<char*(const size_t size)> Hunk_AllocateTempMemoryHigh{0x415DB0, 0x59DEC0};
 
 	WEAK symbol<char*(char* string)> I_CleanStr{0x4293E0, 0x5AF2E0};
+	WEAK symbol<char*(char* dest, const char* src, int dest_size)> I_strncpyz{0x0, 0x5AF8B0};
 
 	WEAK symbol<const char*(int, int, int)> Key_KeynumToString{0x1AC410, 0x199990};
 	WEAK symbol<int(const char* cmd)> Key_GetBindingForCmd{0x377280, 0x1572B0};
@@ -159,6 +166,11 @@ namespace game
 	WEAK symbol<int()> R_PopRemoteScreenUpdate{0x0, 0x6A6D60};
 	WEAK symbol<void(int)> R_PushRemoteScreenUpdate{0x0, 0x6A6E60};
 
+	WEAK symbol<void()> R_BeginFrame{0x0, 0x6A61F0};
+	WEAK symbol<void()> R_EndFrame{0x0, 0x6A6300};
+	WEAK symbol<void(int)> R_IssueRenderCommands{0x0, 0x6A6B00};
+	WEAK symbol<bool(__int64 a1, int a2, int a3, int a4, int width, int height, int numChannels, void* buffer)> R_TakeScreenshot{0x0, 0xAC6D0};
+
 	WEAK symbol<char* (GfxImage* image, uint32_t width, uint32_t height, uint32_t depth, uint32_t mipCount,
 		uint32_t imageFlags, DXGI_FORMAT imageFormat, const char* name, const D3D11_SUBRESOURCE_DATA* initData)> Image_Setup{0x560740, 0x683890};
 
@@ -192,14 +204,17 @@ namespace game
 	WEAK symbol<unsigned int(int handle, int num_param)> Scr_ExecThread{0x3C7FE0, 0x50F150};
 	WEAK symbol<unsigned int(void* func, int type, unsigned int name)> Scr_RegisterFunction{0x3BD860, 0x504840};
 
+	WEAK symbol<ScreenPlacement* ()> ScrPlace_GetActivePlacement{0x0, 0x362810};
 	WEAK symbol<ScreenPlacement*()> ScrPlace_GetViewPlacement{0x1BCED0, 0x362840};
 	WEAK symbol<float()> ScrPlace_HiResGetScaleX{0x0, 0x362910};
 	WEAK symbol<float()> ScrPlace_HiResGetScaleY{0x0, 0x362930};
 
+	WEAK symbol<bool(int localClient, ScreenPlacement* scrPlace, vec3_t& WorldLocation, vec2_t& Screen)> CG_WorldPosToScreenPosReal{0x0, 0x307AD0};
+
 	WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)>
 	DB_EnumXAssets_Internal{0x1F0BF0, 0x394C60};
 	WEAK symbol<const char*(const XAsset* asset)> DB_GetXAssetName{0x1BF890, 0x366140};
-	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x0, 0x366180};
+	WEAK symbol<int(XAssetType type)> DB_GetXAssetTypeSize{0x1BF8D0, 0x366180};
 	WEAK symbol<XAssetHeader(XAssetType type, const char* name, 
 		int createDefault)> DB_FindXAssetHeader{0x1F1120, 0x3950C0};
 	WEAK symbol<void(void* levelLoad, const char* name, 
@@ -210,7 +225,7 @@ namespace game
 
 	WEAK symbol<int(const RawFile* rawfile)> DB_GetRawFileLen{0x1F1F40, 0x3961B0};
 	WEAK symbol<int(const RawFile* rawfile, char* buf, int size)> DB_GetRawBuffer{0x1F1E00, 0x396080};
-	WEAK symbol<char*(const char* filename, char* buf, int size)> DB_ReadRawFile{0x0, 0x3994B0};
+	WEAK symbol<char*(const char* filename, char* buf, int size)> DB_ReadRawFile{0x1F4D00, 0x3994B0};
 
 	WEAK symbol<bool(const char* zone, int source)> DB_FileExists{0x1F0D50, 0x394DC0};
 	WEAK symbol<void(XZoneInfo* zoneInfo, unsigned int zoneCount, DBSyncMode syncMode)> DB_LoadXAssets{0x1F31E0, 0x397500};
@@ -252,6 +267,8 @@ namespace game
 	WEAK symbol<bool()> SV_Loaded{0x4C4810, 0x553970};
 	WEAK symbol<void(int clientNum, const char* reason)> SV_KickClientNum{0x0, 0x54C060};
 	WEAK symbol<bool(const char* map)> SV_MapExists{0x0, 0x54C0C0};
+	WEAK symbol<void(int localClientNum, const char* map, bool mapIsPreloaded, bool migrate)> SV_StartMapForParty{0, 0x54CCD0};
+
 	WEAK symbol<void(mp::client_t*, const char*, int)> SV_ExecuteClientCommand{0x0, 0x0};
 	WEAK symbol<void(int localClientNum)> SV_FastRestart{0x0, 0x54BE00};
 	WEAK symbol<void(void* cl, int type, const char* fmt, ...)> SV_SendServerCommand{0x0, 0x1CC040};
@@ -311,15 +328,15 @@ namespace game
 	WEAK symbol<scrVmPub_t> scr_VmPub{0xC3F4E20, 0xB7AE3C0};
 	WEAK symbol<function_stack_t> scr_function_stack{0xC4015C0, 0xB7B8940};
 
-	WEAK game::symbol<unsigned __int64> pmem_size{0xD5F26D8, 0xC92E1D8};
-	WEAK game::symbol<unsigned char*> pmem_buffer{0xD5F26D0, 0xC92E1D0};
+	WEAK symbol<unsigned __int64> pmem_size{0xD5F26D8, 0xC92E1D8};
+	WEAK symbol<unsigned char*> pmem_buffer{0xD5F26D0, 0xC92E1D0};
 
-	WEAK game::symbol<PhysicalMemory> g_mem{0xD5F26E0, 0xC92E1E0};
-	WEAK game::symbol<PhysicalMemory> g_scriptmem{0xD5F3140, 0xC92EC40};
-	WEAK game::symbol<PhysicalMemory> g_physmem{0xD5F3BA0, 0xC92F6A0};
+	WEAK symbol<PhysicalMemory> g_mem{0xD5F26E0, 0xC92E1E0};
+	WEAK symbol<PhysicalMemory> g_scriptmem{0xD5F3140, 0xC92EC40};
+	WEAK symbol<PhysicalMemory> g_physmem{0xD5F3BA0, 0xC92F6A0};
 
-	WEAK game::symbol<unsigned __int64> stream_size{0x1DAD810, 0x258AA10};
-	WEAK game::symbol<unsigned char*> stream_buffer{0x1DAD808, 0x258AA08};
+	WEAK symbol<unsigned __int64> stream_size{0x1DAD810, 0x258AA10};
+	WEAK symbol<unsigned char*> stream_buffer{0x1DAD808, 0x258AA08};
 
 	WEAK symbol<GfxDrawMethod_s> gfxDrawMethod{0xF7530B0, 0xE9213F0};
 
@@ -346,8 +363,11 @@ namespace game
 	WEAK symbol<ui_info> ui_info_array{0x0, 0x352E580};
 
 	WEAK symbol<int> level_time{0x56DBAA0, 0x7361F9C};
+	WEAK symbol<int> com_frameTime{0x0, 0x2E6EE34};
 
 	WEAK symbol<map_t> maps{0x7CE5A0, 0x926C80};
+
+	WEAK symbol<GfxWorld*> s_world{0x0, 0xE973AE0};
 
 	WEAK symbol<ID3D11Device*> d3d11_device{0x1163B98, 0x12DFBF8};
 
@@ -357,6 +377,7 @@ namespace game
 		WEAK symbol<client_t*> svs_clients{0x0, 0x2DC3390};
 		WEAK symbol<int> svs_numclients{0x0, 0x2DC338C};
 		WEAK symbol<int> gameTime{0x0, 0x7361F9C};
+		WEAK symbol<int> num_entities{0x0, 0x7361A40};
 
 		WEAK symbol<int> sv_serverId_value{0x0, 0xB7F9630};
 
@@ -366,7 +387,19 @@ namespace game
 		WEAK symbol<connect_state_t*> connect_state{0x0, 0x2EC8510};
 
 		WEAK symbol<XZone> g_zones{0x0, 0x5F292B0};
+		WEAK symbol<unsigned int> g_zoneCount{0x0, 0x3D10088};
+
+		WEAK symbol<int> db_hashTable{0x0, 0x3C54FC0};
+		WEAK symbol<XAssetEntry> g_assetEntryPool{0x0, 0x5A6E3B0};
+
+		WEAK symbol<playerState_s*> playerState{0x0, 0x2DE3600};
 	}
+
+	WEAK symbol<int64_t(ID3D11Buffer**)> R_DestroyComputeBuffers{0x0, 0xAA5B0};
+	WEAK symbol<mp::refdef_t*> refdef{0x0, 0x390B580};
+	WEAK symbol<PathData> pathdata{0x0, 0x71AF210};
+	WEAK symbol<unsigned __int64(pathnode_t* node, float* pos)> WorldifyPosFromParent{0x0, 0x3FD7D0};
+	WEAK symbol<GfxScene> scene{0x0, 0x33E4290};
 
 	namespace sp
 	{

@@ -34,6 +34,57 @@ namespace gsc
 		std::optional<std::string> gsc_error_msg;
 		game::scr_entref_t saved_ent_ref;
 
+		std::vector<devmap_entry> devmap_entries{};
+
+		std::optional<devmap_entry> get_devmap_entry(const std::uint8_t* codepos)
+		{
+			const auto itr = std::ranges::find_if(devmap_entries, [codepos](const devmap_entry& entry) -> bool
+			{
+				return codepos >= entry.bytecode && codepos < entry.bytecode + entry.size;
+			});
+
+			if (itr != devmap_entries.end())
+			{
+				return *itr;
+			}
+
+			return {};
+		}
+
+		std::optional<std::pair<std::uint16_t, std::uint16_t>> get_line_and_col_for_codepos(const std::uint8_t* codepos)
+		{
+			const auto entry = get_devmap_entry(codepos);
+
+			if (!entry.has_value())
+			{
+				return {};
+			}
+
+			std::optional<std::pair<std::uint16_t, std::uint16_t>> best_line_info{};
+			std::uint32_t best_codepos = 0;
+
+			assert(codepos >= entry->bytecode);
+			const std::uint32_t codepos_offset = static_cast<std::uint32_t>(codepos - entry->bytecode);
+
+			for (const auto& instruction : entry->devmap)
+			{
+				if (instruction.codepos > codepos_offset)
+				{
+					continue;
+				}
+
+				if (best_line_info.has_value() && codepos_offset - instruction.codepos > codepos_offset - best_codepos)
+				{
+					continue;
+				}
+
+				best_line_info = { { instruction.line, instruction.col } };
+				best_codepos = instruction.codepos;
+			}
+
+			return best_line_info;
+		}
+
 		function_args get_arguments()
 		{
 			std::vector<scripting::script_value> args;
@@ -181,14 +232,23 @@ namespace gsc
 				const auto pos = frame == game::scr_VmPub->function_frame ? game::scr_function_stack->pos : frame->fs.pos;
 				const auto function = find_function(frame->fs.pos);
 
+				const char* location;
 				if (function.has_value())
 				{
-					console::warn("\tat function \"%s\" in file \"%s.gsc\"\n", function.value().first.data(), function.value().second.data());
+					location = utils::string::va("function \"%s\" in file \"%s\"", function.value().first.data(), function.value().second.data());
 				}
 				else
 				{
-					console::warn("\tat unknown location %p\n", pos);
+					location = utils::string::va("unknown location %p", pos);
 				}
+
+				const auto line_info = get_line_and_col_for_codepos(reinterpret_cast<const std::uint8_t*>(pos));
+				if (line_info.has_value())
+				{
+					location = utils::string::va("%s (line %d col %d)", location, line_info->first, line_info->second);
+				}
+
+				console::warn("\tat %s\n", location);
 			}
 		}
 
@@ -250,6 +310,22 @@ namespace gsc
 		{
 			return args[0].type_name();
 		}
+	}
+
+	void add_devmap_entry(std::uint8_t* codepos, std::size_t size, const std::string& name, xsk::gsc::buffer devmap_buf)
+	{
+		std::vector<dev_map_instruction> devmap{};
+		const auto* devmap_ptr = reinterpret_cast<const dev_map*>(devmap_buf.data);
+
+		devmap.resize(devmap_ptr->num_instructions);
+		std::memcpy(devmap.data(), devmap_ptr->instructions, sizeof(dev_map_instruction) * devmap_ptr->num_instructions);
+
+		devmap_entries.emplace_back(codepos, size, name, std::move(devmap));
+	}
+
+	void clear_devmap()
+	{
+		devmap_entries.clear();
 	}
 
 	void scr_error(const char* error, const bool force_print)

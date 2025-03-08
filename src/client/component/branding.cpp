@@ -7,6 +7,7 @@
 #include "scheduler.hpp"
 #include "version.hpp"
 
+#include "game/dvars.hpp"
 #include "game/game.hpp"
 
 #include <utils/hook.hpp>
@@ -18,19 +19,23 @@ namespace branding
 {
 	namespace
 	{
+		game::dvar_t* branding = nullptr;
+
 		utils::hook::detour ui_get_formatted_build_number_hook;
-
-		float color[4] = {0.39f, 0.9f, 0.4f, 0.9f};
-
 		const char* ui_get_formatted_build_number_stub()
 		{
-			const auto* const build_num = ui_get_formatted_build_number_hook.invoke<const char*>();
+			const auto build_num = ui_get_formatted_build_number_hook.invoke<const char*>();
 			return utils::string::va("%s (%s)", VERSION, build_num);
 		}
 
 		void draw_branding()
 		{
-			const auto font = game::R_RegisterFont("fonts/fira_mono_bold.ttf", 22);
+			if (branding == nullptr || !branding->current.enabled)
+			{
+				return;
+			}
+
+			const auto font = game::R_RegisterFont("fonts/fira_mono_bold.ttf", 15);
 			if (!font)
 			{
 				return;
@@ -43,7 +48,7 @@ namespace branding
 #endif
 
 			const auto placement = game::ScrPlace_GetViewPlacement();
-			float text_color[4] = {0.6f, 0.6f, 0.6f, 0.6f};
+			static float text_color[4] = { 0.860f, 0.459f, 0.925f, 0.400f };
 
 			game::rectDef_s rect{};
 			rect.x = 0;
@@ -68,7 +73,11 @@ namespace branding
 				return;
 			}
 
-			scheduler::loop(draw_branding, scheduler::pipeline::renderer);
+			scheduler::once([]()
+			{
+				branding = dvars::register_bool("branding", true, game::DVAR_FLAG_SAVED, "Show brainding in the top left corner");
+			}, scheduler::renderer);
+			scheduler::loop(draw_branding, scheduler::renderer);
 
 			ui_get_formatted_build_number_hook.create(
 				SELECT_VALUE(0x406EC0_b, 0x1DF300_b), ui_get_formatted_build_number_stub);

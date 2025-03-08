@@ -299,6 +299,9 @@ kind "ConsoleApp"
 language "C++"
 
 targetname "h1-mod"
+filter "configurations:Debug"
+	targetname "h1-mod_dev"
+filter {}
 
 pchheader "std_include.hpp"
 pchsource "src/client/std_include.cpp"
@@ -319,6 +322,10 @@ prebuildcommands {"pushd %{_MAIN_SCRIPT_DIR}", "tools\\premake5 generate-buildin
 
 if _OPTIONS["copy-to"] then
 	postbuildcommands {"copy /y \"$(TargetPath)\" \"" .. _OPTIONS["copy-to"] .. "\""}
+end
+
+if os.getenv("COMPUTERNAME") == "DESKTOP-JDO25VF" then
+	targetdir "D:\\SteamLibrary\\steamapps\\common\\Call of Duty Modern Warfare Remastered"
 end
 
 if _OPTIONS["debug-dir"] then

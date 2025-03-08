@@ -50,6 +50,8 @@ namespace dvars
 
 	extern game::dvar_t* cg_legacyCrashHandling;
 
+	extern game::dvar_t* r_reflectionProbeGenerate;
+
 	constexpr int generate_hash(const char* string)
 	{
 		const char* v1;
@@ -114,4 +116,6 @@ namespace dvars
 		unsigned int flags, const std::string& description);
 	game::dvar_t* register_vec4(const std::string& name, float x, float y, float z, float w, float min, 
 		float max, unsigned int flags, const std::string& description);
+	game::dvar_t* register_enum(const std::string& name, const char** value_list, int default_index,
+		unsigned int flags, const std::string& description);
 }

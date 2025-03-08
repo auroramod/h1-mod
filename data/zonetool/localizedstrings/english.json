@@ -7,5 +7,10 @@
     "LUA_MENU_DISCORD_REQUEST": "&&1^7 requested to join your game!",
     "LUA_MENU_DISCORD_REQUEST_DISCRIMINATOR": "&&1^7#&&2 requested to join your game!",
     "LUA_MENU_DISCORD_ACCEPT": "[&&1] Accept",
-    "LUA_MENU_DISCORD_DENY": "[&&1] Deny"
+    "LUA_MENU_DISCORD_DENY": "[&&1] Deny",
+
+    "LUA_MENU_VOICE_CHAT": "Voice Chat",
+    "LUA_MENU_VOICE_CHAT_DESC": "Enable or disable voice chat.",
+    "LUA_MENU_MIC_REC_VOLUME": "Voice Volume",
+    "LUA_MENU_MIC_REC_VOLUME_DESC": "Move the slider to adjust voice volume."
 }

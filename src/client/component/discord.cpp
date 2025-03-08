@@ -81,8 +81,8 @@ namespace discord
 			discord_strings.large_image_key = mapname;
 
 			const auto presence_key = utils::string::va("PRESENCE_%s%s", SELECT_VALUE("SP_", ""), mapname);
-			if (game::DB_XAssetExists(game::ASSET_TYPE_LOCALIZE, presence_key) && 
-				!game::DB_IsXAssetDefault(game::ASSET_TYPE_LOCALIZE, presence_key))
+			if (game::DB_XAssetExists(game::ASSET_TYPE_LOCALIZE_ENTRY, presence_key) && 
+				!game::DB_IsXAssetDefault(game::ASSET_TYPE_LOCALIZE_ENTRY, presence_key))
 			{
 				mapname = game::UI_SafeTranslateString(presence_key);
 			}

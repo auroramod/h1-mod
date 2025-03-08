@@ -179,11 +179,11 @@ namespace gameplay
 
 			if ((entity->client->flags & 1)) // noclip
 			{
-				entity->client->pm_type = 2;
+				entity->client->ps.pm_type = 2;
 			}
 			else if ((entity->client->flags & 2)) // ufo
 			{
-				entity->client->pm_type = 3;
+				entity->client->ps.pm_type = 3;
 			}
 		}
 

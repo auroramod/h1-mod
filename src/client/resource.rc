@@ -74,9 +74,9 @@ BEGIN
             VALUE "FileDescription", "H1-Mod"
             VALUE "FileVersion", VERSION_FILE
             VALUE "InternalName", "H1-Mod"
-            VALUE "LegalCopyright", "Copyright © 2022 H1-Mod. All rights reserved."
+            VALUE "LegalCopyright", "Copyright © 2024 Aurora. All rights reserved."
             VALUE "Licence", "GPLv3"
-            VALUE "Info", "https://h1.gg"
+            VALUE "Info", "https://auroramod.dev"
             VALUE "OriginalFilename", "h1-mod.exe"
             VALUE "ProductName", "h1-mod"
             VALUE "ProductVersion", VERSION_PRODUCT

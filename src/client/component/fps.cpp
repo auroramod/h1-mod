@@ -16,9 +16,12 @@ namespace fps
 	namespace
 	{
 		utils::hook::detour sub_5D6810_hook;
+		utils::hook::detour com_frame_hook;
+		utils::hook::detour r_wait_end_time_hook;
 
-		game::dvar_t* cg_drawfps;
-		game::dvar_t* cg_drawping;
+		game::dvar_t* cg_drawfps = nullptr;
+		game::dvar_t* cg_drawping = nullptr;
+		game::dvar_t* com_wait_end_frame_mode = nullptr;
 
 		float fps_color_good[4] = {0.6f, 1.0f, 0.0f, 1.0f};
 		float fps_color_ok[4] = {1.0f, 0.7f, 0.3f, 1.0f};
@@ -128,16 +131,73 @@ namespace fps
 			}
 		}
 
-		game::dvar_t* cg_draw_fps_register_stub()
-		{
-			cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_FLAG_SAVED, "Draw frames per second");
-			return cg_drawfps;
-		}
-
 		void sub_5D6810_stub()
 		{
 			perf_update();
 			sub_5D6810_hook.invoke<void>();
+		}
+
+		bool r_wait_end_frame_stub()
+		{
+			if (com_wait_end_frame_mode->current.integer > 0)
+			{
+				return true;
+			}
+
+			return r_wait_end_time_hook.invoke<bool>();
+		}
+
+		void com_frame_stub()
+		{
+			const auto value = com_wait_end_frame_mode->current.integer;
+			if (value == 0)
+			{
+				return com_frame_hook.invoke<void>();
+			}
+
+			const auto start = std::chrono::high_resolution_clock::now();
+			com_frame_hook.invoke<void>();
+
+			auto max_fps = 0;
+			static const auto com_max_fps = game::Dvar_FindVar("com_maxfps");
+
+			if (game::environment::is_mp())
+			{
+				max_fps = utils::hook::invoke<int>(0x183490_b, com_max_fps);
+
+			}
+			else
+			{
+				max_fps = com_max_fps->current.integer;
+			}
+
+			if (max_fps == 0)
+			{
+				max_fps = 1000;
+			}
+
+
+			constexpr auto nano_secs = std::chrono::duration_cast<std::chrono::nanoseconds>(1s);
+			const auto frame_time = nano_secs / max_fps;
+
+			if (value == 1)
+			{
+				const auto diff = (std::chrono::high_resolution_clock::now() - start);
+				if (diff > frame_time)
+				{
+					return;
+				}
+
+				const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(frame_time - diff);
+				std::this_thread::sleep_for(ms);
+			}
+			else if (value == 2)
+			{
+				while (std::chrono::high_resolution_clock::now() - start < frame_time)
+				{
+					std::this_thread::sleep_for(0ms);
+				}
+			}
 		}
 	}
 
@@ -204,6 +264,11 @@ namespace fps
 
 			dvars::register_bool("cg_infobar_fps", false, game::DVAR_FLAG_SAVED, "Show server latency");
 			dvars::register_bool("cg_infobar_ping", false, game::DVAR_FLAG_SAVED, "Show FPS counter");
+
+			// Make fps capping accurate
+			com_wait_end_frame_mode = dvars::register_int("com_waitEndFrameMode", 0, 0, 2, game::DVAR_FLAG_SAVED, "Wait end frame mode (0 = default, 1 = sleep(n), 2 = loop sleep(0)");
+			r_wait_end_time_hook.create(SELECT_VALUE(0x3A7330_b, 0x1C2420_b), r_wait_end_frame_stub);
+			com_frame_hook.create(SELECT_VALUE(0x385210_b, 0x15A960_b), com_frame_stub);
 		}
 	};
 }

@@ -167,8 +167,8 @@ namespace command
 			{
 				if (args.size() == 1)
 				{
-					const auto current = game::Dvar_ValueToString(dvar, true, dvar->current);
-					const auto reset = game::Dvar_ValueToString(dvar, true, dvar->reset);
+					const std::string current = game::Dvar_ValueToString(dvar, true, dvar->current);
+					const std::string reset = game::Dvar_ValueToString(dvar, true, dvar->reset);
 
 					const auto info = dvars::get_dvar_info_from_hash(dvar->hash);
 					std::string desc{};
@@ -181,7 +181,7 @@ namespace command
 					}
 
 					console::info("\"%s\" is: \"%s\" default: \"%s\" hash: 0x%08lX type: %i\n",
-						name.data(), current, reset, dvar->hash, dvar->type);
+						name.data(), current.data(), reset.data(), dvar->hash, dvar->type);
 
 					console::info("%s\n", desc.data());
 					console::info("   %s\n", dvars::dvar_get_domain(dvar->type, dvar->domain).data());
@@ -871,6 +871,60 @@ namespace command
 				}
 
 				cmd_kill(client_num);
+			});
+
+			add_sv("getviewpos", [](const int client_num, const params_sv& params)
+			{
+				console::info("%f, %f, %f\n", 
+					game::mp::g_entities[client_num].client->ps.origin[0], 
+					game::mp::g_entities[client_num].client->ps.origin[1], 
+					game::mp::g_entities[client_num].client->ps.origin[2]);
+			});
+
+			add_sv("setviewpos", [](const int client_num, const params_sv& params)
+			{
+				if (!check_cheats(client_num))
+				{
+					return;
+				}
+
+				if (params.size() < 4)
+				{
+					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+						"f \"You did not specify the correct number of coordinates\"");
+					return;
+				}
+
+				game::mp::g_entities[client_num].client->ps.origin[0] = std::strtof(params.get(1), nullptr);
+				game::mp::g_entities[client_num].client->ps.origin[1] = std::strtof(params.get(2), nullptr);
+				game::mp::g_entities[client_num].client->ps.origin[2] = std::strtof(params.get(3), nullptr);
+			});
+
+			add_sv("getviewang", [](const int client_num, const params_sv& params)
+			{
+				console::info("%f, %f, %f\n",
+					game::mp::g_entities[client_num].client->ps.delta_angles[0],
+					game::mp::g_entities[client_num].client->ps.delta_angles[1],
+					game::mp::g_entities[client_num].client->ps.delta_angles[2]);
+			});
+
+			add_sv("setviewang", [](const int client_num, const params_sv& params)
+			{
+				if (!check_cheats(client_num))
+				{
+					return;
+				}
+
+				if (params.size() < 4)
+				{
+					game::SV_GameSendServerCommand(client_num, game::SV_CMD_RELIABLE,
+						"f \"You did not specify the correct number of coordinates\"");
+					return;
+				}
+
+				game::mp::g_entities[client_num].client->ps.delta_angles[0] = std::strtof(params.get(1), nullptr);
+				game::mp::g_entities[client_num].client->ps.delta_angles[1] = std::strtof(params.get(2), nullptr);
+				game::mp::g_entities[client_num].client->ps.delta_angles[2] = std::strtof(params.get(3), nullptr);
 			});
 		}
 	};

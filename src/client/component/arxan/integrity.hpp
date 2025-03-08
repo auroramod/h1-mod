@@ -1,0 +1,92 @@
+#pragma once
+
+#include <cstdint>
+
+namespace mp
+{
+	constexpr uint64_t intact_integrity_check_blocks[] =
+	{
+		0x140000519,
+		0x1407DB02E,
+		0x140AFF08D,
+		0x15143E06E,
+		0x151440DC4,
+		0x151455F3B,
+		0x151489363,
+		0x1515F10AB,
+		0x1515F66D0,
+		0x15161DB84,
+		0x15161EAA8,
+		0x151622530,
+		0x151687D47,
+		0x151690107,
+		0x1516979D7,
+		0x1516D3ED0,
+		0x1516E2FC2,
+		0x15173F3E9,
+		0x15174B9FA,
+		0x15175EAE1,
+		0x15176E778,
+		0x151787948,
+		0x15179956D,
+		0x1517B36C8,
+		0x1517DE653,
+		0x1517E2CE0,
+		0x1517EEAE2,
+		0x1517F92E1,
+		0x1517FB858,
+		0x151809719,
+		0x151868985,
+		0x1518BB832,
+		0x1518EE362,
+		0x1518FE162,
+		0x1519024C3,
+		0x151908639,
+		0x151985713,
+		0x15199565C,
+		0x1519C6C5B,
+		0x1519EB05E,
+		0x1519F0EE1,
+		0x1519F4A25,
+		0x151A0503F,
+		0x151A45752,
+		0x151A7E83E,
+		0x151A87C67,
+		0x151AAF804,
+		0x151AB3E72,
+		0x151AC3482,
+		0x151AC5B0F,
+		0x151ACBE3C,
+	};
+	constexpr uint64_t split_integrity_check_blocks[] =
+	{
+		0x1514B9FC8,
+		0x15161D235,
+		0x1516DE9FF,
+		0x151754691,
+		0x151772B7F,
+		0x1517B3CA9,
+		0x1517DB0D0,
+		0x1517E65DF,
+		0x15181407C,
+		0x151832847,
+		0x15183B664,
+		0x15199ABAA,
+		0x1519AA163,
+		0x1519C5852,
+		0x1519C7B0E,
+		0x1519C7F63,
+		0x1519F3291,
+	};
+}
+namespace sp
+{
+	constexpr uint64_t intact_integrity_check_blocks[] =
+	{
+		0x15263308B,
+	};
+	constexpr uint64_t split_integrity_check_blocks[] =
+	{
+		0x152630C3F,
+	};
+}

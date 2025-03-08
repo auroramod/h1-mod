@@ -16,10 +16,7 @@ namespace dedicated
 {
 	namespace
 	{
-		utils::hook::detour gscr_set_dynamic_dvar_hook;
-		utils::hook::detour com_quit_f_hook;
-
-		const game::dvar_t* sv_lanOnly;
+		const game::dvar_t* sv_lanOnly = nullptr;
 
 		void init_dedicated_server()
 		{
@@ -31,9 +28,14 @@ namespace dedicated
 			utils::hook::invoke<void>(0x686310_b);
 		}
 
+		void sv_kill_server_f()
+		{
+			game::Com_Shutdown("EXE_SERVERKILLED");
+		}
+
 		void send_heartbeat()
 		{
-			if (sv_lanOnly->current.enabled)
+			if (sv_lanOnly && sv_lanOnly->current.enabled)
 			{
 				return;
 			}
@@ -106,44 +108,11 @@ namespace dedicated
 
 		void sync_gpu_stub()
 		{
-			std::this_thread::sleep_for(1ms);
-		}
+			const auto frame_time = *game::com_frameTime;
+			const auto sys_msec = game::Sys_Milliseconds();
+			const auto msec = frame_time - sys_msec;
 
-		void kill_server()
-		{
-			const auto* svs_clients = *game::mp::svs_clients;
-			if (svs_clients != nullptr)
-			{
-				for (auto i = 0; i < *game::mp::svs_numclients; ++i)
-				{
-					if (svs_clients[i].header.state >= 3)
-					{
-						game::SV_GameSendServerCommand(i, game::SV_CMD_CAN_IGNORE,
-							utils::string::va("r \"%s\"", "EXE_ENDOFGAME"));
-					}
-				}
-			}
-
-			com_quit_f_hook.invoke<void>();
-		}
-
-		void sys_error_stub(const char* msg, ...)
-		{
-			char buffer[2048]{};
-
-			va_list ap;
-			va_start(ap, msg);
-
-			vsnprintf_s(buffer, _TRUNCATE, msg, ap);
-
-			va_end(ap);
-
-			scheduler::once([]
-			{
-				command::execute("map_rotate");
-			}, scheduler::main, 3s);
-
-			game::Com_Error(game::ERR_DROP, "%s", buffer);
+			std::this_thread::sleep_for(std::chrono::milliseconds(msec));
 		}
 
 		utils::hook::detour ui_set_active_menu_hook;
@@ -162,13 +131,6 @@ namespace dedicated
 
 			ui_set_active_menu_hook.invoke<void>(localClientNum, menu);
 		}
-	}
-
-	void initialize()
-	{
-		command::execute("exec default_xboxlive.cfg", true);
-		command::execute("onlinegame 1", true);
-		command::execute("xblive_privatematch 1", true);
 	}
 
 	class component final : public component_interface
@@ -201,9 +163,6 @@ namespace dedicated
 
 			// Disable r_preloadShaders
 			dvars::override::register_bool("r_preloadShaders", false, game::DVAR_FLAG_READ);
-
-			// Stop crashing from sys_errors
-			utils::hook::jump(0x1D8710_b, sys_error_stub, true);
 
 			// Hook R_SyncGpu
 			utils::hook::jump(0x688620_b, sync_gpu_stub, true);
@@ -326,13 +285,14 @@ namespace dedicated
 
 			scheduler::on_game_initialized([]
 			{
-				initialize();
+				command::execute("exec default_xboxlive.cfg", true);
+				command::execute("onlinegame 1", true);
+				command::execute("xblive_privatematch 1", true);
 
 				console::info("==================================\n");
 				console::info("Server started!\n");
 				console::info("==================================\n");
 
-				// remove disconnect command
 				game::Cmd_RemoveCommand("disconnect");
 
 				execute_startup_command_queue();
@@ -344,8 +304,7 @@ namespace dedicated
 				command::add("heartbeat", send_heartbeat);
 			}, scheduler::pipeline::main, 1s);
 
-			command::add("killserver", kill_server);
-			com_quit_f_hook.create(0x17CD00_b, &kill_server);
+			command::add("killserver", sv_kill_server_f);
 		}
 	};
 }

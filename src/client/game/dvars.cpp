@@ -40,12 +40,14 @@ namespace dvars
 
 	game::dvar_t* jump_height = nullptr;
 
-	game::dvar_t* jump_enableFallDamage;
+	game::dvar_t* jump_enableFallDamage = nullptr;
 
-	game::dvar_t* r_fullbright;
-	game::dvar_t* r_chams;
+	game::dvar_t* r_fullbright = nullptr;
+	game::dvar_t* r_chams = nullptr;
 
-	game::dvar_t* cg_legacyCrashHandling;
+	game::dvar_t* cg_legacyCrashHandling = nullptr;
+
+	game::dvar_t* r_reflectionProbeGenerate = nullptr;
 
 	std::string dvar_get_vector_domain(const int components, const game::dvar_limits& domain)
 	{
@@ -276,5 +278,13 @@ namespace dvars
 		const auto hash = generate_hash(name);
 		insert_dvar_info(hash, name, description);
 		return game::Dvar_RegisterVec4(hash, "", x, y, z, w, min, max, flags);
+	}
+
+	game::dvar_t* register_enum(const std::string& name, const char** value_list, int default_index,
+		unsigned int flags, const std::string& description)
+	{
+		const auto hash = generate_hash(name);
+		insert_dvar_info(hash, name, description);
+		return game::Dvar_RegisterEnum(hash, "", value_list, default_index, flags);
 	}
 }

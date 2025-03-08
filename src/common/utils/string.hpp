@@ -91,6 +91,8 @@ namespace utils::string
 
 	std::string get_clipboard_data();
 
+	void set_clipboard_data(const std::string& text);
+
 	void strip(const char* in, char* out, int max);
 	std::string strip(const std::string& string);
 
@@ -102,4 +104,7 @@ namespace utils::string
 	bool match_compare(const std::string& input, const std::string& text, const bool exact);
 
 	bool is_numeric(const std::string& text);
+
+	bool find_lower(const std::string& a, const std::string& b);
+	bool strstr_lower(const char* a, const char* b);
 }

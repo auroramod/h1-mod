@@ -126,23 +126,18 @@ namespace patches
 			return true;
 		}
 
+		utils::hook::detour db_read_raw_file_hook;
 		const char* db_read_raw_file_stub(const char* filename, char* buf, const int size)
 		{
-			std::string file_name = filename;
-			if (file_name.find(".cfg") == std::string::npos)
-			{
-				file_name.append(".cfg");
-			}
-
 			std::string buffer{};
-			if (filesystem::read_file(file_name, &buffer))
+			if (filesystem::read_file(filename, &buffer))
 			{
 				snprintf(buf, size, "%s\n", buffer.data());
 				return buf;
 			}
 
 			// DB_ReadRawFile
-			return utils::hook::invoke<const char*>(SELECT_VALUE(0x1F4D00_b, 0x3994B0_b), filename, buf, size);
+			return db_read_raw_file_hook.invoke<const char*>(filename, buf, size);
 		}
 
 		void bsp_sys_error_stub(const char* error, const char* arg1)
@@ -300,6 +295,46 @@ namespace patches
 
 			game::Com_Error(code, "%s", buffer);
 		}
+
+		void dvar_set_bool(game::dvar_t* dvar, bool value)
+		{
+			game::dvar_value dvar_value{};
+			dvar_value.enabled = value;
+			game::Dvar_SetVariant(dvar, &dvar_value, game::DVAR_SOURCE_INTERNAL);
+		}
+
+		void sub_157FA0_stub()
+		{
+			const auto dvar_706663C2 = *reinterpret_cast<game::dvar_t**>(0x3426B90_b);
+			const auto dvar_617FB3B4 = *reinterpret_cast<game::dvar_t**>(0x3426BA0_b);
+
+			if (!dvar_706663C2->current.enabled || utils::hook::invoke<bool>(0x15B2F0_b))
+			{
+				utils::hook::invoke<void>(0x17D8D0_b, 0, 0);
+				dvar_set_bool(dvar_706663C2, true);
+				dvar_set_bool(dvar_617FB3B4, true);
+			}
+
+			if (utils::hook::invoke<bool>(0x5B7AB0_b))
+			{
+				utils::hook::invoke<void>(0x17D8D0_b, 0, 0);
+				dvar_set_bool(dvar_617FB3B4, true);
+			}
+		}
+
+		utils::hook::detour sv_shutdown_hook;
+		void sv_shutdown_stub(const char* finalmsg)
+		{
+			console::info("----- Server Shutdown -----\n");
+			sv_shutdown_hook.invoke<void>(finalmsg);
+		}
+
+		utils::hook::detour com_quit_f_hook;
+		void com_quit_f_stub()
+		{
+			console::info("quitting...\n");
+			com_quit_f_hook.invoke<void>();
+		}
 	}
 
 	class component final : public component_interface
@@ -335,7 +370,14 @@ namespace patches
 			dvars::override::register_int("marketing_active", 1, 1, 1, game::DVAR_FLAG_WRITE);
 
 			// Makes com_maxfps saved dvar
-			dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
+			if (game::environment::is_dedi())
+			{
+				dvars::override::register_int("com_maxfps", 85, 0, 100, game::DVAR_FLAG_NONE);
+			}
+			else
+			{
+				dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_FLAG_SAVED);
+			}
 
 			// Makes mis_cheat saved dvar
 			dvars::override::register_bool("mis_cheat", 0, game::DVAR_FLAG_SAVED);
@@ -350,8 +392,8 @@ namespace patches
 			// Show missing fastfiles
 			utils::hook::call(SELECT_VALUE(0x1F588B_b, 0x39A78E_b), missing_content_error_stub);
 
-			// Allow executing custom cfg files with the "exec" command
-			utils::hook::call(SELECT_VALUE(0x376EB5_b, 0x156D41_b), db_read_raw_file_stub);
+			// Allow loading of rawfiles from disk
+			db_read_raw_file_hook.create(game::DB_ReadRawFile, db_read_raw_file_stub);
 
 			// Remove useless information from errors + add additional help to common errors
 			utils::hook::call(SELECT_VALUE(0x55E919_b, 0x681A69_b), create_2d_texture_stub_1); 	// Sys_Error for "Create2DTexture( %s, %i, %i, %i, %i ) failed"
@@ -468,6 +510,15 @@ namespace patches
 
 			// Prevent the game from modifying Windows microphone volume (since voice chat isn't used)
 			utils::hook::set<uint8_t>(0x5BEEA0_b, 0xC3); // Mixer_SetWaveInRecordLevels
+
+			utils::hook::set<uint8_t>(0x556250_b, 0xC3); // disable host migration
+
+			// Fix 'out of memory' error
+			utils::hook::call(0x15C7EE_b, sub_157FA0_stub);
+
+			// Re-implement dev prints
+			com_quit_f_hook.create(0x17CD00_b, com_quit_f_stub);
+			sv_shutdown_hook.create(0x5543A0_b, sv_shutdown_stub);
 		}
 	};
 }

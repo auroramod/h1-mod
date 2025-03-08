@@ -1,7 +1,7 @@
-![license](https://img.shields.io/github/license/h1-mod/h1-mod.svg)
-[![open bugs](https://img.shields.io/github/issues/h1-mod/h1-mod/bug?label=bugs)](https://github.com/h1-mod/h1-mod/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
-[![Build](https://github.com/h1-mod/h1-mod/workflows/Build/badge.svg)](https://github.com/h1-mod/h1-mod/actions)
-[![Build status](https://ci.appveyor.com/api/projects/status/0sh80kdnsvm53rno?svg=true)](https://ci.appveyor.com/project/h1-mod/h1-mod)
+![license](https://img.shields.io/github/license/auroramod/h1-mod.svg)
+[![open bugs](https://img.shields.io/github/issues/auroramod/h1-mod/bug?label=bugs)](https://github.com/auroramod/h1-mod/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+[![Build](https://github.com/auroramod/h1-mod/workflows/Build/badge.svg)](https://github.com/auroramod/h1-mod/actions)
+[![Build status](https://ci.appveyor.com/api/projects/status/0sh80kdnsvm53rno?svg=true)](https://ci.appveyor.com/project/auroramod/h1-mod)
 [![Discord](https://img.shields.io/discord/945420505157083208?color=%237289DA&label=members&logo=discord&logoColor=%23FFFFFF)](https://discord.gg/RzzXu5EVnh)
 
 # H1-Mod
@@ -27,9 +27,9 @@ NOTE: You must legally own Call of Duty®: Modern Warfare Remastered to run this
 
 ## Credits
 
-- [S1x](https://github.com/XLabsProject/s1x-client) - codebase and research (predecessor of MWR)
+- [s1x-client](https://github.com/HeartbeatingForCenturies/s1x-client) - codebase and research (predecessor of MWR)
 - [h2-mod](https://github.com/fedddddd/h2-mod) - research (successor of MWR)
-- [momo5502](https://github.com/momo5502) - Arxan/Steam research, developer of [XLabsProject](https://github.com/XLabsProject)
+- [momo5502](https://github.com/momo5502) - Arxan/Steam research, former lead developer of [XLabsProject](https://github.com/XLabsProject)
 
 ## Disclaimer
 

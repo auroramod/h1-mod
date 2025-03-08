@@ -1078,9 +1078,80 @@ namespace fastfiles
 			{
 				reallocate_attachment_and_weapon();
 				reallocate_sound_pool();
-				reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIM, 2>();
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIMPARTS, 2>();
 				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOADED_SOUND, 2>();
-				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOCALIZE, 2>();
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOCALIZE_ENTRY, 2>();
+			}
+		}
+
+		namespace sp
+		{
+			constexpr unsigned int get_asset_type_size(const game::XAssetType type)
+			{
+				constexpr int asset_type_sizes[] =
+				{
+					96, 88, 128, 56, 40, 216,
+					56, 680, 592, 32, 32, 32,
+					32, 32, 2112, 1936, 104,
+					32, 24, 152, 152, 152, 16,
+					64, 640, 40, 16, 136, 24,
+					296, 176, 2864, 48, 0, 24,
+					200, 88, 16, 144, 3616, 56,
+					64, 16, 16, 0, 0, 0, 0, 24,
+					40, 24, 48, 40, 24, 16, 80,
+					128, 2256, 136, 32, 72,
+					24, 64, 88, 48, 32, 96, 152,
+					64, 32, 32,
+				};
+
+				return asset_type_sizes[type];
+			}
+
+			constexpr unsigned int get_pool_type_size(const game::XAssetType type)
+			{
+				constexpr int asset_pool_sizes[] =
+				{
+					128, 1024, 16, 1, 128, 5000, 5248,
+					2560, 10624, 256, 49152, 12288, 12288,
+					72864, 512, 2750, 12000, 16000, 256, 
+					64, 64, 64, 64, 8000, 1, 1, 1, 1,
+					1, 2, 1, 1, 32, 0, 128,
+					400, 0, 11500, 128, 360, 1, 2048,
+					4, 6, 0, 0, 0, 0, 1024,
+					768, 400, 128, 128, 24, 24, 24,
+					32, 128, 2, 0, 64, 384, 128,
+					1, 128, 64, 32, 32, 16, 32, 16,
+				};
+
+				return asset_pool_sizes[type];
+			}
+
+			template <game::XAssetType Type, size_t Size>
+			char* reallocate_asset_pool()
+			{
+				constexpr auto element_size = get_asset_type_size(Type);
+				static char new_pool[element_size * Size] = {0};
+				static_assert(element_size != 0);
+				assert(element_size == game::DB_GetXAssetTypeSize(Type));
+
+				std::memmove(new_pool, game::g_assetPool[Type], game::g_poolSize[Type] * element_size);
+
+				game::g_assetPool[Type] = new_pool;
+				game::g_poolSize[Type] = Size;
+
+				return new_pool;
+			}
+
+			template <game::XAssetType Type, size_t Multiplier>
+			char* reallocate_asset_pool_multiplier()
+			{
+				constexpr auto pool_size = get_pool_type_size(Type);
+				return reallocate_asset_pool<Type, pool_size* Multiplier>();
+			}
+
+			void reallocate_asset_pools()
+			{
+				reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOCALIZE_ENTRY, 2>();
 			}
 		}
 
@@ -1089,6 +1160,10 @@ namespace fastfiles
 			if (!game::environment::is_sp())
 			{
 				mp::reallocate_asset_pools();
+			}
+			else
+			{
+				sp::reallocate_asset_pools();
 			}
 		}
 
@@ -1156,6 +1231,11 @@ namespace fastfiles
 		
 	}
 
+	std::string get_zone_name(const unsigned int index)
+	{
+		return game::mp::g_zones[index].name;
+	}
+
 	void set_usermap(const std::string& usermap)
 	{
 		current_usermap.access([&](std::optional<std::string>& current_usermap_)
@@ -1194,6 +1274,39 @@ namespace fastfiles
 	bool is_stock_map(const std::string& name)
 	{
 		return fastfiles::exists(name, true);
+	}
+
+	void enum_asset_entries(const game::XAssetType type, const std::function<void(game::XAssetEntry*)>& callback, bool include_override)
+	{
+		constexpr auto max_asset_count = 0x25D78;
+		auto hash = &game::mp::db_hashTable[0];
+		for (auto c = 0; c < max_asset_count; c++)
+		{
+			for (auto i = *hash; i; )
+			{
+				const auto entry = &game::mp::g_assetEntryPool[i];
+
+				if (entry->asset.type == type)
+				{
+					callback(entry);
+
+					if (include_override && entry->nextOverride)
+					{
+						auto next_ovveride = entry->nextOverride;
+						while (next_ovveride)
+						{
+							const auto override = &game::mp::g_assetEntryPool[next_ovveride];
+							callback(override);
+							next_ovveride = override->nextOverride;
+						}
+					}
+				}
+
+				i = entry->nextHash;
+			}
+
+			++hash;
+		}
 	}
 
 	class component final : public component_interface

@@ -42,15 +42,15 @@ jobs:
         run: msbuild /m /v:minimal /p:Configuration=${{matrix.configuration}} /p:Platform=x64 build/h1-mod.sln
 
       - name: Upload ${{matrix.configuration}} binaries
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.configuration}} binaries
           path: |
-            build/bin/x64/${{matrix.configuration}}/h1-mod.exe
-            build/bin/x64/${{matrix.configuration}}/h1-mod.pdb
+            build/bin/x64/${{matrix.configuration}}/${{ matrix.configuration == 'Debug' && 'h1-mod_dev.exe' || 'h1-mod.exe' }}
+            build/bin/x64/${{matrix.configuration}}/${{ matrix.configuration == 'Debug' && 'h1-mod_dev.pdb' || 'h1-mod.pdb' }}
             
       - name: Upload ${{matrix.configuration}} data artifacts
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.configuration}} data artifacts
           path: |
@@ -58,7 +58,7 @@ jobs:
   deploy:
     name: Deploy artifacts
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     steps:
       - name: Setup main environment
@@ -70,12 +70,12 @@ jobs:
         run: echo "H1_MOD_MASTER_PATH=${{ secrets.H1_MOD_MASTER_SSH_PATH_DEV }}" >> $GITHUB_ENV
 
       - name: Download Release binaries
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Release binaries
           
       - name: Download Release data artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Release data artifacts
           path: data

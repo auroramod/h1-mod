@@ -26,11 +26,12 @@ namespace materials
 #ifdef DEBUG
 		utils::hook::detour material_compare_hook;
 		utils::hook::detour set_pixel_texture_hook;
+		utils::hook::detour r_draw_triangles_lit_hook;
 
 		const game::dvar_t* debug_materials = nullptr;
 #endif
 
-		char constant_table[0x20] = {};
+		game::MaterialConstantDef constant_table{};
 		
 		int db_material_streaming_fail_stub(game::Material* material)
 		{
@@ -65,7 +66,7 @@ namespace materials
 			{
 				const auto* material_a = utils::hook::invoke<game::Material*>(0x395FE0_b, index_a);
 				const auto* material_b = utils::hook::invoke<game::Material*>(0x395FE0_b, index_b);
-				console::error("Material_Compare: %s - %s (%d - %d)", 
+				console::error("Material_Compare: %s - %s (%d - %d)\n", 
 					material_a->name, material_b->name, material_a->info.sortKey, material_b->info.sortKey);
 			}
 
@@ -122,6 +123,42 @@ namespace materials
 
 			set_pixel_texture_hook.invoke<void>(cmd_buf_state, a2, image);
 		}
+
+		struct GfxBspSurfIter
+		{
+			const unsigned int* current;
+			const unsigned int* end;
+			const unsigned int* mark;
+		};
+
+		struct GfxTrianglesDrawStream
+		{
+			void* viewProjectionMatrix;
+			void* projectionMatrix;
+			float viewOrigin[3];
+			int needSubdomain;
+			GfxBspSurfIter* bspSurfIter;
+			const game::GfxTexture* reflectionProbeTexture;
+			const game::GfxTexture* lightmapPrimaryTexture;
+			const game::GfxTexture* lightmapSecondaryTexture;
+			unsigned int customSamplerFlags;
+		};
+
+		void r_draw_triangles_lit_stub(GfxTrianglesDrawStream* draw_stream, void* context)
+		{
+			__try
+			{
+				r_draw_triangles_lit_hook.invoke<void>(draw_stream, context);
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER)
+			{
+				auto world = (*game::s_world);
+				auto index = *(draw_stream->bspSurfIter->current - 1);
+				auto surf = &world->dpvs.surfaces[index];
+				auto material = surf->material;
+				console::error("R_DrawTrianglesLit: %s\n", material->name);
+			}
+		}
 #endif
 	}
 
@@ -134,8 +171,8 @@ namespace materials
 		}
 
 		const auto image = material->textureTable->u.image;
-		image->imageFormat = 0x1000003;
-		image->resourceSize = -1;
+		*(int*)&image->mapType = 0x1000003;
+		*(int*)&image->picmip = -1;
 
 		auto raw_image = utils::image{data};
 
@@ -145,7 +182,7 @@ namespace materials
 		resource_data.pSysMem = raw_image.get_buffer();
 
 		game::Image_Setup(image, raw_image.get_width(), raw_image.get_height(), image->depth, image->numElements,
-			image->imageFormat, DXGI_FORMAT_R8G8B8A8_UNORM, image->name, &resource_data);
+			image->mapType, DXGI_FORMAT_R8G8B8A8_UNORM, image->name, &resource_data);
 		return true;
 	}
 
@@ -164,9 +201,9 @@ namespace materials
 		material->name = utils::memory::duplicate_string(name);
 		image->name = material->name;
 
-		image->textures.map = nullptr;
-		image->textures.shaderView = nullptr;
-		image->textures.shaderViewAlternate = nullptr;
+		image->texture.map = nullptr;
+		image->texture.shaderView = nullptr;
+		image->texture.shaderViewAlternate = nullptr;
 		texture_table->u.image = image;
 
 		material->textureTable = texture_table;
@@ -185,9 +222,9 @@ namespace materials
 			}
 		};
 
-		try_release(&material->textureTable->u.image->textures.map);
-		try_release(&material->textureTable->u.image->textures.shaderView);
-		try_release(&material->textureTable->u.image->textures.shaderViewAlternate);
+		try_release(&material->textureTable->u.image->texture.map);
+		try_release(&material->textureTable->u.image->texture.shaderView);
+		try_release(&material->textureTable->u.image->texture.shaderViewAlternate);
 
 		utils::memory::free(material->textureTable->u.image);
 		utils::memory::free(material->textureTable);
@@ -220,6 +257,8 @@ namespace materials
 				{
 					debug_materials = dvars::register_bool("debug_materials", false, game::DVAR_FLAG_NONE, "Print current material and images");
 				}, scheduler::main);
+
+				r_draw_triangles_lit_hook.create(0x666870_b, r_draw_triangles_lit_stub);
 			}
 #endif
 		}

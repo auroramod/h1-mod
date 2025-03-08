@@ -21,32 +21,32 @@ namespace fonts
 	{
 		struct font_data_t
 		{
-			std::unordered_map<std::string, game::TTF*> fonts;
+			std::unordered_map<std::string, game::TTFDef*> fonts;
 			std::unordered_map<std::string, std::string> raw_fonts;
 		};
 
 		utils::concurrency::container<font_data_t> font_data;
 
-		game::TTF* create_font(const std::string& name, const std::string& data)
+		game::TTFDef* create_font(const std::string& name, const std::string& data)
 		{
-			const auto font = utils::memory::get_allocator()->allocate<game::TTF>();
+			const auto font = utils::memory::get_allocator()->allocate<game::TTFDef>();
 			font->name = utils::memory::get_allocator()->duplicate_string(name);
-			font->buffer = utils::memory::get_allocator()->duplicate_string(data);
-			font->len = static_cast<int>(data.size());
-			font->fontFace = 0;
+			font->file = utils::memory::get_allocator()->duplicate_string(data);
+			font->fileLen = static_cast<int>(data.size());
+			font->ftFace = nullptr;
 			return font;
 		}
 
-		void free_font(game::TTF* font)
+		void free_font(game::TTFDef* font)
 		{
-			utils::memory::get_allocator()->free(font->buffer);
+			utils::memory::get_allocator()->free(font->file);
 			utils::memory::get_allocator()->free(font->name);
 			utils::memory::get_allocator()->free(font);
 		}
 
-		game::TTF* load_font(const std::string& name)
+		game::TTFDef* load_font(const std::string& name)
 		{
-			return font_data.access<game::TTF*>([&](font_data_t& data_) -> game::TTF*
+			return font_data.access<game::TTFDef*>([&](font_data_t& data_) -> game::TTFDef*
 			{
 				if (const auto i = data_.fonts.find(name); i != data_.fonts.end())
 				{
@@ -71,7 +71,7 @@ namespace fonts
 			});
 		}
 
-		game::TTF* try_load_font(const std::string& name)
+		game::TTFDef* try_load_font(const std::string& name)
 		{
 			try
 			{
@@ -85,12 +85,12 @@ namespace fonts
 			return nullptr;
 		}
 
-		game::TTF* db_find_xasset_header_stub(game::XAssetType type, const char* name, int create_default)
+		game::TTFDef* db_find_xasset_header_stub(game::XAssetType type, const char* name, int create_default)
 		{
 			auto result = try_load_font(name);
 			if (result == nullptr)
 			{
-				result = game::DB_FindXAssetHeader(type, name, create_default).ttf;
+				result = game::DB_FindXAssetHeader(type, name, create_default).ttfDef;
 			}
 			return result;
 		}

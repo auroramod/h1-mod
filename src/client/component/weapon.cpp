@@ -266,10 +266,8 @@ namespace weapon
 				// precache all weapons that are loaded in zones
 				g_setup_level_weapon_def_hook.create(0x462630_b, g_setup_level_weapon_def_stub);
 
-#ifdef DEBUG
 				// use tag_weapon if tag_weapon_right or tag_knife_attach are not found on model
 				xmodel_get_bone_index_hook.create(0x5C82B0_b, xmodel_get_bone_index_stub);
-#endif
 				// make custom weapon index mismatch not drop in CG_SetupCustomWeapon
 				utils::hook::call(0x11B9AF_b, cw_mismatch_error_stub);
 
