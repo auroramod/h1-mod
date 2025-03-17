@@ -280,20 +280,6 @@ resincludedirs {"$(ProjectDir)src"}
 
 dependencies.imports()
 
-project "runner"
-kind "WindowedApp"
-language "C++"
-
-files {"./src/runner/**.rc", "./src/runner/**.hpp", "./src/runner/**.cpp", "./src/runner/resources/**.*"}
-
-includedirs {"./src/runner", "./src/common", "%{prj.location}/src"}
-
-resincludedirs {"$(ProjectDir)src"}
-
-links {"common"}
-
-dependencies.imports()
-
 project "client"
 kind "ConsoleApp"
 language "C++"
@@ -314,7 +300,7 @@ includedirs {"./src/client", "./src/common", "%{prj.location}/src"}
 
 resincludedirs {"$(ProjectDir)src"}
 
-dependson {"tlsdll", "runner"}
+dependson {"tlsdll"}
 
 links {"common"}
 
@@ -345,22 +331,6 @@ includedirs {"./src/tlsdll", "%{prj.location}/src"}
 links {"common"}
 
 resincludedirs {"$(ProjectDir)src"}
-
-project "runner"
-kind "WindowedApp"
-language "C++"
-
-files {"./src/runner/**.rc", "./src/runner/**.hpp", "./src/runner/**.cpp", "./src/runner/resources/**.*"}
-
-includedirs {"./src/runner", "./src/common", "%{prj.location}/src"}
-
-links {"common"}
-
-resincludedirs {"$(ProjectDir)src"}
-
-links {"common"}
-
-dependencies.imports()
 
 group "Dependencies"
 dependencies.projects()
