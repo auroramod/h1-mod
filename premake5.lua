@@ -228,7 +228,7 @@ targetdir "%{wks.location}/bin/%{cfg.platform}/%{cfg.buildcfg}"
 configurations {"Debug", "Release"}
 
 language "C++"
-cppdialect "C++20"
+cppdialect "C++23"
 
 architecture "x86_64"
 platforms "x64"
@@ -259,7 +259,7 @@ filter "configurations:Release"
 	buildoptions {"/GL"}
 	linkoptions { "/IGNORE:4702", "/LTCG" }
 	defines {"NDEBUG"}
-	flags {"FatalCompileWarnings"}
+	fatalwarnings { "All" }
 filter {}
 
 filter "configurations:Debug"

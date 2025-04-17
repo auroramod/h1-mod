@@ -12,7 +12,7 @@
 DECLSPEC_NORETURN void WINAPI exit_hook(const int code)
 {
 	component_loader::pre_destroy();
-	exit(code);
+	std::exit(code);
 }
 
 BOOL WINAPI system_parameters_info_a(const UINT uiAction, const UINT uiParam, const PVOID pvParam, const UINT fWinIni)
@@ -243,7 +243,7 @@ int main()
 		limit_parallel_dll_loading();
 	}
 
-	srand(uint32_t(time(nullptr)));
+	std::srand(static_cast<std::uint32_t>(std::time(nullptr)) ^ ~(GetTickCount() * GetCurrentProcessId()));
 	remove_crash_file();
 
 	{
