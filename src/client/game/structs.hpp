@@ -1168,6 +1168,19 @@ namespace game
 		unsigned int data;
 	};
 
+	struct weaponParms
+	{
+		float forward[3];
+		float right[3];
+		float up[3];
+		float muzzleTrace[3];
+		float gunForward[3];
+		Weapon weapon;
+		bool isAlternate;
+		const WeaponDef* weapDef;
+		const void* weapCompleteDef;
+	};
+
 	struct map_t
 	{
 		const char* name;

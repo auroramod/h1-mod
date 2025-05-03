@@ -23,31 +23,31 @@ namespace dvars
 	game::dvar_t* con_inputDvarValueColor = nullptr;
 	game::dvar_t* con_inputDvarInactiveValueColor = nullptr;
 	game::dvar_t* con_inputCmdMatchColor = nullptr;
-	game::dvar_t* g_playerEjection = nullptr;
-	game::dvar_t* g_playerCollision = nullptr;
-	game::dvar_t* player_sustainAmmo = nullptr;
-	game::dvar_t* g_enableElevators = nullptr;
 
 	game::dvar_t* g_speed = nullptr;
-
 	game::dvar_t* g_gravity = nullptr;
+	game::dvar_t* g_playerEjection = nullptr;
+	game::dvar_t* g_playerCollision = nullptr;
+	game::dvar_t* g_enableElevators = nullptr;
+	game::dvar_t* g_rocketJumpScale = nullptr;
 
 	game::dvar_t* pm_bouncing = nullptr;
 	game::dvar_t* pm_bouncingAllAngles = nullptr;
 	game::dvar_t* pm_sprintInAir = nullptr;
 
-	game::dvar_t* jump_ladderPushVel = nullptr;
-
 	game::dvar_t* jump_height = nullptr;
-
+	game::dvar_t* jump_ladderPushVel = nullptr;
+	game::dvar_t* jump_slowDownEnable = nullptr;
 	game::dvar_t* jump_enableFallDamage = nullptr;
 
-	game::dvar_t* r_fullbright = nullptr;
 	game::dvar_t* r_chams = nullptr;
+	game::dvar_t* r_fullbright = nullptr;
 
 	game::dvar_t* cg_legacyCrashHandling = nullptr;
 
 	game::dvar_t* r_reflectionProbeGenerate = nullptr;
+
+	game::dvar_t* player_sustainAmmo = nullptr;
 
 	std::string dvar_get_vector_domain(const int components, const game::dvar_limits& domain)
 	{

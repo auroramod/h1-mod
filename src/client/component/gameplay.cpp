@@ -24,13 +24,11 @@ namespace gameplay
 		utils::hook::detour client_end_frame_hook;
 		utils::hook::detour g_damage_client_hook;
 		utils::hook::detour g_damage_hook;
-
-		game::dvar_t* jump_slowDownEnable;
-		game::dvar_t* jump_enableFallDamage;
+		utils::hook::detour weapon_rocket_fire_hook;
 
 		void jump_apply_slowdown_stub(game::mp::playerState_s* ps)
 		{
-			if (jump_slowDownEnable->current.enabled)
+			if (dvars::jump_slowDownEnable->current.enabled)
 			{
 				jump_apply_slowdown_hook.invoke<void>(ps);
 			}
@@ -56,7 +54,7 @@ namespace gameplay
 
 		void pm_crashland_stub(game::mp::playerState_s* ps, void* pml)
 		{
-			if (jump_enableFallDamage->current.enabled)
+			if (dvars::jump_enableFallDamage->current.enabled)
 			{
 				pm_crashland_hook.invoke<void>(ps, pml);
 			}
@@ -312,6 +310,17 @@ namespace gameplay
 				a.jmp(0x2C98EF_b);
 			});
 		}
+
+		void weapon_rocket_fire_stub(game::mp::gentity_s* entity, unsigned int weapon_index, float spread,
+			game::weaponParms* wp, const float* gun_vel, void* a6)
+		{
+			weapon_rocket_fire_hook.invoke<void>(entity, weapon_index, spread, wp, gun_vel, a6);
+
+			const auto scale = dvars::g_rocketJumpScale->current.value;
+			entity->client->ps.velocity[0] -= wp->forward[0] * scale;
+			entity->client->ps.velocity[1] -= wp->forward[1] * scale;
+			entity->client->ps.velocity[2] -= wp->forward[2] * scale;
+		}
 	}
 
 	class component final : public component_interface
@@ -362,10 +371,10 @@ namespace gameplay
 			utils::hook::inject(0x17D243_b, &timescale->current.value); // Com_Restart
 			utils::hook::inject(0x17E609_b, &timescale->current.value); // Com_SetSlowMotion
 			utils::hook::inject(0x17E626_b, &timescale->current.value); // Com_SetSlowMotion
-			utils::hook::inject(0x17E69C_b, &timescale->current.value);// Com_SetSlowMotion
+			utils::hook::inject(0x17E69C_b, &timescale->current.value); // Com_SetSlowMotion
 			utils::hook::inject(0x17EAD0_b, &timescale->current.value); // Com_TimeScaleMsec
 			utils::hook::inject(0x17EFE2_b, &timescale->current.value); // Com_UpdateSlowMotion
-			utils::hook::inject(0x17F00C_b, &timescale->current.value); //Com_UpdateSlowMotion
+			utils::hook::inject(0x17F00C_b, &timescale->current.value); // Com_UpdateSlowMotion
 
 			dvars::jump_ladderPushVel = dvars::register_float("jump_ladderPushVel", 128.0f,
 				0.0f, 1024.0f, game::DVAR_FLAG_REPLICATED, "The velocity of a jump off of a ladder");
@@ -377,10 +386,10 @@ namespace gameplay
 			utils::hook::call(0x2BD22D_b, jump_start_stub);
 
 			jump_apply_slowdown_hook.create(0x2BD0B0_b, jump_apply_slowdown_stub);
-			jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_FLAG_REPLICATED, "Slow player movement after jumping");
+			dvars::jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_FLAG_REPLICATED, "Slow player movement after jumping");
 
 			pm_crashland_hook.create(0x2CB070_b, pm_crashland_stub);
-			jump_enableFallDamage = dvars::register_bool("jump_enableFallDamage", true, game::DVAR_FLAG_REPLICATED, "Enable fall damage");
+			dvars::jump_enableFallDamage = dvars::register_bool("jump_enableFallDamage", true, game::DVAR_FLAG_REPLICATED, "Enable fall damage");
 
 			dvars::g_playerEjection = dvars::register_bool("g_playerEjection", true, game::DVAR_FLAG_REPLICATED,
 				"Flag whether player ejection is on or off");
@@ -389,6 +398,9 @@ namespace gameplay
 			dvars::g_playerCollision = dvars::register_bool("g_playerCollision", true, game::DVAR_FLAG_REPLICATED,
 				"Flag whether player collision is on or off");
 			cm_transformed_capsule_trace_hook.create(0x4D63C0_b, cm_transformed_capsule_trace_stub);
+
+			weapon_rocket_fire_hook.create(0x463AE0_b, weapon_rocket_fire_stub);
+			dvars::g_rocketJumpScale = dvars::register_float("g_rocketJumpScale", 64.0f, 1.0f, 1000.0f, game::DVAR_FLAG_REPLICATED, "Adjust rocket jump scale");
 
 			// Make noclip work
 			client_end_frame_hook.create(0x3FF7D0_b, client_end_frame_stub2);

@@ -26,31 +26,31 @@ namespace dvars
 	extern game::dvar_t* con_inputDvarValueColor;
 	extern game::dvar_t* con_inputDvarInactiveValueColor;
 	extern game::dvar_t* con_inputCmdMatchColor;
+
+	extern game::dvar_t* g_speed;
+	extern game::dvar_t* g_gravity;
 	extern game::dvar_t* g_playerEjection;
 	extern game::dvar_t* g_playerCollision;
-	extern game::dvar_t* player_sustainAmmo;
 	extern game::dvar_t* g_enableElevators;
-	
-	extern game::dvar_t* g_speed;
-
-	extern game::dvar_t* g_gravity;
+	extern game::dvar_t* g_rocketJumpScale;
 
 	extern game::dvar_t* pm_bouncing;
 	extern game::dvar_t* pm_bouncingAllAngles;
 	extern game::dvar_t* pm_sprintInAir;
 
-	extern game::dvar_t* jump_ladderPushVel;
-
 	extern game::dvar_t* jump_height;
-
+	extern game::dvar_t* jump_ladderPushVel;
+	extern game::dvar_t* jump_slowDownEnable;
 	extern game::dvar_t* jump_enableFallDamage;
 
-	extern game::dvar_t* r_fullbright;
 	extern game::dvar_t* r_chams;
+	extern game::dvar_t* r_fullbright;
 
 	extern game::dvar_t* cg_legacyCrashHandling;
 
 	extern game::dvar_t* r_reflectionProbeGenerate;
+
+	extern game::dvar_t* player_sustainAmmo;
 
 	constexpr int generate_hash(const char* string)
 	{
