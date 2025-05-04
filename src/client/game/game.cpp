@@ -107,7 +107,7 @@ namespace game
 		{
 			if (mode == launcher::mode::none)
 			{
-				throw std::runtime_error("Launcher mode not valid. Something must be wrong.");
+				//throw std::runtime_error("Launcher mode not valid. Something must be wrong.");
 			}
 
 			return mode;

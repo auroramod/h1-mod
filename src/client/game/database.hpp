@@ -261,8 +261,8 @@ namespace database
 		dm_int32 m_subEdgeCount;
 		dm_float32 m_volume;
 		dm_float32 m_area;
-		dmFloat3 unk1;
-		dmFloat3 unk2;
+		dmFloat3 m_inertiaMoments;
+		dmFloat3 m_inertiaProducts;
 		int contents;
 		int pad2;
 	}; assert_sizeof(dmPolytopeData, 0x70);
@@ -6582,7 +6582,7 @@ namespace database
 		float origin[3];
 		unsigned short triggerIndex;
 		unsigned char sunPrimaryLightIndex;
-		unsigned int entityUID;
+		float radiometricScale;
 	}; assert_sizeof(Stage, 32);
 
 	enum DynEntityType : std::int32_t
@@ -7429,6 +7429,7 @@ namespace database
 		unsigned short cellIndex;
 		unsigned short closeDistance;
 		unsigned char vertexCount;
+		unsigned short distancePortalIndex;
 		float hullAxis[2][3];
 	}; assert_sizeof(GfxPortal, 80);
 	assert_offsetof(GfxPortal, vertices, 40);

@@ -18,6 +18,8 @@ DECLSPEC_NORETURN void WINAPI exit_hook(const int code)
 BOOL WINAPI system_parameters_info_a(const UINT uiAction, const UINT uiParam, const PVOID pvParam, const UINT fWinIni)
 {
 	component_loader::post_unpack();
+	MH_ApplyQueued();
+
 	return SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
 }
 
@@ -277,6 +279,7 @@ int main()
 			}
 
 			if (!component_loader::post_load()) return 0;
+			MH_ApplyQueued();
 
 			premature_shutdown = false;
 		}
