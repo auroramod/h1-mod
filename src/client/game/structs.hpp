@@ -2077,4 +2077,106 @@ namespace game
 		int sceneDObjModelCount;
 		GfxSceneModel sceneModel[2046];
 	};
+
+	struct FxEffect
+	{
+		const FxEffectDef* def;
+		int status;
+		unsigned int firstElemHandle[3];
+		unsigned int firstSortedElemHandle;
+		unsigned int firstTrailHandle;
+		unsigned int firstSparkFountainHandle;
+		unsigned __int16 occlusionQueryHandle;
+		char __pad0[10];
+		unsigned __int16 randomSeed;
+		unsigned int owner;
+		float lighting[3];
+		unsigned __int16 updateCount;
+		unsigned __int16 markEntnum;
+		unsigned __int16 b;
+		unsigned __int16 flags;
+		char __pad1[4];
+		unsigned __int16 bolt;
+		char __pad2[1];
+		unsigned __int8 markViewmodelClientIndex;
+		char __pad4[2];
+		unsigned __int8 runnerSortOrder;
+		volatile int frameCount;
+		int msecBegin;
+		int msecLastUpdate;
+		float distanceTravelled;
+		FxSpatialFrame frameAtSpawn;
+		FxSpatialFrame frameNow;
+		FxSpatialFrame framePrev;
+		unsigned int numVectorFields;
+		unsigned int vectorFields[8];
+		unsigned int pad[3];
+		float occlusionFade;
+		char __pad3[32];
+	};
+
+	struct FxElem
+	{
+		unsigned __int8 defIndex : 6;
+		__int8 defer : 1;
+		__int8 valid : 1;
+		unsigned __int8 sequence;
+		unsigned __int8 atRestFraction;
+		unsigned __int8 emitResidual;
+		int msecBegin;
+		float baseVel[3];
+		float origin[3];
+		__declspec(align(8)) float lastFrameColor[4][3];
+		int timeLightingLastCalculated;
+	};
+
+	struct ElemUpdate
+	{
+		unsigned int effectHandle;
+		unsigned int elemHandle;
+	};
+
+	union FxAccessLock
+	{
+		volatile int data;
+		unsigned __int8 pad0[128];
+	};
+
+	struct FxSystem
+	{
+		char __pad0[48];
+		FxEffect* effects;
+		char __pad1[64];
+		FxElem* elems;
+		char __pad2[16];
+		unsigned int* nextElemHandleInEffect;
+		unsigned int* prevElemHandleInEffect;
+		char __pad8[48];
+		int firstActiveEffect;
+		int firstNewEffect;
+		int firstFreeEffect;
+		char __pad6[4];
+		unsigned int* allEffectHandles;
+		char __pad7[12];
+		int msecNow;
+		int msecDelta;
+		int msecDraw;
+		char __pad3[56];
+		FxAccessLock* lock;
+		unsigned int systemFlags;
+		char __pad5[44];
+		ElemUpdate* updateElement;
+		int numUpdateElement;
+		char __pad4[1972];
+	};
+	static_assert(sizeof(FxSystem) == 2352);
+	assert_offsetof(FxSystem, effects, 48);
+	assert_offsetof(FxSystem, elems, 120);
+	assert_offsetof(FxSystem, nextElemHandleInEffect, 144);
+	assert_offsetof(FxSystem, firstNewEffect, 212);
+	assert_offsetof(FxSystem, allEffectHandles, 224);
+	assert_offsetof(FxSystem, msecNow, 244);
+	assert_offsetof(FxSystem, lock, 312);
+	assert_offsetof(FxSystem, updateElement, 368);
+	assert_offsetof(FxSystem, numUpdateElement, 376);
 }

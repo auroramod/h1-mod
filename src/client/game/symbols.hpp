@@ -100,6 +100,10 @@ namespace game
 	WEAK symbol<void(const char* gameName)> FS_Startup{0x40D890, 0x0};
 	WEAK symbol<void(const char* path, const char* dir)> FS_AddLocalizedGameDirectory{0x40B1E0, 0x1878F0};
 
+	WEAK symbol<FxSystem*()> Fx_GetSystem{0x0, 0x3DBC10};
+	WEAK symbol<void(FxAccessLock* lock)> FX_WaitEnterReadSystemLock{0x0, 0x3DC320};
+	WEAK symbol<void(FxAccessLock* lock)> FX_ExitReadSystemLock{ 0x0, 0x3DC230 };
+
 	WEAK symbol<unsigned int(unsigned int)> GetObjectType{0x3C3680, 0x50A810};
 	WEAK symbol<unsigned int(unsigned int, unsigned int)> GetVariable{0x3C3740, 0x50A8D0};
 	WEAK symbol<unsigned int(unsigned int parentId, unsigned int unsignedValue)> GetNewVariable{0x3C3360, 0x50A4F0};

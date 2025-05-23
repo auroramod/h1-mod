@@ -27,6 +27,8 @@ namespace renderer
 		game::dvar_t* r_drawLightOrigins;
 		game::dvar_t* r_drawModelNames;
 		game::dvar_t* r_drawDynEntInfo;
+		game::dvar_t* r_drawFxInfo;
+
 		game::dvar_t* r_playerDrawDebugDistance;
 
 		enum model_draw_e : int
@@ -231,7 +233,6 @@ namespace renderer
 			auto sqrDist = distance * static_cast<float>(distance);
 
 			float textColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
-			auto scene = *game::scene;
 
 			for (size_t i = 0; i < comWorld->primaryLightCount; i++)
 			{
@@ -379,6 +380,46 @@ namespace renderer
 				}
 			}
 		}
+
+		void debug_draw_fx_info()
+		{
+			if (!r_drawFxInfo || r_drawFxInfo->current.enabled == 0)
+			{
+				return;
+			}
+
+			const auto fxSystem = game::Fx_GetSystem();
+			if ((fxSystem->systemFlags & 0x3) != 0)
+			{
+				return;
+			}
+
+			auto player = *game::mp::playerState;
+			float playerPosition[3]{ player->origin[0], player->origin[1], player->origin[2] };
+
+			auto distance = r_playerDrawDebugDistance->current.integer;
+			auto sqrDist = distance * static_cast<float>(distance);
+
+			static float fxInfoColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+			game::FX_WaitEnterReadSystemLock(fxSystem->lock);
+
+			for (auto i = fxSystem->firstActiveEffect; i != fxSystem->firstNewEffect; ++i)
+			{
+				auto effectHandle = fxSystem->allEffectHandles[i & 0x7FF];
+				auto effect = (game::FxEffect*)((char*)fxSystem->effects + (unsigned int)(16 * effectHandle));
+
+				if (!effect->def)
+					continue;
+
+				if (Vec3SqrDistance(playerPosition, effect->frameNow.origin) < static_cast<float>(sqrDist))
+				{
+					draw_text(effect->def->name, effect->frameNow.origin, fxInfoColor);
+				}
+			}
+
+			game::FX_ExitReadSystemLock(fxSystem->lock);
+		}
 #endif
 	}
 	
@@ -428,6 +469,8 @@ namespace renderer
 			r_drawLightOrigins = dvars::register_bool("r_drawLightOrigins", false, game::DVAR_FLAG_CHEAT, "Draw comworld light origins");
 			r_drawModelNames = dvars::register_enum("r_drawModelNames", model_draw_s, model_draw_e::off, game::DVAR_FLAG_CHEAT, "Draw all model names");
 			r_drawDynEntInfo = dvars::register_bool("r_drawDynEntInfo", false, game::DVAR_FLAG_CHEAT, "Draw dynent info");
+			r_drawFxInfo = dvars::register_bool("r_drawFxInfo", false, game::DVAR_FLAG_CHEAT, "Draw fx info");
+
 			r_playerDrawDebugDistance = dvars::register_int("r_drawDebugDistance", 1000, 0, 50000, game::DVAR_FLAG_SAVED, "r_draw debug functions draw distance relative to the player");
 
 			scheduler::loop([]
@@ -443,6 +486,7 @@ namespace renderer
 					debug_draw_light_origins();
 					debug_draw_model_names();
 					debug_draw_dynent_info();
+					debug_draw_fx_info();
 				}
 			}, scheduler::renderer);
 #endif
