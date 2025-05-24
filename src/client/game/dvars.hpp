@@ -49,6 +49,7 @@ namespace dvars
 	extern game::dvar_t* cg_legacyCrashHandling;
 
 	extern game::dvar_t* r_reflectionProbeGenerate;
+	extern game::dvar_t* r_reflectionProbeGenerateExit;
 
 	extern game::dvar_t* player_sustainAmmo;
 

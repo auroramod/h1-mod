@@ -38,6 +38,45 @@ namespace reflection_probes
 			return new_name;
 		}
 
+		bool ConvertWithMips(
+			const std::vector<DirectX::Image>& images,
+			const DirectX::TexMetadata& metadata,
+			DXGI_FORMAT targetFormat,
+			DirectX::ScratchImage& finalImage)
+		{
+			DirectX::ScratchImage convertedImage;
+
+			// 1. Convert
+			HRESULT hr = DirectX::Convert(
+				images.data(),
+				images.size(),
+				metadata,
+				targetFormat,
+				DirectX::TEX_FILTER_DEFAULT,
+				1.0f,
+				convertedImage
+			);
+			if (FAILED(hr))
+				return false;
+
+			// 2. Generate mipmaps from the converted image
+			DirectX::ScratchImage mipmappedImage;
+			hr = DirectX::GenerateMipMaps(
+				convertedImage.GetImages(),
+				convertedImage.GetImageCount(),
+				convertedImage.GetMetadata(),
+				DirectX::TEX_FILTER_DEFAULT,
+				0, // 0 = auto compute max mips
+				mipmappedImage
+			);
+			if (FAILED(hr))
+				return false;
+
+			// 3. Assign output
+			finalImage = std::move(mipmappedImage);
+			return true;
+		}
+
 		void dump_image_dds(game::GfxImage* image)
 		{
 			if (image->streamed)
@@ -111,7 +150,20 @@ namespace reflection_probes
 				std::filesystem::create_directories(parent_path);
 			}
 
-			auto result = DirectX::SaveToDDSFile(images.data(), images.size(), mdata, DirectX::DDS_FLAGS_NONE, wpath.data());
+			DirectX::ScratchImage convertedImage;
+			if (!ConvertWithMips(images, mdata, DXGI_FORMAT_R11G11B10_FLOAT, convertedImage))
+			{
+				console::error("Failed to convert image \"%s\" with mipmaps", spath.data());
+				return;
+			}
+
+			HRESULT result = DirectX::SaveToDDSFile(
+				convertedImage.GetImages(),
+				convertedImage.GetImageCount(),
+				convertedImage.GetMetadata(),
+				DirectX::DDS_FLAGS_NONE,
+				wpath.data()
+			);
 			if (FAILED(result))
 			{
 				console::error("Failed to dump image \"%s\"", spath.data());
@@ -350,6 +402,10 @@ namespace reflection_probes
 
 			restoreDvars();
 
+			if (dvars::r_reflectionProbeGenerateExit)
+			{
+				game::Quit();
+			}
 			dvars::r_reflectionProbeGenerate->current.enabled = false;
 		}
 
@@ -407,6 +463,7 @@ namespace reflection_probes
 			}
 
 			dvars::r_reflectionProbeGenerate = dvars::register_bool("r_reflectionProbeGenerate", false, game::DVAR_FLAG_NONE, "Generate cube maps for reflection probes.");
+			dvars::r_reflectionProbeGenerateExit = dvars::register_bool("r_reflectionProbeGenerateExit", false, game::DVAR_FLAG_NONE, "Exit when done generating reflection cubes.");
 
 			cl_cgame_rendering_hook.create(0x3433A0_b, cl_cgame_rendering_stub);
 			scr_update_frame_hook.create(0x343830_b, scr_update_frame_stub);

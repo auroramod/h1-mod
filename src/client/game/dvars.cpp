@@ -46,6 +46,7 @@ namespace dvars
 	game::dvar_t* cg_legacyCrashHandling = nullptr;
 
 	game::dvar_t* r_reflectionProbeGenerate = nullptr;
+	game::dvar_t* r_reflectionProbeGenerateExit = nullptr;
 
 	game::dvar_t* player_sustainAmmo = nullptr;
 
