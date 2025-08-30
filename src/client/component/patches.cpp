@@ -519,6 +519,9 @@ namespace patches
 			// Re-implement dev prints
 			com_quit_f_hook.create(0x17CD00_b, com_quit_f_stub);
 			sv_shutdown_hook.create(0x5543A0_b, sv_shutdown_stub);
+
+			// Allow using unauthorized clantags
+			utils::hook::set<uint32_t>(0x1D9800_b, 0x90C301B0);
 		}
 	};
 }
