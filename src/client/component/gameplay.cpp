@@ -317,9 +317,12 @@ namespace gameplay
 			weapon_rocket_fire_hook.invoke<void>(entity, weapon_index, spread, wp, gun_vel, a6);
 
 			const auto scale = dvars::g_rocketJumpScale->current.value;
-			entity->client->ps.velocity[0] -= wp->forward[0] * scale;
-			entity->client->ps.velocity[1] -= wp->forward[1] * scale;
-			entity->client->ps.velocity[2] -= wp->forward[2] * scale;
+			if (scale > 0.0 && entity->client)
+			{
+				entity->client->ps.velocity[0] -= wp->forward[0] * scale;
+				entity->client->ps.velocity[1] -= wp->forward[1] * scale;
+				entity->client->ps.velocity[2] -= wp->forward[2] * scale;
+			}
 		}
 	}
 
