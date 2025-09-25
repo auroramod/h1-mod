@@ -58,12 +58,17 @@ namespace arena
 
 			parse_arena("mp/basemaps.arena");
 
-			// read usermap arena from disk
-			const auto mapname = game::Dvar_FindVar("ui_mapname");
-			if (mapname && mapname->current.string)
+			// read all usermaps for map list
+			for (const auto& entry : std::filesystem::directory_iterator("usermaps"))
 			{
-				const auto usermap_path = "usermaps/"s + mapname->current.string;
-				const auto arena_path = usermap_path + "/" + mapname->current.string + ".arena";
+				if (!entry.is_directory())
+				{
+					continue;
+				}
+
+				auto mapname = entry.path().filename().string();
+				auto arena_path = entry.path().string() + "/" + mapname + ".arena";
+
 				parse_arena(arena_path);
 			}
 		}
