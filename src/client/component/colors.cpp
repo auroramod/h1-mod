@@ -2,6 +2,7 @@
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
+#include "game/dvars.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
@@ -19,7 +20,16 @@ namespace colors
 
 	namespace
 	{
-		std::vector<DWORD> color_table;
+		enum color_mode_t
+		{
+			mode_original,
+			mode_custom,
+			mode_count,
+		};
+
+		game::dvar_t* r_color_mode = nullptr;
+
+		std::vector<DWORD> color_table[mode_count];
 
 		DWORD hsv_to_rgb(const hsv_color hsv)
 		{
@@ -75,10 +85,21 @@ namespace colors
 			return (index > MAX_COLOR_INDEX ? 7 : index);
 		}
 
-		char add(const uint8_t r, const uint8_t g, const uint8_t b)
+		char add(const std::int32_t mode, const uint8_t r, const uint8_t g, const uint8_t b)
 		{
-			const char index = '0' + static_cast<char>(color_table.size());
-			color_table.push_back(RGB(r, g, b));
+			const char index = '0' + static_cast<char>(color_table[mode].size());
+
+			if (mode == -1)
+			{
+				color_table[mode_original].emplace_back(RGB(r, g, b));
+				color_table[mode_custom].emplace_back(RGB(r, g, b));
+
+			}
+			else
+			{
+				color_table[mode].emplace_back(RGB(r, g, b));
+			}
+
 			return index;
 		}
 
@@ -136,7 +157,7 @@ namespace colors
 				*color = 0xFFFCFF80;
 				break;
 			default:
-				*color = color_table[color_index(index)];
+				*color = color_table[r_color_mode->current.integer][color_index(index)];
 				break;
 			}
 		}
@@ -151,6 +172,11 @@ namespace colors
 			{
 				return;
 			}
+
+			static const char* color_modes[2]{};
+			color_modes[mode_original] = "original";
+			color_modes[mode_custom] = "custom";
+			r_color_mode = dvars::register_enum("r_colorMode", color_modes, mode_custom, game::DVAR_FLAG_SAVED, "which color table to use");
 
 			if (!game::environment::is_sp())
 			{
@@ -173,25 +199,38 @@ namespace colors
 			utils::hook::jump(SELECT_VALUE(0x5B17E0_b, 0x6C9460_b), rb_lookup_color_stub, true);
 
 			// add colors
-			add(0, 0, 0);		// ^0 black (original)
-			add(255, 0, 0);		// ^1 red (original)
-			add(0, 255, 0);		// ^2 green (original)
-			add(255, 255, 0);	// ^3 yellow (original)
-			add(0, 135, 193);	// ^4 blue (easier to see)
-			add(25, 200, 230);	// ^5 light blue (original)
-			add(255, 92, 255);	// ^6 pink (original)
-			add(255, 255, 255);	// ^7 white (original)
+			add(mode_original, 0, 0, 0);		// ^0 black (original)
+			add(mode_original, 255, 0, 0);		// ^1 red (original)
+			add(mode_original, 0, 255, 0);		// ^2 green (original)
+			add(mode_original, 255, 255, 0);	// ^3 yellow (original)
+			add(mode_original, 0, 135, 193);	// ^4 blue (easier to see)
+			add(mode_original, 25, 200, 230);	// ^5 light blue (original)
+			add(mode_original, 255, 92, 255);	// ^6 pink (original)
+			add(mode_original, 255, 255, 255);	// ^7 white (original)
+
+			add(mode_custom, 0, 0, 0); // 0  - Black
+			add(mode_custom, 255, 49, 49); // 1  - Red
+			add(mode_custom, 134, 192, 0); // 2  - Green
+			add(mode_custom, 255, 173, 34); // 3  - Yellow
+			add(mode_custom, 0, 135, 193); // 4  - Blue
+			add(mode_custom, 32, 197, 255); // 5  - Light Blue
+			add(mode_custom, 151, 80, 221); // 6  - Pink
+			add(mode_custom, 255, 255, 255); // 7  - White
 
 			// these are all handled in rb_lookup_color_stub
-			add(0, 0, 0);		// ^8 friendly team color (original)
-			add(0, 0, 0);		// ^9 enemy team color (original)
-			add(0, 0, 0);		// ^: rainbow color code (original is "my party")
-			add(0, 0, 0);		// ^; facebook blue (original, ';' is an illegal character for infostrings)
-			add(0, 0, 0);		// ^< sky blue (idek where this comes from)
+			add(-1, 0, 0, 0);		// ^8 friendly team color (original)
+			add(-1, 0, 0, 0);		// ^9 enemy team color (original)
+			add(-1, 0, 0, 0);		// ^: rainbow color code (original is "my party")
+			add(-1, 0, 0, 0);		// ^; facebook blue (original, ';' is an illegal character for infostrings)
+			add(-1, 0, 0, 0);		// ^< sky blue (idek where this comes from)
 
-			add(255, 173, 34);	// ^= orange 
-			add(151, 80, 221);	// ^> purple
-			add(205, 133, 63);	// ^? brown
+			add(mode_original, 255, 173, 34);	// ^= orange 
+			add(mode_original, 151, 80, 221);	// ^> purple
+			add(mode_original, 205, 133, 63);	// ^? brown
+
+			add(mode_custom, 255, 173, 34);	// ^= orange 
+			add(mode_custom, 151, 80, 221);	// ^> purple
+			add(mode_custom, 205, 133, 63);	// ^? brown
 		}
 	};
 }
