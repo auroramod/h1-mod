@@ -402,7 +402,7 @@ namespace reflection_probes
 
 			restoreDvars();
 
-			if (dvars::r_reflectionProbeGenerateExit)
+			if (dvars::r_reflectionProbeGenerateExit && dvars::r_reflectionProbeGenerateExit->current.enabled)
 			{
 				game::Quit();
 			}
