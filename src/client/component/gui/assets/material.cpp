@@ -131,6 +131,8 @@ namespace gui::asset_list::material
 			DRAW_ASSET_PROPERTY_COPY(name);
 			DRAW_ASSET_PROPERTY_COPY(techniqueSet->name);
 
+			add_view_button(0, game::ASSET_TYPE_TECHNIQUE_SET, asset->techniqueSet->name);
+
 			ImGui::Separator();
 
 			static char buffer[64]{};
@@ -140,7 +142,7 @@ namespace gui::asset_list::material
 				if (tech)
 				{
 					asset->techniqueSet = tech;
-					memset(buffer, 0, 64);
+					std::memset(buffer, 0, 64);
 				}
 			}
 
