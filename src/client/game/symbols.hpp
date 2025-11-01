@@ -375,6 +375,8 @@ namespace game
 
 	WEAK symbol<ID3D11Device*> d3d11_device{0x1163B98, 0x12DFBF8};
 
+	WEAK symbol<ComWorld> comWorld{0x0, 0xA97C0E0};
+
 	namespace mp
 	{
 		WEAK symbol<gentity_s> g_entities{0x0, 0x71F19E0};

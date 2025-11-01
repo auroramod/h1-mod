@@ -274,6 +274,131 @@ namespace gui::asset_list::techet
 			"MATERIAL_SAMPLER",
 		};
 
+		void draw_technique(game::MaterialTechnique* technique)
+		{
+#define DRAW_SUB_ASSET_PROPERTY_NAME(__var__, __fmt__, __name__) \
+				ImGui::Text(#__name__ ": " __fmt__, __var__->__name__ != nullptr ? __var__->__name__->name : "null"); \
+
+#define DRAW_SUB_ASSET_PROPERTY_NAME_COPY(__var__, __fmt__, __name__) \
+				ImGui::Text(#__name__ ": " __fmt__, __var__->__name__ != nullptr ? __var__->__name__->name : "null"); \
+
+#define DRAW_SUB_ASSET_PROPERTY(__var__, __fmt__, __name__) \
+				ImGui::Text(#__name__ ": " __fmt__, __var__->__name__); \
+
+			if (ImGui::Button(technique->hdr.name))
+			{
+				gui::copy_to_clipboard(technique->hdr.name);
+			}
+
+			for (auto o = 0; o < technique->hdr.passCount; o++)
+			{
+				const auto pass = &technique->passArray[o];
+
+				if (ImGui::TreeNode(pass, "pass %i", o))
+				{
+					DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", vertexShader);
+					DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", vertexDecl);
+					DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", hullShader);
+					DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", domainShader);
+					DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", pixelShader);
+
+					ImGui::NewLine();
+
+					DRAW_SUB_ASSET_PROPERTY(pass, "%i", pixelOutputMask);
+					DRAW_SUB_ASSET_PROPERTY(pass, "%i", perPrimArgCount);
+					DRAW_SUB_ASSET_PROPERTY(pass, "%i", perObjArgCount);
+					DRAW_SUB_ASSET_PROPERTY(pass, "%i", stableArgCount);
+					DRAW_SUB_ASSET_PROPERTY(pass, "%i", perPrimArgSize);
+					DRAW_SUB_ASSET_PROPERTY(pass, "%i", perObjArgSize);
+					DRAW_SUB_ASSET_PROPERTY(pass, "%i", stableArgSize);
+					DRAW_SUB_ASSET_PROPERTY(pass, "%i", customBufferFlags);
+					DRAW_SUB_ASSET_PROPERTY(pass, "%i", customSamplerFlags);
+					DRAW_SUB_ASSET_PROPERTY(pass, "%i", precompiledIndex);
+					DRAW_SUB_ASSET_PROPERTY(pass, "%i", stageConfig);
+
+					auto id = 0;
+					const auto draw_arg = [&](game::MaterialShaderArgument* arg, const std::uint32_t arg_index)
+					{
+						ImGui::SetNextItemOpen(true, ImGuiCond_FirstUseEver);
+
+						ImGui::PushID(id++);
+						if (ImGui::TreeNode(arg, "argument %i", arg_index))
+						{
+							ImGui::Text("type: %s", material_arg_type_names[arg->type]);
+
+							DRAW_SUB_ASSET_PROPERTY(arg, "%i", shader);
+							DRAW_SUB_ASSET_PROPERTY(arg, "%i", dest);
+
+							switch (arg->type)
+							{
+							case game::MTL_ARG_CODE_CONST:
+								ImGui::InputScalarN("codeConst.index", ImGuiDataType_U16, &arg->u.codeConst.index, 1, NULL, NULL, "%d");
+								ImGui::InputScalarN("codeConst.firstRow", ImGuiDataType_U8, &arg->u.codeConst.firstRow, 1, NULL, NULL, "%d");
+								ImGui::InputScalarN("codeConst.rowCount", ImGuiDataType_U8, &arg->u.codeConst.rowCount, 1, NULL, NULL, "%d");
+								break;
+							case game::MTL_ARG_MATERIAL_CONST:
+								ImGui::InputScalarN("nameHash", ImGuiDataType_U32, &arg->u.nameHash, 1, NULL, NULL, "%u");
+								break;
+							case game::MTL_ARG_LITERAL_CONST:
+								ImGui::DragFloat4("literal", arg->u.literalConst);
+								break;
+							case game::MTL_ARG_MATERIAL_TEXTURE:
+							case game::MTL_ARG_MATERIAL_SAMPLER:
+							case game::MTL_ARG_CODE_TEXTURE:
+							case game::MTL_ARG_CODE_SAMPLER:
+								ImGui::Text("codeSampler: %u", arg->u.codeSampler);
+								break;
+							}
+
+							ImGui::TreePop();
+						}
+
+						ImGui::PopID();
+					};
+
+
+					if (ImGui::TreeNode("per primitive args"))
+					{
+						for (auto arg_index = 0u; arg_index < pass->perPrimArgCount; arg_index++)
+						{
+							const auto arg = &pass->args[arg_index];
+							draw_arg(arg, arg_index);
+						}
+
+						ImGui::TreePop();
+					}
+
+					ImGui::Separator();
+
+					if (ImGui::TreeNode("per object args"))
+					{
+						for (auto arg_index = 0u; arg_index < pass->perObjArgCount; arg_index++)
+						{
+							const auto arg = &pass->args[pass->perPrimArgCount + arg_index];
+							draw_arg(arg, arg_index);
+						}
+
+						ImGui::TreePop();
+					}
+
+					ImGui::Separator();
+
+					if (ImGui::TreeNode("stable args"))
+					{
+						for (auto arg_index = 0u; arg_index < pass->stableArgCount; arg_index++)
+						{
+							const auto arg = &pass->args[pass->perPrimArgCount + pass->perObjArgCount + arg_index];
+							draw_arg(arg, arg_index);
+						}
+
+						ImGui::TreePop();
+					}
+
+					ImGui::TreePop();
+				}
+			}
+		}
+
 		bool draw_techset_window(game::MaterialTechniqueSet* asset)
 		{
 			ImGui::SetNextItemOpen(true, ImGuiCond_FirstUseEver);
@@ -295,130 +420,31 @@ namespace gui::asset_list::techet
 					gui::copy_to_clipboard(asset->__name__); \
 				} \
 
-#define DRAW_SUB_ASSET_PROPERTY_NAME(__var__, __fmt__, __name__) \
-				ImGui::Text(#__name__ ": " __fmt__, __var__->__name__ != nullptr ? __var__->__name__->name : "null"); \
-
-#define DRAW_SUB_ASSET_PROPERTY(__var__, __fmt__, __name__) \
-				ImGui::Text(#__name__ ": " __fmt__, __var__->__name__); \
-
 			DRAW_ASSET_PROPERTY_COPY(name);
 			DRAW_ASSET_PROPERTY(flags, "%i");
 			DRAW_ASSET_PROPERTY(worldVertFormat, "%i");
 			DRAW_ASSET_PROPERTY(preDisplacementOnlyCount, "%i");
 
-			auto id = 0;
+			static std::uint32_t inputs[game::TECHNIQUE_COUNT]{};
+
 			for (auto i = 0; i < game::TECHNIQUE_COUNT; i++)
 			{
 				const auto technique = asset->techniques[i];
-				if (technique == nullptr)
-				{
-					continue;
-				}
 
-				if (ImGui::TreeNode(technique_names[i]))
+				if (ImGui::TreeNode(technique_names[i], "%s %s", technique_names[i], technique == nullptr ? "(null)" : ""))
 				{
-					ImGui::Text(technique->hdr.name);
+					ImGui::InputScalarN("technique index", ImGuiDataType_U32, &inputs[i], 1);
 
-					for (auto o = 0; o < technique->hdr.passCount; o++)
+					ImGui::SameLine();
+
+					if (ImGui::Button("copy technique") && inputs[i] < game::TECHNIQUE_COUNT)
 					{
-						const auto pass = &technique->passArray[o];
-						DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", vertexShader);
-						DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", vertexDecl);
-						DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", hullShader);
-						DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", domainShader);
-						DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", pixelShader);
+						asset->techniques[i] = asset->techniques[inputs[i]];
+					}
 
-						ImGui::NewLine();
-
-						DRAW_SUB_ASSET_PROPERTY(pass, "%i", pixelOutputMask);
-						DRAW_SUB_ASSET_PROPERTY(pass, "%i", perPrimArgCount);
-						DRAW_SUB_ASSET_PROPERTY(pass, "%i", perObjArgCount);
-						DRAW_SUB_ASSET_PROPERTY(pass, "%i", stableArgCount);
-						DRAW_SUB_ASSET_PROPERTY(pass, "%i", perPrimArgSize);
-						DRAW_SUB_ASSET_PROPERTY(pass, "%i", perObjArgSize);
-						DRAW_SUB_ASSET_PROPERTY(pass, "%i", stableArgSize);
-						DRAW_SUB_ASSET_PROPERTY(pass, "%i", customBufferFlags);
-						DRAW_SUB_ASSET_PROPERTY(pass, "%i", customSamplerFlags);
-						DRAW_SUB_ASSET_PROPERTY(pass, "%i", precompiledIndex);
-						DRAW_SUB_ASSET_PROPERTY(pass, "%i", stageConfig);
-
-						const auto draw_arg = [&](game::MaterialShaderArgument* arg, const std::uint32_t arg_index)
-						{
-							ImGui::SetNextItemOpen(true, ImGuiCond_FirstUseEver);
-
-							ImGui::PushID(id++);
-							if (ImGui::TreeNode(arg, "argument %i", arg_index))
-							{
-								ImGui::Text("type: %s", material_arg_type_names[arg->type]);
-
-								DRAW_SUB_ASSET_PROPERTY(arg, "%i", shader);
-								DRAW_SUB_ASSET_PROPERTY(arg, "%i", dest);
-
-								switch (arg->type)
-								{
-								case game::MTL_ARG_CODE_CONST:
-									ImGui::InputScalarN("codeConst.index", ImGuiDataType_U16, &arg->u.codeConst.index, 1, NULL, NULL, "%d");
-									ImGui::InputScalarN("codeConst.firstRow", ImGuiDataType_U8, &arg->u.codeConst.firstRow, 1, NULL, NULL, "%d");
-									ImGui::InputScalarN("codeConst.rowCount", ImGuiDataType_U8, &arg->u.codeConst.rowCount, 1, NULL, NULL, "%d");
-									break;
-								case game::MTL_ARG_MATERIAL_CONST:
-									ImGui::InputScalarN("nameHash", ImGuiDataType_U32, &arg->u.nameHash, 1, NULL, NULL, "%u");
-									break;
-								case game::MTL_ARG_LITERAL_CONST:
-									ImGui::DragFloat4("literal", arg->u.literalConst);
-									break;
-								case game::MTL_ARG_MATERIAL_TEXTURE:
-								case game::MTL_ARG_MATERIAL_SAMPLER:
-								case game::MTL_ARG_CODE_TEXTURE:
-								case game::MTL_ARG_CODE_SAMPLER:
-									ImGui::Text("codeSampler: %u", arg->u.codeSampler);
-									break;
-								}
-
-								ImGui::TreePop();
-							}
-
-							ImGui::PopID();
-						};
-
-
-						if (ImGui::TreeNode("per primitive args"))
-						{
-							for (auto arg_index = 0u; arg_index < pass->perPrimArgCount; arg_index++)
-							{
-								const auto arg = &pass->args[arg_index];
-								draw_arg(arg, arg_index);
-							}
-
-							ImGui::TreePop();
-						}
-
-						ImGui::Separator();
-
-						if (ImGui::TreeNode("per object args"))
-						{
-							for (auto arg_index = 0u; arg_index < pass->perObjArgCount; arg_index++)
-							{
-								const auto arg = &pass->args[pass->perPrimArgCount + arg_index];
-								draw_arg(arg, arg_index);
-							}
-
-							ImGui::TreePop();
-						}
-
-						ImGui::Separator();
-
-						if (ImGui::TreeNode("stable args"))
-						{
-							for (auto arg_index = 0u; arg_index < pass->stableArgCount; arg_index++)
-							{
-								const auto arg = &pass->args[pass->perPrimArgCount + pass->perObjArgCount + arg_index];
-								draw_arg(arg, arg_index);
-							}
-
-							ImGui::TreePop();
-						}
-
+					if (technique != nullptr)
+					{
+						draw_technique(technique);
 					}
 
 					ImGui::TreePop();

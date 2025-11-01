@@ -285,9 +285,6 @@ kind "ConsoleApp"
 language "C++"
 
 targetname "h1-mod"
-filter "configurations:Debug"
-	targetname "h1-mod_dev"
-filter {}
 
 pchheader "std_include.hpp"
 pchsource "src/client/std_include.cpp"

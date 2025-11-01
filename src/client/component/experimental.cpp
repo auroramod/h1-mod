@@ -284,7 +284,7 @@ namespace experimental
 			// Surface materials info
 			const char* text = nullptr;
 
-			auto format_material_info = [](const game::GfxSurface* surface) 
+			auto format_material_info = [&](const game::GfxSurface* surface) 
 			{
 				if (!surface || !surface->material || !surface->material->name)
 				{
@@ -293,7 +293,7 @@ namespace experimental
 
 				auto techniqueset_name = surface->material->techniqueSet && surface->material->techniqueSet->name ?
 					utils::string::va("^3%s^7", surface->material->techniqueSet->name) : "^1null^7";
-				return utils::string::va("%s (%s)\n", surface->material->name, techniqueset_name);
+				return utils::string::va("%s (%s) (baseIndex: %i, envIndex: %i)\n", surface->material->name, techniqueset_name, surface->tris.baseIndex, surface->laf.fields.primaryLightEnvIndex);
 			};
 
 			text = utils::string::va("%s%s%s",
