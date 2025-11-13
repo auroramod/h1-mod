@@ -87,6 +87,38 @@ namespace game
 		cmd_argsPrivate->totalUsedTextPool -= cmd_argsPrivate->usedTextPool[nesting];
 	}
 
+	unsigned int SND_GetSoundFileLength(SoundFile* soundfile)
+	{
+		LoadedSound* sound = nullptr;
+		switch (soundfile->type)
+		{
+		case game::SAT_LOADED:
+			sound = soundfile->u.loadSnd;
+			break;
+		case game::SAT_STREAMED:
+			return soundfile->u.streamSnd.totalMsec;
+		case game::SAT_PRIMED:
+			sound = soundfile->u.primedSnd.loadedPart;
+			if (!sound)
+				return 0;
+			break;
+		default:
+			return 0;
+		}
+		if (!sound->info.sampleRate)
+			return 0;
+		return 1000 * sound->info.numSamples / sound->info.sampleRate;
+	}
+
+	unsigned int SND_SV_LookupSoundLength(const char* name)
+	{
+		game::SoundFile* soundfile = nullptr;
+		game::snd_alias_t* soundalias = game::Com_PickSoundAlias(name, 0);
+		if (soundalias && (soundfile = soundalias->soundFile) != nullptr)
+			return SND_GetSoundFileLength(soundfile);
+		return 0;
+	}
+
 	namespace environment
 	{
 		launcher::mode mode = launcher::mode::none;

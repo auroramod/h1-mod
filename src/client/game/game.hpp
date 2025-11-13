@@ -74,6 +74,9 @@ namespace game
 
 	void Cmd_TokenizeString(const char* text);
 	void Cmd_EndTokenizeString();
+
+	unsigned int SND_GetSoundFileLength(SoundFile* soundfile);
+	unsigned int SND_SV_LookupSoundLength(const char* name);
 }
 
 size_t operator"" _b(const size_t ptr);

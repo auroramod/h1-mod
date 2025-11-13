@@ -50,6 +50,8 @@ namespace game
 	WEAK symbol<bool(const char* mapname, const char** base_mapname)> Com_IsAddonMap{0x40AED0, 0x17C100};
 	WEAK symbol<int(char* dest, int size, const char* fmt, ...)> Com_sprintf{0x429200, 0x5AF0F0};
 
+	WEAK symbol<snd_alias_t* (const char* aliasname, int entNum)> Com_PickSoundAlias{ 0x0, 0x59FE70 };
+
 	WEAK symbol<void()> Quit{0x3A5A20, 0x17CF50};
 
 	WEAK symbol<void(int localClientNum, const char* message)> CG_GameMessage{0x15B3B0, 0x316210};
@@ -253,6 +255,8 @@ namespace game
 	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{0x3C1210, 0x5083A0};
 	WEAK symbol<const char*(scr_string_t stringValue)> SL_ConvertToString{0x3C0C50, 0x507CD0};
 	WEAK symbol<unsigned int(const char* str)> SL_GetCanonicalString{0x3BDA20, 0x504A00};
+
+	WEAK symbol<void(int index, char* buffer, int bufferSize)> SV_GetConfigstring{ 0x0, 0x552E90 };
 
 	WEAK symbol<void(netadr_s* from)> SV_DirectConnect{0x0, 0x54DBF0};
 	WEAK symbol<void(int arg, char* buffer, int bufferLength)> SV_Cmd_ArgvBuffer{0x377D40, 0x1CAC60};
