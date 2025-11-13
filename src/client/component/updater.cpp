@@ -351,7 +351,11 @@ namespace updater
 
 	bool auto_updates_enabled()
 	{
+#ifdef DEBUG
+		return false;
+#else
 		return cl_auto_update->current.enabled;
+#endif
 	}
 
 	bool is_update_check_done()

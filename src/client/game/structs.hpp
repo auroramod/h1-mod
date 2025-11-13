@@ -2179,4 +2179,64 @@ namespace game
 	assert_offsetof(FxSystem, lock, 312);
 	assert_offsetof(FxSystem, updateElement, 368);
 	assert_offsetof(FxSystem, numUpdateElement, 376);
+
+	struct GfxMatrix
+	{
+		float m[4][4];
+	};
+
+	struct GfxCodeMatrices
+	{
+		GfxMatrix matrix[72];
+	};
+
+	struct GfxBackEndData
+	{
+
+	};
+
+	struct GfxCmdBufInput
+	{
+		float consts[349][4];
+		const game::GfxImage* codeImages[79];
+		unsigned __int8 codeImageSamplerStates[79];
+		unsigned __int8 : 6;
+		__int8 noLightMapPrepass : 1;
+		__int8 noLitPrepass : 1;
+		char __pad0[104];
+		const void* data;
+	};
+
+	struct GfxCmdBufSourceState
+	{
+		GfxCodeMatrices matrices;
+		GfxCmdBufInput input;
+		char __pad0[456];
+		unsigned __int16 constVersions[514];
+		char __pad1[344];
+		unsigned int sceneLightEnvIndex;
+		unsigned int sceneLightCount;
+		unsigned __int16 sceneLightIndices[4];
+	};
+	assert_offsetof(GfxCmdBufSourceState, constVersions, 0x2CD0);
+
+	struct GfxCmdBufState
+	{
+		char __pad0[6376];
+		Material* material;
+		MaterialTechniqueType techType;
+		MaterialTechnique* technique;
+		MaterialPass* pass;
+		unsigned int passIndex;
+		char __pad1[1812];
+		MaterialPixelShader* pixelShader;
+	};
+	assert_offsetof(GfxCmdBufState, material, 6376);
+	assert_offsetof(GfxCmdBufState, pixelShader, 8224);
+
+	struct GfxCmdBufContext
+	{
+		GfxCmdBufSourceState* source;
+		GfxCmdBufState* state;
+	};
 }
