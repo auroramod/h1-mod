@@ -425,14 +425,14 @@ namespace database
 		TECHNIQUE_LIGHT_OMNI = 38,
 		TECHNIQUE_LIGHT_SPOT_SHADOW = 39,
 		TECHNIQUE_LIGHT_SPOT_SHADOW_CUCOLORIS = 40,
-		// 41
-		// 42
+		TECHNIQUE_LIGHT_SPOT_STENCIL = 41,
+		TECHNIQUE_LIGHT_OMNI_STENCIL = 42,
 		TECHNIQUE_LIGHT_SPOT_DFOG = 43,
 		TECHNIQUE_LIGHT_OMNI_DFOG = 44,
 		TECHNIQUE_LIGHT_SPOT_SHADOW_DFOG = 45,
 		TECHNIQUE_LIGHT_SPOT_SHADOW_CUCOLORIS_DFOG = 46,
-		// 47
-		// 48
+		TECHNIQUE_LIGHT_SPOT_STENCIL_DFOG = 47,
+		TECHNIQUE_LIGHT_OMNI_STENCIL_DFOG = 48,
 		TECHNIQUE_FAKELIGHT_NORMAL = 49,
 		TECHNIQUE_FAKELIGHT_VIEW = 50,
 		TECHNIQUE_SUNLIGHT_PREVIEW = 51,
@@ -489,14 +489,14 @@ namespace database
 		TECHNIQUE_INSTANCED_LIGHT_OMNI = 98,
 		TECHNIQUE_INSTANCED_LIGHT_SPOT_SHADOW = 99,
 		TECHNIQUE_INSTANCED_LIGHT_SPOT_SHADOW_CUCOLORIS = 100,
-		// 101
-		// 102
+		TECHNIQUE_INSTANCED_LIGHT_SPOT_STENCIL = 101,
+		TECHNIQUE_INSTANCED_LIGHT_OMNI_STENCIL = 102,
 		TECHNIQUE_INSTANCED_LIGHT_SPOT_DFOG = 103,
 		TECHNIQUE_INSTANCED_LIGHT_OMNI_DFOG = 104,
 		TECHNIQUE_INSTANCED_LIGHT_SPOT_SHADOW_DFOG = 105,
 		TECHNIQUE_INSTANCED_LIGHT_SPOT_SHADOW_CUCOLORIS_DFOG = 106,
-		// 107
-		// 108
+		TECHNIQUE_INSTANCED_LIGHT_SPOT_STENCIL_DFOG = 107,
+		TECHNIQUE_INSTANCED_LIGHT_OMNI_STENCIL_DFOG = 108,
 		TECHNIQUE_INSTANCED_FAKELIGHT_NORMAL = 109,
 		TECHNIQUE_INSTANCED_FAKELIGHT_VIEW = 110,
 		TECHNIQUE_INSTANCED_SUNLIGHT_PREVIEW = 111,
@@ -553,14 +553,14 @@ namespace database
 		TECHNIQUE_SUBDIV_PATCH_LIGHT_OMNI = 158,
 		TECHNIQUE_SUBDIV_PATCH_LIGHT_SPOT_SHADOW = 159,
 		TECHNIQUE_SUBDIV_PATCH_LIGHT_SPOT_SHADOW_CUCOLORIS = 160,
-		// 161
-		// 162
+		TECHNIQUE_SUBDIV_PATCH_LIGHT_SPOT_STENCIL = 161,
+		TECHNIQUE_SUBDIV_PATCH_LIGHT_OMNI_STENCIL = 162,
 		TECHNIQUE_SUBDIV_PATCH_LIGHT_SPOT_DFOG = 163,
 		TECHNIQUE_SUBDIV_PATCH_LIGHT_OMNI_DFOG = 164,
 		TECHNIQUE_SUBDIV_PATCH_LIGHT_SPOT_SHADOW_DFOG = 165,
 		TECHNIQUE_SUBDIV_PATCH_LIGHT_SPOT_SHADOW_CUCOLORIS_DFOG = 166,
-		// 167
-		// 168
+		TECHNIQUE_SUBDIV_PATCH_LIGHT_SPOT_STENCIL_DFOG = 167,
+		TECHNIQUE_SUBDIV_PATCH_LIGHT_OMNI_STENCIL_DFOG = 168,
 		TECHNIQUE_SUBDIV_PATCH_FAKELIGHT_NORMAL = 169,
 		TECHNIQUE_SUBDIV_PATCH_FAKELIGHT_VIEW = 170,
 		TECHNIQUE_SUBDIV_PATCH_SUNLIGHT_PREVIEW = 171,
@@ -573,7 +573,7 @@ namespace database
 		TECHNIQUE_SUBDIV_PATCH_VELOCITY_SKINNED = 178,
 		TECHNIQUE_SUBDIV_PATCH_DEBUG_BUMPMAP = 179,
 
-		TECHNIQUE_SUBDIV_PATCH_LAST = 180,
+		TECHNIQUE_SUBDIV_PATCH_LAST = 179,
 		TECHNIQUE_NO_DISPLACEMENT_BEGIN = 180,
 
 		TECHNIQUE_NO_DISPLACEMENT_ZPREPASS = 180,
@@ -617,14 +617,14 @@ namespace database
 		TECHNIQUE_NO_DISPLACEMENT_LIGHT_OMNI = 218,
 		TECHNIQUE_NO_DISPLACEMENT_LIGHT_SPOT_SHADOW = 219,
 		TECHNIQUE_NO_DISPLACEMENT_LIGHT_SPOT_SHADOW_CUCOLORIS = 220,
-		// 221
-		// 222
+		TECHNIQUE_NO_DISPLACEMENT_LIGHT_SPOT_STENCIL = 221,
+		TECHNIQUE_NO_DISPLACEMENT_LIGHT_OMNI_STENCIL = 222,
 		TECHNIQUE_NO_DISPLACEMENT_LIGHT_SPOT_DFOG = 223,
 		TECHNIQUE_NO_DISPLACEMENT_LIGHT_OMNI_DFOG = 224,
 		TECHNIQUE_NO_DISPLACEMENT_LIGHT_SPOT_SHADOW_DFOG = 225,
 		TECHNIQUE_NO_DISPLACEMENT_LIGHT_SPOT_SHADOW_CUCOLORIS_DFOG = 226,
-		// 227
-		// 228
+		TECHNIQUE_NO_DISPLACEMENT_LIGHT_SPOT_STENCIL_DFOG = 227,
+		TECHNIQUE_NO_DISPLACEMENT_LIGHT_OMNI_STENCIL_DFOG = 228,
 		TECHNIQUE_NO_DISPLACEMENT_FAKELIGHT_NORMAL = 229,
 		TECHNIQUE_NO_DISPLACEMENT_FAKELIGHT_VIEW = 230,
 		TECHNIQUE_NO_DISPLACEMENT_SUNLIGHT_PREVIEW = 231,
@@ -637,7 +637,7 @@ namespace database
 		TECHNIQUE_NO_DISPLACEMENT_VELOCITY_SKINNED = 238,
 		TECHNIQUE_NO_DISPLACEMENT_DEBUG_BUMPMAP = 239,
 
-		TECHNIQUE_NO_DISPLACEMENT_LAST = 240,
+		TECHNIQUE_NO_DISPLACEMENT_LAST = 239,
 
 		TECHNIQUE_COUNT = 240,
 		TECHNIQUE_TOTAL_COUNT = 241,
@@ -1070,6 +1070,8 @@ namespace database
 		CONST_SRC_CODE_INVERSE_TRANSPOSE_WORLD_VIEW_PROJECTION_MATRIX2,
 		CONST_SRC_TOTAL_COUNT,
 		CONST_SRC_NONE,
+
+		CONST_SRC_CODE_COUNT_FLOAT4 = 349
 	};
 
 	enum MaterialTextureSource : std::int32_t
@@ -1572,6 +1574,37 @@ namespace database
 		MaterialVertexStreamRouting routing;
 	}; assert_sizeof(MaterialVertexDeclaration, 0x840);
 
+	enum CustomSamplerFlags : std::uint8_t
+	{
+		CUSTOM_SAMPLER_FLAG_USE_REFLECTION_PROBE = 0x1,
+		CUSTOM_SAMPLER_FLAG_USE_LIGHTMAP_PRIMARY = 0x2,
+		CUSTOM_SAMPLER_FLAG_USE_LIGHTMAP_SECONDARY = 0x4,
+	};
+
+	enum CustomBufferFlags : std::uint32_t
+	{
+		CUSTOM_BUFFER_PER_PRIM = 0x1,
+		CUSTOM_BUFFER_PER_OBJECT = 0x2,
+		CUSTOM_BUFFER_PER_STABLE = 0x4,
+		CUSTOM_BUFFER_MATERIAL = 0x8,
+		CUSTOM_BUFFER_SUBDOMAIN = 0x10,
+		CUSTOM_BUFFER_REACTIVE_MOTION = 0x20,
+		CUSTOM_BUFFER_REACTIVE_TURBULENCE_EFFECTORS = 0x40,
+		CUSTOM_BUFFER_SMODEL_WORLDMATRIX = 0x80,
+		CUSTOM_BUFFER_SMODEL_LIGHTING = 0x100,
+		CUSTOM_BUFFER_SMODEL_AMBIENT = 0x200,
+		CUSTOM_BUFFER_SKINNED_CACHED_PREV_FRAME = 0x400,
+	};
+
+	enum PrecompiledIndex : std::uint8_t
+	{
+		PRECOMPILED_INDEX_LIT = 1,
+		PRECOMPILED_INDEX_UNLIT = 2,
+		PRECOMPILED_INDEX_AMBIENT = 3,
+		PRECOMPILED_INDEX_VERTEX_LIT = 4,
+		PRECOMPILED_INDEX_MODEL_LMAP = 5,
+	};
+
 	struct MaterialPass
 	{
 		MaterialVertexShader* vertexShader;
@@ -1882,6 +1915,9 @@ namespace database
 	enum RasterizerState : std::uint8_t
 	{
 		RASTERIZER_STATE_CULL_SHIFT = 0x0,
+		RASTERIZER_STATE_CULL_NONE = 0x1,
+		RASTERIZER_STATE_CULL_BACK = 0x2,
+		RASTERIZER_STATE_CULL_FRONT = 0x3,
 		RASTERIZER_STATE_CULL_MASK = 0x3,
 		RASTERIZER_STATE_POLYGON_OFFSET_SHIFT = 0x2,
 		RASTERIZER_STATE_POLYGON_OFFSET_MASK = 0xC,
@@ -1931,14 +1967,15 @@ namespace database
 	enum MaterialGameFlags : std::uint8_t
 	{
 		MTL_GAMEFLAG_NONE = 0x0,
-		MTL_GAMEFLAG_1 = 0x1,
-		MTL_GAMEFLAG_2 = 0x2,
-		MTL_GAMEFLAG_4 = 0x4,
+		MTL_GAMEFLAG_NO_MARKS1 = 0x1,
+		MTL_GAMEFLAG_MARK_HAS_LIGHTMAP = 0x2, // with this flag, the game will use precomputed primaryLightIndex instead of computed one for shadows
+		MTL_GAMEFLAG_NO_MARKS2 = 0x4,
 		MTL_GAMEFLAG_8 = 0x8,
-		MTL_GAMEFLAG_10 = 0x10,
+		MTL_GAMEFLAG_MARK_HAS_REFLECTION = 0x10,
 		MTL_GAMEFLAG_20 = 0x20,
 		MTL_GAMEFLAG_CASTS_SHADOW = 0x40,
-		MTL_GAMEFLAG_EFFECT = 0x80,
+		MTL_GAMEFLAG_CASTS_SHADOW_EFFECT = 0x80,
+		MTL_GAMEFLAG_CASTS_SHADOW_MASK = 0xC0,
 	};
 
 	enum MaterialSortKey : std::uint8_t
@@ -1948,26 +1985,26 @@ namespace database
 		MTL_SORTKEY_OPAQUE = 2,
 		MTL_SORTKEY_SKY = 3,
 		MTL_SORTKEY_SUN = 4,
+		MTL_SORTKEY_CLOUDS = 5,
+		MTL_SORTKEY_HORIZON = 6,
 
-		MTL_SORTKEY_UNKNOWN5 = 5,
-		MTL_SORTKEY_UNKNOWN6 = 6,
+		MTL_SORTKEY_DECAL_BOTTOM_1 = 7,
+		MTL_SORTKEY_DECAL_BOTTOM_2 = 8,
+		MTL_SORTKEY_DECAL_BOTTOM_3 = 9,
 
-		MTL_SORTKEY_LIT_DECAL = 7, // c
+		MTL_SORTKEY_DECAL_STATIC = 10,
 
-		MTL_SORTKEY_UNKNOWN8 = 8,
-		MTL_SORTKEY_UNKNOWN9 = 9,
-		MTL_SORTKEY_UNKNOWN10 = 10,
-		MTL_SORTKEY_UNKNOWN11 = 11,
-		MTL_SORTKEY_UNKNOWN12 = 12,
-		MTL_SORTKEY_UNKNOWN13 = 13,
+		MTL_SORTKEY_DECAL_MID_1 = 11,
+		MTL_SORTKEY_DECAL_MID_2 = 12,
+		MTL_SORTKEY_DECAL_MID_3 = 13,
 
-		MTL_SORTKEY_WEAPON_IMPACT = 14,
+		MTL_SORTKEY_DECAL_WEAPON_IMPACT = 14,
 
-		MTL_SORTKEY_UNKNOWN15 = 15,
-		MTL_SORTKEY_UNKNOWN16 = 16,
+		MTL_SORTKEY_DECAL_TOP_1 = 15,
+		MTL_SORTKEY_DECAL_TOP_2 = 16,
+		MTL_SORTKEY_DECAL_TOP_3 = 17,
 
-		MTL_SORTKEY_TOP_DECAL = 17, // c
-		MTL_SORTKEY_HAIR = 18, // c
+		MTL_SORTKEY_HAIR = 18,
 
 		MTL_SORTKEY_UNKNOWN19 = 19, // blend/additive
 		MTL_SORTKEY_UNKNOWN20 = 20,
@@ -1975,7 +2012,7 @@ namespace database
 		MTL_SORTKEY_UNKNOWN22 = 22,
 		MTL_SORTKEY_UNKNOWN23 = 23,
 		MTL_SORTKEY_UNKNOWN24 = 24,
-		MTL_SORTKEY_UNKNOWN25 = 25,
+		MTL_SORTKEY_CORONA = 25,
 
 		MTL_SORTKEY_WINDOW_INSIDE = 26,
 		MTL_SORTKEY_WINDOW_OUTSIDE = 27,
@@ -1983,12 +2020,14 @@ namespace database
 		MTL_SORTKEY_UNKNOWN28 = 28,
 		MTL_SORTKEY_UNKNOWN29 = 29,
 		MTL_SORTKEY_UNKNOWN30 = 30,
-		MTL_SORTKEY_UNKNOWN31 = 31,
-		MTL_SORTKEY_UNKNOWN32 = 32,
-		MTL_SORTKEY_UNKNOWN33 = 33, // impact glass / impact riotshield
+
+		MTL_SORTKEY_BLEND_BOTTOM = 31,
+		MTL_SORTKEY_BLEND_MIDDLE = 32,
+		MTL_SORTKEY_BLEND_TOP = 33,
+
 		MTL_SORTKEY_UNKNOWN34 = 34,
 		MTL_SORTKEY_UNKNOWN35 = 35,
-		MTL_SORTKEY_UNKNOWN36 = 36,
+		MTL_SORTKEY_VIEWMODEL_EFFECT = 36,
 		MTL_SORTKEY_UNKNOWN37 = 37,
 		MTL_SORTKEY_UNKNOWN38 = 38,
 		MTL_SORTKEY_UNKNOWN39 = 39,
@@ -1996,7 +2035,7 @@ namespace database
 		MTL_SORTKEY_UNKNOWN41 = 41,
 		MTL_SORTKEY_UNKNOWN42 = 42,
 
-		MTL_SORTKEY_EFFECT_DECAL = 43, // c
+		MTL_SORTKEY_EFFECT_DECAL = 43,
 
 		MTL_SORTKEY_UNKNOWN44 = 44,
 		MTL_SORTKEY_UNKNOWN45 = 45,
@@ -2008,13 +2047,11 @@ namespace database
 		MTL_SORTKEY_UNKNOWN51 = 51,
 		MTL_SORTKEY_UNKNOWN52 = 52, // overlay
 
-		MTL_SORTKEY_EFFECT_AUTO = 53, // c
+		MTL_SORTKEY_EFFECT_AUTO_SORT = 53,
 
 		MTL_SORTKEY_UNKNOWN54 = 54,
 		MTL_SORTKEY_UNKNOWN55 = 55,
 		MTL_SORTKEY_UNKNOWN56 = 56, // additive
-
-		MTL_SORT_PRIMARY_COUNT = 0x40,
 	};
 
 	enum SurfaceTypeBits : std::uint64_t
@@ -2074,6 +2111,65 @@ namespace database
 		SURFTYPE_BITS_CUSHION = 0x8000000000000,
 	};
 
+	enum materialSurfType_t
+	{
+		SURF_TYPE_DEFAULT,
+		SURF_TYPE_BARK,
+		SURF_TYPE_BRICK,
+		SURF_TYPE_CARPET,
+		SURF_TYPE_CLOTH,
+		SURF_TYPE_CONCRETE,
+		SURF_TYPE_DIRT,
+		SURF_TYPE_FLESH,
+		SURF_TYPE_FOLIAGE_DEBRIS,
+		SURF_TYPE_GLASS,
+		SURF_TYPE_GRASS,
+		SURF_TYPE_GRAVEL,
+		SURF_TYPE_ICE,
+		SURF_TYPE_METAL_SOLID,
+		SURF_TYPE_METAL_GRATE,
+		SURF_TYPE_MUD,
+		SURF_TYPE_PAPER,
+		SURF_TYPE_PLASTER,
+		SURF_TYPE_ROCK,
+		SURF_TYPE_SAND,
+		SURF_TYPE_SNOW,
+		SURF_TYPE_WATER_WAIST,
+		SURF_TYPE_WOOD_SOLID,
+		SURF_TYPE_ASPHALT,
+		SURF_TYPE_CERAMIC,
+		SURF_TYPE_PLASTIC_SOLID,
+		SURF_TYPE_RUBBER,
+		SURF_TYPE_FRUIT,
+		SURF_TYPE_PAINTEDMETAL,
+		SURF_TYPE_RIOTSHIELD,
+		SURF_TYPE_SLUSH,
+		SURF_TYPE_ASPHALT_WET,
+		SURF_TYPE_ASPHALT_DEBRIS,
+		SURF_TYPE_CONCRETE_WET,
+		SURF_TYPE_CONCRETE_DEBRIS,
+		SURF_TYPE_FOLIAGE_VEGETATION,
+		SURF_TYPE_FOLIAGE_LEAVES,
+		SURF_TYPE_GRASS_TALL,
+		SURF_TYPE_METAL_HOLLOW,
+		SURF_TYPE_METAL_VEHICLE,
+		SURF_TYPE_METAL_THIN,
+		SURF_TYPE_METAL_WET,
+		SURF_TYPE_METAL_DEBRIS,
+		SURF_TYPE_PLASTIC_HOLLOW,
+		SURF_TYPE_PLASTIC_TARP,
+		SURF_TYPE_ROCK_WET,
+		SURF_TYPE_ROCK_DEBRIS,
+		SURF_TYPE_WATER_ANKLE,
+		SURF_TYPE_WATER_KNEE,
+		SURF_TYPE_WOOD_HOLLOW,
+		SURF_TYPE_WOOD_WET,
+		SURF_TYPE_WOOD_DEBRIS,
+		SURF_TYPE_CUSHION,
+
+		SURF_TYPE_COUNT
+	};
+
 	struct MaterialInfo
 	{
 		const char* name;
@@ -2092,6 +2188,8 @@ namespace database
 	enum MaterialStateFlags : std::uint8_t
 	{
 		STATE_FLAG_CULL_BACK = 0x1,
+		STATE_FLAG_CULL_FRONT = 0x2,
+		STATE_FLAG_CULL_MASK = 0x3,
 		STATE_FLAG_DECAL = 0x4,
 		STATE_FLAG_WRITES_DEPTH = 0x8,
 		STATE_FLAG_USES_DEPTH_BUFFER = 0x10,
@@ -2120,19 +2218,38 @@ namespace database
 	{
 		MTL_TYPE_DEFAULT = 0x0, // ""
 		MTL_TYPE_MODEL = 0x1, // "m"
-		MTL_TYPE_MODEL_GREY = 0x2, // "me"
+		MTL_TYPE_MODEL_EFFECT = 0x2, // "me"
 		MTL_TYPE_MODEL_VERTCOL = 0x3, // "mc"
-		MTL_TYPE_MODEL_VERTCOL_GREY = 0x4, // "mce"
-		MTL_TYPE_MODEL_VERTLIT = 0xD, // "mv"
-		MTL_TYPE_MODEL_VERTLIT_VERTCOL = 0xE, // "mvc"
+		MTL_TYPE_MODEL_VERTCOL_EFFECT = 0x4, // "mce"
+		MTL_TYPE_MODEL_VERTCOL_GREY = 0xD, // "mv"
+		MTL_TYPE_MODEL_VERTCOL_GREY_EFFECT = 0xE, // "mvc"
+		MTL_TYPE_MODEL_QUANTIZED = 0x7,
+		MTL_TYPE_MODEL_QUANTIZED_EFFECT = 0x8,
+		MTL_TYPE_MODEL_QUANTIZED_VERTCOL = 0x9,
+		MTL_TYPE_MODEL_QUANTIZED_VERTCOL_EFFECT = 0xA,
+		MTL_TYPE_MODEL_QUANTIZED_VERTCOL_GREY = 0xB,
+		MTL_TYPE_MODEL_QUANTIZED_VERTCOL_GREY_EFFECT = 0xC,
+		MTL_TYPE_MODEL_VERTLIT = 0xD,
+		MTL_TYPE_MODEL_VERTLIT_VERTCOL = 0xE,
+		MTL_TYPE_MODEL_VERTLIT_VERTCOL_GREY = 0xF,
+		MTL_TYPE_MODEL_VERTLIT_QUANTIZED = 0x10,
+		MTL_TYPE_MODEL_VERTLIT_QUANTIZED_VERTCOL = 0x11,
+		MTL_TYPE_MODEL_VERTLIT_QUANTIZED_VERTCOL_GREY = 0x12,
 		MTL_TYPE_MODEL_LMAP = 0x13, // "ml"
 		MTL_TYPE_MODEL_LMAP_VERTCOL = 0x14, // "mlc"
+		MTL_TYPE_MODEL_LMAP_VERTCOL_GREY = 0x15,
 		MTL_TYPE_MODEL_SUBDIV = 0x19, // "ms"
-		MTL_TYPE_MODEL_SUBDIV_VERTCOL = 0x1A, // "msc"
-		MTL_TYPE_MODEL_SUBDIV_VERTLIT = 0x1F, // "msv"
+		MTL_TYPE_MODEL_SUBDIV_VERTCOL = 27, // "msc"
+		MTL_TYPE_MODEL_SUBDIV_VERTCOL_GREY = 28, //
+		MTL_TYPE_MODEL_SUBDIV_TENSION = 29, //
+		MTL_TYPE_MODEL_SUBDIV_VERTLIT = 30, //
+		MTL_TYPE_MODEL_SUBDIV_VERTLIT_VERTCOL = 31, //
+		MTL_TYPE_MODEL_SUBDIV_LMAP = 32, //
+		MTL_TYPE_MODEL_SUBDIV_LMAP_VERTCOL = 33, //
+		MTL_TYPE_MODEL_SUBDIV_LMAP_VERTCOL_GREY = 34, //
 		MTL_TYPE_WORLD = 0x23, // "w"
 		MTL_TYPE_WORLD_VERTCOL = 0x24, // "wc"
-		MTL_TYPE_COUNT = 0x24,
+		MTL_TYPE_COUNT = 0x25,
 	};
 
 	enum MaterialAssetFlags : std::uint8_t
@@ -2348,11 +2465,11 @@ namespace database
 		unsigned int sampleRate;
 		unsigned int dataByteCount;
 		unsigned int numSamples;
-		char channels;
-		char numBits;
-		char blockAlign;
+		unsigned char channels;
+		unsigned char numBits;
+		unsigned short blockAlign;
 		short format;
-		int loadedSize;
+		unsigned int loadedSize;
 	}; assert_sizeof(LoadedSoundInfo, 0x20);
 
 	struct LoadedSound
@@ -3285,7 +3402,13 @@ namespace database
 
 	enum FxElemDefExtraFlags : std::uint32_t
 	{
-
+		FX_ELEM2_BILLBOARD_FACING_CAMERA_PERPENDICULAR = 0x1,
+		FX_ELEM2_BILLBOARD_FACING_PLAYER = 0x2,
+		FX_ELEM2_BILLBOARD_FACING_MASK = 0x3,
+		FX_ELEM2_EMIT_TRAILS = 0x4,
+		FX_ELEM2_USE_EMISSIVE_DRAW = 0x8,
+		FX_ELEM2_USE_EFFECT_MODEL_COLOR = 0x20,
+		FX_ELEM2_DECAL_EXPONENTIAL_FADE_OUT = 0x80,
 	};
 
 	struct FxFloatRange
@@ -3447,7 +3570,7 @@ namespace database
 		float bulbLength;
 		float fadeOffsetRt[2];
 		char unk1;
-		char opl;
+		char opl; // overlapsPrimaryLight
 		char unk2;
 		char unused;
 	};
@@ -3943,7 +4066,7 @@ namespace database
 		ID3D11ShaderResourceView* vb0View;
 		ID3D11Buffer* indexBuffer;
 		XRigidVertList* rigidVertLists;
-		UnknownXSurface0* unknown0;
+		UnknownXSurface0* unknown0; // GfxQuantizedNoColorVertex
 		XBlendInfo* blendVerts;
 		BlendVertsUnknown* blendVertsTable;
 		ID3D11Buffer* blendVertsBuffer;
@@ -3961,8 +4084,8 @@ namespace database
 		ID3D11ShaderResourceView* indexBufferView;
 		BlendShape* blendShapes;
 		unsigned int blendShapesCount;
+		char __pad0[4];
 		unsigned int vertexLightingIndex;
-		float quantizeScale;
 		int partBits[8];
 		char __pad1[4];
 	}; assert_sizeof(XSurface, 0x108);
@@ -4249,10 +4372,11 @@ namespace database
 		WEAPON_FIRETYPE_BURSTFIRE2 = 0x2,
 		WEAPON_FIRETYPE_BURSTFIRE3 = 0x3,
 		WEAPON_FIRETYPE_BURSTFIRE4 = 0x4,
-		WEAPON_FIRETYPE_DOUBLEBARREL = 0x5,
-		WEAPON_FIRETYPECOUNT = 0x6,
+		WEAPON_FIRETYPE_BURSTFIRE5 = 0x5,
+		WEAPON_FIRETYPE_DOUBLEBARREL = 0x6,
+		WEAPON_FIRETYPECOUNT = 0x7,
 		WEAPON_FIRETYPE_BURSTFIRE_FIRST = 0x2,
-		WEAPON_FIRETYPE_BURSTFIRE_LAST = 0x4,
+		WEAPON_FIRETYPE_BURSTFIRE_LAST = 0x5,
 	};
 
 	enum PenetrateType : std::uint32_t
@@ -4266,7 +4390,21 @@ namespace database
 
 	enum ImpactType : std::int32_t
 	{
-
+		IMPACT_TYPE_NONE = 0x0,
+		IMPACT_TYPE_BULLET_SMALL = 0x1,
+		IMPACT_TYPE_BULLET_LARGE = 0x2,
+		IMPACT_TYPE_BULLET_AP = 0x3,
+		IMPACT_TYPE_BULLET_EXPLODE = 0x4,
+		IMPACT_TYPE_SHOTGUN = 0x5,
+		IMPACT_TYPE_SHOTGUN_EXPLODE = 0x6,
+		IMPACT_TYPE_SHOTGUN_ENERGY = 0x7,
+		IMPACT_TYPE_GRENADE_BOUNCE = 0x8,
+		IMPACT_TYPE_GRENADE_EXPLODE = 0x9,
+		IMPACT_TYPE_ROCKET_EXPLODE = 0xA,
+		IMPACT_TYPE_PROJECTILE_DUD = 0xB,
+		IMPACT_TYPE_ENERGY_BEAM = 0xC,
+		IMPACT_TYPE_GRAPPLE = 0xD,
+		IMPACT_TYPE_COUNT = 0xE,
 	};
 
 	enum weapStance_t : std::int32_t
@@ -4280,11 +4418,15 @@ namespace database
 	enum OffhandClass : std::uint32_t
 	{
 		OFFHAND_CLASS_NONE = 0x0,
-		OFFHAND_CLASS_FRAG_GRENADE = 0x1,
-		OFFHAND_CLASS_SMOKE_GRENADE = 0x2,
-		OFFHAND_CLASS_FLASH_GRENADE = 0x3,
-		OFFHAND_CLASS_OTHER = 0x9,
-		OFFHAND_CLASS_COUNT = 0xA,
+		OFFHAND_CLASS_FRAG_GRENADE = 0x1, // OFFHAND_CLASS_DAMAGING_THROWBACKABLE
+		OFFHAND_CLASS_UNK2 = 0x2, // OFFHAND_CLASS_DAMAGING_UNTHROWBACKABLE
+		OFFHAND_CLASS_SMOKE_GRENADE = 0x3,
+		OFFHAND_CLASS_FLASH_GRENADE = 0x4,
+		OFFHAND_CLASS_THREAT_GRENADE = 0x5,
+		OFFHAND_CLASS_THROWINGKNIFE = 0x6,
+		OFFHAND_CLASS_OTHER = 0x7,
+		OFFHAND_CLASS_ABILITY = 0x8,
+		OFFHAND_CLASS_COUNT = 0x9,
 	};
 
 	enum weapProjExposion_t : std::int32_t
@@ -4301,53 +4443,59 @@ namespace database
 
 	enum weapAdsFireMode_t : std::int32_t
 	{
+		WEAPADSFIREMODE_DEFAULT = 0x0,
+		WEAPADSFIREMODE_AUTOADS = 0x1,
+		WEAPADSFIREMODE_ONLYADS = 0x2,
 		WEAPADSFIREMODE_NUM = 0x3,
 	};
 
 	enum weapGreebleType_t : std::int32_t
 	{
-		WEAPGREEBLE_NONE = 0x0,
-		WEAPGREEBLE_ACCURACYLEVEL1 = 0x1,
-		WEAPGREEBLE_ACCURACYLEVEL2 = 0x2,
-		WEAPGREEBLE_FIRERATELEVEL1 = 0x3,
-		WEAPGREEBLE_FIRERATELEVEL2 = 0x4,
-		WEAPGREEBLE_NUM = 0x5,
+		WEAPON_GREEBLE_NONE = 0x0,
+		WEAPON_GREEBLE_ACCURACY_LEVEL1 = 0x1,
+		WEAPON_GREEBLE_ACCURACY_LEVEL2 = 0x2,
+		WEAPON_GREEBLE_FIRERATE_LEVEL1 = 0x3,
+		WEAPON_GREEBLE_FIRERATE_LEVEL2 = 0x4,
+		WEAPON_GREEBLE_COUNT = 0x5,
 	};
 
 	enum weapAutoReloadType_t : std::int32_t
 	{
-
+		WEAPON_AUTORELOAD_ALWAYS = 0x0,
+		WEAPON_AUTORELOAD_ONEMPTYFIRE = 0x1,
+		WEAPON_AUTORELOAD_NEVER = 0x2,
+		WEAPON_AUTORELOAD_NUM = 0x3,
 	};
 
 	enum weapAutoHolsterType_t : std::int32_t
 	{
-
+		WEAPON_AUTOHOLSTER_ALWAYS = 0x0,
+		WEAPON_AUTOHOLSTER_ONEMPTYFIRE = 0x1,
+		WEAPON_AUTOHOLSTER_NEVER = 0x2,
+		WEAPON_AUTOHOLSTER_NUM = 0x3,
 	};
 
 	enum weapFireBarrels_t : std::int32_t
 	{
-
+		WEAPON_FIREBARREL_SINGLE = 0x0,
+		WEAPON_FIREBARREL_DOUBLE = 0x1,
+		WEAPON_FIREBARRELCOUNT = 0x2,
 	};
 
 	enum weapFireTimeInterpolation_t : std::int32_t
 	{
-
-	};
-
-	enum WeaponSlotRestriction : std::int32_t
-	{
-		SLOT_RESTRICTION_NONE = 0x0,
-		SLOT_RESTRICTION_OPEN = 0x1,
-		SLOT_RESTRICTION_PRESET = 0x2,
-		SLOT_RESTRICTION_COUNT = 0x3,
+		WEAPON_FIRETIME_INTERPOLATION_NONE = 0x0,
+		WEAPON_FIRETIME_INTERPOLATION_LINEAR = 0x1,
+		WEAPON_FIRETIME_INTERPOLATION_COUNT = 0x2,
 	};
 
 	enum AttachmentType : std::int32_t
 	{
 		ATTACHMENT_SCOPE = 0x0,
 		ATTACHMENT_UNDERBARREL = 0x1,
-		ATTACHMENT_OTHER = 0x2,
-		ATTACHMENT_COUNT = 0x3,
+		ATTACHMENT_SIDERAIL = 0x2,
+		ATTACHMENT_OTHER = 0x3,
+		ATTACHMENT_COUNT = 0x4,
 	};
 
 	struct AttChargeInfo
@@ -4424,7 +4572,7 @@ namespace database
 	struct WAField
 	{
 		unsigned char index;
-		unsigned char type; //WAFieldType type;
+		unsigned char type; // WAFieldType type;
 		unsigned char code; // WAFieldCode code;
 		WAFieldParm parm;
 	}; assert_sizeof(WAField, 16);
@@ -4595,6 +4743,18 @@ namespace database
 		WEAPON_ICON_RATIO_COUNT = 0x3,
 	};
 
+	enum ammoCounterClipType_t : std::int32_t
+	{
+		AMMO_COUNTER_CLIP_NONE = 0x0,
+		AMMO_COUNTER_CLIP_MAGAZINE = 0x1,
+		AMMO_COUNTER_CLIP_SHORTMAGAZINE = 0x2,
+		AMMO_COUNTER_CLIP_SHOTGUN = 0x3,
+		AMMO_COUNTER_CLIP_ROCKET = 0x4,
+		AMMO_COUNTER_CLIP_BELTFED = 0x5,
+		AMMO_COUNTER_CLIP_ALTWEAPON = 0x6,
+		AMMO_COUNTER_CLIP_COUNT = 0x7,
+	};
+
 	enum WeapStickinessType : std::int32_t
 	{
 		WEAPSTICKINESS_NONE = 0x0,
@@ -4612,10 +4772,9 @@ namespace database
 		MISSILE_GUIDANCE_SIDEWINDER = 0x1,
 		MISSILE_GUIDANCE_HELLFIRE = 0x2,
 		MISSILE_GUIDANCE_JAVELIN = 0x3,
-		MISSILE_GUIDANCE_UNKNOWN0 = 0x4,
-		MISSILE_GUIDANCE_UNKNOWN1 = 0x5,
-		MISSILE_GUIDANCE_UNKNOWN2 = 0x6,
-		MISSILE_GUIDANCE_COUNT = 0x7,
+		MISSILE_GUIDANCE_BALLISTIC = 0x4,
+		MISSILE_GUIDANCE_EXOKNIFE = 0x5,
+		MISSILE_GUIDANCE_COUNT = 0x6,
 	};
 
 	enum WeapOverlayInteface_t : std::int32_t
@@ -4822,6 +4981,34 @@ namespace database
 		NUM_WEAP_ANIMS = 190,
 	};
 
+	enum hitLocation_t
+	{
+		HITLOC_NONE = 0x0,
+		HITLOC_HELMET = 0x1,
+		HITLOC_HEAD = 0x2,
+		HITLOC_NECK = 0x3,
+		HITLOC_TORSO_UPR = 0x4,
+		HITLOC_TORSO_LWR = 0x5,
+		HITLOC_R_ARM_UPR = 0x6,
+		HITLOC_L_ARM_UPR = 0x7,
+		HITLOC_R_ARM_LWR = 0x8,
+		HITLOC_L_ARM_LWR = 0x9,
+		HITLOC_R_HAND = 0xA,
+		HITLOC_L_HAND = 0xB,
+		HITLOC_R_LEG_UPR = 0xC,
+		HITLOC_L_LEG_UPR = 0xD,
+		HITLOC_R_LEG_LWR = 0xE,
+		HITLOC_L_LEG_LWR = 0xF,
+		HITLOC_R_FOOT = 0x10,
+		HITLOC_L_FOOT = 0x11,
+		HITLOC_GUN = 0x12,
+		HITLOC_SHIELD = 0x13,
+		HITLOC_ARMOR = 0x14,
+		HITLOC_SOFT = 0x15,
+
+		HITLOC_COUNT
+	};
+
 	struct StateTimers
 	{
 		int fireDelay; // 1640 * x
@@ -4944,9 +5131,9 @@ namespace database
 		scr_string_t* notetrackFXMapKeys; // 176 (16 xstrings)
 		FxEffectDef** notetrackFXMapValues; // 184 (16 effects)
 		scr_string_t* notetrackFXMapTagValues; // 192 (16 xstrings)
-		scr_string_t* notetrackUnknownKeys; // 200 (16 xstrings)
-		char* notetrackUnknown; // 208 (16 chars)
-		scr_string_t* notetrackUnknownValues; // 216 (16 xstrings)
+		scr_string_t* notetrackHideTagKeys; // 200 (16 xstrings)
+		bool* notetrackHideTagValues; // 208 (16 booleans)
+		scr_string_t* notetrackHideTagTagValues; // 216 (16 xstrings)
 		const char* szAdsrBaseSetting; // 224
 		FxEffectDef* viewFlashEffect; // 232
 		FxEffectDef* viewBodyFlashEffect; // 240
@@ -5127,7 +5314,7 @@ namespace database
 		weaponIconRatioType_t hudIconRatio; // 1564
 		weaponIconRatioType_t pickupIconRatio; // 1568
 		weaponIconRatioType_t ammoCounterIconRatio; // 1572
-		int ammoCounterClip; // 1576
+		ammoCounterClipType_t ammoCounterClip; // 1576
 		int startAmmo; // 1580
 		ammoindex_t iAmmoIndex; // 1584 (runtime variable)
 		clipindex_t iClipIndex; // 1592 (runtime variable)
@@ -5404,8 +5591,8 @@ namespace database
 		int explodeCount; // 3444 X
 		int batteryDischargeRate; // 3448 X
 		int extendedBattery; // 3452 X
-		int iU_079; // 3456 // int numBulletTags (BG_ShowHideTagsBasedOnAltMode)
-		int iU_080; // 3460 // int tagForAmmo (1400C77D0)
+		int bulletsPerTag; // 3456 (1400C77D0)
+		int maxTags; // 3460 (1400C77D0)
 		scr_string_t stowTag; // 3464
 		unsigned char rattleSoundType; // 3468 X
 		bool adsShouldShowCrosshair; // 3469 (CG_DrawCrosshair)
@@ -5431,8 +5618,8 @@ namespace database
 		bool aimDownSight; // 3489
 		bool canHoldBreath; // 3490
 		bool meleeOnly; // 3491
-		bool bU_085; // 3492 bool isMeleeAnimDelayed;? (0x14009FDC0)(1401F2BC0)
-		bool bU_086; // 3493 X bool oldWeaponBot;?
+		bool quickMelee; // 3492 (0x14009FDC0)(1401F2BC0)
+		bool bU_086; // 3493 UNUSED
 		bool canVariableZoom; // 3494
 		bool rechamberWhileAds; // 3495
 		bool bulletExplosiveDamage; // 3496
@@ -5503,14 +5690,14 @@ namespace database
 		bool cloaked; // 3561 (BG_IsWeaponCloaked)
 		bool adsHideWeapon; // 3562 (0x1401fa7aa)
 		bool adsHideHands; // 3563 (0x1401fa78a)
-		bool bU_108; // 3564 X
+		bool bU_108; // 3564 USED
 		bool adsSceneBlur; // 3565 (BG_GetADSSceneBlur)
 		bool usesSniperScope; // 3566 (BG_UsingSniperScope)
 		bool hasTransientModels; // 3567 (140499130) (14049CE70) (14049B890) (14049B680)
-		bool bU_112; // 3568 X
-		bool bU_113; // 3569 X
-		bool bU_114; // 3570 (BG_ShowHideTagsBasedOnAltMode)
-		bool bU_115; // 3571 (BG_ShowHideTagsBasedOnAltMode)
+		bool signatureAmmoAlternate; // 3568 X
+		bool useScriptCallbackForHit; // 3569 X
+		bool useBulletTagSystem; // 3570 (1400C77D0)
+		bool hideBulletTags; // 3571 (1400C77D0)
 		float adsDofPhysicalFstop; // 3572 (BG_ADSDOFPhysicalFStop)
 		float adsDofPhysicalFocusDistance; // 3576 (BG_ADSDOFPhysicalFocusDistance)
 		float autosimSpeedScale; // 3580 (BG_GetAutosimSpeedScalar)
@@ -7429,7 +7616,6 @@ namespace database
 		unsigned short cellIndex;
 		unsigned short closeDistance;
 		unsigned char vertexCount;
-		unsigned short distancePortalIndex;
 		float hullAxis[2][3];
 	}; assert_sizeof(GfxPortal, 80);
 	assert_offsetof(GfxPortal, vertices, 40);
@@ -7794,6 +7980,11 @@ namespace database
 		float lightingOrigin[3];
 	}; assert_sizeof(GfxStaticModelInst, 36);
 
+	enum GFX_SURFACE_FLAGS : std::int32_t
+	{
+		GFX_SURFACE_CASTS_SUN_SHADOW = 0x1,
+	};
+
 	struct srfTriangles_t
 	{
 		unsigned int vertexLayerData;
@@ -8028,7 +8219,7 @@ namespace database
 	struct GfxHeroOnlyLight
 	{
 		unsigned char type;
-		unsigned char needsDynamicShadows;
+		unsigned char physicallyBased;
 		unsigned char unused[2];
 		float color[3];
 		float dir[3];
@@ -8119,6 +8310,7 @@ namespace database
 		umbraTomePtr_t umbraTomePtr; // 2776
 		unsigned int mdaoVolumesCount; // 2784
 		MdaoVolume* mdaoVolumes; // 2792
+		char __pad2[2];
 		bool useLightGridDefaultModelLightingLookup;
 		bool useLightGridDefaultFXLightingLookup;
 		float lightGridDefaultModelLightingLookup[3];
@@ -8993,7 +9185,7 @@ namespace database
 	{
 		DDL_BYTE_TYPE = 0x0,
 		DDL_SHORT_TYPE = 0x1,
-		DDL_BOOL_TYPE = 0x2,
+		DDL_UINT_TYPE = 0x2,
 		DDL_INT_TYPE = 0x3,
 		DDL_UINT64_TYPE = 0x4,
 		DDL_FLOAT_TYPE = 0x5,
@@ -9583,6 +9775,7 @@ namespace database
 		DB_ZONE_BASEMAP = 0x20,
 		DB_ZONE_TRANSIENT_POOL = 0x40,
 		DB_ZONE_TRANSIENT_MASK = 0x40,
+		DB_ZONE_VLOBBY = 0x100,
 		DB_ZONE_CUSTOM = 0x1000 // added for custom zone loading
 	};
 
