@@ -6,9 +6,9 @@
 #include "game/dvars.hpp"
 
 #ifdef DEBUG
-#include "component/scheduler.hpp"
-#include "component/console.hpp"
+#include "console.hpp"
 #include "gui/gui.hpp"
+#include "d3d11.hpp"
 
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
@@ -1372,6 +1372,63 @@ namespace d3d11
 		typedef HRESULT(__stdcall* debug_info_add_message_t)(ID3D11InfoQueue*, D3D11_MESSAGE_CATEGORY, D3D11_MESSAGE_SEVERITY, D3D11_MESSAGE_ID, LPCSTR);
 		debug_info_add_message_t add_message_original = nullptr;
 
+		ID3D11DeviceContext* device_context = nullptr;
+
+		std::string get_shader_name(ID3D11DeviceChild* shader)
+		{
+			if (shader == nullptr)
+			{
+				return "nullptr";
+			}
+
+			std::string name;
+			UINT length{};
+			shader->GetPrivateData(WKPDID_D3DDebugObjectName, &length, name.data());
+			if (length == 0u)
+			{
+				return "unnamed";
+			}
+
+			name.resize(length);
+			shader->GetPrivateData(WKPDID_D3DDebugObjectName, &length, name.data());
+			return name;
+		}
+
+		void print_current_shaders(const console::console_type print_type)
+		{
+			if (device_context == nullptr)
+			{
+				return;
+			}
+
+			ID3D11PixelShader* ps_{};
+			ID3D11VertexShader* vs_{};
+			ID3D11DomainShader* ds_{};
+			ID3D11HullShader* hs_{};
+
+			ID3D11ClassInstance* instances[1]{};
+			UINT num_instances{};
+
+			device_context->PSGetShader(&ps_, instances, &num_instances);
+			num_instances = 0u;
+			device_context->VSGetShader(&vs_, instances, &num_instances);
+			num_instances = 0u;
+			device_context->DSGetShader(&ds_, instances, &num_instances);
+			num_instances = 0u;
+			device_context->HSGetShader(&hs_, instances, &num_instances);
+
+			const auto ps_name = get_shader_name(ps_);
+			const auto vs_name = get_shader_name(vs_);
+			const auto ds_name = get_shader_name(ds_);
+			const auto hs_name = get_shader_name(hs_);
+
+			console::print(print_type, "\tps: %s\n", ps_name.data());
+			console::print(print_type, "\tvs: %s\n", vs_name.data());
+			console::print(print_type, "\tds: %s\n", ds_name.data());
+			console::print(print_type, "\ths: %s\n", hs_name.data());
+			console::print(print_type, "\n");
+		}
+
 		HRESULT __stdcall info_queue_add_message_stub(ID3D11InfoQueue* this_, 
 			D3D11_MESSAGE_CATEGORY category, D3D11_MESSAGE_SEVERITY severity,
 			D3D11_MESSAGE_ID id, LPCSTR description)
@@ -1379,6 +1436,11 @@ namespace d3d11
 			if (d3d11_debug_legacy->current.enabled)
 			{
 				return add_message_original(this_, category, severity, id, description);
+			}
+
+			if (id == D3D11_MESSAGE_ID_GETPRIVATEDATA_MOREDATA)
+			{
+				return S_OK;
 			}
 
 			const auto now = game::Sys_Milliseconds();
@@ -1404,12 +1466,15 @@ namespace d3d11
 			{
 			case D3D11_MESSAGE_SEVERITY_CORRUPTION:
 				console::error("D3D11 CORRUPTION: %s [%i: %s]\n", description, id, name);
+				print_current_shaders(console::con_type_error);
 				break;
 			case D3D11_MESSAGE_SEVERITY_ERROR:
 				console::error("D3D11 ERRROR: %s [%i: %s]\n", description, id, name);
+				print_current_shaders(console::con_type_error);
 				break;
 			case D3D11_MESSAGE_SEVERITY_WARNING:
 				console::warn("D3D11 WARNING: %s [%i: %s]\n", description, id, name);
+				print_current_shaders(console::con_type_warning);
 				break;
 			case D3D11_MESSAGE_SEVERITY_INFO:
 				console::info("D3D11 INFO: %s [%i: %s]\n", description, id, name);
@@ -1420,7 +1485,7 @@ namespace d3d11
 			}
 
 			return S_OK;
-		}
+		} 
 
 		void hook_debug_info(ID3D11Device* device)
 		{
@@ -1463,6 +1528,7 @@ namespace d3d11
 			{
 				gui::device = *pp_device;
 				gui::device_context = *pp_immediate_context;
+				device_context = *pp_immediate_context;
 
 #ifdef __d3d11sdklayers_h__
 				hook_debug_info(*pp_device);
@@ -1470,6 +1536,47 @@ namespace d3d11
 			}
 
 			return result;
+		}
+
+		utils::hook::detour create_pixel_shader_hook;
+		utils::hook::detour create_vertex_shader_hook;
+		utils::hook::detour create_domain_shader_hook;
+		utils::hook::detour create_hull_shader_hook;
+		utils::hook::detour create_compute_shader_hook;
+
+		void create_pixel_shader_stub(game::GfxPixelShaderLoadDef* load_def, game::MaterialPixelShader* shader)
+		{
+			create_pixel_shader_hook.invoke<void>(load_def, shader);
+			shader->prog.ps->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
+			shader->prog.ps->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+		}
+
+		void create_vertex_shader_stub(game::GfxVertexShaderLoadDef* load_def, game::MaterialVertexShader* shader)
+		{
+			create_vertex_shader_hook.invoke<void>(load_def, shader);
+			shader->prog.vs->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
+			shader->prog.vs->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+		}
+
+		void create_domain_shader_stub(game::GfxDomainShaderLoadDef* load_def, game::MaterialDomainShader* shader)
+		{
+			create_domain_shader_hook.invoke<void>(load_def, shader);
+			shader->prog.ds->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
+			shader->prog.ds->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+		}
+
+		void create_hull_shader_stub(game::GfxHullShaderLoadDef* load_def, game::MaterialHullShader* shader)
+		{
+			create_hull_shader_hook.invoke<void>(load_def, shader);
+			shader->prog.hs->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
+			shader->prog.hs->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+		}
+
+		void create_compute_shader_stub(game::GfxComputeShaderLoadDef* load_def, game::ComputeShader* shader)
+		{
+			create_compute_shader_hook.invoke<void>(load_def, shader);
+			shader->prog.cs->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
+			shader->prog.cs->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
 		}
 	}
 
@@ -1506,6 +1613,12 @@ namespace d3d11
 			d3d11_debug_level = dvars::register_enum("d3d11_debugLevel", severity_levels, D3D11_MESSAGE_SEVERITY_WARNING, game::DVAR_FLAG_SAVED,
 				"d3d11 debug message severity level");
 			d3d11_debug_legacy = dvars::register_bool("d3d11_debugLegacyMode", false, game::DVAR_FLAG_SAVED, "use legacy d3d11 debug messages mode (dbgview)");
+
+			create_pixel_shader_hook.create(SELECT_VALUE(0x56DB40_b, 0x6910A0_b), create_pixel_shader_stub);
+			create_vertex_shader_hook.create(SELECT_VALUE(0x56DBF0_b, 0x691150_b), create_vertex_shader_stub);
+			create_domain_shader_hook.create(SELECT_VALUE(0x56DA20_b, 0x690F80_b), create_domain_shader_stub);
+			create_hull_shader_hook.create(SELECT_VALUE(0x56DAB0_b, 0x691010_b), create_hull_shader_stub);
+			create_compute_shader_hook.create(SELECT_VALUE(0x56D8F0_b, 0x690E50_b), create_compute_shader_stub);
 		}
 
 		void pre_destroy() override
