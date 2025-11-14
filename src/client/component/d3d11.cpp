@@ -20,6 +20,7 @@ namespace d3d11
 	{
 		game::dvar_t* d3d11_debug = nullptr;
 		game::dvar_t* d3d11_debug_level = nullptr;
+		game::dvar_t* d3d11_debug_legacy = nullptr;
 
 #ifdef __d3d11sdklayers_h__
 		std::unordered_map<std::uint32_t, const char*> message_names_map =
@@ -1368,21 +1369,29 @@ namespace d3d11
 
 		constexpr const auto msg_interval = 1000;
 
-		void info_queue_add_message_stub(ID3D11InfoQueue* this_, 
+		typedef HRESULT(__stdcall* debug_info_add_message_t)(ID3D11InfoQueue*, D3D11_MESSAGE_CATEGORY, D3D11_MESSAGE_SEVERITY, D3D11_MESSAGE_ID, LPCSTR);
+		debug_info_add_message_t add_message_original = nullptr;
+
+		HRESULT __stdcall info_queue_add_message_stub(ID3D11InfoQueue* this_, 
 			D3D11_MESSAGE_CATEGORY category, D3D11_MESSAGE_SEVERITY severity,
 			D3D11_MESSAGE_ID id, LPCSTR description)
 		{
+			if (d3d11_debug_legacy->current.enabled)
+			{
+				return add_message_original(this_, category, severity, id, description);
+			}
+
 			const auto now = game::Sys_Milliseconds();
 			if ((now - last_error_times[id] < msg_interval) && severity < D3D11_MESSAGE_SEVERITY_INFO)
 			{
-				return;
+				return S_OK;
 			}
 
 			last_error_times[id] = now;
 
 			if (severity > d3d11_debug_level->current.integer)
 			{
-				return;
+				return S_OK;
 			}
 
 			auto name = "unknown";
@@ -1394,21 +1403,23 @@ namespace d3d11
 			switch (severity)
 			{
 			case D3D11_MESSAGE_SEVERITY_CORRUPTION:
-				console::error("[D3D11 Corruption] (%s) %s\n", name, description);
+				console::error("D3D11 CORRUPTION: %s [%i: %s]\n", description, id, name);
 				break;
 			case D3D11_MESSAGE_SEVERITY_ERROR:
-				console::error("[D3D11 Error] (%s) %s\n", name, description);
+				console::error("D3D11 ERRROR: %s [%i: %s]\n", description, id, name);
 				break;
 			case D3D11_MESSAGE_SEVERITY_WARNING:
-				console::warn("[D3D11 Warning] (%s) %s\n", name, description);
+				console::warn("D3D11 WARNING: %s [%i: %s]\n", description, id, name);
 				break;
 			case D3D11_MESSAGE_SEVERITY_INFO:
-				console::info("[D3D11 Info] (%s) %s\n", name, description);
+				console::info("D3D11 INFO: %s [%i: %s]\n", description, id, name);
 				break;
 			case D3D11_MESSAGE_SEVERITY_MESSAGE:
-				console::info("[D3D11 Message] (%s) %s\n", name, description);
+				console::info("D3D11 MESSAGE: %s [%i: %s]\n", description, id, name);
 				break;
 			}
+
+			return S_OK;
 		}
 
 		void hook_debug_info(ID3D11Device* device)
@@ -1418,9 +1429,18 @@ namespace d3d11
 				return;
 			}
 
+			static auto done = false;
+			if (done)
+			{
+				return;
+			}
+
+			done = true;
+
 			ID3D11InfoQueue* debug_info_queue{};
 			device->QueryInterface(__uuidof(ID3D11InfoQueue), reinterpret_cast<void**>(&debug_info_queue));
 			const auto vtable_entry = utils::hook::get_vtable_entry(debug_info_queue, &ID3D11InfoQueue::AddMessage);
+			add_message_original = *reinterpret_cast<debug_info_add_message_t*>(vtable_entry);
 			utils::hook::set(vtable_entry, info_queue_add_message_stub);
 		}
 #endif
@@ -1485,6 +1505,7 @@ namespace d3d11
 			d3d11_debug = dvars::register_bool("d3d11_debug", false, game::DVAR_FLAG_SAVED, "enable d3d11 debug layer");
 			d3d11_debug_level = dvars::register_enum("d3d11_debugLevel", severity_levels, D3D11_MESSAGE_SEVERITY_WARNING, game::DVAR_FLAG_SAVED,
 				"d3d11 debug message severity level");
+			d3d11_debug_legacy = dvars::register_bool("d3d11_debugLegacyMode", false, game::DVAR_FLAG_SAVED, "use legacy d3d11 debug messages mode (dbgview)");
 		}
 
 		void pre_destroy() override
