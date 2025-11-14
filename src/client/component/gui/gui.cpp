@@ -282,19 +282,19 @@ namespace gui
 			initialized = false;
 		}
 
-		HRESULT d3d11_create_device_stub(IDXGIAdapter* pAdapter, D3D_DRIVER_TYPE DriverType, HMODULE Software,
-			UINT Flags, const D3D_FEATURE_LEVEL* pFeatureLevels, UINT FeatureLevels, UINT SDKVersion,
-			ID3D11Device** ppDevice, D3D_FEATURE_LEVEL* pFeatureLevel, ID3D11DeviceContext** ppImmediateContext)
+		HRESULT d3d11_create_device_stub(IDXGIAdapter* p_adapter, D3D_DRIVER_TYPE driver_type, HMODULE software,
+			UINT flags, const D3D_FEATURE_LEVEL* p_feature_levels, UINT feature_levels, UINT sdk_version,
+			ID3D11Device** pp_device, D3D_FEATURE_LEVEL* p_feature_level, ID3D11DeviceContext** pp_immediate_context)
 		{
 			shutdown_gui();
 
-			const auto result = D3D11CreateDevice(pAdapter, DriverType, Software, Flags, pFeatureLevels,
-				FeatureLevels, SDKVersion, ppDevice, pFeatureLevel, ppImmediateContext);
+			const auto result = D3D11CreateDevice(p_adapter, driver_type, software, flags, p_feature_levels,
+				feature_levels, sdk_version, pp_device, p_feature_level, pp_immediate_context);
 
-			if (ppDevice != nullptr && ppImmediateContext != nullptr)
+			if (pp_device != nullptr && pp_immediate_context != nullptr)
 			{
-				device = *ppDevice;
-				device_context = *ppImmediateContext;
+				device = *pp_device;
+				device_context = *pp_immediate_context;
 			}
 
 			return result;
@@ -306,9 +306,9 @@ namespace gui
 			if (wParam != VK_ESCAPE && toggled)
 			{
 				event_queue.access([hWnd, msg, wParam, lParam](std::vector<event>& queue)
-					{
-						queue.emplace_back(hWnd, msg, wParam, lParam);
-					});
+				{
+					queue.emplace_back(hWnd, msg, wParam, lParam);
+				});
 			}
 
 			return wnd_proc_hook.invoke<LRESULT>(hWnd, msg, wParam, lParam);
@@ -345,9 +345,9 @@ namespace gui
 	void on_frame(const std::function<void()>& callback, bool always)
 	{
 		on_frame_callbacks.access([always, callback](std::vector<frame_callback>& callbacks)
-			{
-				callbacks.emplace_back(callback, always);
-			});
+		{
+			callbacks.emplace_back(callback, always);
+		});
 	}
 
 	bool is_menu_open(const std::string& name)
@@ -364,9 +364,9 @@ namespace gui
 		notification.creation_time = std::chrono::high_resolution_clock::now();
 
 		notifications.access([notification](std::deque<notification_t>& notifications_)
-			{
-				notifications_.push_front(notification);
-			});
+		{
+			notifications_.push_front(notification);
+		});
 	}
 
 	void copy_to_clipboard(const std::string& text)
@@ -382,12 +382,12 @@ namespace gui
 		enabled_menus[name] = false;
 
 		on_frame([=]
+		{
+			if (enabled_menus.at(name))
 			{
-				if (enabled_menus.at(name))
-				{
-					callback();
-				}
-			}, always);
+				callback();
+			}
+		}, always);
 	}
 
 	void register_callback(const std::function<void()>& callback, bool always)

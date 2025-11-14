@@ -279,7 +279,7 @@ namespace gui::asset_list::techet
 #define DRAW_SUB_ASSET_PROPERTY_NAME(__var__, __fmt__, __name__) \
 				ImGui::Text(#__name__ ": " __fmt__, __var__->__name__ != nullptr ? __var__->__name__->name : "null"); \
 
-#define DRAW_SUB_ASSET_PROPERTY_NAME_COPY(__var__, __fmt__, __name__) \
+#define DRAW_SUB_ASSET_PROPERTY_NAME_VIEW(__var__, __fmt__, __name__) \
 				ImGui::Text(#__name__ ": " __fmt__, __var__->__name__ != nullptr ? __var__->__name__->name : "null"); \
 
 #define DRAW_SUB_ASSET_PROPERTY(__var__, __fmt__, __name__) \
@@ -294,13 +294,30 @@ namespace gui::asset_list::techet
 			{
 				const auto pass = &technique->passArray[o];
 
+#define ADD_SHADER(__name__, __type__) \
+				ImGui::Text(#__name__ ": "); \
+				ImGui::SameLine(); \
+				if (pass->__name__ != nullptr) \
+				{ \
+					if (ImGui::Button(pass->__name__->name)) \
+					{ \
+						gui::copy_to_clipboard(pass->__name__->name); \
+					} \
+					gui::asset_list::add_view_button(__type__, __type__, pass->__name__->name); \
+				} \
+				else \
+				{ \
+					ImGui::Text("null"); \
+				} \
+
+
 				if (ImGui::TreeNode(pass, "pass %i", o))
 				{
-					DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", vertexShader);
+					ADD_SHADER(vertexShader, game::ASSET_TYPE_VERTEXSHADER);
 					DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", vertexDecl);
-					DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", hullShader);
-					DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", domainShader);
-					DRAW_SUB_ASSET_PROPERTY_NAME(pass, "%s", pixelShader);
+					ADD_SHADER(hullShader, game::ASSET_TYPE_HULLSHADER);
+					ADD_SHADER(domainShader, game::ASSET_TYPE_DOMAINSHADER);
+					ADD_SHADER(pixelShader, game::ASSET_TYPE_PIXELSHADER);
 
 					ImGui::NewLine();
 
@@ -355,7 +372,6 @@ namespace gui::asset_list::techet
 
 						ImGui::PopID();
 					};
-
 
 					if (ImGui::TreeNode("per primitive args"))
 					{
@@ -427,9 +443,17 @@ namespace gui::asset_list::techet
 
 			static std::uint32_t inputs[game::TECHNIQUE_COUNT]{};
 
+			static std::string technique_filter;
+			ImGui::InputText("filter", &technique_filter);
+
 			for (auto i = 0; i < game::TECHNIQUE_COUNT; i++)
 			{
 				const auto technique = asset->techniques[i];
+
+				if (!utils::string::strstr_lower(technique_names[i], technique_filter.data()))
+				{
+					continue;
+				}
 
 				if (ImGui::TreeNode(technique_names[i], "%s %s", technique_names[i], technique == nullptr ? "(null)" : ""))
 				{
