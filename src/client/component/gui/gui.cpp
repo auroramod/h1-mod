@@ -20,6 +20,9 @@ namespace gui
 {
 	std::unordered_map<std::string, bool> enabled_menus;
 
+	ID3D11Device* device;
+	ID3D11DeviceContext* device_context;
+
 	namespace
 	{
 		struct frame_callback
@@ -48,8 +51,6 @@ namespace gui
 		utils::concurrency::container<std::vector<event>> event_queue;
 		std::vector<menu_t> menus;
 
-		ID3D11Device* device;
-		ID3D11DeviceContext* device_context;
 		bool initialized = false;
 		bool toggled = false;
 
@@ -271,35 +272,6 @@ namespace gui
 			}
 		}
 
-		void shutdown_gui()
-		{
-			if (initialized)
-			{
-				ImGui_ImplWin32_Shutdown();
-				ImGui::DestroyContext();
-			}
-
-			initialized = false;
-		}
-
-		HRESULT d3d11_create_device_stub(IDXGIAdapter* p_adapter, D3D_DRIVER_TYPE driver_type, HMODULE software,
-			UINT flags, const D3D_FEATURE_LEVEL* p_feature_levels, UINT feature_levels, UINT sdk_version,
-			ID3D11Device** pp_device, D3D_FEATURE_LEVEL* p_feature_level, ID3D11DeviceContext** pp_immediate_context)
-		{
-			shutdown_gui();
-
-			const auto result = D3D11CreateDevice(p_adapter, driver_type, software, flags, p_feature_levels,
-				feature_levels, sdk_version, pp_device, p_feature_level, pp_immediate_context);
-
-			if (pp_device != nullptr && pp_immediate_context != nullptr)
-			{
-				device = *pp_device;
-				device_context = *pp_immediate_context;
-			}
-
-			return result;
-		}
-
 		utils::hook::detour wnd_proc_hook;
 		LRESULT wnd_proc_stub(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
@@ -410,19 +382,20 @@ namespace gui
 		return ImGui::InputScalarN(label, ImGuiDataType_U32, v, 6, NULL, NULL, "%d", flags);
 	}
 
+	void shutdown_gui()
+	{
+		if (initialized)
+		{
+			ImGui_ImplWin32_Shutdown();
+			ImGui::DestroyContext();
+		}
+
+		initialized = false;
+	}
+
 	class component final : public component_interface
 	{
 	public:
-		void* load_import(const std::string& library, const std::string& function) override
-		{
-			if (function == "D3D11CreateDevice" && (!game::environment::is_dedi() && !game::environment::is_sp()))
-			{
-				return d3d11_create_device_stub;
-			}
-
-			return nullptr;
-		}
-
 		void post_unpack() override
 		{
 			if (game::environment::is_dedi() || game::environment::is_sp())
