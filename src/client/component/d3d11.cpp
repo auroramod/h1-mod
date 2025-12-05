@@ -1547,36 +1547,56 @@ namespace d3d11
 		void create_pixel_shader_stub(game::GfxPixelShaderLoadDef* load_def, game::MaterialPixelShader* shader)
 		{
 			create_pixel_shader_hook.invoke<void>(load_def, shader);
-			shader->prog.ps->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
-			shader->prog.ps->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+
+			if (shader->prog.ps != nullptr)
+			{
+				shader->prog.ps->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
+				shader->prog.ps->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+			}
 		}
 
 		void create_vertex_shader_stub(game::GfxVertexShaderLoadDef* load_def, game::MaterialVertexShader* shader)
 		{
 			create_vertex_shader_hook.invoke<void>(load_def, shader);
-			shader->prog.vs->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
-			shader->prog.vs->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+			
+			if (shader->prog.vs != nullptr)
+			{
+				shader->prog.vs->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
+				shader->prog.vs->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+			}
 		}
 
 		void create_domain_shader_stub(game::GfxDomainShaderLoadDef* load_def, game::MaterialDomainShader* shader)
 		{
 			create_domain_shader_hook.invoke<void>(load_def, shader);
-			shader->prog.ds->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
-			shader->prog.ds->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+
+			if (shader->prog.ds != nullptr)
+			{
+				shader->prog.ds->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
+				shader->prog.ds->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+			}
 		}
 
 		void create_hull_shader_stub(game::GfxHullShaderLoadDef* load_def, game::MaterialHullShader* shader)
 		{
 			create_hull_shader_hook.invoke<void>(load_def, shader);
-			shader->prog.hs->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
-			shader->prog.hs->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+
+			if (shader->prog.hs != nullptr)
+			{
+				shader->prog.hs->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
+				shader->prog.hs->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+			}
 		}
 
 		void create_compute_shader_stub(game::GfxComputeShaderLoadDef* load_def, game::ComputeShader* shader)
 		{
 			create_compute_shader_hook.invoke<void>(load_def, shader);
-			shader->prog.cs->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
-			shader->prog.cs->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+
+			if (shader->prog.cs != nullptr)
+			{
+				shader->prog.cs->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);
+				shader->prog.cs->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(std::strlen(shader->name)), shader->name);
+			}
 		}
 	}
 
