@@ -2231,6 +2231,7 @@ namespace game
 		char __pad1[1812];
 		MaterialPixelShader* pixelShader;
 	};
+
 	assert_offsetof(GfxCmdBufState, material, 6376);
 	assert_offsetof(GfxCmdBufState, pixelShader, 8224);
 
@@ -2238,5 +2239,11 @@ namespace game
 	{
 		GfxCmdBufSourceState* source;
 		GfxCmdBufState* state;
+	};
+
+	struct pathsort_s
+	{
+		pathnode_t* node;
+		float metric;
 	};
 }

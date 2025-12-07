@@ -251,6 +251,9 @@ namespace game
 	WEAK symbol<void(void* dc, void* menu, int a3)> Menus_Open{0x0, 0x1E1296};
 	WEAK symbol<void(void* dc)> Display_MouseMove{0x0, 0x180B70};
 
+	WEAK symbol<int(const float* origin, const float* enemyPos, float maxDist, float maxHeight,
+		pathsort_s* nodes, int maxNodes, int typeFlags)> Path_NodesInCylinder{0x0, 0x3F9D30};
+
 	WEAK symbol<scr_string_t(const char* str)> SL_FindString{0x3C0F50, 0x507FD0};
 	WEAK symbol<scr_string_t(const char* str, unsigned int user)> SL_GetString{0x3C1210, 0x5083A0};
 	WEAK symbol<const char*(scr_string_t stringValue)> SL_ConvertToString{0x3C0C50, 0x507CD0};
@@ -281,6 +284,8 @@ namespace game
 	WEAK symbol<void(int localClientNum)> SV_FastRestart{0x0, 0x54BE00};
 	WEAK symbol<void(void* cl, int type, const char* fmt, ...)> SV_SendServerCommand{0x0, 0x1CC040};
 	WEAK symbol<void(mp::client_t* drop, const char* reason, bool tellThem)> SV_DropClient_Internal{0x0, 0x54E7F0};
+
+	WEAK symbol<void(const float* origin, float radius, int dangerous)> SV_BotMarkNodesAsDangerous{0x0, 0x53BC20};
 
 	WEAK symbol<void()> Sys_ShowConsole{0x0, 0x0};
 	WEAK symbol<void(const char* error, ...)> Sys_Error{0x0, 0x1D8710};
