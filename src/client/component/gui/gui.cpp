@@ -138,16 +138,6 @@ namespace gui
 		void new_gui_frame()
 		{
 			ImGui::GetIO().MouseDrawCursor = toggled;
-			if (toggled)
-			{
-				*reinterpret_cast<int*>(0xC9DC405_b) = 0;
-				*game::keyCatchers |= 0x10;
-			}
-			else
-			{
-				*reinterpret_cast<int*>(0xC9DC405_b) = 1;
-				*game::keyCatchers &= ~0x10;
-			}
 
 			update_colors();
 
@@ -287,17 +277,32 @@ namespace gui
 		}
 	}
 
+	void toggle()
+	{
+		if (!toggled)
+		{
+			*reinterpret_cast<int*>(0xC9DC405_b) = 0;
+			*game::keyCatchers |= 0x10;
+		}
+		else
+		{
+			*reinterpret_cast<int*>(0xC9DC405_b) = 1;
+			*game::keyCatchers &= ~0x10;
+		}
+		toggled = !toggled;
+	}
+
 	bool gui_key_event(const int local_client_num, const int key, const int down)
 	{
 		if (key == game::K_F11 && down)
 		{
-			toggled = !toggled;
+			toggle();
 			return false;
 		}
 
 		if (key == game::K_ESCAPE && down && toggled)
 		{
-			toggled = false;
+			toggle();
 			return false;
 		}
 
