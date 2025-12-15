@@ -1,5 +1,6 @@
-#ifdef DEBUG
 #pragma once
+
+#ifdef DEBUG
 
 namespace gui::debug
 {
@@ -7,7 +8,7 @@ namespace gui::debug
 	void remove_debug_line(const size_t line);
 	void set_debug_line_color(size_t line, const float* color);
 
-	size_t add_debug_square(const float* origin, const float* color);
+	size_t add_debug_square(const float* origin, const float* color, const float thickness);
 	void remove_debug_square(const size_t line);
 	void set_debug_square_color(size_t square, const float* color);
 

@@ -6,15 +6,14 @@
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
-#include "component/scheduler.hpp"
-#include "component/command.hpp"
 #include "gui.hpp"
+#include "component/scripting.hpp"
+#include "component/scheduler.hpp"
 
-#include "game/scripting/execution.hpp"
+#include "component/gsc/script_extension.hpp"
 
-#include <utils/string.hpp>
-#include <utils/hook.hpp>
 #include <utils/concurrency.hpp>
+#include <utils/string.hpp>
 
 namespace gui::debug
 {
@@ -33,11 +32,15 @@ namespace gui::debug
 			float origin[3];
 			float color[4];
 			bool deleted;
+			std::optional<std::string> text;
+			float thickness;
 		};
 
 		std::vector<debug_line> debug_lines;
 		std::vector<debug_square> debug_squares;
 		std::mutex debug_items_mutex;
+		
+		std::vector<size_t> debug_nodes_mapping;
 
 		game::dvar_t* cl_paused = nullptr;
 
@@ -707,6 +710,11 @@ namespace gui::debug
 				{
 					continue;
 				}
+				
+				if (distance_2d(path_node_settings.camera, line.start) >= path_node_settings.range)
+				{
+					continue;
+				}
 
 				draw_line(line.start, line.end, line.color, 1.f);
 			}
@@ -717,8 +725,29 @@ namespace gui::debug
 				{
 					continue;
 				}
+				
+				if (distance_2d(path_node_settings.camera, square.origin) >= path_node_settings.range)
+				{
+					continue;
+				}
 
-				draw_square(square.origin, 50.f, square.color);
+				draw_cube(square.origin, square.thickness, square.color, 0.25f, false);
+				
+				if (square.text.has_value())
+				{
+					float screen_pos[2] = {};
+					if (world_pos_to_screen_pos(square.origin, screen_pos))
+					{
+						const auto* window = ImGui::GetCurrentWindow();
+						window->DrawList->AddText(
+							ImGui::GetDefaultFont(),
+							ImGui::GetFontSize(),
+							ImVec2(screen_pos[0], screen_pos[1]),
+							IM_COL32(255, 255, 255, 255),
+							square.text.value().c_str()
+						);
+					}
+				}
 			}
 		}
 
@@ -798,11 +827,13 @@ namespace gui::debug
 		std::memcpy(line_.color, color, sizeof(float[4]));
 	}
 
-	size_t add_debug_square(const float* origin, const float* color)
+	size_t add_debug_square(const float* origin, const float* color, const std::string& text, const float thickness)
 	{
 		debug_square line{};
 		std::memcpy(line.origin, origin, sizeof(float[3]));
 		std::memcpy(line.color, color, sizeof(float[4]));
+		line.text = text;
+		line.thickness = thickness;
 
 		std::lock_guard _0(debug_items_mutex);
 		const auto index = debug_squares.size();
@@ -838,6 +869,7 @@ namespace gui::debug
 		std::lock_guard _0(debug_items_mutex);
 		debug_lines.clear();
 		debug_squares.clear();
+		debug_nodes_mapping.clear();
 	}
 
 	class component final : public component_interface
@@ -865,6 +897,20 @@ namespace gui::debug
 				draw_debug_items();
 				end_render_window();
 			}, true);
+			
+#ifdef DEBUG
+			scripting::on_shutdown([](bool, const bool post_shutdown)
+			{
+				if (!post_shutdown)
+				{
+					for (const auto node_id : debug_nodes_mapping)
+					{
+						remove_debug_square(node_id);
+					}
+					reset_debug_items();
+				}
+			});
+#endif
 
 			scheduler::once([]()
 			{
@@ -881,6 +927,80 @@ namespace gui::debug
 
 				update_camera();
 			}, scheduler::pipeline::renderer);
+			
+			// GSC functions for quick node/line debugging
+			gsc::function::add("add_debug_node", [](const gsc::function_args& args)
+			{
+#ifdef DEBUG
+				const auto origin = args[0].as<scripting::vector>();
+				const auto text = args[1].as<std::string>();
+				const auto thickness = args[2].as<float>();
+
+				float color[4] = { 0.f, 1.f, 0.f, 1.f };
+				if (args[3].as<scripting::vector>())
+				{
+					const auto color_arg = args[3].as<scripting::vector>();
+					color[0] = color_arg.get_x();
+					color[1] = color_arg.get_y();
+					color[2] = color_arg.get_z();
+				}
+
+				const size_t node_id = add_debug_square(origin, color, text, thickness);
+				debug_nodes_mapping.push_back(node_id);
+
+				return static_cast<int>(node_id);
+#else
+				return scripting::script_value{};
+#endif
+			});
+
+			gsc::function::add("add_debug_line", [](const gsc::function_args& args)
+			{
+#ifdef DEBUG
+				const auto origin = args[0].as<scripting::vector>();
+				const auto end = args[1].as<scripting::vector>();
+
+				float color[4] = { 0.f, 1.f, 0.f, 1.f };
+				if (args[2].as<scripting::vector>())
+				{
+					const auto color_arg = args[2].as<scripting::vector>();
+					color[0] = color_arg.get_x();
+					color[1] = color_arg.get_y();
+					color[2] = color_arg.get_z();
+				}
+
+				const size_t node_id = add_debug_line(origin, end, color);
+				//debug_nodes_mapping.push_back(node_id);
+
+				return static_cast<int>(node_id);
+#else
+				return scripting::script_value{};
+#endif
+			});
+
+			gsc::function::add("remove_debug_node", [](const gsc::function_args& args)
+			{
+#ifdef DEBUG
+				remove_debug_square(static_cast<size_t>(args[0].as<int>()));
+#endif
+				return scripting::script_value{};
+			});
+
+			gsc::function::add("remove_debug_line", [](const gsc::function_args& args)
+			{
+#ifdef DEBUG
+				remove_debug_line(static_cast<size_t>(args[0].as<int>()));
+#endif
+				return scripting::script_value{};
+			});
+
+			gsc::function::add("reset_debug_items", [](const gsc::function_args& args)
+			{
+#ifdef DEBUG
+				reset_debug_items();
+#endif
+				return scripting::script_value{};
+			});
 		}
 	};
 }
