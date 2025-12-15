@@ -37,7 +37,7 @@ namespace network
 			const std::string data(message->data + offset, message->cursize - offset);
 
 			handler->second(*address, data);
-#ifdef DEBUG
+#ifdef _DEBUG
 			console::info("[Network] Handling command %s\n", cmd_string.data());
 #endif
 			return true;

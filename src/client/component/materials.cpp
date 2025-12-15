@@ -23,7 +23,7 @@ namespace materials
 		utils::hook::detour db_material_streaming_fail_hook;
 		utils::hook::detour db_get_material_index_hook;
 
-#ifdef DEBUG
+#ifdef _DEBUG
 		utils::hook::detour material_compare_hook;
 		utils::hook::detour set_pixel_texture_hook;
 		utils::hook::detour r_draw_triangles_lit_hook;
@@ -53,7 +53,7 @@ namespace materials
 			return db_get_material_index_hook.invoke<unsigned int>(material);
 		}
 
-#ifdef DEBUG
+#ifdef _DEBUG
 		char material_compare_stub(unsigned int index_a, unsigned int index_b)
 		{
 			char result = 0;
@@ -245,7 +245,7 @@ namespace materials
 			db_material_streaming_fail_hook.create(SELECT_VALUE(0x1FB400_b, 0x3A1600_b), db_material_streaming_fail_stub);
 			db_get_material_index_hook.create(SELECT_VALUE(0x1F1D80_b, 0x396000_b), db_get_material_index_stub);
 
-#ifdef DEBUG
+#ifdef _DEBUG
 			if (!game::environment::is_sp())
 			{
 				material_compare_hook.create(0x693B90_b, material_compare_stub);

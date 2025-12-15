@@ -19,7 +19,7 @@ namespace steam
 			std::string content;
 			if (::utils::io::read_file(LANGUAGE_FILE, &content))
 			{
-#ifdef DEBUG
+#ifdef _DEBUG
 				console::info("Language switched to \"%s\".\n", content.data());
 #endif
 				strcpy_s(language, sizeof(language), content.data());

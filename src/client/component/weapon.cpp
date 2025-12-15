@@ -280,7 +280,7 @@ namespace weapon
 					false, game::DVAR_FLAG_REPLICATED, "Disable custom classes on server");
 			}
 
-#ifdef DEBUG
+#ifdef _DEBUG
 			command::add("setWeaponFieldFloat", [](const command::params& params)
 			{
 				if (params.size() <= 3)

@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef DEBUG
+#ifdef _DEBUG
 
 namespace gui::debug
 {

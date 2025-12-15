@@ -60,7 +60,7 @@
 #undef min
 #endif
 
-#ifdef DEBUG
+#ifdef _DEBUG
 //#define DW_DEBUG
 #endif
 

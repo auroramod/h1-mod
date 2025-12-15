@@ -23,7 +23,7 @@ namespace renderer
 		game::dvar_t* r_use_custom_red_dot_brightness;
 		float tonemap_highlight_range = 16.f;
 
-#ifdef DEBUG
+#ifdef _DEBUG
 		game::dvar_t* r_drawLightOrigins;
 		game::dvar_t* r_drawModelNames;
 		game::dvar_t* r_drawDynEntInfo;
@@ -180,7 +180,7 @@ namespace renderer
 			a.jmp(SELECT_VALUE(0x5CF20A_b, 0x6E7722_b));
 		}
 
-#ifdef DEBUG
+#ifdef _DEBUG
 		void VectorSubtract(const float va[3], const float vb[3], float out[3])
 		{
 			out[0] = va[0] - vb[0];
@@ -462,7 +462,7 @@ namespace renderer
 			utils::hook::jump(SELECT_VALUE(0x5CF1F1_b, 0x6E76F1_b), utils::hook::assemble(r_preload_shaders_stub), true);
 			dvars::override::register_bool("r_preloadShaders", false, game::DVAR_FLAG_SAVED);
 
-#ifdef DEBUG
+#ifdef _DEBUG
 			if (!game::environment::is_mp())
 			{
 				return;

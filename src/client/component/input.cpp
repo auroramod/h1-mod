@@ -24,7 +24,7 @@ namespace input
 				return;
 			}
 
-#ifdef DEBUG
+#ifdef _DEBUG
 			if (!gui::gui_char_event(local_client_num, key))
 			{
 				return;
@@ -41,7 +41,7 @@ namespace input
 				return;
 			}
 
-#ifdef DEBUG
+#ifdef _DEBUG
 			if (!gui::gui_key_event(local_client_num, key, down))
 			{
 				return;
@@ -51,7 +51,7 @@ namespace input
 			cl_key_event_hook.invoke<void>(local_client_num, key, down);
 		}
 
-#ifdef DEBUG
+#ifdef _DEBUG
 		void cl_mouse_move_stub(const int local_client_num, int x, int y)
 		{
 			if (!gui::gui_mouse_event(local_client_num, x, y))
@@ -76,7 +76,7 @@ namespace input
 
 			cl_char_event_hook.create(SELECT_VALUE(0x1AB8F0_b, 0x12C8F0_b), cl_char_event_stub);
 			cl_key_event_hook.create(SELECT_VALUE(0x1ABC20_b, 0x135A70_b), cl_key_event_stub);
-#ifdef DEBUG
+#ifdef _DEBUG
 			if (game::environment::is_sp())
 			{
 				cl_mouse_move_hook.create(SELECT_VALUE(0x0_b, 0x27B310_b), cl_mouse_move_stub);

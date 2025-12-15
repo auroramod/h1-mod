@@ -1,6 +1,6 @@
 #include <std_include.hpp>
 
-#ifdef DEBUG
+#ifdef _DEBUG
 #include "loader/component_loader.hpp"
 
 #include "component/command.hpp"

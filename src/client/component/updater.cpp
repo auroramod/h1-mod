@@ -351,7 +351,7 @@ namespace updater
 
 	bool auto_updates_enabled()
 	{
-#ifdef DEBUG
+#ifdef _DEBUG
 		return false;
 #else
 		return cl_auto_update->current.enabled;

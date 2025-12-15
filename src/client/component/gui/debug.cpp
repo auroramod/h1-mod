@@ -1,6 +1,6 @@
 #include <std_include.hpp>
 
-#ifdef DEBUG
+#ifdef _DEBUG
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -898,7 +898,6 @@ namespace gui::debug
 				end_render_window();
 			}, true);
 			
-#ifdef DEBUG
 			scripting::on_shutdown([](bool, const bool post_shutdown)
 			{
 				if (!post_shutdown)
@@ -910,7 +909,6 @@ namespace gui::debug
 					reset_debug_items();
 				}
 			});
-#endif
 
 			scheduler::once([]()
 			{
@@ -931,7 +929,7 @@ namespace gui::debug
 			// GSC functions for quick node/line debugging
 			gsc::function::add("add_debug_node", [](const gsc::function_args& args)
 			{
-#ifdef DEBUG
+#ifdef _DEBUG
 				const auto origin = args[0].as<scripting::vector>();
 				const auto text = args[1].as<std::string>();
 				const auto thickness = args[2].as<float>();
@@ -956,7 +954,7 @@ namespace gui::debug
 
 			gsc::function::add("add_debug_line", [](const gsc::function_args& args)
 			{
-#ifdef DEBUG
+#ifdef _DEBUG
 				const auto origin = args[0].as<scripting::vector>();
 				const auto end = args[1].as<scripting::vector>();
 
@@ -980,7 +978,7 @@ namespace gui::debug
 
 			gsc::function::add("remove_debug_node", [](const gsc::function_args& args)
 			{
-#ifdef DEBUG
+#ifdef _DEBUG
 				remove_debug_square(static_cast<size_t>(args[0].as<int>()));
 #endif
 				return scripting::script_value{};
@@ -988,7 +986,7 @@ namespace gui::debug
 
 			gsc::function::add("remove_debug_line", [](const gsc::function_args& args)
 			{
-#ifdef DEBUG
+#ifdef _DEBUG
 				remove_debug_line(static_cast<size_t>(args[0].as<int>()));
 #endif
 				return scripting::script_value{};
@@ -996,7 +994,7 @@ namespace gui::debug
 
 			gsc::function::add("reset_debug_items", [](const gsc::function_args& args)
 			{
-#ifdef DEBUG
+#ifdef _DEBUG
 				reset_debug_items();
 #endif
 				return scripting::script_value{};

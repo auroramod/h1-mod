@@ -1,4 +1,4 @@
-#ifdef DEBUG
+#ifdef _DEBUG
 #pragma once
 #include "game/structs.hpp"
 #include "gui.hpp"

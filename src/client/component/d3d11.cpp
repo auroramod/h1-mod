@@ -5,7 +5,7 @@
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
-#ifdef DEBUG
+#ifdef _DEBUG
 #include "console.hpp"
 #include "gui/gui.hpp"
 #include "d3d11.hpp"
