@@ -67,12 +67,6 @@ function dependencies.projects()
 end
 
 newoption {
-	trigger = "copy-to",
-	description = "Optional, copy the EXE to a custom folder after build, define the path here if wanted.",
-	value = "PATH"
-}
-
-newoption {
 	trigger = "dev-build",
 	description = "Enable development builds of the client."
 }
@@ -240,10 +234,6 @@ editandcontinue "Off"
 warnings "Extra"
 characterset "ASCII"
 
-if _OPTIONS["dev-build"] then
-	defines {"DEV_BUILD"}
-end
-
 if os.getenv("CI") then
 	defines {"CI"}
 end
@@ -303,8 +293,13 @@ links {"common"}
 
 prebuildcommands {"pushd %{_MAIN_SCRIPT_DIR}", "tools\\premake5 generate-buildinfo", "popd"}
 
-if _OPTIONS["copy-to"] then
-	postbuildcommands {"copy /y \"$(TargetPath)\" \"" .. _OPTIONS["copy-to"] .. "\""}
+if os.getenv("AURORAH1_GAME_PATH") then
+	debugdir "$(AURORAH1_GAME_PATH)"
+	debugcommand "$(AURORAH1_GAME_PATH)\\$(TargetName)$(TargetExt)"
+	postbuildcommands {
+		"echo Copying to Aurora H1-mod game path...",
+		"copy /y \"$(OutDir)$(TargetName)$(TargetExt)\" \"$(AURORAH1_GAME_PATH)\\$(TargetName)$(TargetExt)\""
+	}
 end
 
 if os.getenv("COMPUTERNAME") == "DESKTOP-JDO25VF" then

@@ -44,7 +44,6 @@ namespace steam_proxy
 			this->load_client();
 			this->clean_up_on_error();
 
-#ifndef DEV_BUILD
 			try
 			{
 				this->start_mod("\xF0\x9F\x8E\xAE" " H1-Mod: "s + (game::environment::is_sp() ? "Singleplayer" : "Multiplayer"), app_id);
@@ -53,7 +52,6 @@ namespace steam_proxy
 			{
 				printf("Steam: %s\n", e.what());
 			}
-#endif
 		}
 
 		void pre_destroy() override

@@ -118,14 +118,6 @@ namespace arxan
 			const auto correct_checksum = *context->original_checksum;
 			*context->computed_checksum = correct_checksum;
 
-			if (current_checksum != correct_checksum)
-			{
-#ifdef DEV_BUILD
-				OutputDebugStringA(utils::string::va("Adjusting checksum (%llX): %X -> %X", handler_address,
-					current_checksum, correct_checksum));
-#endif
-			}
-
 			return correct_checksum;
 		}
 
