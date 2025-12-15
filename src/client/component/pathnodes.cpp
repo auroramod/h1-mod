@@ -8,10 +8,12 @@
 
 #include <utils/hook.hpp>
 
-namespace nodes
+namespace pathnodes
 {
 	namespace
 	{
+		game::dvar_t* scr_enable_jump_nodes = nullptr;
+
 		scripting::script_value mark_dangerous_nodes(const gsc::function_args& args)
 		{
 			if (args.size() < 3)
@@ -115,6 +117,109 @@ namespace nodes
 
 			return {};
 		}
+
+		constexpr const auto node_type_jump = 32;
+		constexpr const auto node_type_jump_attack = 33;
+		constexpr const auto node_type_end = 34;
+
+		bool is_jump_node(const std::uint16_t type)
+		{
+			return type == node_type_jump || type == node_type_jump_attack;
+		}
+
+		bool is_traverse_begin_node(const std::uint16_t type)
+		{
+			return type == game::NODE_NEGOTIATION_BEGIN || type == game::NODE_NEGOTIATION_BEGIN_3D;
+		}
+
+		bool is_traverse_end_node(const std::uint16_t type)
+		{
+			return type == game::NODE_NEGOTIATION_END || type == game::NODE_NEGOTIATION_END_3D;
+		}
+
+		bool is_traverse_begin_or_jump_node(const std::uint16_t type)
+		{
+			return is_traverse_begin_node(type) || is_jump_node(type);
+		}
+
+		bool is_traverse_end_or_jump_node(const std::uint16_t type)
+		{
+			return is_traverse_end_node(type) || is_jump_node(type);
+		}
+
+		const char* node_types[] =
+		{
+			"Error",
+			"Path",
+			"Cover Stand",
+			"Cover Crouch",
+			"Cover Crouch Window",
+			"Cover Prone",
+			"Cover Right",
+			"Cover Left",
+			"Cover Wide Right",
+			"Cover Wide Left",
+			"Cover Multi",
+			"Ambush",
+			"Exposed",
+			"Conceal Stand",
+			"Conceal Crouch",
+			"Conceal Prone",
+			"Door",
+			"Door Interior",
+			"Scripted",
+			"Begin",
+			"End",
+			"Turret",
+			"Guard",
+			"Path 3D",
+			"Cover Up 3D",
+			"Cover Right 3D",
+			"Cover Left 3D",
+			"Exposed 3D",
+			"Scripted 3D",
+			"Begin 3D",
+			"End 3D",
+			"",
+			"Jump",
+			"Jump Attack",
+		};
+
+		bool check_traverse_node(const game::pathnode_t* a1, const game::pathnode_t* a2)
+		{
+			if (!scr_enable_jump_nodes->current.enabled)
+			{
+				return is_traverse_begin_node(a1->constant.type) && is_traverse_end_node(a2->constant.type) &&
+					(a1->constant.targetname == a2->constant.targetname);
+			}
+			else
+			{
+				return is_traverse_begin_or_jump_node(a1->constant.type) && is_traverse_end_or_jump_node(a2->constant.type) &&
+					(a1->constant.targetname == a2->constant.targetname || (is_jump_node(a1->constant.type) && is_jump_node(a2->constant.type)));
+			}
+		}
+
+		void path_generate_path_stub(utils::hook::assembler& a)
+		{
+			const auto do_traverse = a.newLabel();
+
+			a.push(rax);
+			a.pushad64();
+			a.mov(rcx, rdi);
+			a.mov(rdx, rsi);
+			a.call_aligned(check_traverse_node);
+			a.mov(qword_ptr(rsp, 0x80), rax);
+			a.popad64();
+			a.pop(rax);
+
+			a.test(eax, eax);
+			a.jnz(do_traverse);
+
+			a.jmp(0x3EAD2A_b);
+
+			a.bind(do_traverse);
+			a.jmp(0x3EAD0A_b);
+		}
 	}
 
 	class component final : public component_interface
@@ -127,10 +232,19 @@ namespace nodes
 				return;
 			}
 
+			scr_enable_jump_nodes = dvars::register_bool("scr_enableJumpNodes", false, game::DVAR_FLAG_REPLICATED, "enable jump nodes");
+
+			// implement jump nodes from iw6
+			utils::hook::inject(0x3F5F03_b + 3, node_types);
+			utils::hook::inject(0x3F66A0_b + 3, node_types);
+			utils::hook::set<std::uint8_t>(0x3F66E7_b + 2, node_type_end);
+
+			utils::hook::jump(0x3EACE0_b, utils::hook::assemble(path_generate_path_stub), true);
+
 			gsc::function::add("markdangerousnodes", mark_dangerous_nodes);
 			gsc::function::add("markdangerousnodesintrigger", mark_dangerous_nodes_in_trigger);
 		}
 	};
 }
 
-REGISTER_COMPONENT(nodes::component)
+REGISTER_COMPONENT(pathnodes::component)

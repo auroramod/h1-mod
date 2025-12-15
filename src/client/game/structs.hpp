@@ -1389,28 +1389,35 @@ namespace game
 			uint16_t number;
 		}; // size = ?
 
+		struct gagent_s
+		{
+			char __pad0[19184];
+		};
+
 #pragma pack(push, 1)
 		struct gentity_s
 		{
 			EntityState s;
-			char _padding[106];
+			char __pad0[106];
 			vec3_t trBase;
 			vec3_t trDelta;
-			char _padding1[12];
+			char __pad1[12];
 			vec3_t currentAngles;
-			char pad_0008[108];
+			char __pad2[108];
 			Bounds box;
 			Bounds absBox;
 			vec3_t origin;
-			char pad_0144[12];
+			char __pad3[12];
 			short owner;
-			char _pad0[6];
+			char __pad4[6];
 			gclient_s* client;
-			char _pad1[56];
+			char __pad5[8];
+			gagent_s* agent;
+			char __pad6[40];
 			scr_string_t script_classname;
-			char _pad2[20];
+			char _pad7[20];
 			int flags;
-			char __pad3[300];
+			char __pad8[300];
 		}; // size = 736
 #pragma pack(pop)
 
