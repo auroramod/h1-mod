@@ -91,7 +91,6 @@ namespace fastfiles
 						if (override_rawfile.rawfile)
 						{
 							result.rawfile = override_rawfile.rawfile;
-							console::debug("using override asset for rawfile: \"%s\"\n", name);
 						}
 					}
 				}
@@ -104,7 +103,6 @@ namespace fastfiles
 						if (override_stringtable.stringTable)
 						{
 							result.stringTable = override_stringtable.stringTable;
-							console::debug("using override asset for stringtable: \"%s\"\n", name);
 						}
 					}
 				}
