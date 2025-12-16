@@ -10,8 +10,6 @@
   <img src="assets/github/banner.png?raw=true" />
 </p>
 
-## Disclaimer
-
 H1-Mod is a client for Call of Duty®: Modern Warfare Remastered that adds dedicated servers, modding utilities, and custom content like weapons and maps. ***You must legally own [Call of Duty®: Modern Warfare Remastered](https://store.steampowered.com/agecheck/app/393080/)*** to run this mod. Cracked versions of the game are **NOT** supported and will not be given assistance.
 
 ## Compile from source code
