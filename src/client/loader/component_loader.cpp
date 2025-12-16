@@ -1,6 +1,25 @@
 #include <std_include.hpp>
 #include "component_loader.hpp"
 
+#include <component/console.hpp>
+
+#ifdef _DEBUG
+#define PRINT_COMPONENT_TIME(__name__, __start__) \
+	auto component_now = std::chrono::high_resolution_clock::now(); \
+	const auto component_ms = std::chrono::duration_cast<std::chrono::milliseconds>(component_now - __start__).count(); \
+	if (component_ms > 100) \
+		console::warn("[%s] %s took %lldms", __FUNCTION__, __name__, component_ms); \
+
+#define PRINT_LOADER_TIME(__start__) \
+	auto now = std::chrono::high_resolution_clock::now(); \
+	const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - __start__).count(); \
+	console::debug("[%s] Completed in %lldms", __FUNCTION__, ms);
+
+#else
+#define PRINT_COMPONENT_TIME(_, __)
+#define PRINT_LOADER_TIME(_)
+#endif
+
 void component_loader::register_component(std::unique_ptr<component_interface>&& component_)
 {
 	get_components().push_back(std::move(component_));
@@ -14,10 +33,15 @@ bool component_loader::post_start()
 
 	try
 	{
+		auto start_time = std::chrono::high_resolution_clock::now();
 		for (const auto& component_ : get_components())
 		{
+			auto component_start_time = std::chrono::high_resolution_clock::now();
 			component_->post_start();
+			PRINT_COMPONENT_TIME(typeid(*component_).name(), component_start_time);
 		}
+
+		PRINT_LOADER_TIME(start_time);
 	}
 	catch (premature_shutdown_trigger&)
 	{
@@ -37,10 +61,15 @@ bool component_loader::post_load()
 
 	try
 	{
+		auto start_time = std::chrono::high_resolution_clock::now();
 		for (const auto& component_ : get_components())
 		{
+			auto component_start_time = std::chrono::high_resolution_clock::now();
 			component_->post_load();
+			PRINT_COMPONENT_TIME(typeid(*component_).name(), component_start_time);
 		}
+
+		PRINT_LOADER_TIME(start_time);
 	}
 	catch (premature_shutdown_trigger&)
 	{
@@ -56,10 +85,15 @@ void component_loader::post_unpack()
 	if (handled) return;
 	handled = true;
 
+	auto start_time = std::chrono::high_resolution_clock::now();
 	for (const auto& component_ : get_components())
 	{
+		auto component_start_time = std::chrono::high_resolution_clock::now();
 		component_->post_unpack();
+		PRINT_COMPONENT_TIME(typeid(*component_).name(), component_start_time);
 	}
+
+	PRINT_LOADER_TIME(start_time);
 }
 
 void component_loader::pre_destroy()

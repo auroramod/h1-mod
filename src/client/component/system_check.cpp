@@ -103,4 +103,5 @@ namespace system_check
 	};
 }
 
-REGISTER_COMPONENT(system_check::component)
+// TODO: this component needs revised. when it's on, it adds 3+ seconds to the initial load time 
+//REGISTER_COMPONENT(system_check::component)
