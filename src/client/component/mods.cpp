@@ -50,6 +50,13 @@ namespace mods
 			}, scheduler::pipeline::main);
 		}
 
+		void reload_omnvars()
+		{
+			*reinterpret_cast<int*>(0x12E9390_b) = -1;
+			*reinterpret_cast<int*>(0x10AD67C_b) = -1;
+			utils::hook::invoke<void>(0x5A4880_b); // reload omnvars
+		}
+
 		void full_restart(const std::string& arg)
 		{
 			if (game::environment::is_mp())
@@ -58,6 +65,7 @@ namespace mods
 				scheduler::once([]
 				{
 					mods::read_stats();
+					reload_omnvars();
 				}, scheduler::main);
 				return;
 			}
@@ -211,6 +219,8 @@ namespace mods
 
 				restart();
 			});
+
+			command::add("omnvar_reload", reload_omnvars);
 		}
 	};
 }
