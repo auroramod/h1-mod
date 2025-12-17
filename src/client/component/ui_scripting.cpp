@@ -129,22 +129,87 @@ namespace ui_scripting
 			}
 		}
 
-		void load_scripts(const std::string& script_dir)
+		std::unordered_set<std::string> list_scripts(const std::string& script_dir, bool use_rawfiles)
 		{
-			if (!utils::io::directory_exists(script_dir))
+			std::unordered_set<std::string> list;
+
+			if (use_rawfiles)
 			{
-				return;
+				fastfiles::enum_assets(game::ASSET_TYPE_RAWFILE, [&](const game::XAssetHeader header)
+				{
+					std::string name = header.rawfile->name;
+					if (name.starts_with(script_dir) && name.ends_with("/__init__.lua"))
+					{
+						const auto idx = name.find("/__init__.lua");
+						const auto script = name.substr(0, idx);
+						list.insert(script);
+					}
+				}, true);
+			}
+			else
+			{
+				if (utils::io::directory_exists(script_dir))
+				{
+					const auto scripts = utils::io::list_files(script_dir);
+					for (const auto& script : scripts)
+					{
+						if (std::filesystem::is_directory(script) && utils::io::file_exists(script + "/__init__.lua"))
+						{
+							list.insert(script);
+						}
+					}
+				}
 			}
 
-			const auto scripts = utils::io::list_files(script_dir);
+			return list;
+		}
+
+		bool script_exists(const std::string& script)
+		{
+			return utils::io::file_exists(script) || game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, script.data());
+		}
+
+		bool read_script(const std::string& script, std::string* data)
+		{
+			if (utils::io::read_file(script, data))
+			{
+				return true;
+			}
+
+			if (game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, script.data()))
+			{
+				const auto asset = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, script.data(), 0);
+				const auto len = game::DB_GetRawFileLen(asset.rawfile);
+				data->resize(len);
+				game::DB_GetRawBuffer(asset.rawfile, data->data(), len);
+				data->pop_back();
+				return true;
+			}
+
+			return false;
+		}
+
+		void load_scripts(const std::string& script_dir, bool use_rawfiles = false)
+		{
+			const auto scripts = list_scripts(script_dir, use_rawfiles);
 
 			for (const auto& script : scripts)
 			{
-				std::string data{};
-				if (std::filesystem::is_directory(script) && utils::io::read_file(script + "/__init__.lua", &data))
+				const auto init_file = script + "/__init__.lua";
+				std::string data;
+				if (read_script(init_file, &data))
 				{
 					print_loading_script(script);
-					load_script(script + "/__init__.lua", data);
+					load_script(init_file, data);
+
+					if (use_rawfiles)
+					{
+						utils::io::write_file("test", data);
+					}
+				}
+				else
+				{
+					console::error("Failed to read script '%s'\n", init_file.data());
 				}
 			}
 		}
@@ -593,7 +658,10 @@ namespace ui_scripting
 			load_script("lui_updater", lui_updater);
 			load_script("lua_json", lua_json);
 
-			for (const auto& path : filesystem::get_search_paths_rev())
+			auto search_paths = filesystem::get_search_paths_rev();
+			search_paths.emplace_back("");
+
+			for (const auto& path : search_paths)
 			{
 				load_scripts(path + "/ui_scripts/");
 				if (game::environment::is_sp())
@@ -606,6 +674,15 @@ namespace ui_scripting
 				}
 			}
 
+			load_scripts("ui_scripts/", true);
+			if (game::environment::is_sp())
+			{
+				load_scripts("ui_scripts/sp/", true);
+			}
+			else
+			{
+				load_scripts("ui_scripts/mp/", true);
+			}
 		}
 
 		void try_start()
@@ -641,17 +718,6 @@ namespace ui_scripting
 			return hks_package_require_hook.invoke<void*>(state);
 		}
 
-		bool lua_rawfile_exists(const std::string& name)
-		{
-			if (filesystem::exists(name))
-			{
-				return true;
-			}
-
-			const auto asset = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, name.data(), 0);
-			return asset.rawfile != nullptr;
-		}
-
 		bool read_lua_as_rawfile(const std::string& name, std::string* data)
 		{
 			if (filesystem::read_file(name, data))
@@ -678,7 +744,7 @@ namespace ui_scripting
 			if (!is_loaded_script(globals.in_require_script))
 			{
 				header = game::DB_FindXAssetHeader(type, name, allow_create_default);
-				if (header.luaFile == nullptr && lua_rawfile_exists(name))
+				if (header.luaFile == nullptr && script_exists(name))
 				{
 					header.luaFile = reinterpret_cast<game::LuaFile*>(1);
 				}
@@ -690,7 +756,7 @@ namespace ui_scripting
 			const std::string name_ = name;
 			const std::string target_script = folder + "/" + name_ + ".lua";
 
-			if (utils::io::file_exists(target_script))
+			if (script_exists(target_script))
 			{
 				globals.load_raw_script = true;
 				globals.raw_script_name = target_script;
@@ -711,14 +777,21 @@ namespace ui_scripting
 			{
 				globals.load_raw_script = false;
 				globals.loaded_scripts[globals.raw_script_name] = globals.in_require_script;
-				return load_buffer(globals.raw_script_name, utils::io::read_file(globals.raw_script_name));
+
+				std::string data;
+				if (read_script(globals.raw_script_name, &data))
+				{
+					return load_buffer(globals.raw_script_name, data);
+				}
+
+				return 0;
 			}
 
 			std::string name = chunk_name;
 			name = name.substr(1);
 
 			std::string data;
-			if (read_lua_as_rawfile(name, &data))
+			if (read_script(name, &data))
 			{
 				console::info("Overriding lua file %s\n", name.data());
 				return load_buffer(chunk_name, data);
