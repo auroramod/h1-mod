@@ -149,20 +149,55 @@ namespace ui_scripting
 			}
 		}
 
+		script_value json_to_lua(const nlohmann::json& json)
+		{
+			if (json.is_object())
+			{
+				table object;
+				for (const auto& [key, value] : json.items())
+				{
+					object[key] = json_to_lua(value);
+				}
+				return object;
+			}
+
+			if (json.is_array())
+			{
+				table array;
+				auto index = 1;
+				for (const auto& value : json.array())
+				{
+					array[index++] = json_to_lua(value);
+				}
+				return array;
+			}
+
+			if (json.is_boolean())
+			{
+				return json.get<bool>();
+			}
+
+			if (json.is_number_integer())
+			{
+				return json.get<int>();
+			}
+
+			if (json.is_number_float())
+			{
+				return json.get<float>();
+			}
+
+			if (json.is_string())
+			{
+				return json.get<std::string>();
+			}
+
+			return {};
+		}
+
 		void setup_functions()
 		{
 			const auto lua = get_globals();
-
-			lua["io"]["fileexists"] = utils::io::file_exists;
-			lua["io"]["writefile"] = utils::io::write_file;
-			lua["io"]["movefile"] = utils::io::move_file;
-			lua["io"]["filesize"] = utils::io::file_size;
-			lua["io"]["createdirectory"] = utils::io::create_directory;
-			lua["io"]["directoryexists"] = utils::io::directory_exists;
-			lua["io"]["directoryisempty"] = utils::io::directory_is_empty;
-			lua["io"]["listfiles"] = utils::io::list_files;
-			lua["io"]["removefile"] = utils::io::remove_file;
-			lua["io"]["readfile"] = static_cast<std::string(*)(const std::string&)>(utils::io::read_file);
 
 			using game = table;
 			auto game_type = game();
@@ -358,6 +393,106 @@ namespace ui_scripting
 				}
 			};
 
+			static std::unordered_set<std::string> available_languages =
+			{
+				"english",
+				"english_safe",
+				"french",
+				"german",
+				"italian",
+				"polish",
+				"portuguese",
+				"russian",
+				"spanish",
+				"simplified_chinese",
+				"traditional_chinese",
+				"japanese_partial",
+				"korean"
+			};
+
+			game_type["setlanguage"] = [](const game&, const std::string& language)
+			{
+				if (available_languages.contains(language))
+				{
+					utils::io::write_file("players2/default/language", language);
+				}
+			};
+
+			game_type["islanguageavailable"] = [](const game&, const std::string& language)
+			{
+				if (!available_languages.contains(language))
+				{
+					return false;
+				}
+
+				return utils::io::directory_exists("zone/" + language);
+			};
+
+			auto mods_table = table();
+			lua["mods"] = mods_table;
+
+			mods_table["getloaded"] = []() -> script_value
+			{
+				const auto& mod = mods::get_mod();
+				if (mod.has_value())
+				{
+					return mod.value();
+				}
+
+				return {};
+			};
+
+			mods_table["getlist"] = mods::get_mod_list;
+			mods_table["getinfo"] = [](const std::string& mod)
+			{
+				table info_table{};
+				const auto info = mods::get_mod_info(mod);
+				const auto has_value = info.has_value();
+				info_table["isvalid"] = has_value;
+
+				if (!has_value)
+				{
+					return info_table;
+				}
+
+				const auto& map = info.value();
+				for (const auto& [key, value] : map.items())
+				{
+					info_table[key] = json_to_lua(value);
+				}
+
+				return info_table;
+			};
+
+			mods_table["load"] = [](const std::string& mod)
+			{
+				scheduler::once([=]()
+				{
+					mods::load(mod);
+				}, scheduler::main);
+			};
+
+			mods_table["unload"] = []
+			{
+				scheduler::once([]()
+				{
+					mods::unload();
+				}, scheduler::main);
+			};
+
+			auto depot_table = table();
+			lua["customdepot"] = depot_table;
+
+			depot_table["save"] = [](const std::string& data)
+			{
+				// todo
+			};
+
+			depot_table["load"] = []()
+			{
+				// todo
+			};
+
 			auto server_list_table = table();
 			lua["serverlist"] = server_list_table;
 
@@ -506,13 +641,49 @@ namespace ui_scripting
 			return hks_package_require_hook.invoke<void*>(state);
 		}
 
+		bool lua_rawfile_exists(const std::string& name)
+		{
+			if (filesystem::exists(name))
+			{
+				return true;
+			}
+
+			const auto asset = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, name.data(), 0);
+			return asset.rawfile != nullptr;
+		}
+
+		bool read_lua_as_rawfile(const std::string& name, std::string* data)
+		{
+			if (filesystem::read_file(name, data))
+			{
+				return true;
+			}
+
+			const auto asset = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, name.data(), 0);
+			if (asset.rawfile != nullptr)
+			{
+				const auto len = game::DB_GetRawFileLen(asset.rawfile);
+				data->resize(len);
+				game::DB_GetRawBuffer(asset.rawfile, data->data(), len);
+				return true;
+			}
+
+			return false;
+		}
+
 		game::XAssetHeader db_find_x_asset_header_stub(game::XAssetType type, const char* name, int allow_create_default)
 		{
 			game::XAssetHeader header{.luaFile = nullptr};
 
 			if (!is_loaded_script(globals.in_require_script))
 			{
-				return game::DB_FindXAssetHeader(type, name, allow_create_default);
+				header = game::DB_FindXAssetHeader(type, name, allow_create_default);
+				if (header.luaFile == nullptr && lua_rawfile_exists(name))
+				{
+					header.luaFile = reinterpret_cast<game::LuaFile*>(1);
+				}
+
+				return header;
 			}
 
 			const auto folder = globals.in_require_script.substr(0, globals.in_require_script.find_last_of("/\\"));
@@ -543,8 +714,20 @@ namespace ui_scripting
 				return load_buffer(globals.raw_script_name, utils::io::read_file(globals.raw_script_name));
 			}
 
-			return hks_load_hook.invoke<int>(state, compiler_options, reader,
-				reader_data, chunk_name);
+			std::string name = chunk_name;
+			name = name.substr(1);
+
+			std::string data;
+			if (read_lua_as_rawfile(name, &data))
+			{
+				console::info("Overriding lua file %s\n", name.data());
+				return load_buffer(chunk_name, data);
+			}
+			else
+			{
+				return hks_load_hook.invoke<int>(state, compiler_options, reader,
+					reader_data, chunk_name);
+			}
 		}
 
 		std::string current_error;
@@ -589,6 +772,11 @@ namespace ui_scripting
 				game::hks::hksi_luaL_error(state, current_error.data());
 			}
 
+			return 0;
+		}
+
+		int removed_function_stub(game::hks::lua_State* /*state*/)
+		{
 			return 0;
 		}
 	}
@@ -639,6 +827,34 @@ namespace ui_scripting
 			{
 				utils::hook::invoke<void>(SELECT_VALUE(0x1052C0_b, 0x27BEC0_b));
 			});
+
+			// remove unsafe functions
+			utils::hook::nop(0x22B5CA_b, 1);
+			utils::hook::jump(0x26EB60_b, 0x22B450_b);
+
+			utils::hook::jump(0x212CF0_b, removed_function_stub); // io
+			utils::hook::jump(0x213180_b, removed_function_stub); // os
+			utils::hook::jump(0x213EB0_b, removed_function_stub); // serialize
+			utils::hook::jump(0x213E80_b, removed_function_stub); // hks
+			utils::hook::jump(0x2135F0_b, removed_function_stub); // debug
+			utils::hook::nop(0x212C78_b, 5); // coroutine
+
+			// profile
+			utils::hook::jump(0x207F50_b, removed_function_stub);
+			utils::hook::jump(0x207F60_b, removed_function_stub);
+			utils::hook::jump(0x207F70_b, removed_function_stub);
+			utils::hook::jump(0x208030_b, removed_function_stub);
+
+			utils::hook::jump(0x209CC0_b, removed_function_stub);
+			utils::hook::jump(0x209930_b, removed_function_stub);
+			utils::hook::jump(0x20C920_b, removed_function_stub);
+
+			utils::hook::jump(0x214750_b, removed_function_stub);
+			utils::hook::jump(0x2131B0_b, removed_function_stub);
+			utils::hook::jump(0x213EE0_b, removed_function_stub);
+
+			utils::hook::jump(0x208C70_b, removed_function_stub);
+			utils::hook::jump(0x20F620_b, removed_function_stub);
 		}
 	};
 }

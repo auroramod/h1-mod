@@ -17,6 +17,8 @@
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
 
+#define MOD_FOLDER "mods"
+
 namespace mods
 {
 	std::optional<std::string> mod_path;
@@ -119,6 +121,106 @@ namespace mods
 		return mod_path;
 	}
 
+	std::vector<std::string> get_mod_list()
+	{
+		if (!utils::io::directory_exists(MOD_FOLDER))
+		{
+			return {};
+		}
+
+		std::vector<std::string> mod_list;
+
+		const auto files = utils::io::list_files(MOD_FOLDER);
+		for (const auto& file : files)
+		{
+			if (!utils::io::directory_exists(file) || utils::io::directory_is_empty(file))
+			{
+				continue;
+			}
+
+			mod_list.push_back(file);
+		}
+
+		return mod_list;
+	}
+
+	bool mod_exists(const std::string& folder)
+	{
+		return utils::io::directory_exists(utils::string::va("%s\\%s", MOD_FOLDER, folder.data()));
+	}
+
+	std::optional<nlohmann::json> get_mod_info(const std::string& name)
+	{
+		const auto info_file = name + "/info.json";
+		if (!utils::io::directory_exists(name) || !utils::io::file_exists(info_file))
+		{
+			return {};
+		}
+
+		std::unordered_map<std::string, std::string> info;
+		const auto data = utils::io::read_file(info_file);
+		const auto parsed = nlohmann::json::parse(data, {}, false);
+		if (parsed.is_discarded())
+		{
+			return {};
+		}
+
+		return {parsed};
+	}
+
+	void load(const std::string& path)
+	{
+		if (!utils::io::directory_exists(path))
+		{
+			console::info("Mod %s not found!\n", path.data());
+			return;
+		}
+
+		console::info("Loading mod %s\n", path.data());
+		set_mod(path);
+
+		if ((mod_path.has_value() && mod_requires_restart(mod_path.value())) ||
+			mod_requires_restart(path))
+		{
+			console::info("Restarting...\n");
+			full_restart("-mod \""s + path + "\"");
+		}
+		else
+		{
+			restart();
+		}
+	}
+
+	void unload()
+	{
+		if (!mod_path.has_value())
+		{
+			console::info("No mod loaded\n");
+			return;
+		}
+
+		if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
+		{
+			console::info("Cannot unload mod while in-game!\n");
+			game::CG_GameMessage(0, "^1Cannot unload mod while in-game!");
+			return;
+		}
+
+		console::info("Unloading mod %s\n", mod_path.value().data());
+
+		if (mod_requires_restart(mod_path.value()))
+		{
+			console::info("Restarting...\n");
+			set_mod("");
+			full_restart("");
+		}
+		else
+		{
+			set_mod("");
+			restart();
+		}
+	}
+
 	void read_stats()
 	{
 		demonware::set_storage_path(mod_path.value_or(""));
@@ -159,56 +261,10 @@ namespace mods
 				}
 
 				const auto path = params.get(1);
-				if (!utils::io::directory_exists(path))
-				{
-					console::info("Mod %s not found!\n", path);
-					return;
-				}
-
-				console::info("Loading mod %s\n", path);
-				set_mod(path);
-
-				if ((mod_path.has_value() && mod_requires_restart(mod_path.value())) ||
-					mod_requires_restart(path))
-				{
-					console::info("Restarting...\n");
-					full_restart("-mod \""s + path + "\"");
-				}
-				else
-				{
-					restart();
-				}
+				load(path);
 			});
 
-			command::add("unloadmod", [](const command::params& params)
-			{
-				if (!mod_path.has_value())
-				{
-					console::info("No mod loaded\n");
-					return;
-				}
-
-				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
-				{
-					console::info("Cannot unload mod while in-game!\n");
-					game::CG_GameMessage(0, "^1Cannot unload mod while in-game!");
-					return;
-				}
-
-				console::info("Unloading mod %s\n", mod_path.value().data());
-
-				if (mod_requires_restart(mod_path.value()))
-				{
-					console::info("Restarting...\n");
-					set_mod("");
-					full_restart("");
-				}
-				else
-				{
-					set_mod("");
-					restart();
-				}
-			});
+			command::add("unloadmod", unload);
 
 			command::add("com_restart", []()
 			{
