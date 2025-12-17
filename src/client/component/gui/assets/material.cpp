@@ -147,7 +147,6 @@ namespace gui::asset_list::material
 			}
 
 			ImGui::Separator();
-
 			DRAW_ASSET_PROPERTY(textureCount, "%i");
 			DRAW_ASSET_PROPERTY(constantCount, "%i");
 			if (asset->constantCount > 0)
@@ -194,6 +193,10 @@ namespace gui::asset_list::material
 
 			DRAW_ASSET_PROPERTY_INPUT_U8(info.gameFlags);
 			DRAW_ASSET_PROPERTY_INPUT_U8(info.renderFlags);
+			DRAW_ASSET_PROPERTY_INPUT_U8(info.textureAtlasRowCount);
+			DRAW_ASSET_PROPERTY_INPUT_U8(info.textureAtlasColumnCount);
+			DRAW_ASSET_PROPERTY_INPUT_U8(info.textureAtlasFrameBlend);
+			DRAW_ASSET_PROPERTY_INPUT_U8(info.textureAtlasAsArray);
 
 			DRAW_ASSET_PROPERTY_INPUT_U8(cameraRegion);
 			DRAW_ASSET_PROPERTY_INPUT_U8(stateFlags);

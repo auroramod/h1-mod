@@ -91,8 +91,27 @@ namespace fonts
 			if (result == nullptr)
 			{
 				result = game::DB_FindXAssetHeader(type, name, create_default).ttfDef;
+				const std::string override_name = utils::string::va("override/%s", name);
+				if (result && game::DB_XAssetExists(game::ASSET_TYPE_TTF, override_name.data()))
+				{
+					const auto override_font = game::DB_FindXAssetHeader(type, override_name.data(), 0);
+					if (override_font.ttfDef != nullptr)
+					{
+						return override_font.ttfDef;
+					}
+				}
 			}
 			return result;
+		}
+
+		int font_name_compare_stub(const char* a1, const char* a2)
+		{
+			if (!strncmp(a1, "override/", 9) && !strcmp(a1 + 9, a2))
+			{
+				return 0;
+			}
+
+			return utils::hook::invoke<int>(0x5AF5F0_b, a1, a2);
 		}
 	}
 
@@ -128,6 +147,7 @@ namespace fonts
 				return;
 			}
 
+			utils::hook::call(SELECT_VALUE(0x0, 0x67F667_b), font_name_compare_stub);
 			utils::hook::call(SELECT_VALUE(0x55C596_b, 0x67F6E6_b), db_find_xasset_header_stub);
 		}
 	};

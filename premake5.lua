@@ -67,6 +67,12 @@ function dependencies.projects()
 end
 
 newoption {
+	trigger = "copy-to",
+	description = "Optional, copy the EXE to a custom folder after build, define the path here if wanted.",
+	value = "PATH"
+}
+
+newoption {
 	trigger = "dev-build",
 	description = "Enable development builds of the client."
 }
@@ -292,6 +298,10 @@ dependson {"tlsdll"}
 links {"common"}
 
 prebuildcommands {"pushd %{_MAIN_SCRIPT_DIR}", "tools\\premake5 generate-buildinfo", "popd"}
+
+if _OPTIONS["copy-to"] then
+	postbuildcommands {"copy /y \"$(TargetPath)\" \"" .. _OPTIONS["copy-to"] .. "\""}
+end
 
 if os.getenv("AURORAH1_GAME_PATH") then
 	debugdir "$(AURORAH1_GAME_PATH)"
