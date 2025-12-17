@@ -3,11 +3,7 @@
 
 #include "game/game.hpp"
 
-#include "console.hpp"
-
 #include <utils/hook.hpp>
-
-// Speeds up startup by disabling WMI
 
 namespace wmi
 {
@@ -39,7 +35,7 @@ namespace wmi
 
 		void post_unpack() override
 		{
-			// disable WMI and remove Hardware query(uses WMI)
+			// disable WMI and remove Hardware Query (uses WMI)
 			utils::hook::set<uint8_t>(SELECT_VALUE(0x450C0_b, 0x4D360_b), 0xC3); // WMI
 			utils::hook::set<uint8_t>(SELECT_VALUE(0x311790_b, 0xB6D20_b), 0xC3); // Hardware query
 		}

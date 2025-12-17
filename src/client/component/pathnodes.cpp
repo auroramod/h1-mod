@@ -6,13 +6,26 @@
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
+#include <utils/csv.hpp>
 #include <utils/hook.hpp>
+
+#include "console.hpp"
+#include "filesystem.hpp"
 
 namespace pathnodes
 {
 	namespace
 	{
 		game::dvar_t* scr_enable_jump_nodes = nullptr;
+		
+		utils::memory::allocator path_allocator;
+
+		static const std::unordered_map<std::string, unsigned short> waypoint_types =
+		{
+			{"stand", 13},
+			{"crouch", 14},
+			{"prone", 15},
+		};
 
 		scripting::script_value mark_dangerous_nodes(const gsc::function_args& args)
 		{
@@ -220,6 +233,236 @@ namespace pathnodes
 			a.bind(do_traverse);
 			a.jmp(0x3EAD0A_b);
 		}
+		
+		float distance(float* a, float* b)
+		{
+			return std::sqrtf((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]));
+		}
+
+		game::pathnode_tree_t* allocate_tree(game::PathData* asset)
+		{
+			++asset->nodeTreeCount;
+			return reinterpret_cast<game::pathnode_tree_t*>(
+				game::mp::Hunk_AllocAlignInternal(sizeof(game::pathnode_tree_t), 4));
+		}
+
+		game::pathnode_tree_t* build_node_tree(game::PathData* asset, unsigned short* node_indexes, const int num_nodes)
+		{
+			if (num_nodes < 4)
+			{
+				const auto result = allocate_tree(asset);
+				result->axis = -1;
+				result->u.s.nodeCount = num_nodes;
+				result->u.s.nodes = node_indexes;
+				return result;
+			}
+
+			game::vec2_t maxs{};
+			game::vec2_t mins{};
+
+			const auto start_node = &asset->nodes[*node_indexes];
+			maxs[0] = start_node->constant.vLocalOrigin[0];
+			mins[0] = maxs[0];
+			maxs[1] = start_node->constant.vLocalOrigin[1];
+			mins[1] = maxs[1];
+
+			for (auto i = 1; i < num_nodes; i++)
+			{	
+				for (auto axis = 0; axis < 2; axis++)
+				{
+					const auto node = &asset->nodes[node_indexes[i]];
+					const auto value = node->constant.vLocalOrigin[axis];
+					if (mins[axis] <= value)
+					{
+						if (value > maxs[axis])
+						{
+							maxs[axis] = value;
+						}
+					}
+					else
+					{
+						mins[axis] = value;
+					}
+				}
+			}
+
+			const auto axis = (maxs[1] - mins[1]) > (maxs[0] - mins[0]);
+			if ((maxs[axis] - mins[axis]) > 192.f)
+			{
+				const auto dist = (maxs[axis] + mins[axis]) * 0.5f;
+				auto left = 0;
+
+				for (auto right = num_nodes - 1; ; --right)
+				{
+					while (dist > asset->nodes[node_indexes[left]].constant.vLocalOrigin[axis])
+					{
+						++left;
+					}
+
+					while (asset->nodes[node_indexes[right]].constant.vLocalOrigin[axis] > dist)
+					{
+						--right;
+					}
+
+					if (left >= right)
+					{
+						break;
+					}
+
+					const auto swap_node = node_indexes[left];
+					node_indexes[left] = node_indexes[right];
+					node_indexes[right] = swap_node;
+					++left;
+				}
+
+				while (2 * left < num_nodes &&
+					asset->nodes[node_indexes[left]].constant.vLocalOrigin[axis] == dist)
+				{
+					++left;
+				}
+
+				while (2 * left < num_nodes &&
+					asset->nodes[node_indexes[left - 1]].constant.vLocalOrigin[axis] == dist)
+				{
+					--left;
+				}
+
+				game::pathnode_tree_t* child[2]{};
+				child[0] = build_node_tree(asset, node_indexes, left);
+				child[1] = build_node_tree(asset, &node_indexes[left], num_nodes - left);
+				const auto result = allocate_tree(asset);
+				result->axis = axis;
+				result->dist = dist;
+				result->u.child[0] = child[0];
+				result->u.child[1] = child[1];
+				
+				return result;
+			}
+			
+			const auto result = allocate_tree(asset);
+			result->axis = -1;
+			result->u.s.nodeCount = num_nodes;
+			result->u.s.nodes = node_indexes;
+			return result;
+		}
+		
+		void path_init_stub()
+		{
+			// Path_Init
+			utils::hook::invoke<void>(0x3F8370_b);
+
+			if (game::VirtualLobby_Loaded())
+			{
+				return;
+			}
+
+			// load new paths with zt util to parse bot warfare from disk
+			std::string buffer;
+
+			auto mapname = game::Dvar_FindVar("mapname");
+			
+			if (const auto file_path = std::format("maps/mp/{}_wp.csv", mapname->current.string); filesystem::read_file(file_path, &buffer))
+			{
+				console::debug("Loading paths '%s' from disk", file_path.data());
+				
+				auto table = utils::csv::parser(buffer);
+
+				auto* asset = path_allocator.allocate<game::PathData>(); // stringtable allocator lul
+
+				asset->name = path_allocator.duplicate_string(std::string(mapname->current.string));
+				
+				if (table.get_num_rows() <= 0)
+				{
+					return;
+				}
+				
+				const auto rows = table.get_rows();
+				asset->nodeCount = std::atoi(rows[0]->fields[0]);
+				asset->nodes = path_allocator.allocate_array<game::pathnode_t>(asset->nodeCount);
+
+				if (table.get_num_rows() < static_cast<int>(asset->nodeCount))
+				{
+					console::error("Less than asset->nodeCount + 1 (%i) rows", asset->nodeCount);
+					return;
+				}
+
+				for (auto i = 0u; i < asset->nodeCount; i++)
+				{
+					const auto row = rows[i + 1];
+					const auto node = &asset->nodes[i];
+					node->constant.type = 1;
+
+					if (row->num_fields < 4)
+					{
+						console::error("Not enough fields for node num %i (must be origin,links,type,angles,...)", i);
+						return;
+					}
+
+					const auto origin_str = utils::string::split(row->fields[0], ' ');
+					if (origin_str.size() == 3)
+					{
+						node->constant.vLocalOrigin[0] = static_cast<float>(std::atof(origin_str[0].data()));
+						node->constant.vLocalOrigin[1] = static_cast<float>(std::atof(origin_str[1].data()));
+						node->constant.vLocalOrigin[2] = static_cast<float>(std::atof(origin_str[2].data()));
+					}
+
+					auto field = row->fields[2];
+					auto field_str = path_allocator.duplicate_string(field);
+					if (waypoint_types.contains(field_str))
+					{
+						node->constant.type = waypoint_types.at(field_str);
+					}
+
+					const auto angles_str = utils::string::split(row->fields[3], ' ');
+					if (angles_str.size() == 3)
+					{
+						node->constant.___u9.angles[0] = static_cast<float>(std::atof(angles_str[1].data()));
+						node->constant.___u9.angles[1] = static_cast<float>(std::atof(angles_str[0].data()));
+						node->constant.___u9.angles[2] = static_cast<float>(std::atof(angles_str[2].data()));
+					}
+
+					const auto links_str = utils::string::split(row->fields[1], ' ');
+					node->constant.totalLinkCount = static_cast<unsigned short>(links_str.size());
+					node->constant.Links = path_allocator.allocate_array<game::pathlink_s>(links_str.size());
+					for (auto o = 0; o < node->constant.totalLinkCount; o++)
+					{
+						const auto num = std::atoi(links_str[o].data());
+						node->constant.Links[o].nodeNum = static_cast<unsigned short>(num);
+					}
+				}
+
+				for (auto i = 0u; i < asset->nodeCount; i++)
+				{
+					const auto node = &asset->nodes[i];
+					for (auto o = 0; o < node->constant.totalLinkCount; o++)
+					{
+						const auto linked_num = node->constant.Links[o].nodeNum;
+						if (linked_num >= asset->nodeCount)
+						{
+							console::error("Node link num out of bounds");
+							return;
+						}
+
+						const auto linked = &asset->nodes[linked_num];
+						node->constant.Links[o].negotiationLink = 1;
+						node->constant.Links[o].fDist = 
+							distance(node->constant.vLocalOrigin, linked->constant.vLocalOrigin);
+					}
+				}
+
+				const auto node_indexes = path_allocator.allocate_array<unsigned short>(asset->nodeCount);
+				for (auto i = 0u; i < asset->nodeCount; i++)
+				{
+					node_indexes[i] = static_cast<unsigned short>(i);
+				}
+
+				asset->nodeTree = build_node_tree(asset, node_indexes, asset->nodeCount);
+
+				console::debug("new node count is %d\n", asset->nodeCount);
+
+				*game::pathdata = *asset;
+			}
+		}
 	}
 
 	class component final : public component_interface
@@ -243,6 +486,9 @@ namespace pathnodes
 
 			gsc::function::add("markdangerousnodes", mark_dangerous_nodes);
 			gsc::function::add("markdangerousnodesintrigger", mark_dangerous_nodes_in_trigger);
+			
+			// add bot warfare CSV loading on map loading
+			utils::hook::call(0x420911_b, path_init_stub);
 		}
 	};
 }

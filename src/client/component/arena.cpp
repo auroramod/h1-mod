@@ -23,7 +23,7 @@ namespace arena
 			std::lock_guard<std::recursive_mutex> _0(arena_mutex);
 
 			std::string buffer{};
-			if (filesystem::read_file(path, &buffer) && !buffer.empty())
+			if (utils::io::read_file(path, &buffer) && !buffer.empty())
 			{
 				*game::ui_num_arenas += game::GameInfo_ParseArenas(buffer.data(), MAX_ARENAS - *game::ui_num_arenas,
 					&game::ui_arena_infos[*game::ui_num_arenas]);
@@ -36,7 +36,7 @@ namespace arena
 				return false;
 			}
 
-			const auto rawfile = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, path.data(), 0).rawfile;
+			const auto* rawfile = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, path.data(), 0).rawfile;
 			const auto len = game::DB_GetRawFileLen(rawfile);
 
 			const auto rawfile_buffer = utils::memory::get_allocator()->allocate_array<char>(len);
@@ -48,6 +48,7 @@ namespace arena
 			game::DB_GetRawBuffer(rawfile, rawfile_buffer, len);
 			*game::ui_num_arenas += game::GameInfo_ParseArenas(rawfile_buffer, MAX_ARENAS - *game::ui_num_arenas,
 				&game::ui_arena_infos[*game::ui_num_arenas]);
+			
 			return true;
 		}
 
@@ -58,7 +59,7 @@ namespace arena
 
 			parse_arena("mp/basemaps.arena");
 
-			// read all usermaps for map list
+			// read all usermap arenas for map list
 			for (const auto& entry : std::filesystem::directory_iterator("usermaps"))
 			{
 				if (!entry.is_directory())

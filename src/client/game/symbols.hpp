@@ -12,6 +12,8 @@ namespace game
 	{
 		WEAK symbol<void(int localClientNum, int controllerIndex, const char* text)> Cbuf_AddText{0x0, 0x1CF480};
 		WEAK symbol<void(const char* text_in, int limit)> Cmd_TokenizeStringWithLimit{0x0, 0x157A40};
+		
+		WEAK symbol<char*(size_t size, size_t alignment)> Hunk_AllocAlignInternal{0x0, 0x59D4B0};
 	}
 
 	namespace sp
