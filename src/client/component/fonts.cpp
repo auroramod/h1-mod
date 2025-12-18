@@ -111,7 +111,7 @@ namespace fonts
 				return 0;
 			}
 
-			return utils::hook::invoke<int>(0x5AF5F0_b, a1, a2);
+			return utils::hook::invoke<int>(SELECT_VALUE(0x3CD370_b, 0x5AF5F0_b), a1, a2);
 		}
 	}
 
@@ -147,8 +147,8 @@ namespace fonts
 				return;
 			}
 
-			utils::hook::call(SELECT_VALUE(0x0, 0x67F667_b), font_name_compare_stub);
-			utils::hook::call(SELECT_VALUE(0x55C596_b, 0x67F6E6_b), db_find_xasset_header_stub);
+			//utils::hook::call(SELECT_VALUE(0x4D4137_b, 0x67F667_b), font_name_compare_stub);
+			//utils::hook::call(SELECT_VALUE(0x55C596_b, 0x67F6E6_b), db_find_xasset_header_stub);
 		}
 	};
 }

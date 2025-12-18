@@ -616,6 +616,13 @@ namespace ui_scripting
 				return lightuserdata(material);
 			};
 
+			lua["string"]["escapelocalization"] = [](const std::string& str)
+			{
+				return "\x1F"s.append(str);
+			};
+
+			lua["string"]["el"] = lua["string"]["escapelocalization"];
+
 			discord_table["reply"] = table();
 			discord_table["reply"]["yes"] = DISCORD_REPLY_YES;
 			discord_table["reply"]["ignore"] = DISCORD_REPLY_IGNORE;

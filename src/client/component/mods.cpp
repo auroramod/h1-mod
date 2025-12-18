@@ -199,13 +199,6 @@ namespace mods
 			return;
 		}
 
-		if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
-		{
-			console::info("Cannot unload mod while in-game!\n");
-			game::CG_GameMessage(0, "^1Cannot unload mod while in-game!");
-			return;
-		}
-
 		console::info("Unloading mod %s\n", mod_path.value().data());
 
 		if (mod_requires_restart(mod_path.value()))
@@ -264,7 +257,17 @@ namespace mods
 				load(path);
 			});
 
-			command::add("unloadmod", unload);
+			command::add("unloadmod", []()
+			{
+				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
+				{
+					console::info("Cannot unload mod while in-game!\n");
+					game::CG_GameMessage(0, "^1Cannot unload mod while in-game!");
+					return;
+				}
+
+				unload();
+			});
 
 			command::add("com_restart", []()
 			{
