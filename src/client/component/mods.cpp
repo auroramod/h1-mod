@@ -59,10 +59,17 @@ namespace mods
 			utils::hook::invoke<void>(0x5A4880_b); // reload omnvars
 		}
 
+		void reset_fonts()
+		{
+			*reinterpret_cast<int*>(0xE962188_b) = 0;
+			std::memset(reinterpret_cast<void*>(0xE962190_b), 0, 128 * 24);
+		}
+
 		void full_restart(const std::string& arg)
 		{
 			if (game::environment::is_mp())
 			{
+				reset_fonts();
 				command::execute("vid_restart");
 				scheduler::once([]
 				{
