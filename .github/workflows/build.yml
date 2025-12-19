@@ -46,8 +46,8 @@ jobs:
         with:
           name: ${{matrix.configuration}} binaries
           path: |
-            build/bin/x64/${{matrix.configuration}}/${{ matrix.configuration == 'Debug' && 'h1-mod_dev.exe' || 'h1-mod.exe' }}
-            build/bin/x64/${{matrix.configuration}}/${{ matrix.configuration == 'Debug' && 'h1-mod_dev.pdb' || 'h1-mod.pdb' }}
+            build/bin/x64/${{matrix.configuration}}/h1-mod.exe
+            build/bin/x64/${{matrix.configuration}}/h1-mod.pdb
             
       - name: Upload ${{matrix.configuration}} data artifacts
         uses: actions/upload-artifact@v4
