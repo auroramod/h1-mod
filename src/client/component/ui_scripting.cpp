@@ -493,6 +493,16 @@ namespace ui_scripting
 				return utils::io::directory_exists("zone/" + language);
 			};
 
+			game_type["zoneexists"] = [](const game&, const std::string& zone)
+			{
+				if (fastfiles::exists(zone, false))
+				{
+					return true;
+				}
+
+				return utils::io::file_exists(utils::string::va("usermaps/%s/%s.ff", zone.data(), zone.data()));
+			};
+
 			auto mods_table = table();
 			lua["mods"] = mods_table;
 
