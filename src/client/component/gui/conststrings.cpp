@@ -38,12 +38,6 @@ namespace
 			buffer[0] = '\0';
 			game::SV_GetConfigstring(i, buffer, sizeof(buffer));
 			g_cs_strings[i] = (buffer[0] != '\0') ? buffer : "(null)";
-
-			if (g_cs_strings[i] == "ex_airconditioner_fan")
-			{
-				auto adr = reinterpret_cast<int*>(0x2DD1E24_b + size_t(i * 4));
-				printf("%s: %p\n", game::SL_ConvertToString(*adr), (void*)adr);
-			}
 		}
 	}
 
@@ -91,7 +85,7 @@ namespace conststrings
 	public:
 		void post_unpack() override
 		{
-			if (game::environment::is_dedi())
+			if (game::environment::is_dedi() || game::environment::is_sp())
 				return;
 
 			gui::register_menu("conststrings", "ConstStrings List", render_window);
