@@ -887,7 +887,7 @@ namespace map_patches
 
 				a.jnb(patch);
 
-				a.mov(dword_ptr(rdi, 0x179914_b), eax);
+				a.mov(dword_ptr(rdi, 0x179914), eax);
 				a.mov(r15d, eax);
 				a.mov(r14, 0xA975F40_b);
 				a.jmp(0x120FA6_b);
