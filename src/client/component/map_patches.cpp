@@ -1,4 +1,4 @@
-#include <std_include.hpp>
+﻿#include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -8,36 +8,6 @@
 
 namespace map_patches
 {
-	enum leaf_table_version : std::int8_t
-	{
-		h2 = 0i8,
-		h1 = 0i8,
-		s1 = 0i8,
-		iw6 = 1i8,
-	};
-
-	utils::hook::detour r_decode_light_grid_block_hook;
-	void r_decode_light_grid_block_stub(game::GfxLightGridTree* p_tree, int child_mask,
-		char child_index, int encoded_node_address, char* p_node_raw, char* p_leaf_raw)
-	{
-		static const auto p_address = SELECT_VALUE(0x57BCCE_b + 1, 0x6A032E_b + 1);
-		auto value = *(uint8_t*)p_address;
-		if (p_tree->unused[0] == leaf_table_version::iw6)
-		{
-			if (value != 6)
-			{
-				utils::hook::set<uint8_t>(p_address, 6); // iw6
-			}
-		}
-		else if (value != 7)
-		{
-			utils::hook::set<uint8_t>(p_address, 7); // s1,h1,h2
-		}
-
-		r_decode_light_grid_block_hook.invoke<void>(p_tree, child_mask,
-			child_index, encoded_node_address, p_node_raw, p_leaf_raw);
-	}
-
 	namespace
 	{
 		struct GfxLightGridRow
@@ -907,6 +877,93 @@ namespace map_patches
 		}
 	}
 
+	namespace
+	{
+		void* cg_trigger_update_stub()
+		{
+			return utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				const auto patch = a.newLabel();
+
+				a.jnb(patch);
+
+				a.mov(dword_ptr(rdi, 0x179914_b), eax);
+				a.mov(r15d, eax);
+				a.mov(r14, 0xA975F40_b);
+				a.jmp(0x120FA6_b);
+
+				a.bind(patch);
+				a.mov(dword_ptr(rdi, 0x179918), 0xFFFFFFFF);
+				a.jmp(0x121035_b);
+			});
+		}
+	}
+
+	namespace
+	{
+		enum leaf_table_version : std::int8_t
+		{
+			h2 = 0i8,
+			h1 = 0i8,
+			s1 = 0i8,
+			iw6 = 1i8,
+		};
+
+		struct LightGridLeafIndexRaw
+		{
+			int indexMin;
+			int indexBitCount;
+			int indexDefault;
+			int indexTable[16];
+		};
+
+		struct LightGridLeafRaw
+		{
+			unsigned __int8 format;
+			LightGridLeafIndexRaw colorIndex;
+			LightGridLeafIndexRaw lightIndex;
+			unsigned int voxels;
+		};
+
+		struct LightGridNodeIndexRaw
+		{
+			unsigned __int8 indexBitCount;
+			unsigned __int8 indexTableSize;
+			unsigned __int8 indexTableSizeBitCount;
+			int indexMin;
+			int indexDefault;
+			int indexTable[15];
+		};
+
+		struct LightGridNodeRaw
+		{
+			LightGridNodeIndexRaw colorIndex;
+			LightGridNodeIndexRaw lightIndex;
+		};
+
+		utils::hook::detour r_decode_light_grid_block_hook;
+		void r_decode_light_grid_block_stub(game::GfxLightGridTree* p_tree, int child_mask,
+			char child_index, int encoded_node_address, LightGridNodeRaw* p_node_raw, LightGridLeafRaw* p_leaf_raw)
+		{
+			static const auto p_address = SELECT_VALUE(0x57BCCE_b + 1, 0x6A032E_b + 1);
+			auto value = *(uint8_t*)p_address;
+			if (p_tree->unused[0] == leaf_table_version::iw6)
+			{
+				if (value != 6)
+				{
+					utils::hook::set<uint8_t>(p_address, 6); // iw6
+				}
+			}
+			else if (value != 7)
+			{
+				utils::hook::set<uint8_t>(p_address, 7); // s1,h1,h2
+			}
+
+			r_decode_light_grid_block_hook.invoke<void>(p_tree, child_mask,
+				child_index, encoded_node_address, p_node_raw, p_leaf_raw);
+		}
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -918,18 +975,21 @@ namespace map_patches
 				utils::hook::set<uint8_t>(0x2F377D_b, 0xEB); // createfx parse
 				utils::hook::set<uint8_t>(0x4444E0_b, 0xEB); // scr_loadfx
 
+				// patch static model lighting
+				utils::hook::set<uint8_t>(0x6971EF_b, 0xEB);
+				utils::hook::nop(0x697249_b, 2);
+
 				// patch iw6 leafTable decoding
-				r_decode_light_grid_block_hook.create(0x69E7D0_b, r_decode_light_grid_block_stub);
+				map_patches::r_decode_light_grid_block_hook.create(0x69E7D0_b, map_patches::r_decode_light_grid_block_stub);
+
+				// patch vision set triggers to behave like old games
+				utils::hook::jump(0x120F90_b, cg_trigger_update_stub(), true);
 			}
 
-			r_lightGridNonCompressed = dvars::register_bool("r_lightGridNonCompressed", false, game::DVAR_FLAG_REPLICATED, "Use old lightgrid data, if available.");
-
+			r_lightGridNonCompressed = dvars::register_bool("r_lightGridNonCompressed", true, game::DVAR_FLAG_REPLICATED, "Use old lightgrid data, if available.");
 			r_lightgrid_lookup_hook.create(SELECT_VALUE(0x5C02F0_b, 0x6D8120_b), r_lightgrid_lookup_stub);
-
 			r_get_lightgrid_colors_from_indices_hook.create(SELECT_VALUE(0x5BE870_b, 0x6D66A0_b), r_get_lightgrid_colors_from_indices_stub);
-
 			r_get_lightgrid_average_color_hook.create(SELECT_VALUE(0x5BE7B0_b, 0x6D65E0_b), r_get_lightgrid_average_color_stub);
-
 			r_get_lighting_info_for_effects_hook.create(SELECT_VALUE(0x5BEF20_b, 0x6D6D50_b), r_get_lighting_info_for_effects_stub);
 		}
 	};
