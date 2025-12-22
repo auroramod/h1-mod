@@ -203,12 +203,12 @@ namespace pathnodes
 			if (!scr_enable_jump_nodes->current.enabled)
 			{
 				return is_traverse_begin_node(a1->constant.type) && is_traverse_end_node(a2->constant.type) &&
-					(a1->constant.targetname == a2->constant.targetname);
+					(a1->constant.target == a2->constant.targetname);
 			}
 			else
 			{
 				return is_traverse_begin_or_jump_node(a1->constant.type) && is_traverse_end_or_jump_node(a2->constant.type) &&
-					(a1->constant.targetname == a2->constant.targetname || (is_jump_node(a1->constant.type) && is_jump_node(a2->constant.type)));
+					(a1->constant.target == a2->constant.targetname || (is_jump_node(a1->constant.type) && is_jump_node(a2->constant.type)));
 			}
 		}
 
@@ -216,21 +216,19 @@ namespace pathnodes
 		{
 			const auto do_traverse = a.newLabel();
 
-			a.push(rax);
 			a.pushad64();
 			a.mov(rcx, rdi);
 			a.mov(rdx, rsi);
 			a.call_aligned(check_traverse_node);
-			a.mov(qword_ptr(rsp, 0x80), rax);
-			a.popad64();
-			a.pop(rax);
 
 			a.test(eax, eax);
 			a.jnz(do_traverse);
 
+			a.popad64();
 			a.jmp(0x3EAD2A_b);
 
 			a.bind(do_traverse);
+			a.popad64();
 			a.jmp(0x3EAD0A_b);
 		}
 		
