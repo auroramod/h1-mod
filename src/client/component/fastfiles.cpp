@@ -81,28 +81,17 @@ namespace fastfiles
 			}
 
 			{
-				const std::string override_asset_name = "override/"s + name;
-
-				if (type == game::XAssetType::ASSET_TYPE_RAWFILE)
+				if (type == game::XAssetType::ASSET_TYPE_RAWFILE ||
+					type == game::XAssetType::ASSET_TYPE_STRINGTABLE ||
+					type == game::XAssetType::ASSET_TYPE_MENU)
 				{
+					const std::string override_asset_name = "override/"s + name;
 					if (result.rawfile)
 					{
 						const auto override_rawfile = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
 						if (override_rawfile.rawfile)
 						{
 							result.rawfile = override_rawfile.rawfile;
-						}
-					}
-				}
-
-				if (type == game::XAssetType::ASSET_TYPE_STRINGTABLE)
-				{
-					if (result.stringTable)
-					{
-						const auto override_stringtable = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
-						if (override_stringtable.stringTable)
-						{
-							result.stringTable = override_stringtable.stringTable;
 						}
 					}
 				}

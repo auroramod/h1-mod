@@ -152,6 +152,20 @@ namespace menus
 			// LUI_ToggleMenu
 			return utils::hook::invoke<void>(0x270A90_b, controller_index, context);
 		}
+
+		constexpr auto patch_menu_list_name = "ui_mp/patch_code.txt";
+
+		void ui_add_menu_list_stub(void* context, void* menu_list, int a3)
+		{
+			game::UI_AddMenuList(context, menu_list, a3);
+
+			if (game::DB_XAssetExists(game::ASSET_TYPE_MENULIST, patch_menu_list_name) &&
+				!game::DB_IsXAssetDefault(game::ASSET_TYPE_MENULIST, patch_menu_list_name))
+			{
+				const auto patch_code_list = game::UI_LoadMenus(patch_menu_list_name);
+				game::UI_AddMenuList(context, patch_code_list, a3);
+			}
+		}
 	}
 
 	void set_script_main_menu(const std::string& menu)

@@ -250,7 +250,7 @@ namespace game
 	WEAK symbol<void(int clientNum, const char* menu)> Menus_OpenByName{0x0, 0x1E1270};
 	WEAK symbol<void(int clientNum, const char* menu)> Menus_CloseByName{0x0, 0x1DA4C0};
 	WEAK symbol<void*(void* dc, const char* name)> Menus_FindByName{0x0, 0x1AC810};
-	WEAK symbol<void(void* dc, void* menu, int a3)> Menus_Open{0x0, 0x1E1296};
+	WEAK symbol<void(void* dc, void* menu, int a3)> Menus_Open{0x0, 0x1ACC10};
 	WEAK symbol<void(void* dc)> Display_MouseMove{0x0, 0x180B70};
 
 	WEAK symbol<int(const float* origin, const float* enemyPos, float maxDist, float maxHeight,
@@ -307,6 +307,7 @@ namespace game
 	WEAK symbol<void(unsigned int localClientNum, const char** args)> UI_RunMenuScript{0x3F3AA0, 0x1E35B0};
 	WEAK symbol<int(const char* text, int maxChars, Font_s* font, float scale)> UI_TextWidth{0x3F5D90, 0x0};
 	WEAK symbol<void(void* dc, void* menuList, int close)> UI_AddMenuList{0x0, 0x1D9960};
+	WEAK symbol<void*(const char* name)> UI_LoadMenus{0x0, 0x594820};
 
 	WEAK symbol<const char*(const char* string)> UI_SafeTranslateString{0x3840A0, 0x4E8BC0};
 	WEAK symbol<void(ScreenPlacement* scrPlace, const char* text, rectDef_s* rect, Font_s* font, float x, float y,
