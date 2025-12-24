@@ -113,6 +113,77 @@ namespace fonts
 
 			return utils::hook::invoke<int>(SELECT_VALUE(0x3CD370_b, 0x5AF5F0_b), a1, a2);
 		}
+
+		utils::hook::detour font_init_hook;
+		utils::hook::detour ui_get_font_handle_hook;
+		utils::hook::detour ui_get_font_handle_hook2;
+		std::vector<game::Font_s*> custom_font_styles;
+		constexpr const auto custom_font_styles_begin = 10;
+
+		void font_init_stub()
+		{
+			font_init_hook.invoke<void>();
+			custom_font_styles.clear();
+
+			const auto font_styles = game::DB_FindXAssetHeader(game::ASSET_TYPE_STRINGTABLE, "ui/fontstyles.csv", 0).stringTable;
+			if (font_styles->columnCount < 1 || font_styles->rowCount < 1)
+			{
+				return;
+			}
+
+			for (auto i = 0; i < font_styles->columnCount; i++)
+			{
+				if (font_styles->values[i].string == nullptr)
+				{
+					custom_font_styles.emplace_back(game::R_RegisterFont("fonts/default.otf", 20));
+					continue;
+				}
+
+				const auto font = game::R_RegisterFont(font_styles->values[i].string, 20);
+				if (font == nullptr)
+				{
+					custom_font_styles.emplace_back(game::R_RegisterFont("fonts/default.otf", 20));
+					continue;
+				}
+
+				printf("Custom font style %s = %lli\n", font_styles->values[i].string, custom_font_styles.size() + custom_font_styles_begin);
+				custom_font_styles.emplace_back(font);
+			}
+		}
+
+		game::Font_s* get_custom_font(int font)
+		{
+			const auto custom_font_index = font - custom_font_styles_begin;
+			if (custom_font_index >= 0 && custom_font_index < custom_font_styles.size())
+			{
+				return custom_font_styles[custom_font_index];
+			}
+
+			return nullptr;
+		}
+
+		game::Font_s* ui_get_font_handle_stub(void* a1, int font)
+		{
+			const auto custom_font = get_custom_font(font);
+			if (custom_font != nullptr)
+			{
+				return custom_font;
+			}
+
+			return ui_get_font_handle_hook.invoke<game::Font_s*>(a1, font);
+		}
+
+		game::Font_s* ui_get_font_handle_stub2(void* a1, __int64 a2)
+		{
+			const auto font = *reinterpret_cast<int*>(a2 + 208);
+			const auto custom_font = get_custom_font(font);
+			if (custom_font != nullptr)
+			{
+				return custom_font;
+			}
+
+			return ui_get_font_handle_hook2.invoke<game::Font_s*>(a1, a2);
+		}
 	}
 
 	void add(const std::string& name, const std::string& data)
@@ -149,6 +220,13 @@ namespace fonts
 
 			utils::hook::call(SELECT_VALUE(0x4D4137_b, 0x67F667_b), font_name_compare_stub);
 			utils::hook::call(SELECT_VALUE(0x55C596_b, 0x67F6E6_b), db_find_xasset_header_stub);
+
+			if (game::environment::is_mp())
+			{
+				font_init_hook.create(0x1D9B30_b, font_init_stub);
+				ui_get_font_handle_hook.create(0x1DF8B0_b, ui_get_font_handle_stub);
+				ui_get_font_handle_hook2.create(0x192360_b, ui_get_font_handle_stub2);
+			}
 		}
 	};
 }
