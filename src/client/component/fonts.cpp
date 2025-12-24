@@ -117,46 +117,87 @@ namespace fonts
 		utils::hook::detour font_init_hook;
 		utils::hook::detour ui_get_font_handle_hook;
 		utils::hook::detour ui_get_font_handle_hook2;
-		std::vector<game::Font_s*> custom_font_styles;
-		constexpr const auto custom_font_styles_begin = 10;
+
+		struct font_style_t
+		{
+			std::int32_t index;
+			game::Font_s* handle;
+		};
+
+		enum font_style_csv
+		{
+			col_index = 0,
+			col_font = 1,
+			col_name = 2,
+			col_count
+		};
+
+		std::vector<font_style_t> custom_font_styles;
+
+		std::array<const char*, 11> default_hudelem_fonts =
+		{
+			"default",
+			"bigfixed",
+			"smallfixed",
+			"objective",
+			"big",
+			"small",
+			"hudbig",
+			"hudsmall",
+			"buttonprompt",
+			"subtitle",
+			"timer",
+		};
+
+		std::vector<const char*> custom_hudelem_fonts;
 
 		void font_init_stub()
 		{
 			font_init_hook.invoke<void>();
 			custom_font_styles.clear();
+			custom_hudelem_fonts.clear();
 
 			const auto font_styles = game::DB_FindXAssetHeader(game::ASSET_TYPE_STRINGTABLE, "ui/fontstyles.csv", 0).stringTable;
-			if (font_styles->columnCount < 1 || font_styles->rowCount < 1)
+			if (font_styles->columnCount != col_count || font_styles->rowCount < 1)
 			{
 				return;
 			}
 
-			for (auto i = 0; i < font_styles->columnCount; i++)
+			for (auto i = 0u; i < default_hudelem_fonts.size(); i++)
 			{
-				if (font_styles->values[i].string == nullptr)
-				{
-					custom_font_styles.emplace_back(game::R_RegisterFont("fonts/default.otf", 20));
-					continue;
-				}
+				custom_hudelem_fonts.emplace_back(default_hudelem_fonts[i]);
+			}
 
-				const auto font = game::R_RegisterFont(font_styles->values[i].string, 20);
+			const auto default_font = game::R_RegisterFont("fonts/default.otf", 20);
+
+			for (auto i = 0; i < font_styles->rowCount; i++)
+			{
+				const auto index = game::StringTable_GetColumnValueForRow(font_styles, i, col_index);
+				const auto font_name = game::StringTable_GetColumnValueForRow(font_styles, i, col_font);
+				const auto hudelem_name = game::StringTable_GetColumnValueForRow(font_styles, i, col_name);
+
+				auto font = game::R_RegisterFont(font_name, 20);
 				if (font == nullptr)
 				{
-					custom_font_styles.emplace_back(game::R_RegisterFont("fonts/default.otf", 20));
-					continue;
+					font = default_font;
 				}
 
-				printf("Custom font style %s = %lli\n", font_styles->values[i].string, custom_font_styles.size() + custom_font_styles_begin);
-				custom_font_styles.emplace_back(font);
+				font_style_t style{};
+				style.index = std::atoi(index);
+				style.handle = font;
+				custom_font_styles.emplace_back(style);
+				custom_hudelem_fonts.emplace_back(hudelem_name);
 			}
 		}
 
 		game::Font_s* get_custom_font(int font)
 		{
-			const auto custom_font_index = font - custom_font_styles_begin;
-			if (custom_font_index >= 0 && custom_font_index < custom_font_styles.size())
+			for (const auto& font_style : custom_font_styles)
 			{
-				return custom_font_styles[custom_font_index];
+				if (font_style.index == font)
+				{
+					return font_style.handle;
+				}
 			}
 
 			return nullptr;
@@ -183,6 +224,73 @@ namespace fonts
 			}
 
 			return ui_get_font_handle_hook2.invoke<game::Font_s*>(a1, a2);
+		}
+
+		int get_font_handle_index(int hudelem_font_index, int current)
+		{
+			const auto custom_index = hudelem_font_index - default_hudelem_fonts.size();
+			if (custom_index >= 0 && custom_index < custom_font_styles.size())
+			{
+				return custom_font_styles[custom_index].index;
+			}
+
+			return current;
+		}
+
+		void get_hud_elem_info_stub(utils::hook::assembler& a)
+		{
+			a.push(ebx);
+			a.pushad64();
+			a.mov(edx, ebx);
+			a.mov(ecx, dword_ptr(rsi, 4));
+			a.call_aligned(get_font_handle_index);
+			a.mov(dword_ptr(rsp, 0x80), eax);
+			a.popad64();
+			a.pop(ebx);
+
+			a.mov(edx, dword_ptr(rdi, 0x238));
+			a.lea(r8, qword_ptr(rsp, 0x98));
+
+			a.jmp(0x181877_b);
+		}
+
+		void hudelem_setfont_stub(__int64 a1, __int64 a2, __int64 /*a3*/, int /*a4*/)
+		{
+			utils::hook::invoke<void>(0x41A8B0_b, a1, a2, custom_hudelem_fonts.data(), custom_hudelem_fonts.size());
+		}
+
+		void* hudelem_getfont_stub_get_fonts()
+		{
+			return custom_hudelem_fonts.data();
+		}
+
+		void hudelem_getfont_stub(utils::hook::assembler& a)
+		{
+			a.push(rcx);
+			a.pushad64();
+			a.call_aligned(hudelem_getfont_stub_get_fonts);
+			a.mov(qword_ptr(rsp, 0x80), rax);
+			a.popad64();
+			a.pop(rcx);
+
+			a.movsxd(rax, dword_ptr(r8, 0x1C));
+			a.and_(rdx, rax);
+			a.mov(rcx, qword_ptr(rcx, rdx, 3));
+			a.jmp(0x50EC50_b);
+		}
+
+		void hudelem_set_font_handle_stub(utils::hook::assembler& a)
+		{
+			a.push(rbx);
+			a.pushad64();
+			a.mov(edx, ebx);
+			a.xor_(rcx, rcx);
+			a.call_aligned(0x1DF8B0_b);
+			a.mov(qword_ptr(rsp, 0x80), rax);
+			a.popad64();
+			a.pop(rbx);
+
+			a.jmp(0x1818F1_b);
 		}
 	}
 
@@ -226,6 +334,11 @@ namespace fonts
 				font_init_hook.create(0x1D9B30_b, font_init_stub);
 				ui_get_font_handle_hook.create(0x1DF8B0_b, ui_get_font_handle_stub);
 				ui_get_font_handle_hook2.create(0x192360_b, ui_get_font_handle_stub2);
+
+				utils::hook::jump(0x181869_b, utils::hook::assemble(get_hud_elem_info_stub), true);
+				utils::hook::jump(0x41868E_b, hudelem_setfont_stub);
+				utils::hook::jump(0x4186C5_b, utils::hook::assemble(hudelem_getfont_stub), true);
+				utils::hook::jump(0x1818A4_b, utils::hook::assemble(hudelem_set_font_handle_stub), true);
 			}
 		}
 	};

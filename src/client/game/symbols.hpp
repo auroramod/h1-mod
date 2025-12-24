@@ -217,6 +217,8 @@ namespace game
 	WEAK symbol<float()> ScrPlace_HiResGetScaleX{0x0, 0x362910};
 	WEAK symbol<float()> ScrPlace_HiResGetScaleY{0x0, 0x362930};
 
+	WEAK symbol<char*(StringTable*, int, int)> StringTable_GetColumnValueForRow{0x0, 0x5A0AC0};
+
 	WEAK symbol<bool(int localClient, ScreenPlacement* scrPlace, vec3_t& WorldLocation, vec2_t& Screen)> CG_WorldPosToScreenPosReal{0x0, 0x307AD0};
 
 	WEAK symbol<void(XAssetType type, void(__cdecl* func)(XAssetHeader, void*), const void* inData, bool includeOverride)>
