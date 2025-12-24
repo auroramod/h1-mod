@@ -204,6 +204,8 @@ namespace menus
 				*game::keyCatchers = *game::keyCatchers & 1 | 0x10;
 				game::Menus_OpenByName(0, params.get(1));
 			});
+
+			utils::hook::call(0x1E0756_b, ui_add_menu_list_stub);
 		}
 	};
 }
