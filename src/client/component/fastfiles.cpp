@@ -83,6 +83,7 @@ namespace fastfiles
 			{
 				if (type == game::XAssetType::ASSET_TYPE_RAWFILE ||
 					type == game::XAssetType::ASSET_TYPE_STRINGTABLE ||
+					type == game::XAssetType::ASSET_TYPE_DDL ||
 					type == game::XAssetType::ASSET_TYPE_MENU)
 				{
 					const std::string override_asset_name = "override/"s + name;
