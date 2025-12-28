@@ -402,31 +402,6 @@ namespace fastfiles
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
 		}
 
-		void load_lua_file_asset_stub(void* a1)
-		{
-			const auto fastfile = fastfiles::get_current_fastfile();
-			if (fastfile == "mod")
-			{
-				console::error("Mod tried to load a lua file!\n");
-				return;
-			}
-
-			const auto usermap = fastfiles::get_current_usermap();
-			if (usermap.has_value())
-			{
-				const auto& usermap_value = usermap.value();
-				const auto usermap_load = usermap_value + "_load";
-
-				if (fastfile == usermap_value || fastfile == usermap_load)
-				{
-					console::error("Usermap tried to load a lua file!\n");
-					return;
-				}
-			}
-
-			utils::hook::invoke<void>(0x39CA90_b, a1);
-		}
-
 		void db_level_load_add_zone_stub(void* load, const char* name, const unsigned int alloc_flags,
 			const size_t size_est)
 		{
@@ -1154,24 +1129,6 @@ namespace fastfiles
 				sp::reallocate_asset_pools();
 			}
 		}
-
-		utils::hook::detour db_link_x_asset_entry_hook;
-		game::XAssetEntry* db_link_x_asset_entry_stub(game::XAssetType type, game::XAssetHeader* header)
-		{
-			if (!is_mod_pre_gfx)
-			{
-				return db_link_x_asset_entry_hook.invoke<game::XAssetEntry*>(type, header);
-			}
-
-			static game::XAssetEntry entry{};
-
-			if (type != game::ASSET_TYPE_STRINGTABLE)
-			{
-				return &entry;
-			}
-
-			return db_link_x_asset_entry_hook.invoke<game::XAssetEntry*>(type, header);
-		}
 	}
 
 	bool exists(const std::string& zone, bool ignore_usermap)
@@ -1312,11 +1269,6 @@ namespace fastfiles
 			db_print_default_assets = dvars::register_bool("db_printDefaultAssets",
 				false, game::DVAR_FLAG_SAVED, "Print default asset usage");
 
-			if (!game::environment::is_sp())
-			{
-				db_link_x_asset_entry_hook.create(0x396E80_b, db_link_x_asset_entry_stub);
-			}
-
 			g_dump_scripts = dvars::register_bool("g_dumpScripts", false, game::DVAR_FLAG_NONE, "Dump GSC scripts");
 
 			reallocate_asset_pools();
@@ -1380,12 +1332,6 @@ namespace fastfiles
 
 				// dont load localized zone for custom maps
 				utils::hook::call(0x394A99_b, db_level_load_add_zone_stub);
-			}
-
-			// prevent mod.ff from loading lua files
-			if (game::environment::is_mp())
-			{
-				utils::hook::call(0x3757B4_b, load_lua_file_asset_stub);
 			}
 
 			command::add("loadzone", [](const command::params& params)
