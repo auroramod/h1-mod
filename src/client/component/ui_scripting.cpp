@@ -637,6 +637,34 @@ namespace ui_scripting
 			discord_table["reply"]["yes"] = DISCORD_REPLY_YES;
 			discord_table["reply"]["ignore"] = DISCORD_REPLY_IGNORE;
 			discord_table["reply"]["no"] = DISCORD_REPLY_NO;
+
+			auto bits_table = table();
+			lua["bits"] = bits_table;
+
+			bits_table["lshift"] = [](const int a, const int b)
+			{
+				return a << b;
+			};
+
+			bits_table["rshift"] = [](const int a, const int b)
+			{
+				return a >> b;
+			};
+
+			bits_table["andbits"] = [](const int a, const int b)
+			{
+				return a & b;
+			};
+
+			bits_table["orbits"] = [](const int a, const int b)
+			{
+				return a | b;
+			};
+
+			bits_table["neg"] = [](const int a)
+			{
+				return ~a;
+			};
 		}
 
 		void start()
