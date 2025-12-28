@@ -164,16 +164,26 @@ namespace ui_scripting
 			return list;
 		}
 
-		bool script_exists(const std::string& script)
+		bool script_exists(const std::string& script, bool use_fs)
 		{
-			return utils::io::file_exists(script) || game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, script.data());
+			return (use_fs ? filesystem::exists(script) : utils::io::file_exists(script)) || game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, script.data());
 		}
 
-		bool read_script(const std::string& script, std::string* data)
+		bool read_script(const std::string& script, std::string* data, bool use_fs)
 		{
-			if (utils::io::read_file(script, data))
+			if (use_fs)
 			{
-				return true;
+				if (filesystem::read_file(script, data))
+				{
+					return true;
+				}
+			}
+			else
+			{
+				if (utils::io::read_file(script, data))
+				{
+					return true;
+				}
 			}
 
 			if (game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, script.data()))
@@ -197,15 +207,10 @@ namespace ui_scripting
 			{
 				const auto init_file = script + "/__init__.lua";
 				std::string data;
-				if (read_script(init_file, &data))
+				if (read_script(init_file, &data, false))
 				{
 					print_loading_script(script);
 					load_script(init_file, data);
-
-					if (use_rawfiles)
-					{
-						utils::io::write_file("test", data);
-					}
 				}
 				else
 				{
@@ -789,7 +794,7 @@ namespace ui_scripting
 			if (!is_loaded_script(globals.in_require_script))
 			{
 				header = game::DB_FindXAssetHeader(type, name, allow_create_default);
-				if (header.luaFile == nullptr && script_exists(name))
+				if (header.luaFile == nullptr && script_exists(name, true))
 				{
 					header.luaFile = reinterpret_cast<game::LuaFile*>(1);
 				}
@@ -801,7 +806,7 @@ namespace ui_scripting
 			const std::string name_ = name;
 			const std::string target_script = folder + "/" + name_ + ".lua";
 
-			if (script_exists(target_script))
+			if (script_exists(target_script, false))
 			{
 				globals.load_raw_script = true;
 				globals.raw_script_name = target_script;
@@ -824,7 +829,7 @@ namespace ui_scripting
 				globals.loaded_scripts[globals.raw_script_name] = globals.in_require_script;
 
 				std::string data;
-				if (read_script(globals.raw_script_name, &data))
+				if (read_script(globals.raw_script_name, &data, false))
 				{
 					return load_buffer(globals.raw_script_name, data);
 				}
@@ -836,7 +841,7 @@ namespace ui_scripting
 			name = name.substr(1);
 
 			std::string data;
-			if (read_script(name, &data))
+			if (read_script(name, &data, true))
 			{
 				console::info("Overriding lua file %s\n", name.data());
 				return load_buffer(chunk_name, data);
