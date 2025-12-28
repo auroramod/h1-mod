@@ -157,15 +157,20 @@ namespace fonts
 			custom_font_styles.clear();
 			custom_hudelem_fonts.clear();
 
-			const auto font_styles = game::DB_FindXAssetHeader(game::ASSET_TYPE_STRINGTABLE, "ui/fontstyles.csv", 0).stringTable;
-			if (font_styles->columnCount != col_count || font_styles->rowCount < 1)
+			for (auto i = 0u; i < default_hudelem_fonts.size(); i++)
+			{
+				custom_hudelem_fonts.emplace_back(default_hudelem_fonts[i]);
+			}
+
+			if (!game::DB_XAssetExists(game::ASSET_TYPE_STRINGTABLE, "ui/fontstyles.csv"))
 			{
 				return;
 			}
 
-			for (auto i = 0u; i < default_hudelem_fonts.size(); i++)
+			const auto font_styles = game::DB_FindXAssetHeader(game::ASSET_TYPE_STRINGTABLE, "ui/fontstyles.csv", 0).stringTable;
+			if (font_styles->columnCount != col_count || font_styles->rowCount < 1)
 			{
-				custom_hudelem_fonts.emplace_back(default_hudelem_fonts[i]);
+				return;
 			}
 
 			const auto default_font = game::R_RegisterFont("fonts/default.otf", 20);
