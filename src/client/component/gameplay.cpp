@@ -409,6 +409,9 @@ namespace gameplay
 			client_end_frame_hook.create(0x3FF7D0_b, client_end_frame_stub2);
 			g_damage_client_hook.create(0x414F10_b, g_damage_client_stub);
 			g_damage_hook.create(0x414A10_b, g_damage_stub);
+			
+			// let moveSpeedScale be used in GSC
+			utils::hook::set<uint32_t>(0x4406FE_b, 0x1DC);
 		}
 	};
 }
