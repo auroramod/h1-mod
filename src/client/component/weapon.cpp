@@ -249,6 +249,32 @@ namespace weapon
 
 			utils::hook::invoke<void>(0x39BE20_b, asset);
 		}
+
+		void patch_num_weapons_reg()
+		{
+			// movzx edx, bl -> mov edx, ebx
+			utils::hook::set<std::uint16_t>(0x118650_b, 0xD38B);
+			utils::hook::nop(0x118652_b, 1);
+
+			// (bunch of stuff) -> inc ebx
+			utils::hook::set<std::uint16_t>(0x1186BD_b, 0xC3FF);
+			utils::hook::nop(0x1186BF_b, 8);
+			// movzx r8d, bl -> mov r8d, ebx
+			utils::hook::set<std::uint32_t>(0x1186C7_b, 0x90C38B44);
+
+			// (bunch of stuff) -> inc ebx
+			utils::hook::set<std::uint16_t>(0x41DC32_b, 0xC3FF);
+			utils::hook::nop(0x41DC34_b, 8);
+			// movzx edi, bl -> mov edi, ebx
+			utils::hook::set<std::uint16_t>(0x41DC3C_b, 0xDF89);
+			utils::hook::nop(0x41DC3E_b, 1);
+
+			utils::hook::set<std::uint16_t>(0x2E0AE9_b, 0xC3FF);
+			utils::hook::nop(0x2E0AEB_b, 3);
+			utils::hook::nop(0x2E0AF0_b, 5);
+			utils::hook::set<std::uint16_t>(0x2E0AF5_b, 0xD889);
+			utils::hook::nop(0x2E0AF7_b, 1);
+		}
 	}
 
 	void clear_modifed_enums()
@@ -278,6 +304,9 @@ namespace weapon
 
 				dvars::register_bool("sv_disableCustomClasses", 
 					false, game::DVAR_FLAG_REPLICATED, "Disable custom classes on server");
+
+				// change register used for BG_GetNumWeapons loops to 32 bits
+				patch_num_weapons_reg();
 			}
 
 #ifdef _DEBUG
