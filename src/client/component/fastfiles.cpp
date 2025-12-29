@@ -1148,6 +1148,11 @@ namespace fastfiles
 			// movzx edi, bl -> mov edi, ebx
 			utils::hook::set<std::uint16_t>(0x41DC3C_b, 0xDF89);
 			utils::hook::nop(0x41DC3E_b, 1);
+
+			utils::hook::set<std::uint16_t>(0x2E0AE9_b, 0xC3FF);
+			utils::hook::nop(0x2E0AEB_b, 10);
+			utils::hook::set<std::uint16_t>(0x2E0AF5_b, 0xD889);
+			utils::hook::nop(0x2E0AF7_b, 1);
 		}
 	}
 
