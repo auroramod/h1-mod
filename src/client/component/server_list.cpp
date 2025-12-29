@@ -33,6 +33,7 @@ namespace server_list
 			int ping;
 			std::string host_name;
 			std::string map_name;
+			std::string game_type_display;
 			std::string game_type;
 			std::string mod_name;
 			game::CodPlayMode play_mode;
@@ -159,7 +160,7 @@ namespace server_list
 					servers[i].clients);
 			}
 			case 3:
-				return servers[i].game_type.empty() ? "" : servers[i].game_type.data();
+				return servers[i].game_type_display.empty() ? "" : servers[i].game_type_display.data();
 			case 4:
 			{
 				const auto ping = servers[i].ping ? servers[i].ping : 999;
@@ -177,6 +178,8 @@ namespace server_list
 				return servers[i].is_private ? "1" : "0";
 			case 6:
 				return servers[i].mod_name.empty() ? "" : servers[i].mod_name.data();
+			case 7:
+				return servers[i].game_type.empty() ? "" : servers[i].game_type.data();
 			default:
 				return "";
 			}
@@ -394,7 +397,8 @@ namespace server_list
 		server.address = address;
 		server.host_name = info.get("hostname");
 		server.map_name = info.get("mapname");
-		server.game_type = game::UI_GetGameTypeDisplayName(info.get("gametype").data());
+		server.game_type_display = game::UI_GetGameTypeDisplayName(info.get("gametype").data());
+		server.game_type = info.get("gametype").data();
 		server.mod_name = info.get("fs_game");
 		server.play_mode = playmode;
 		server.clients = atoi(info.get("clients").data());
