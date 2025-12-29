@@ -1129,6 +1129,26 @@ namespace fastfiles
 				sp::reallocate_asset_pools();
 			}
 		}
+
+		void patch_num_weapons_reg()
+		{
+			// movzx edx, bl -> mov edx, ebx
+			utils::hook::set<std::uint16_t>(0x118650_b, 0xD38B);
+			utils::hook::nop(0x118652_b, 1);
+
+			// (bunch of stuff) -> inc ebx
+			utils::hook::set<std::uint16_t>(0x1186BD_b, 0xC3FF);
+			utils::hook::nop(0x1186BF_b, 8);
+			// movzx r8d, bl -> mov r8d, ebx
+			utils::hook::set<std::uint32_t>(0x1186C7_b, 0x90C38B44);
+
+			// (bunch of stuff) -> inc ebx
+			utils::hook::set<std::uint16_t>(0x41DC32_b, 0xC3FF);
+			utils::hook::nop(0x41DC34_b, 8);
+			// movzx edi, bl -> mov edi, ebx
+			utils::hook::set<std::uint16_t>(0x41DC3C_b, 0xDF89);
+			utils::hook::nop(0x41DC3E_b, 1);
+		}
 	}
 
 	bool exists(const std::string& zone, bool ignore_usermap)
@@ -1332,6 +1352,9 @@ namespace fastfiles
 
 				// dont load localized zone for custom maps
 				utils::hook::call(0x394A99_b, db_level_load_add_zone_stub);
+
+				// change register used for BG_GetNumWeapons loops to 32 bits
+				patch_num_weapons_reg();
 			}
 
 			command::add("loadzone", [](const command::params& params)
