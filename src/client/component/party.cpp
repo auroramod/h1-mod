@@ -453,13 +453,7 @@ namespace party
 				}
 				else if (needs_restart || needs_vid_restart)
 				{
-					command::execute("vid_restart");
-					needs_vid_restart = false;
-					scheduler::once([=]()
-					{
-						mods::read_stats();
-						connect(target);
-					}, scheduler::pipeline::main);
+					mods::execute_restart(target);
 					return true;
 				}
 			}

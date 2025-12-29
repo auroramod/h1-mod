@@ -12,6 +12,8 @@
 #include "materials.hpp"
 #include "mods.hpp"
 #include "scheduler.hpp"
+#include "network.hpp"
+#include "party.hpp"
 #include "game/demonware/services.hpp"
 
 #include <utils/hook.hpp>
@@ -65,26 +67,6 @@ namespace mods
 			std::memset(reinterpret_cast<void*>(0xE962190_b), 0, 128 * 24);
 		}
 
-		void full_restart(const std::string& arg)
-		{
-			if (game::environment::is_mp())
-			{
-				reset_fonts();
-				command::execute("vid_restart");
-				scheduler::once([]
-				{
-					mods::read_stats();
-					reload_omnvars();
-				}, scheduler::main);
-				return;
-			}
-
-			auto mode = game::environment::is_mp() ? " -multiplayer "s : " -singleplayer "s;
-
-			utils::nt::relaunch_self(mode.append(arg), true);
-			utils::nt::terminate();
-		}
-
 		bool mod_requires_restart(const std::string& path)
 		{
 			return utils::io::file_exists(path + "/mod.ff") || utils::io::file_exists(path + "/zone/mod.ff");
@@ -106,6 +88,64 @@ namespace mods
 			{
 				filesystem::register_path(path);
 			}
+		}
+
+		bool can_use_vid_restart()
+		{
+			if (game::environment::is_sp())
+			{
+				return false;
+			}
+
+			if (game::environment::is_mp())
+			{
+				return false; // vid restart causes issues with mods
+			}
+
+			return false;
+		}
+
+		void do_vid_restart(const std::optional<game::netadr_s>& server)
+		{
+			reset_fonts();
+			command::execute("vid_restart");
+			scheduler::once([=]
+			{
+				mods::read_stats();
+				reload_omnvars();
+
+				if (server.has_value())
+				{
+					party::connect(server.value());
+				}
+			}, scheduler::main);
+		}
+
+		void do_full_restart(const std::optional<game::netadr_s>& server)
+		{
+			std::string cmd;
+			const auto add_arg = [&](const std::string& arg)
+			{
+				cmd.append(" ");
+				cmd.append(arg);
+			};
+
+			const auto mode = game::environment::is_mp() ? "-multiplayer "s : "-singleplayer "s;
+			add_arg(mode);
+
+			if (mod_path.has_value())
+			{
+				add_arg(utils::string::va("-mod %s", mod_path->data()));
+			}
+
+			if (server.has_value())
+			{
+				const auto connect_cmd = utils::string::va("+connect %s", network::net_adr_to_string(*server));
+				add_arg(connect_cmd);
+			}
+
+			utils::nt::relaunch_self(cmd, true);
+			utils::nt::terminate();
 		}
 	}
 
@@ -190,7 +230,7 @@ namespace mods
 			mod_requires_restart(path))
 		{
 			console::info("Restarting...\n");
-			full_restart("-mod \""s + path + "\"");
+			execute_restart();
 		}
 		else
 		{
@@ -212,7 +252,7 @@ namespace mods
 		{
 			console::info("Restarting...\n");
 			set_mod("");
-			full_restart("");
+			execute_restart();
 		}
 		else
 		{
@@ -225,6 +265,18 @@ namespace mods
 	{
 		demonware::set_storage_path(mod_path.value_or(""));
 		utils::hook::invoke<void>(0x4E6B60_b, 0); // read stats
+	}
+
+	void execute_restart(const std::optional<game::netadr_s>& server)
+	{
+		if (can_use_vid_restart())
+		{
+			do_vid_restart(server);
+		}
+		else
+		{
+			do_full_restart(server);
+		}
 	}
 
 	class component final : public component_interface
