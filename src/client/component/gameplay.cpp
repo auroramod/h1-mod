@@ -310,22 +310,6 @@ namespace gameplay
 				a.jmp(0x2C98EF_b);
 			});
 		}
-
-		void* weapon_rocket_fire_stub(game::mp::gentity_s* entity, unsigned int weapon_index, float spread,
-			game::weaponParms* wp, const float* gun_vel, void* a6, void* a7, __int64 magic_bullet)
-		{
-			const auto result = weapon_rocket_fire_hook.invoke<void*>(entity, weapon_index, spread, wp, gun_vel, a6, a7, magic_bullet);
-
-			const auto scale = dvars::g_rocketJumpScale->current.value;
-			if (magic_bullet == 0 && scale > 0.0 && entity->client)
-			{
-				entity->client->ps.velocity[0] -= wp->forward[0] * scale;
-				entity->client->ps.velocity[1] -= wp->forward[1] * scale;
-				entity->client->ps.velocity[2] -= wp->forward[2] * scale;
-			}
-
-			return result;
-		}
 	}
 
 	class component final : public component_interface
@@ -404,7 +388,6 @@ namespace gameplay
 				"Flag whether player collision is on or off");
 			cm_transformed_capsule_trace_hook.create(0x4D63C0_b, cm_transformed_capsule_trace_stub);
 
-			weapon_rocket_fire_hook.create(0x463AE0_b, weapon_rocket_fire_stub);
 			dvars::g_rocketJumpScale = dvars::register_float("g_rocketJumpScale", 64.0f, 1.0f, 1000.0f, game::DVAR_FLAG_REPLICATED, "Adjust rocket jump scale");
 
 			// Make noclip work
