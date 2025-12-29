@@ -402,20 +402,25 @@ namespace fastfiles
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
 		}
 
-		void db_level_load_add_zone_stub(void* load, const char* name, const unsigned int alloc_flags,
-			const size_t size_est)
+		bool is_builtin_map(const char* name)
 		{
-			auto is_builtin_map = false;
+			auto result = false;
 			for (auto map = &game::maps[0]; map->unk; ++map)
 			{
 				if (!std::strcmp(map->name, name))
 				{
-					is_builtin_map = true;
+					result = true;
 					break;
 				}
 			}
 
-			if (is_builtin_map)
+			return result;
+		}
+
+		void db_level_load_add_zone_stub(void* load, const char* name, const unsigned int alloc_flags,
+			const size_t size_est)
+		{
+			if (is_builtin_map(name))
 			{
 				game::DB_LevelLoadAddZone(load, name, alloc_flags, size_est);
 			}
@@ -1129,6 +1134,17 @@ namespace fastfiles
 				sp::reallocate_asset_pools();
 			}
 		}
+
+		void db_load_xassets_vlobby_stub(game::XZoneInfo* zone_info, unsigned int zone_count, game::DBSyncMode sync_mode)
+		{
+			if (!is_builtin_map(zone_info->name))
+			{
+				set_usermap(zone_info->name);
+				zone_info->allocFlags |= game::DB_ZONE_CUSTOM;
+			}
+
+			return game::DB_LoadXAssets(zone_info, zone_count, sync_mode);
+		}
 	}
 
 	bool exists(const std::string& zone, bool ignore_usermap)
@@ -1332,6 +1348,9 @@ namespace fastfiles
 
 				// dont load localized zone for custom maps
 				utils::hook::call(0x394A99_b, db_level_load_add_zone_stub);
+
+				// handle custom vlobby maps
+				utils::hook::call(0x17F186_b, db_load_xassets_vlobby_stub);
 			}
 
 			command::add("loadzone", [](const command::params& params)
