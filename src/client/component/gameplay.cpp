@@ -310,6 +310,29 @@ namespace gameplay
 				a.jmp(0x2C98EF_b);
 			});
 		}
+
+		void weapon_rocket_launcher_fire_stub(utils::hook::assembler& a)
+		{
+			const auto loc_463D2A = a.newLabel();
+			a.mov(rax, rcx);
+			a.push(rax);
+
+			a.mov(rcx, qword_ptr(rsi, 0x158));
+			a.test(rcx, rcx);
+			a.jz(loc_463D2A);
+			a.movss(xmm1, dword_ptr(rdi));
+			a.movss(xmm0, dword_ptr(rcx, 0x84));
+
+			a.mov(rax, qword_ptr(reinterpret_cast<uint64_t>(&dvars::g_rocketJumpScale)));
+			a.movss(xmm3, qword_ptr(rax, 0x10));
+			a.mulss(xmm1, xmm3);
+
+			a.pop(rax);
+			a.jmp(0x463CE4_b);
+
+			a.bind(loc_463D2A);
+			a.jmp(0x463D2A_b);
+		}
 	}
 
 	class component final : public component_interface
@@ -388,7 +411,11 @@ namespace gameplay
 				"Flag whether player collision is on or off");
 			cm_transformed_capsule_trace_hook.create(0x4D63C0_b, cm_transformed_capsule_trace_stub);
 
-			dvars::g_rocketJumpScale = dvars::register_float("g_rocketJumpScale", 64.0f, 1.0f, 1000.0f, game::DVAR_FLAG_REPLICATED, "Adjust rocket jump scale");
+			dvars::g_rocketJumpScale = dvars::register_float("g_rocketJumpScale", 64.0f, 0.0f, 1000.0f, game::DVAR_FLAG_REPLICATED, "Adjust rocket jump scale");
+			utils::hook::set<std::uint8_t>(0x463CC7_b, 0x48); // save rax
+			utils::hook::set<std::uint8_t>(0x463CC8_b, 0x89);
+			utils::hook::set<std::uint8_t>(0x463CC9_b, 0xC1);
+			utils::hook::jump(0x463CCA_b, utils::hook::assemble(weapon_rocket_launcher_fire_stub), true);
 
 			// Make noclip work
 			client_end_frame_hook.create(0x3FF7D0_b, client_end_frame_stub2);
