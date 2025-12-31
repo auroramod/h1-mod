@@ -70,6 +70,24 @@ namespace anims
 
 			a.jmp(0x2B70F0_b);
 		}
+
+		void set_anim_rate_stub(utils::hook::assembler& a)
+		{
+			const auto is_zero = a.newLabel();
+
+			a.xorps(xmm1, xmm1);
+			a.ucomiss(xmm8, xmm1);
+			a.jnp(is_zero);
+
+			a.divss(xmm7, xmm8);
+			a.mov(edx, edi);
+			a.mov(rcx, rsi);
+			a.mulss(xmm7, xmm9);
+			a.jmp(0x1CCF24_b);
+
+			a.bind(is_zero);
+			a.jmp(0x1CCF2C_b);
+		}
 	}
 
 	class component final : public component_interface
@@ -83,6 +101,9 @@ namespace anims
 			}
 
 			utils::hook::jump(0x2B7628_b, utils::hook::assemble(bg_parse_commands_stub), true);
+
+			// prevent division by zero 
+			utils::hook::jump(0x1CCF15_b, utils::hook::assemble(set_anim_rate_stub), true);
 		}
 	};
 }
