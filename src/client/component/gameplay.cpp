@@ -331,6 +331,7 @@ namespace gameplay
 			a.jmp(0x463CE4_b);
 
 			a.bind(loc_463D2A);
+			a.pop(rax);
 			a.jmp(0x463D2A_b);
 		}
 	}
