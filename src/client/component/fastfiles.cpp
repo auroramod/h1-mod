@@ -1145,6 +1145,19 @@ namespace fastfiles
 
 			return game::DB_LoadXAssets(zone_info, zone_count, sync_mode);
 		}
+
+		char wait_for_vlobby_stub(const char* zone, int a2)
+		{
+			static const auto virtual_lobby_map = *reinterpret_cast<game::dvar_t**>(0x3426CA0_b);
+			if (*zone == 0 || exists(zone))
+			{
+				return utils::hook::invoke<char>(0x396610_b, zone, a2);
+			}
+			else
+			{
+				return utils::hook::invoke<char>(0x396610_b, virtual_lobby_map->current.string, a2);
+			}
+		}
 	}
 
 	bool exists(const std::string& zone, bool ignore_usermap)
@@ -1351,6 +1364,7 @@ namespace fastfiles
 
 				// handle custom vlobby maps
 				utils::hook::call(0x17F186_b, db_load_xassets_vlobby_stub);
+				utils::hook::call(0x17F1B0_b, wait_for_vlobby_stub); // dont wait for _path ff if it doesnt exist
 			}
 
 			command::add("loadzone", [](const command::params& params)
