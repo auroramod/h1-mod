@@ -66,7 +66,7 @@ LUI.MenuBuilder.registerType("choose_language_menu", function(a1)
     menu:AddHelp({
         name = "add_button_helper_text",
         button_ref = "",
-        helper_text = "^2" .. Engine.Localize("@LUA_MENU_DOWNLOAD") .. ": ^7https://docs.h1.gg/languages",
+        helper_text = "^2" .. Engine.Localize("@LUA_MENU_DOWNLOAD") .. ": ^7https://docs.auroramod.dev/languages",
         side = "left",
         priority = -9001,
         clickable = false
@@ -109,4 +109,4 @@ CoD.TextSettings.H1TitleFont = {
     Font = RegisterFont("fonts/bank_h1.ttf", 50),
     Height = scale(50)
 }
-]]--
+]] --
