@@ -88,7 +88,7 @@ namespace gui::asset_list::mapents
 		bool create_and_open_mapents_file(mapents_t& data)
 		{
 			const auto current_path = std::filesystem::current_path().generic_string();
-			const std::string path = utils::string::va("%s\\h2m-mod\\tmp\\%s", current_path.data(), data.asset->name);
+			const std::string path = utils::string::va("%s\\h1-mod\\tmp\\%s", current_path.data(), data.asset->name);
 
 			utils::io::write_file(path, data.converted_mapents, false);
 			ShellExecuteA(nullptr, nullptr, path.data(), nullptr, nullptr, SW_SHOWNORMAL);
@@ -134,7 +134,7 @@ namespace gui::asset_list::mapents
 
 		void pre_destroy() override
 		{
-			utils::io::remove_directory("h2m-mod/tmp");
+			utils::io::remove_directory("h1-mod/tmp");
 		}
 	};
 }

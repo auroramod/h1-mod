@@ -235,7 +235,7 @@ namespace gui::vision_editor
 			}();
 
 			static const auto* mapname = game::Dvar_FindVar("mapname");
-			const auto path = std::format("h2m-mod/vision_export/{}_{}.json", (mapname ? mapname->current.string : "export"), timestamp);
+			const auto path = std::format("h1-mod/vision_export/{}_{}.json", (mapname ? mapname->current.string : "export"), timestamp);
 			utils::io::write_file(path, obj.dump(4));
 
 			gui::notification("Exported tweak values to:", utils::string::va("\"%s\"", path.data()));
