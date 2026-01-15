@@ -260,6 +260,12 @@ int main()
 
 		try
 		{
+			if (utils::flags::has_flag("stdout"))
+			{
+				setvbuf(stdout, NULL, _IONBF, 0);
+				setvbuf(stderr, NULL, _IONBF, 0);
+			}
+
 			if (!component_loader::post_start()) return 0;
 
 			auto mode = detect_mode_from_arguments();
