@@ -1028,6 +1028,16 @@ namespace party
 				console::info("hash output: %s\n", hash.data());
 			});
 
+			command::add("xpartygogametype", [](const command::params& params)
+			{
+				if (params.size() < 2)
+				{
+					return;
+				}
+
+				command::execute( utils::string::va("ui_gametype %s;g_gametype %s;xpartygo", params.get(1), params.get(1)) );
+			});
+
 			network::on("getInfo", [](const game::netadr_s& target, const std::string& data)
 			{
 				const auto mapname = get_dvar_string("mapname");
