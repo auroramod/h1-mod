@@ -13,19 +13,21 @@ local function VolumeMore(f3_arg0)
         SliderBounds.Volume.Step, "snd_volume")
 end
 
-local function get_mic_volume()
-    return (Engine.GetDvarFloat("winvoice_mic_reclevel") - SliderBounds.VoiceRecord.Min) /
-               (SliderBounds.VoiceRecord.Max - SliderBounds.VoiceRecord.Min)
-end
+if not game:issingleplayer() then
+    local function get_mic_volume()
+        return (Engine.GetDvarFloat("winvoice_mic_reclevel") - SliderBounds.VoiceRecord.Min) /
+                   (SliderBounds.VoiceRecord.Max - SliderBounds.VoiceRecord.Min)
+    end
 
-local function mic_levels_more(index)
-    local current = get_mic_volume() * SliderBounds.VoiceRecord.Max
-    Engine.SetDvarFloat("winvoice_mic_reclevel", current + SliderBounds.VoiceRecord.Step)
-end
+    local function mic_levels_more(index)
+        local current = get_mic_volume() * SliderBounds.VoiceRecord.Max
+        Engine.SetDvarFloat("winvoice_mic_reclevel", current + SliderBounds.VoiceRecord.Step)
+    end
 
-local function mic_levels_less(index)
-    local current = get_mic_volume() * SliderBounds.VoiceRecord.Max
-    Engine.SetDvarFloat("winvoice_mic_reclevel", current - SliderBounds.VoiceRecord.Step)
+    local function mic_levels_less(index)
+        local current = get_mic_volume() * SliderBounds.VoiceRecord.Max
+        Engine.SetDvarFloat("winvoice_mic_reclevel", current - SliderBounds.VoiceRecord.Step)
+    end
 end
 
 local function pc_audio(f4_arg0, f4_arg1)
@@ -99,17 +101,19 @@ local function pc_audio(f4_arg0, f4_arg1)
     end
 
     -- voice chat options
-    createdivider(menu, Engine.Localize("@LUA_MENU_VOICE_CHAT"))
+    if not game:issingleplayer() then
+        createdivider(menu, Engine.Localize("@LUA_MENU_VOICE_CHAT"))
 
-    LUI.Options.AddButtonOptionVariant(menu, GenericButtonSettings.Variants.Select, "@LUA_MENU_VOICE_CHAT",
-        "@LUA_MENU_VOICE_CHAT_DESC", LUI.Options.GetDvarEnableTextFunc("cl_voice", false),
-        LUI.Options.ToggleDvarFunc("cl_voice"), LUI.Options.ToggleDvarFunc("cl_voice"))
-    LUI.Options.AddButtonOptionVariant(menu, GenericButtonSettings.Variants.Select, "@LUA_MENU_PUSH_TO_TALK",
-        "@LUA_MENU_PUSH_TO_TALK_DESC", LUI.Options.GetDvarEnableTextFunc("cl_pushToTalk", false),
-        LUI.Options.ToggleDvarFunc("cl_pushToTalk"), LUI.Options.ToggleDvarFunc("cl_pushToTalk"))
+        LUI.Options.AddButtonOptionVariant(menu, GenericButtonSettings.Variants.Select, "@LUA_MENU_VOICE_CHAT",
+            "@LUA_MENU_VOICE_CHAT_DESC", LUI.Options.GetDvarEnableTextFunc("cl_voice", false),
+            LUI.Options.ToggleDvarFunc("cl_voice"), LUI.Options.ToggleDvarFunc("cl_voice"))
+        LUI.Options.AddButtonOptionVariant(menu, GenericButtonSettings.Variants.Select, "@LUA_MENU_PUSH_TO_TALK",
+            "@LUA_MENU_PUSH_TO_TALK_DESC", LUI.Options.GetDvarEnableTextFunc("cl_pushToTalk", false),
+            LUI.Options.ToggleDvarFunc("cl_pushToTalk"), LUI.Options.ToggleDvarFunc("cl_pushToTalk"))
 
-    LUI.Options.AddButtonOptionVariant(menu, GenericButtonSettings.Variants.Slider, "@LUA_MENU_MIC_REC_VOLUME",
-        "@LUA_MENU_MIC_REC_VOLUME_DESC", get_mic_volume, mic_levels_less, mic_levels_more)
+        LUI.Options.AddButtonOptionVariant(menu, GenericButtonSettings.Variants.Slider, "@LUA_MENU_MIC_REC_VOLUME",
+            "@LUA_MENU_MIC_REC_VOLUME_DESC", get_mic_volume, mic_levels_less, mic_levels_more)
+    end
 
     LUI.Options.InitScrollingList(menu.list, nil)
     LUI.Options.AddOptionTextInfo(menu)
