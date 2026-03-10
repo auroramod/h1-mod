@@ -2253,4 +2253,109 @@ namespace game
 		pathnode_t* node;
 		float metric;
 	};
+
+	// hud (s1 pdb)
+	enum he_type_t : __int32
+	{
+		HE_TYPE_FREE = 0x0,
+		HE_TYPE_TEXT = 0x1,
+		HE_TYPE_VALUE = 0x2,
+		HE_TYPE_PLAYERNAME = 0x3,
+		HE_TYPE_MATERIAL = 0x4,
+		HE_TYPE_TIMER_DOWN = 0x5,
+		HE_TYPE_TIMER_UP = 0x6,
+		HE_TYPE_TIMER_STATIC = 0x7,
+		HE_TYPE_TENTHS_TIMER_DOWN = 0x8,
+		HE_TYPE_TENTHS_TIMER_UP = 0x9,
+		HE_TYPE_TENTHS_TIMER_STATIC = 0xA,
+		HE_TYPE_CLOCK_DOWN = 0xB,
+		HE_TYPE_CLOCK_UP = 0xC,
+		HE_TYPE_WAYPOINT = 0xD,
+		//HE_TYPE_TEXT_DEV = 0xE,
+		//HE_TYPE_RADAR_PING = 0xF,
+		//HE_TYPE_RADAR_HIGHLIGHT = 0x10,
+		//HE_TYPE_SONARVISION = 0x11,
+		//HE_TYPE_HARMONIC_BREACH = 0x12,
+		HE_TYPE_COUNT = 0x13,
+	};
+
+	struct $0D0CB43DF22755AD856C77DD3F304010
+	{
+		unsigned __int8 r;
+		unsigned __int8 g;
+		unsigned __int8 b;
+		unsigned __int8 a;
+	};
+
+	union hudelem_color_t
+	{
+		$0D0CB43DF22755AD856C77DD3F304010 __s0;
+		int rgba;
+	};
+
+	struct hudelem_s
+	{
+		short targetEntNum; //0x0
+		short triggerEntNum; //0x2
+		int font; //0x4
+		int alignOrg; //0x8
+		int alignScreen; //0xC
+		float x; //0x10
+		float y; //0x14
+		float z; //0x18
+		he_type_t type; //0x1C
+		float fontScale; //0x20
+		float fromFontScale; //0x24
+		int fontScaleStartTime; //0x28
+		int fontScaleTime; //0x2C
+		hudelem_color_t color; //0x30
+		hudelem_color_t fromColor; //0x34
+		int fadeStartTime; //0x38
+		int fadeTime; //0x3C
+		int label; //0x40
+		int width; //0x44
+		int height; //0x48
+		int materialIndex; //0x4C
+		int fromWidth; //0x50
+		int fromHeight; //0x54
+		int scaleStartTime; //0x58
+		int scaleTime; //0x5C
+		float fromX; //0x60
+		float fromY; //0x64
+		int fromAlignOrg; //0x68
+		int fromAlignScreen; //0x6C
+		int moveStartTime; //0x70
+		int moveTime; //0x74
+		int time; //0x78
+		int duration; //0x7C
+		float value; //0x80
+		int text; //0x84
+		float sort; //0x88
+		hudelem_color_t glowColor; //0x8C
+		int fxBirthTime; //0x90
+		int fxLetterTime; //0x94
+		int fxDecayStartTime; //0x98
+		int fxDecayDuration; //0x9C
+		int soundID; //0xA0
+		int boneIndex; //0xA4
+		int flags; //0xA8
+
+		// unknown
+		int _pad_AC;
+		long _pad_B0;
+		short _pad_B8;
+		short _pad_BA;
+		int _pad_BC;
+		int _pad_idk;
+	};
+	static_assert(offsetof(hudelem_s, text) == 0x84);
+
+	struct game_hudelem_s
+	{
+		hudelem_s elem;
+		int clientNum;
+		int team;
+		int archived;
+		int currentShowInKillcam;
+	}; static_assert(sizeof(game_hudelem_s) == 208);
 }

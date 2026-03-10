@@ -533,6 +533,38 @@ namespace gsc
 			function::add("typeof", typeof);
 			function::add("type", typeof);
 
+			// matches S1 PDB, thanks @zLazyDev for example though
+			method::add("clearalltextafterhudelem", [](const game::scr_entref_t ent, const function_args& args)
+			{
+				console::debug("clearalltextafterhudelem 1a\n");
+
+				if (ent.classnum != 1)
+				{
+					throw std::runtime_error("not a hud element");
+				}
+
+				if (game::g_hudelems == nullptr)
+				{
+					throw std::runtime_error("g_hudelems is null");
+				}
+
+				console::debug("clearalltextafterhudelem 2a\n");
+
+				auto* hud = &game::g_hudelems[ent.entnum];
+
+				if (hud->elem.text + 1 < 650)
+				{
+					for (int i = hud->elem.text + 541; i < 1190; ++i)
+					{
+						// basically a function inside SV_SetConfigString called SV_UpdateConstConfigString, directly
+						//game::SV_SetConfigstring(i, "");
+						utils::hook::invoke<void>(0x555060_b, i, "");
+					}
+				}
+
+				return scripting::script_value{};
+			});
+
 			if (!game::environment::is_sp())
 			{
 				function::add("say", [](const function_args& args)

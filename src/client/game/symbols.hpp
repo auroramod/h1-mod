@@ -421,6 +421,8 @@ namespace game
 	WEAK symbol<unsigned __int64(pathnode_t* node, float* pos)> WorldifyPosFromParent{0x0, 0x3FD7D0};
 	WEAK symbol<GfxScene> scene{0x0, 0x33E4290};
 
+	WEAK symbol<game_hudelem_s> g_hudelems{0x0, 0x71BD9C0};
+
 	namespace sp
 	{
 		WEAK symbol<gentity_s> g_entities{0x56E74D0, 0x0};
