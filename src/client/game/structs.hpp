@@ -2,6 +2,7 @@
 #include <d3d11.h>
 
 #define PROTOCOL 2
+#define ANIM_TOGGLEBIT 0x800
 
 #include "database.hpp"
 
@@ -1316,6 +1317,74 @@ namespace game
 			int sprintStartMaxLength;
 		};
 
+		struct PlayerActiveWeaponState
+		{
+			int weapAnim;
+			int weaponTime;
+			int weaponDelay;
+			int weaponRestrictKickTime;
+			int weaponState;
+			int weapHandFlags;
+			unsigned int weaponShotCount;
+		};
+
+		struct PlayerEquippedWeaponState
+		{
+			bool usedBefore;
+			bool dualWielding;
+			bool inAltMode;
+			bool needsRechamber[2];
+			int zoomLevelIndex;
+			bool thermalEnabled;
+			bool hybridScope;
+		};
+
+		struct GlobalAmmo
+		{
+			ammoindex_t ammoType;
+			int ammoCount;
+		};
+
+		struct ClipAmmo
+		{
+			clipindex_t clipIndex;
+			int ammoCount[2];
+			int chargeAmmoCount[2];
+		};
+
+		struct PlayerWeaponAnimArrays
+		{
+			XAnimParts* normalAnimArray[190];
+			XAnimParts* altAnimArray[190];
+			XAnimParts* leftHandedAnimArray[190];
+			XAnimParts* leftHandedAltAnimArray[190];
+		};
+
+		struct PlayerWeaponCommonState
+		{
+			Weapon offHand; // 0x4c0 (size: 4, global: 0xbb43d50)
+			Weapon lethalWeapon; // 0x4c4 (size: 4, global: 0xbb44340)
+			Weapon tacticalWeapon; // 0x4c8 (size: 4, global: 0xbb44350)
+			Weapon weapon; // 0x4cc (size: 4, global: 0xbb43cd0)
+			int weapFlags; // 0x4d0 (size: 4, global: 0xbb43c50)
+			float fWeaponPosFrac; // 0x4d4 (size: 8, global: 0xbb43bb0)
+			float fPreviousWeaponPosFrac;
+			float aimSpreadScale; // 0x4dc (size: 4, global: 0xbb43ab0)
+			int adsDelayTime; // 0x4e0 (size: 4, global: 0xbb449f0)
+			int spreadOverride; // 0x4e4 (size: 4, global: 0xbb448d0)
+			int spreadOverrideState; // 0x4e8 (size: 4, global: 0xbb448e0)
+			float fAimSpreadMovementScale; // 0x4ec (size: 4, global: 0xbb448f0)
+			PlayerHandIndex lastWeaponHand; // 0x4f0 (size: 544, global: 0xbb44320)
+			GlobalAmmo ammoNotInClip[15];
+			ClipAmmo ammoInClip[15];
+			int weapLockFlags; // 0x710 (size: 4, global: 0xbb44900)
+			int16_t weapLockedEntnum; // 0x714 (size: 4, global: 0xbb44910)
+			vec3_t weapLockedPos; // 0x718 (size: 12, global: 0xbb44920)
+			int weaponIdleTime; // 0x724 (size: 6092, global: 0xbb43aa0)
+			Weapon lastStowedWeapon;
+			PlayerWeaponAnimArrays weaponAnimArrays;
+		};
+
 		struct playerState_s
 		{
 			char clientNum;
@@ -1331,13 +1400,17 @@ namespace game
 			char __pad3[24];
 			vec3_t origin;
 			vec3_t velocity;
-			char __pad7[156];
+			char __pad7[40]; // 144
+			int torsoAnim; // 184
+			char bruh[112]; // 188
 			vec3_t delta_angles;
-			char __pad4[144];
-			SprintState sprintState;
-			char __pad5[88];
-			int weaponState0;
-			char __pad6[7040];
+			char __pad4[128];
+			SprintState sprintState; // 440
+			char __pad5[88]; // 460
+			PlayerActiveWeaponState weapState[NUM_WEAPON_HANDS]; // 548
+			Weapon weaponsEquipped[15]; // 604
+			PlayerEquippedWeaponState weapEquippedData[15]; // 664
+			PlayerWeaponCommonState weapCommon; // 0x4c0
 			int perks[2];
 			char __pad10[10960];
 		};
@@ -1353,8 +1426,8 @@ namespace game
 		static_assert(offsetof(playerState_s, origin) == 120);
 		static_assert(offsetof(playerState_s, velocity) == 132);
 		static_assert(offsetof(playerState_s, delta_angles) == 300);
-		static_assert(offsetof(playerState_s, sprintState) == 456);
-		static_assert(offsetof(playerState_s, weaponState0) == 564);
+		static_assert(offsetof(playerState_s, sprintState) == 440);
+		static_assert(offsetof(playerState_s, weapState) == 548);
 		static_assert(offsetof(playerState_s, perks) == 7608);
 
 		struct gclient_s
@@ -1378,11 +1451,27 @@ namespace game
 
 		struct usercmd_s
 		{
-			char __pad0[28];
+			int serverTime;
+			int buttons;
+			int angles[3];
+			Weapon weapon;
+			Weapon offHandIndex;
 			char forwardmove;
 			char rightmove;
-			char __pad1[34];
+			uint16_t airburstMarkDistance;
+			uint16_t meleeChargeYaw;
+			char meleeChargeDist;
+			char selectedLoc[2];
+			uint8_t selectedLocAngle;
+			char remoteControlAngles[2];
+			char remoteControlMove[3];
+			char sightedClientsMask;
+			uint16_t spawnTraceEntIndex;
+			uint32_t sightedSpawnsMask[2];
+			uint32_t partialSightedSpawnsMask[2];
 		};
+		static_assert(offsetof(usercmd_s, forwardmove) == 28);
+		static_assert(offsetof(usercmd_s, rightmove) == 29);
 
 		struct EntityState
 		{
@@ -1469,7 +1558,8 @@ namespace game
 
 		struct cg_s
 		{
-			char __pad0[18644];
+			playerState_s predictedPlayerState; // 0
+			char __pad0[68]; // 18576
 			CubemapShot cubemapShot;
 			int cubemapSize;
 			char __pad4[28];
@@ -2252,5 +2342,174 @@ namespace game
 	{
 		pathnode_t* node;
 		float metric;
+	};
+
+	enum userbuttons_t
+	{
+		BUTTON_ATTACK = (1 << 0),
+		BUTTON_SPRINT = (1 << 1),
+		BUTTON_MELEEZOOM = (1 << 2), // on melee attack
+		BUTTON_UNK1 = (1 << 3), // ??
+		BUTTON_RELOAD = (1 << 4),
+		BUTTON_USERELOAD = (1 << 5), // BUTTON_USERELOAD | BUTTON_UNK1 == BUTTON_USE?
+		BUTTON_LEANLEFT = (1 << 6),
+		BUTTON_LEANRIGHT = (1 << 7),
+		BUTTON_PRONE = (1 << 8),
+		BUTTON_DUCK = (1 << 9),
+		BUTTON_GOSTAND = (1 << 10), // jump button
+		BUTTON_ADS = (1 << 11),
+		BUTTON_UNK6 = (1 << 12), // ??
+		BUTTON_BREATH = (1 << 13), // hold breath
+		BUTTON_FRAG = (1 << 14),
+		BUTTON_SMOKE = (1 << 15),
+		BUTTON_UNK8 = (1 << 16), // ucmd->selectedLoc and ucmd->selectedLocAngle related
+		BUTTON_UNK9 = (1 << 17), // ??
+		BUTTON_UNK10 = (1 << 18), // ??
+		BUTTON_SECONDARY_ATTACK = (1 << 19),
+		BUTTON_UNK12 = (1 << 20), // ucmd->remoteControlAngles and ucmd->remoteControlMove related
+		BUTTON_UNK13 = (1 << 21), // ??
+		BUTTON_UNK14 = (1 << 22), // ??
+		BUTTON_UNK15 = (1 << 23), // ??
+		BUTTON_UNK16 = (1 << 24), // ??
+		BUTTON_UNK17 = (1 << 25), // ??
+		BUTTON_UNK18 = (1 << 26), // ??
+		BUTTON_UNK19 = (1 << 27), // ??
+		BUTTON_UNK20 = (1 << 28), // ??
+		BUTTON_UNK21 = (1 << 29), // ??
+		BUTTON_BIT_COUNT = 29
+	};
+
+	enum playerMoveFlags_t
+	{
+		PMF_PRONE = 0x1,
+		PMF_DUCKED = 0x2,
+		PMF_MANTLE = 0x4,
+		PMF_LADDER = 0x8,
+		PMF_SIGHT_AIMING = 0x10,
+		PMF_BACKWARDS_RUN = 0x20,
+		PMF_WALKING = 0x40,
+		PMF_TIME_HARDLANDING = 0x80,
+		PMF_TIME_KNOCKBACK = 0x100,
+		PMF_PRONEMOVE_OVERRIDDEN = 0x200,
+		PMF_RESPAWNED = 0x400,
+		PMF_FROZEN = 0x800,
+		PMF_LADDER_FALL = 0x1000,
+		PMF_JUMPING = 0x2000,
+		PMF_SPRINTING = 0x4000,
+		PMF_SHELLSHOCKED = 0x8000,
+		PMF_MELEE_CHARGE = 0x10000,
+		PMF_NO_SPRINT = 0x20000,
+		PMF_NO_JUMP = 0x40000,
+		PMF_REMOTE_CONTROLLING = 0x80000,
+		PMF_NO_STAND = 0x800000,
+		PMF_NO_CROUCH = 0x1000000,
+		PMF_NO_PRONE = 0x2000000,
+		PMF_NO_LEAN = 0x4000000,
+		PMF_NO_MELEE = 0x8000000,
+		PMF_NO_FIRE = 0x10000000,
+		PMF_NO_LADDER = 0x20000000,
+		PMF_NO_MANTLE = 0x40000000
+	};
+
+	enum weaponstate_t : std::uint32_t
+	{
+		WEAPON_READY,
+		WEAPON_RAISING,
+		WEAPON_RAISING_ALTSWITCH,
+		WEAPON_DROPPING,
+		WEAPON_DROPPING_QUICK,
+		WEAPON_DROPPING_ALT,
+		WEAPON_FIRING,
+		WEAPON_FIRING_BALL_PASS,
+		WEAPON_RECHAMBERING,
+		WEAPON_RELOADING,
+		WEAPON_RELOADING_INTERUPT,
+		WEAPON_RELOAD_START,
+		WEAPON_RELOAD_START_INTERUPT,
+		WEAPON_RELOAD_END,
+		WEAPON_MELEE_WAIT_FOR_RESULT,
+		WEAPON_MELEE_FIRE,
+		WEAPON_MELEE_END,
+		WEAPON_OFFHAND_INIT,
+		WEAPON_OFFHAND_PREPARE,
+		WEAPON_OFFHAND_HOLD,
+		WEAPON_OFFHAND_HOLD_PRIMED,
+		WEAPON_OFFHAND_FIRE,
+		WEAPON_OFFHAND_SWITCH,
+		WEAPON_OFFHAND_DETONATE,
+		WEAPON_OFFHAND_END,
+		WEAPON_DETONATING,
+		WEAPON_SPRINT_RAISE,
+		WEAPON_SPRINT_LOOP,
+		WEAPON_SPRINT_DROP,
+		WEAPON_STUNNED_START,
+		WEAPON_STUNNED_LOOP,
+		WEAPON_STUNNED_END,
+		WEAPON_NIGHTVISION_WEAR,
+		WEAPON_NIGHTVISION_REMOVE,
+		WEAPON_MANTLE_UP,
+		WEAPON_MANTLE_OVER,
+		WEAPON_BLAST_IMPACT,
+		WEAPON_HYBRID_SIGHT_IN,
+		WEAPON_HYBRID_SIGHT_OUT,
+		WEAPON_HEAT_COOLDOWN_START,
+		WEAPON_HEAT_COOLDOWN_END,
+		WEAPON_HEAT_COOLDOWN_READY,
+		WEAPON_OVERHEAT_END,
+		WEAPON_OVERHEAT_READY,
+		WEAPON_RIOTSHIELD_PREPARE,
+		WEAPON_RIOTSHIELD_HOLD,
+		WEAPON_RIOTSHIELD_START,
+		WEAPON_RIOTSHIELD_END,
+		WEAPON_INSPECTION_ANIM,
+		WEAPONSTATES_NUM,
+	};
+
+	enum pmtype_t
+	{
+		PM_NORMAL = 0x0,
+		PM_NORMAL_LINKED = 0x1,
+		PM_NOCLIP = 0x2,
+		PM_UFO = 0x3,
+		PM_SPECTATOR = 0x4,
+		PM_INTERMISSION = 0x5,
+		PM_LASTSTAND = 0x6,
+		PM_DEAD = 0x7,
+		PM_DEAD_LINKED = 0x8,
+	};
+
+	enum playerOtherFlags_t
+	{
+		POF_INVULNERABLE = 0x1,
+		POF_REMOTE_EYES = 0x2,
+		POF_BALL_PASS_ALLOWED = 0x4,
+		POF_THERMAL_VISION = 0x8,
+		POF_THERMAL_VISION_OVERLAY_FOF = 0x10,
+		POF_REMOTE_CAMERA_SOUNDS = 0x20,
+		POF_ALT_SCENE_REAR_VIEW = 0x40,
+		POF_ALT_SCENE_TAG_VIEW = 0x80,
+		POF_SHIELD_ATTACHED_TO_WORLD_MODEL = 0x100,
+		POF_DONT_LERP_VIEWANGLES = 0x200,
+		POF_EMP_JAMMED_EQUIPMENT = 0x800,
+		POF_LASTSTAND = 0x1000,
+		POF_SHADOW_OFF = 0x2000,
+		POF_FOLLOW = 0x4000,
+		POF_PLAYER = 0x8000,
+		POF_SPEC_ALLOW_CYCLE = 0x10000,
+		POF_SPEC_ALLOW_FREELOOK = 0x20000,
+		POF_SPEC_CYCLE_LOADING = 0x40000,
+		POF_COMPASS_PING = 0x80000,
+		POF_ADS_THIRD_PERSON_TOGGLE = 0x100000,
+		POF_AUTOSPOT_OVERLAY = 0x200000,
+		POF_REMOTE_TURRET = 0x400000,
+		POF_KILLCAM_THERMAL_OFF = 0x800000,
+		POF_AGENT = 0x1000000,
+		POF_PLATFORM_PUSH = 0x2000000,
+		POF_PLATFORM_ALTERNATE_COLLISION = 0x4000000,
+		POF_COMPASS_EYES_ON = 0x8000000,
+		POF_FOLLOW_FORCE_THIRD = 0x10000000,
+		POF_FOLLOW_FORCE_FIRST = 0x20000000,
+		POF_AC130 = 0x40000000,
+		POF_VIEWMODEL_UFO = 0x80000000
 	};
 }

@@ -26,6 +26,15 @@ namespace gameplay
 		utils::hook::detour g_damage_hook;
 		utils::hook::detour weapon_rocket_fire_hook;
 
+		utils::hook::detour pm_weapon_check_for_sprint_hook;
+		utils::hook::detour pm_sprint_ending_buttons_hook;
+		utils::hook::detour begin_weapon_change_hook;
+		utils::hook::detour start_weapon_anim_hook;
+		utils::hook::detour pm_sprint_start_interfering_buttons_hook;
+
+		game::dvar_t* pm_iw4_mechanics = nullptr;
+		game::dvar_t* pm_glide_on_inspect = nullptr;
+
 		void jump_apply_slowdown_stub(game::mp::playerState_s* ps)
 		{
 			if (dvars::jump_slowDownEnable->current.enabled)
@@ -334,6 +343,290 @@ namespace gameplay
 			a.pop(rax);
 			a.jmp(0x463D2A_b);
 		}
+
+		// https://github.com/REVLIIS/IW4-mechanics-for-H2M
+		bool check_for_righty_tighty(game::mp::pmove_t* pm)
+		{
+			if ((pm->oldcmd.buttons & game::BUTTON_USERELOAD) == 0 && ((pm->cmd.buttons & game::BUTTON_USERELOAD) != 0) ||
+				((pm->oldcmd.buttons & game::BUTTON_RELOAD) == 0 && ((pm->cmd.buttons & game::BUTTON_RELOAD) != 0)))
+			{
+				if ((pm->ps->sprintState.lastSprintEnd - pm->ps->sprintState.lastSprintStart) < 50)
+				{
+					if (game::PM_Weapon_AllowReload(pm->ps, game::WEAPON_HAND_RIGHT) && !game::PM_Weapon_AllowReload(pm->ps, game::WEAPON_HAND_LEFT))
+					{
+						game::PM_SetReloadingState(pm->ps, game::WEAPON_HAND_RIGHT);
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		bool check_for_wrist_twist(game::mp::pmove_t* pm)
+		{
+			if ((pm->cmd.buttons & game::BUTTON_USERELOAD) == 0 && ((pm->oldcmd.buttons & game::BUTTON_USERELOAD) != 0) ||
+				(pm->cmd.buttons & game::BUTTON_RELOAD) == 0 && ((pm->oldcmd.buttons & game::BUTTON_RELOAD) != 0))
+			{
+				// if we are allowed to reload our left gun, and NOT allowed to reload right gun, start wrist twist
+				if (game::PM_Weapon_AllowReload(pm->ps, game::WEAPON_HAND_LEFT) && !game::PM_Weapon_AllowReload(pm->ps, game::WEAPON_HAND_RIGHT))
+				{
+					game::PM_SetReloadingState(pm->ps, game::WEAPON_HAND_LEFT);
+					pm->ps->torsoAnim = 3181; // reload anim, overrides the reset in BG_ClearReloadAnim
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		void sprint_drop(game::mp::pmove_t* pm)
+		{
+			game::mp::playerState_s* ps = pm->ps;
+			auto handIndex = game::BG_PlayerLastWeaponHand(ps);
+
+			for (auto i = 0; i <= handIndex; i++)
+			{
+				if (i == game::WEAPON_HAND_LEFT && check_for_righty_tighty(pm))
+				{
+					continue;
+				}
+
+				ps->weapState[i].weaponState = game::WEAPON_SPRINT_DROP;
+				ps->weapState[i].weaponTime = game::BG_SprintOutTime(ps->weapCommon.weapon, false, ps->weapCommon.lastWeaponHand == game::WEAPON_HAND_LEFT);
+				ps->weapState[i].weaponDelay = 0;
+
+				if (ps->pm_type != game::PM_DEAD && ps->pm_type != game::PM_DEAD_LINKED)
+				{
+					ps->weapState[i].weapAnim = ps->weapState[i].weaponState & ANIM_TOGGLEBIT | game::WEAP_ANIM_SPEED_RELOAD;
+				}
+			}
+		}
+
+		void sprint_raise(game::mp::pmove_t* pm)
+		{
+			game::mp::playerState_s* ps = pm->ps;
+			auto handIndex = game::BG_PlayerLastWeaponHand(ps);
+
+			for (auto i = 0; i <= handIndex; i++)
+			{
+				ps->weapState[i].weaponState = game::WEAPON_SPRINT_RAISE;
+				ps->weapState[i].weaponTime = game::BG_SprintInTime(ps->weapCommon.weapon, false, ps->weapCommon.lastWeaponHand == game::WEAPON_HAND_LEFT);
+				ps->weapState[i].weaponDelay = 0;
+
+				if (ps->pm_type != game::PM_DEAD && ps->pm_type != game::PM_DEAD_LINKED)
+				{
+					ps->weapState[i].weapAnim = ps->weapState[i].weaponState & ANIM_TOGGLEBIT | game::WEAP_ANIM_FAST_RELOAD_END;
+				}
+
+				if (ps->weapCommon.lastWeaponHand == game::WEAPON_HAND_LEFT)
+				{
+					if (i == game::WEAPON_HAND_RIGHT)
+					{
+						check_for_righty_tighty(pm);
+					}
+					else if (i == game::WEAPON_HAND_LEFT)
+					{
+						check_for_wrist_twist(pm);
+					}
+				}
+			}
+		}
+
+		// reversed from IW4
+		void pm_weapon_check_for_sprint_stub(game::mp::pmove_t* pm)
+		{
+			if (!pm->cmd.weapon.data)
+			{
+				return;
+			}
+
+			int weaponStateRight = pm->ps->weapState[game::WEAPON_HAND_RIGHT].weaponState;
+			int weaponStateLeft = pm->ps->weapState[game::WEAPON_HAND_LEFT].weaponState;
+
+			// don't override the inspection animation while sprinting (added for HMW)
+			if (weaponStateRight == game::WEAPON_HEAT_COOLDOWN_END || weaponStateLeft == game::WEAPON_HEAT_COOLDOWN_END)
+			{
+				return;
+			}
+
+			if (weaponStateRight != game::WEAPON_FIRING && weaponStateRight != game::WEAPON_RECHAMBERING && weaponStateRight != game::WEAPON_MELEE_WAIT_FOR_RESULT && weaponStateRight != game::WEAPON_MELEE_FIRE && weaponStateRight != game::WEAPON_MELEE_END)
+			{
+				if (weaponStateLeft != game::WEAPON_FIRING && weaponStateLeft != game::WEAPON_RECHAMBERING
+					&& weaponStateLeft != game::WEAPON_MELEE_WAIT_FOR_RESULT && weaponStateLeft != game::WEAPON_MELEE_FIRE && weaponStateLeft != game::WEAPON_MELEE_END
+					&& weaponStateRight != game::WEAPON_RAISING && weaponStateRight != game::WEAPON_RAISING_ALTSWITCH
+					&& weaponStateRight != game::WEAPON_DROPPING && weaponStateRight != game::WEAPON_DROPPING_QUICK && weaponStateRight != game::WEAPON_DROPPING_ALT
+					&& weaponStateRight != game::WEAPON_OFFHAND_INIT && weaponStateRight != game::WEAPON_OFFHAND_PREPARE && weaponStateRight != game::WEAPON_OFFHAND_HOLD && weaponStateRight != game::WEAPON_OFFHAND_HOLD_PRIMED && weaponStateRight != game::WEAPON_OFFHAND_END
+					)
+				{
+					if (((pm->ps->pm_flags & game::PMF_SPRINTING) != 0) && (weaponStateRight != game::WEAPON_SPRINT_RAISE && weaponStateRight != game::WEAPON_SPRINT_LOOP && weaponStateRight != game::WEAPON_SPRINT_DROP))
+					{
+						sprint_raise(pm);
+					}
+					else if (((pm->ps->pm_flags & game::PMF_SPRINTING) == 0) && (weaponStateRight == game::WEAPON_SPRINT_RAISE || weaponStateRight == game::WEAPON_SPRINT_LOOP))
+					{
+						sprint_drop(pm);
+					}
+				}
+			}
+		}
+
+		/*
+			this detour fixes an issue when you're on servers and trying to wrist twist with +usereload
+			i added an additional check to see if you're pressing the usereload button when the sprint raise event is happening,
+			so if your connection isn't perfect you dont stop halfway trough a wrist twist
+		*/
+		bool pm_sprint_ending_buttons_stub(game::mp::playerState_s* ps, int8_t forwardSpeed, int buttons)
+		{
+			if ((ps->pm_flags & (game::POF_PLAYER | game::POF_THERMAL_VISION_OVERLAY_FOF | game::POF_THERMAL_VISION)) != 0)
+			{
+				return true;
+			}
+
+			if (forwardSpeed <= 105)
+			{
+				return true;
+			}
+
+			//// mwr code
+			//int cancel_on_buttons =
+			//	game::BUTTON_MELEEZOOM | game::BUTTON_UNK1 |
+			//	game::BUTTON_PRONE | game::BUTTON_DUCK |
+			//	game::BUTTON_GOSTAND | game::BUTTON_ADS |
+			//	game::BUTTON_FRAG | game::BUTTON_SMOKE;
+
+			//int is_ball_carrier = game::BG_HasPerk(ps->perks, game::PERK_BALLCARRIER);
+			//if (!is_ball_carrier)
+			//	cancel_on_buttons |= game::BUTTON_ATTACK;
+
+			//int has_low_profile = game::BG_HasPerk(ps->perks, game::PERK_LOWPROFILE);
+			//if (has_low_profile)
+			//	cancel_on_buttons &= ~(game::BUTTON_DUCK | game::BUTTON_USERELOAD | game::BUTTON_RELOAD);
+
+			//// this completely disables part of the previous statement, is the low profile perk even used?
+			//cancel_on_buttons |= game::BUTTON_USERELOAD | game::BUTTON_RELOAD;
+
+			// original iw4 checks
+			int cancel_on_buttons =
+				game::BUTTON_ATTACK | game::BUTTON_MELEEZOOM |
+				game::BUTTON_RELOAD | game::BUTTON_USERELOAD |
+				game::BUTTON_PRONE | game::BUTTON_DUCK |
+				game::BUTTON_GOSTAND | game::BUTTON_ADS |
+				game::BUTTON_FRAG | game::BUTTON_SMOKE;
+
+			int weapon_state = ps->weapState[game::WEAPON_HAND_RIGHT].weaponState;
+			if ((buttons & cancel_on_buttons) != 0)
+			{
+				// +usereload high ping fix
+				if (ps->weapCommon.lastWeaponHand == game::WEAPON_HAND_LEFT && (buttons & game::BUTTON_USERELOAD) == 0 && weapon_state == game::WEAPON_SPRINT_RAISE)
+				{
+					return false;
+				}
+
+				return true;
+			}
+
+			bool is_in_melee_or_nade_throw = (weapon_state - game::WEAPON_MELEE_WAIT_FOR_RESULT) <= (game::WEAPON_OFFHAND_END - game::WEAPON_MELEE_WAIT_FOR_RESULT);
+			bool is_in_nightvision_equip = (weapon_state - game::WEAPON_NIGHTVISION_WEAR) <= (game::WEAPON_NIGHTVISION_REMOVE - game::WEAPON_NIGHTVISION_WEAR);
+			bool is_in_blast_or_hybrid_scope = (weapon_state - game::WEAPON_BLAST_IMPACT) <= (game::WEAPON_HEAT_COOLDOWN_START - game::WEAPON_BLAST_IMPACT);
+
+			return is_in_melee_or_nade_throw || is_in_nightvision_equip || is_in_blast_or_hybrid_scope;
+		}
+
+		void begin_weapon_change_stub(game::mp::pmove_t* pm, game::Weapon new_weap, bool is_new_alt, bool quick, unsigned int* holdrand)
+		{
+			if (!pm_iw4_mechanics || !pm_iw4_mechanics->current.enabled)
+			{
+				begin_weapon_change_hook.invoke<void>(pm, new_weap, is_new_alt, quick, holdrand);
+				return;
+			}
+
+			auto right_anim = pm->ps->weapState[game::WEAPON_HAND_RIGHT].weapAnim;
+			auto left_anim = pm->ps->weapState[game::WEAPON_HAND_LEFT].weapAnim;
+
+			auto stall_anim = (pm->ps->sprintState.lastSprintStart > pm->ps->sprintState.lastSprintEnd);
+
+			begin_weapon_change_hook.invoke<void>(pm, new_weap, is_new_alt, quick, holdrand);
+
+			if (stall_anim)
+			{
+				pm->ps->weapState[game::WEAPON_HAND_RIGHT].weapAnim = right_anim;
+				pm->ps->weapState[game::WEAPON_HAND_LEFT].weapAnim = left_anim;
+			}
+		}
+
+		inline bool is_previous_anim(int anim)
+		{
+			return	(anim == game::WEAP_ANIM_IDLE || anim == game::WEAP_ANIM_FAST_RELOAD_END ||
+				anim == (game::WEAP_ANIM_IDLE | ANIM_TOGGLEBIT) || anim == (game::WEAP_ANIM_FAST_RELOAD_END | ANIM_TOGGLEBIT));
+		}
+
+		void start_weapon_anim_stub(uint64_t local_client_num, game::Weapon weapon_idx, game::PlayerHandIndex player_hand_idx,
+			game::weapAnimFiles_t blend_in_anim_index, game::weapAnimFiles_t blend_out_anim_index, float transition_time)
+		{
+			auto* cg_array = game::CG_GetLocalClientGlobals();
+			auto* playerstate = &cg_array[local_client_num].predictedPlayerState;
+
+			auto should_sprint = (playerstate->sprintState.lastSprintStart < playerstate->sprintState.lastSprintEnd);
+
+			auto do_glide =
+				blend_out_anim_index == game::WEAP_ANIM_SPRINT_IN || // allow glides on sprint drop
+				blend_out_anim_index == game::WEAP_ANIM_SPRINT_LOOP; // allow glides on sprint loop
+
+			if (pm_glide_on_inspect && pm_glide_on_inspect->current.enabled)
+			{
+				do_glide |= blend_out_anim_index == game::WEAP_ANIM_INSPECTION;
+			}
+
+			if (do_glide && is_previous_anim(playerstate->weapState[player_hand_idx].weapAnim) && should_sprint)
+			{
+				blend_out_anim_index = game::WEAP_ANIM_QUICK_DROP;
+				transition_time = 0.5f;
+			}
+
+			start_weapon_anim_hook.invoke<void>(local_client_num, weapon_idx, player_hand_idx, blend_in_anim_index, blend_out_anim_index, transition_time);
+		}
+
+		bool pm_sprint_start_interfering_buttons_stub(game::mp::playerState_s* ps, int forward_speed, int buttons)
+		{
+			if ((ps->pm_flags & game::PMF_LADDER) || forward_speed <= 105)
+			{
+				return true;
+			}
+
+			int interfere_on_buttons =
+				game::BUTTON_ATTACK | game::BUTTON_MELEEZOOM |
+				game::BUTTON_RELOAD | game::BUTTON_USERELOAD |
+				game::BUTTON_GOSTAND | game::BUTTON_ADS |
+				game::BUTTON_FRAG | game::BUTTON_SMOKE;
+
+			if (buttons & interfere_on_buttons)
+			{
+				return true;
+			}
+
+			if (ps->pm_flags & (game::PMF_SHELLSHOCKED | game::PMF_SIGHT_AIMING |
+				game::PMF_LADDER | game::PMF_MANTLE))
+			{
+				return true;
+			}
+
+			if (ps->pm_flags & game::PMF_JUMPING && ps->pm_time == 0)
+			{
+				return false;
+			}
+
+			auto weapon_state = ps->weapState[game::WEAPON_HAND_RIGHT].weaponState;
+			if (weapon_state != game::WEAPON_MELEE_WAIT_FOR_RESULT
+				&& weapon_state != game::WEAPON_MELEE_FIRE
+				&& weapon_state != game::WEAPON_MELEE_END
+				&& (weapon_state < game::WEAPON_OFFHAND_INIT || weapon_state > game::WEAPON_OFFHAND_END))
+			{
+				return false;
+			}
+
+			return true;
+		}
 	}
 
 	class component final : public component_interface
@@ -425,6 +718,22 @@ namespace gameplay
 			
 			// let moveSpeedScale be used in GSC
 			utils::hook::set<uint32_t>(0x4406FE_b, 0x1DC);
+
+			pm_iw4_mechanics = dvars::register_bool("pm_iw4Mechanics", false, game::DVAR_FLAG_REPLICATED, "Use IW4 mechanics");
+			pm_glide_on_inspect = dvars::register_bool("pm_glideOnInspect", true, game::DVAR_FLAG_NONE, "Do a gliding animation on inspects?");
+
+			// stall animations on sprints
+			begin_weapon_change_hook.create(0x2D57E0_b, begin_weapon_change_stub);
+
+			// glides (thank you @girlmachinery for the help on this)
+			start_weapon_anim_hook.create(0x1D5CA0_b, start_weapon_anim_stub);
+
+			// sprint raise & drop events, don't stop inspecting on sprinting
+			pm_weapon_check_for_sprint_hook.create(0x2D9A10_b, pm_weapon_check_for_sprint_stub);
+			pm_sprint_ending_buttons_hook.create(0x2CEE40_b, pm_sprint_ending_buttons_stub);
+
+			// removes the slight "delay" for sprint whenever u shot making some still swaps possible again (from @Patoke)
+			pm_sprint_start_interfering_buttons_hook.create(0x2CEEC0_b, pm_sprint_start_interfering_buttons_stub);
 		}
 	};
 }

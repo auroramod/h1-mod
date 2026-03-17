@@ -40,8 +40,16 @@ namespace game
 
 	WEAK symbol<void(void*, void*)> AimAssist_AddToTargetList{0x0, 0xE66C0};
 
+	WEAK symbol<int(game::playerState_s* ps)> BG_GetMaxSprintTime{ 0x0, 0x2C3130 };
+	WEAK symbol<int(Weapon weapon, bool isAlternate)> BG_SegmentedReload{ 0x0, 0x2EA990 };
+	WEAK symbol<int(mp::playerState_s* ps, int hand)> PM_Weapon_AllowReload{ 0x0, 0x2D85B0 };
+
 	WEAK symbol<void(unsigned int weapon, bool isAlternate, 
 		char* output, unsigned int maxStringLen)> BG_GetWeaponNameComplete{0x4B19C0, 0x2E2500};
+	WEAK symbol<int(mp::playerState_s* ps)> BG_PlayerLastWeaponHand{0x0, 0x2E95F0};
+	WEAK symbol<int(Weapon weapIdx, bool isAlternate, bool isDualWielding)> BG_SprintInTime{ 0x0, 0x2EB5C0 };
+	WEAK symbol<int(Weapon weapIdx, bool isAlternate, bool isDualWielding)> BG_SprintOutTime{ 0x0, 0x2EB640 };
+	WEAK symbol<void(mp::playerState_s* ps, PlayerHandIndex hand)> PM_SetReloadingState{ 0x0, 0x2D66D0 };
 
 	WEAK symbol<void()> Com_Frame_Try_Block_Function{0x385280, 0x0};
 	WEAK symbol<CodPlayMode()> Com_GetCurrentCoDPlayMode{0x0, 0x5AEF80};
