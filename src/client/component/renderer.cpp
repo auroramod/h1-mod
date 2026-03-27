@@ -423,6 +423,14 @@ namespace renderer
 			game::FX_ExitReadSystemLock(fxSystem->lock);
 		}
 #endif
+
+		void r_get_gfx_ent_index_stub(utils::hook::assembler& a)
+		{
+			a.movss(dword_ptr(rbx, 4), xmm6);
+			a.mov(dword_ptr(rbx, 8), r9); // gfxEnt->genericMaterialData
+			a.mov(dword_ptr(rbx, 0), esi);
+			a.jmp(0x1C0C46_b);
+		}
 	}
 	
 	class component final : public component_interface
@@ -492,6 +500,8 @@ namespace renderer
 				}
 			}, scheduler::renderer);
 #endif
+			// set genericMaterialData in R_AddDObjToScene -> R_GetGfxEntIndex (fixes alien glow material)
+			utils::hook::far_jump<0x140000000>(0x1C0C3F_b, utils::hook::assemble(r_get_gfx_ent_index_stub));
 		}
 	};
 }

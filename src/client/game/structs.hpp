@@ -1492,7 +1492,9 @@ namespace game
 			vec3_t trDelta;
 			char __pad1[12];
 			vec3_t currentAngles;
-			char __pad2[108];
+			char __pad2[102];
+			int svFlags;
+			char __pad21[2];
 			Bounds box;
 			Bounds absBox;
 			vec3_t origin;
@@ -1511,6 +1513,8 @@ namespace game
 #pragma pack(pop)
 
 		static_assert(sizeof(gentity_s) == 736);
+		static_assert(offsetof(gentity_s, svFlags) == 258);
+		static_assert(offsetof(gentity_s, box) == 264);
 
 		struct snapshot_s
 		{
@@ -2338,6 +2342,30 @@ namespace game
 		GfxCmdBufState* state;
 	};
 
+	struct GfxDrawListInfo
+	{
+		MaterialTechniqueType baseTechType;
+		void* viewInfo;
+		float eyeOffset[3];
+		unsigned int sceneLightEnvIndex;
+		int cameraView;
+		int isNoSunShadow;
+		int codeSurfListType;
+	};
+
+	struct GfxDrawListArgs
+	{
+		GfxCmdBufContext context;
+		GfxDrawListInfo* listInfo;
+		MaterialTechniqueType baseTechType;
+	};
+
+	union GfxDrawSurf
+	{
+		GfxDrawSurfFields fields;
+		Packed128 packed;
+	};
+
 	struct pathsort_s
 	{
 		pathnode_t* node;
@@ -2511,5 +2539,24 @@ namespace game
 		POF_FOLLOW_FORCE_FIRST = 0x20000000,
 		POF_AC130 = 0x40000000,
 		POF_VIEWMODEL_UFO = 0x80000000
+	};
+
+	struct NetConstStringMapList;
+
+	struct NetConstStringMapList
+	{
+		NetConstStrings* ncs;
+		NetConstStringMapList* next;
+	};
+
+	struct NetConstStringMap
+	{
+		NetConstStringMapList* head;
+		unsigned int ncsCount;
+	};
+	struct NetConstStringConfigStringTypeData
+	{
+		unsigned int csMax;
+		int a2;
 	};
 }

@@ -30,6 +30,8 @@ namespace game
 	WEAK symbol<unsigned int(unsigned int id)> AllocThread{0x3C22B0, 0x509440};
 	WEAK symbol<ObjectVariableValue*(unsigned int* id)> AllocVariable{0x3C2310, 0x5094A0};
 
+	WEAK symbol<int(int entnum)> Agent_IsScripted{0x0, 0x51C7F0};
+
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* buffer,
 		void (int, int, const char*))> Cbuf_ExecuteBufferInternal{0x3765B0, 0x155BC0};
 	WEAK symbol<void(const char* message)> Conbuf_AppendText{0x0, 0x0};
@@ -299,6 +301,8 @@ namespace game
 
 	WEAK symbol<void(const float* origin, float radius, int dangerous)> SV_BotMarkNodesAsDangerous{0x0, 0x53BC20};
 
+	WEAK symbol<void(void* entity)> SV_LinkEntity{0x0, 0x568130};
+
 	WEAK symbol<void()> Sys_ShowConsole{0x0, 0x0};
 	WEAK symbol<void(const char* error, ...)> Sys_Error{0x0, 0x1D8710};
 	WEAK symbol<void(char* path, int pathSize, Sys_Folder folder, const char* filename, const char* ext)>
@@ -398,6 +402,9 @@ namespace game
 	WEAK symbol<ID3D11Device*> d3d11_device{0x1163B98, 0x12DFBF8};
 
 	WEAK symbol<ComWorld> comWorld{0x0, 0xA97C0E0};
+	
+	WEAK symbol<NetConstStringMap> s_netConstStringMaps{0x0, 0x3881CD0};
+	WEAK symbol<NetConstStringConfigStringTypeData> s_oldConfigStringToNetStringMap{0x0, 0x8F6264};
 
 	namespace mp
 	{
