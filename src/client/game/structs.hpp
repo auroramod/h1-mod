@@ -1493,9 +1493,10 @@ namespace game
 			char __pad1[12];
 			vec3_t currentAngles;
 			char __pad2[102];
-			int svFlags;
-			char __pad21[2];
+			char svFlags;
+			char isInUse;
 			Bounds box;
+			int contents;
 			Bounds absBox;
 			vec3_t origin;
 			char __pad3[12];
@@ -1514,7 +1515,7 @@ namespace game
 
 		static_assert(sizeof(gentity_s) == 736);
 		static_assert(offsetof(gentity_s, svFlags) == 258);
-		static_assert(offsetof(gentity_s, box) == 264);
+		static_assert(offsetof(gentity_s, box) == 260);
 
 		struct snapshot_s
 		{

@@ -61,6 +61,7 @@ namespace gui::debug
 			trigger_radius,
 			generic_trigger,
 			actor,
+			agent,
 			count
 		};
 
@@ -93,6 +94,7 @@ namespace gui::debug
 				{0.f, 0.5f, 1.f, 0.3f},
 				{0.f, 1.f, 0.f, 0.3f},
 				{1.0f, 1.f, 0.f, 0.3f},
+				{1.f, 0.0f, 1.f, 0.3f},
 				{1.f, 0.5f, 1.f, 0.3f},
 			};
 			bool mesh_only = false;
@@ -507,8 +509,15 @@ namespace gui::debug
 						ImGui::TreePop();
 					}
 
+					ImGui::Checkbox("agent", &entity_bound_settings.enabled_types[entity_type::agent]);
+					if (entity_bound_settings.enabled_types[entity_type::agent] && ImGui::TreeNode("Color picker #4"))
+					{
+						ImGui::ColorPicker4("color", entity_bound_settings.type_colors[entity_type::actor]);
+						ImGui::TreePop();
+					}
+
 					ImGui::Checkbox("other entities", &entity_bound_settings.enabled_types[entity_type::other]);
-					if (entity_bound_settings.enabled_types[entity_type::other] && ImGui::TreeNode("Color picker #4"))
+					if (entity_bound_settings.enabled_types[entity_type::other] && ImGui::TreeNode("Color picker #5"))
 					{
 						ImGui::ColorPicker4("color", entity_bound_settings.type_colors[entity_type::other]);
 						ImGui::TreePop();
@@ -640,6 +649,10 @@ namespace gui::debug
 			else if (strstr(classname, "actor"))
 			{
 				return entity_type::actor;
+			}
+			else if (strstr(classname, "agent"))
+			{
+				return entity_type::agent;
 			}
 
 			return entity_type::other;
