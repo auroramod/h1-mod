@@ -74,14 +74,29 @@ namespace gui::asset_list
 
 			ImGui::TableNextRow();
 
-			if (should_add_view_btn)
+			if (should_add_view_btn || type == game::ASSET_TYPE_WEAPON)
 			{
 				ImGui::TableSetColumnIndex(col_index++);
 				ImGui::PushID(asset_count[type]);
-				if (ImGui::Button("view"))
+
+				if (should_add_view_btn)
 				{
-					asset_view_callbacks.at(type)(asset_name);
+					if (ImGui::Button("view"))
+					{
+						asset_view_callbacks.at(type)(asset_name);
+					}
 				}
+
+				ImGui::SameLine();
+
+				if (type == game::ASSET_TYPE_WEAPON)
+				{
+					if (ImGui::Button("give"))
+					{
+						command::execute(utils::string::va("give %s", asset_name));
+					}
+				}
+
 				ImGui::PopID();
 			}
 

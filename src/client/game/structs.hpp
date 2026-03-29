@@ -1505,9 +1505,13 @@ namespace game
 			gclient_s* client;
 			char __pad5[8];
 			gagent_s* agent;
-			char __pad6[40];
+			char __pad6[36];
+			scr_string_t classname;
 			scr_string_t script_classname;
-			char _pad7[20];
+			scr_string_t script_linkName;
+			scr_string_t target;
+			scr_string_t targetname;
+			char _pad7[8];
 			int flags;
 			char __pad8[300];
 		}; // size = 736
@@ -1516,6 +1520,7 @@ namespace game
 		static_assert(sizeof(gentity_s) == 736);
 		static_assert(offsetof(gentity_s, svFlags) == 258);
 		static_assert(offsetof(gentity_s, box) == 260);
+		static_assert(offsetof(gentity_s, flags) == 432);
 
 		struct snapshot_s
 		{
