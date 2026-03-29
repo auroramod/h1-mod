@@ -2560,6 +2560,7 @@ namespace game
 		NetConstStringMapList* head;
 		unsigned int ncsCount;
 	};
+
 	struct NetConstStringConfigStringTypeData
 	{
 		unsigned int csMax;

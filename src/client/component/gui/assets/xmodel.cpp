@@ -8,23 +8,29 @@
 
 #include "component/scheduler.hpp"
 #include "component/command.hpp"
-#include "component/fastfiles.hpp"
-#include "component/gsc/script_loading.hpp"
 #include "../gui.hpp"
 #include "../asset_list.hpp"
-
-#include "utils/mapents.hpp"
+#include "xmodel.hpp"
 
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
-#include <utils/concurrency.hpp>
-#include <utils/io.hpp>
-#include <game/scripting/execution.hpp>
 
 namespace gui::asset_list::xmodel
 {
 	namespace
 	{
+		struct xmodel_draw_t
+		{
+			game::XModel* asset;
+			game::GfxScaledPlacement placement;
+			unsigned short cached_lighting_handle;
+			float color_lit[3];
+			float color_unlit[3];
+			float color_emissive[3];
+		};
+
+		std::vector<xmodel_draw_t> spawned_xmodels;
+
 		ImVec2 project_vertex(game::vec3_t v, bool flip_axis, float scale = 1.f,
 			bool rotate = false, float rotation_speed = 0.f)
 		{
@@ -188,10 +194,42 @@ namespace gui::asset_list::xmodel
 
 		bool draw_xmodel_window(game::XModel* asset)
 		{
+			static float scale = 1.f;
+			if (ImGui::Button("spawn model"))
+			{
+				spawn_xmodel(asset, scale);
+			}
+
+			ImGui::SameLine();
+			ImGui::DragFloat("model scale", &scale, 0.1f, 0.f, 10.f);
+
+			auto id = 0;
+			for (auto i = spawned_xmodels.begin(); i != spawned_xmodels.end(); )
+			{
+				if (i->asset != asset)
+				{
+					++i;
+					continue;
+				}
+
+				ImGui::Text("(%f, %f, %f)", i->placement.base.origin[0], i->placement.base.origin[1], i->placement.base.origin[2]);
+				ImGui::SameLine();
+				ImGui::PushID(id++);
+				if (ImGui::Button("delete"))
+				{
+					i = spawned_xmodels.erase(i);
+				}
+				else
+				{
+					++i;
+				}
+				ImGui::PopID();
+			}
+
 			static bool flip_axis = false;
 			ImGui::Checkbox("flip axis", &flip_axis);
 
-			ImGui::SetNextItemOpen(true, ImGuiCond_FirstUseEver);
+			ImGui::SetNextItemOpen(false, ImGuiCond_FirstUseEver);
 			if (ImGui::TreeNode("3d mesh"))
 			{
 				int vert_count = 0;
@@ -317,26 +355,142 @@ namespace gui::asset_list::xmodel
 				}
 			}
 
-			if (ImGui::Button("Spawn Model"))
-			{
-				auto host = scripting::call("getentbynum", { 0 }).as<scripting::entity>();
-				auto hostOrigin = host.call("getorigin").as<scripting::vector>();
-
-				auto spawned_model = scripting::call("spawn", { "script_model", hostOrigin }).as<scripting::entity>();
-				scripting::call("precachemodel", { asset->name });
-				spawned_model.call("setmodel", { asset->name });
-			}
-
 			return true;
 		}
+
+		utils::hook::detour r_generate_sorted_draw_surfs_hook;
+		void r_generate_sorted_draw_surfs_stub(void* a1, void* a2, void* a3, void* a4, void* a5, void* a6)
+		{
+			for (auto& model : spawned_xmodels)
+			{
+				game::R_FilterXModelIntoScene(model.asset, &model.placement, 1, &model.cached_lighting_handle, 
+					model.color_lit, model.color_unlit, model.color_emissive);
+			}
+
+			r_generate_sorted_draw_surfs_hook.invoke<void>(a1, a2, a3, a4, a5, a6);
+		}
+
+		void spawn_xmodel_button(game::XModel* asset)
+		{
+			spawn_xmodel(asset, 1.f);
+		}
+
+		void update()
+		{
+			if (!game::CL_IsCgameInitialized())
+			{
+				spawned_xmodels.clear();
+			}
+		}
+
+		float distance_3d(float* a, float* b)
+		{
+			return std::sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]));
+		}
 	}
+
+	void spawn_xmodel(game::XModel* asset, const float scale)
+	{
+		const auto refdef = (*game::refdef);
+		if (!game::CL_IsCgameInitialized() || refdef == nullptr)
+		{
+			return;
+		}
+
+		xmodel_draw_t xmodel_draw{};
+		xmodel_draw.asset = asset;
+
+		float angles[3]{};
+		float forward[3]{};
+		game::AxisToAngles(refdef->view.axis, angles);
+		game::AngleVectors(angles, forward, nullptr, nullptr);
+
+		auto forward_dist = 50.f;
+
+		const auto is_too_close = [&]()
+		{
+			for (auto& model : spawned_xmodels)
+			{
+				if (model.asset == asset && 
+					distance_3d(model.placement.base.origin, xmodel_draw.placement.base.origin) < 50.f)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		};
+
+		xmodel_draw.placement.base.origin[0] = refdef->view.org[0] + forward[0] * forward_dist;
+		xmodel_draw.placement.base.origin[1] = refdef->view.org[1] + forward[1] * forward_dist;
+		xmodel_draw.placement.base.origin[2] = refdef->view.org[2] + forward[2] * forward_dist;
+
+		while (is_too_close())
+		{
+			forward_dist += 50.f;
+			xmodel_draw.placement.base.origin[0] += forward[0] * forward_dist;
+			xmodel_draw.placement.base.origin[1] += forward[1] * forward_dist;
+			xmodel_draw.placement.base.origin[2] += forward[2] * forward_dist;
+		}
+
+		xmodel_draw.placement.base.quat[0] = 0.f;
+		xmodel_draw.placement.base.quat[1] = 0.f;
+		xmodel_draw.placement.base.quat[2] = 0.f;
+		xmodel_draw.placement.base.quat[3] = 1.f;
+
+		xmodel_draw.placement.scale = scale;
+
+		xmodel_draw.cached_lighting_handle = 0;
+
+		xmodel_draw.color_lit[0] = 1.f;
+		xmodel_draw.color_lit[1] = 1.f;
+		xmodel_draw.color_lit[2] = 1.f;
+
+		xmodel_draw.color_unlit[0] = 1.f;
+		xmodel_draw.color_unlit[1] = 1.f;
+		xmodel_draw.color_unlit[2] = 1.f;
+
+		xmodel_draw.color_emissive[0] = 1.f;
+		xmodel_draw.color_emissive[1] = 1.f;
+		xmodel_draw.color_emissive[2] = 1.f;
+
+		spawned_xmodels.emplace_back(xmodel_draw);
+	}
+
 
 	class component final : public component_interface
 	{
 	public:
 		void post_unpack() override
 		{
+			r_generate_sorted_draw_surfs_hook.create(0x1BFC60_b, r_generate_sorted_draw_surfs_stub);
+
+			scheduler::loop(update, scheduler::main);
+
 			gui::asset_list::add_asset_view<game::XModel>(game::ASSET_TYPE_XMODEL, draw_xmodel_window);
+			gui::asset_list::add_asset_button<game::XModel>(game::ASSET_TYPE_XMODEL, "spawn", spawn_xmodel_button, game::CL_IsCgameInitialized);
+
+			command::add("spawn_xmodel", [](const command::params& params)
+			{
+				if (!game::CL_IsCgameInitialized())
+				{
+					return;
+				}
+
+				const auto name = params.get(1);
+				const auto asset = game::DB_FindXAssetHeader(game::ASSET_TYPE_XMODEL, name, 0);
+				if (asset.model == nullptr)
+				{
+					return;
+				}
+
+				spawn_xmodel(asset.model);
+			});
+
+			command::add("clear_spawned_xmodels", []
+			{
+				spawned_xmodels.clear();
+			});
 		}
 	};
 }

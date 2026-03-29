@@ -32,6 +32,9 @@ namespace game
 
 	WEAK symbol<int(int entnum)> Agent_IsScripted{0x0, 0x51C7F0};
 
+	WEAK symbol<void(float (*axis)[3], float* angles)> AxisToAngles{0x0, 0x597480};
+	WEAK symbol<void(float* angles, float* forward, float* right, float* up)> AngleVectors{0x0, 0x59C600};
+
 	WEAK symbol<void(int localClientNum, int controllerIndex, const char* buffer,
 		void (int, int, const char*))> Cbuf_ExecuteBufferInternal{0x3765B0, 0x155BC0};
 	WEAK symbol<void(const char* message)> Conbuf_AppendText{0x0, 0x0};
@@ -188,6 +191,8 @@ namespace game
 	WEAK symbol<void()> R_EndFrame{0x0, 0x6A6300};
 	WEAK symbol<void(int)> R_IssueRenderCommands{0x0, 0x6A6B00};
 	WEAK symbol<bool(__int64 a1, int a2, int a3, int a4, int width, int height, int numChannels, void* buffer)> R_TakeScreenshot{0x0, 0xAC6D0};
+	WEAK symbol<void(XModel* model, game::GfxScaledPlacement* placement, unsigned int renderFlags, 
+		unsigned __int16* cachedLightingHandle, float* colorLit, float* colorUnlit, float* colorEmissive)> R_FilterXModelIntoScene{0x0, 0x65E430};
 
 	WEAK symbol<char* (GfxImage* image, uint32_t width, uint32_t height, uint32_t depth, uint32_t mipCount,
 		uint32_t imageFlags, DXGI_FORMAT imageFormat, const char* name, const D3D11_SUBRESOURCE_DATA* initData)> Image_Setup{0x560740, 0x683890};

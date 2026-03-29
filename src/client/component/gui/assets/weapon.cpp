@@ -11,6 +11,7 @@
 #include "component/fastfiles.hpp"
 #include "../gui.hpp"
 #include "../asset_list.hpp"
+#include "xmodel.hpp"
 
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
@@ -38,6 +39,18 @@ namespace gui::asset_list::weapon
 			DRAW_ASSET_PROPERTY_COPY(szInternalName);
 			DRAW_ASSET_PROPERTY_COPY(szDisplayName);
 			DRAW_ASSET_PROPERTY_COPY(killIcon->name);
+
+			if (asset->gunModel[0] != nullptr)
+			{
+				ImGui::Text("gun model: %s", asset->gunModel[0]->name);
+				add_view_button(0, game::ASSET_TYPE_XMODEL, asset->gunModel[0]->name);
+			}
+
+			if (asset->worldModel[0] != nullptr)
+			{
+				ImGui::Text("world model: %s", asset->gunModel[0]->name);
+				add_view_button(1, game::ASSET_TYPE_XMODEL, asset->worldModel[0]->name);
+			}
 
 			ImGui::Text("location multipliers");
 			for (auto i = 0; i < 22; i++)
@@ -216,6 +229,23 @@ namespace gui::asset_list::weapon
 
 			return true;
 		}
+
+		void give_weapon(game::WeaponDef* asset)
+		{
+			command::execute(utils::string::va("give %s", asset->name));
+		}
+
+		void spawn_model(game::WeaponDef* asset)
+		{
+			if (asset->gunModel[0] != nullptr)
+			{
+				gui::asset_list::xmodel::spawn_xmodel(asset->gunModel[0]);
+			}
+			else
+			{
+				gui::notification("error", "weapon doesn't have a gunModel");
+			}
+		}
 	}
 
 	class component final : public component_interface
@@ -224,6 +254,8 @@ namespace gui::asset_list::weapon
 		void post_unpack() override
 		{
 			gui::asset_list::add_asset_view<game::WeaponDef>(game::ASSET_TYPE_WEAPON, draw_weapon_window);
+			gui::asset_list::add_asset_button<game::WeaponDef>(game::ASSET_TYPE_WEAPON, "give", give_weapon, game::CL_IsCgameInitialized);
+			gui::asset_list::add_asset_button<game::WeaponDef>(game::ASSET_TYPE_WEAPON, "spawn model", spawn_model, game::CL_IsCgameInitialized);
 		}
 	};
 }
