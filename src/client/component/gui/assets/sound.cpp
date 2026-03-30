@@ -314,6 +314,11 @@ namespace gui::asset_list::sound
 			}
 			return true;
 		}
+
+		void play_sound(game::snd_alias_list_t* asset)
+		{
+			game::UI_PlayLocalSoundAliasByName(0, asset->name, 0);
+		}
 	}
 
 	class component final : public component_interface
@@ -322,6 +327,7 @@ namespace gui::asset_list::sound
 		void post_unpack() override
 		{
 			gui::asset_list::add_asset_view<game::snd_alias_list_t>(game::ASSET_TYPE_SOUND, draw_sound_window);
+			gui::asset_list::add_asset_button<game::snd_alias_list_t>(game::ASSET_TYPE_SOUND, "play", play_sound);
 		}
 	};
 }

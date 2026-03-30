@@ -278,6 +278,10 @@ namespace gui::asset_list::xmodel
 			DRAW_ASSET_PROPERTY(numBonePhysics, "%i");
 			DRAW_ASSET_PROPERTY(numCompositeModels, "%i");
 			DRAW_ASSET_PROPERTY(scale, "%f");
+			DRAW_ASSET_PROPERTY(radius, "%f");
+			DRAW_ASSET_PROPERTY(contents, "%i");
+			ImGui::Text("bounds.midPoint: (%f, %f, %f)", asset->bounds.midPoint[0], asset->bounds.midPoint[1], asset->bounds.midPoint[2]);
+			ImGui::Text("bounds.halfSize: (%f, %f, %f)", asset->bounds.halfSize[0], asset->bounds.halfSize[1], asset->bounds.halfSize[2]);
 
 			if (ImGui::TreeNode("bones"))
 			{
