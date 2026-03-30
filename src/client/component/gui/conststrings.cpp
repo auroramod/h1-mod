@@ -14,70 +14,55 @@
 
 namespace conststrings
 {
-	enum ConfigString : __int32
-	{
-		CS_FIRST = 0x0,
-		MAX_CONFIGSTRINGS = 5617,
-	};
-
 	namespace
 	{
-		static std::vector<std::string> g_cs_strings;
-		static int g_cs_count = 5617;
-
-		void refresh_configstrings()
-		{
-			g_cs_strings.assign(g_cs_count, "(null)");
-
-			if (!game::SV_Loaded())
-			{
-				return;
-			}
-
-			char buffer[1024]{};
-			for (int i = 0; i < g_cs_count; ++i)
-			{
-				buffer[0] = '\0';
-				game::SV_GetConfigstring(i, buffer, sizeof(buffer));
-				g_cs_strings[i] = (buffer[0] != '\0') ? buffer : "(null)";
-			}
-		}
-
 		void render_window()
 		{
-			static auto* enabled = &gui::enabled_menus["conststrings"];
+			static auto* enabled = &gui::enabled_menus["configstrings"];
 
 			ImGui::SetNextWindowSizeConstraints(ImVec2(500, 500), ImVec2(1000, 1000));
-			if (!ImGui::Begin("ConstStrings List", enabled))
+			if (!ImGui::Begin("ConfigString list", enabled))
 			{
 				ImGui::End();
 				return;
 			}
 
-			ImGui::TextUnformatted("This is a read-only view of the server config strings.");
-			ImGui::TextUnformatted("Useful for debugging custom gametypes/mods.");
-			ImGui::Separator();
-
-			// --- Refresh button ---
-			if (ImGui::Button("Refresh"))
-			{
-				refresh_configstrings();
-			}
-
-			ImGui::Text("Config Strings (%d):", g_cs_count);
+			ImGui::Text("count (%d):", game::MAX_CONFIGSTRINGS);
 
 			ImGui::BeginChild("##cs_scroll", ImVec2(0, 0));
 			ImGuiListClipper clipper;
-			clipper.Begin(static_cast<int>(g_cs_strings.size()));
+			clipper.Begin(game::MAX_CONFIGSTRINGS);
+
+			const auto config_strings = reinterpret_cast<int*>(0x2DD1E24_b);
+			const auto mt_buffer = *reinterpret_cast<std::size_t*>(0xAC87D00_b);
+
 			while (clipper.Step())
 			{
 				for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
 				{
-					ImGui::Text("%04d: %s", i, g_cs_strings[i].c_str());
+					const auto string_value = config_strings[i];
+					const auto string = reinterpret_cast<const char*>(mt_buffer + 8 + 16 * string_value);
+					if (string_value == 0)
+					{
+						ImGui::Text("%04d: ", i);
+						ImGui::SameLine();
+						ImGui::Button("(null)");
+					}
+					else
+					{
+						ImGui::Text("%04d: ", i);
+						ImGui::SameLine();
+						ImGui::PushID(i);
+						if (ImGui::Button(string))
+						{
+							gui::copy_to_clipboard(string);
+						}
+						ImGui::PopID();
+					}
 				}
 			}
-			ImGui::EndChild();
 
+			ImGui::EndChild();
 			ImGui::End();
 		}
 
@@ -134,7 +119,14 @@ namespace conststrings
 					{
 						for (auto i = 0u; i < iter->ncs->entryCount; i++)
 						{
-							ImGui::Text("%i: %s", count++, iter->ncs->stringList[i]);
+							ImGui::Text("%04d: ", count++);
+							ImGui::SameLine();
+							ImGui::PushID(count);
+							if (ImGui::Button(iter->ncs->stringList[i]))
+							{
+								gui::copy_to_clipboard(iter->ncs->stringList[i]);
+							}
+							ImGui::PopID();
 						}
 					}
 
@@ -142,7 +134,7 @@ namespace conststrings
 					{
 						for (auto i = 0u; i < game::s_oldConfigStringToNetStringMap[type].csMax - count; i++)
 						{
-							ImGui::Text("%i: (null)", count + i);
+							ImGui::Text("%04d: (null)", count + i);
 						}
 					}
 
@@ -164,11 +156,8 @@ namespace conststrings
 			if (game::environment::is_dedi() || game::environment::is_sp())
 				return;
 
-			gui::register_menu("conststrings", "ConstStrings List", render_window);
+			gui::register_menu("configstrings", "ConfigString List", render_window);
 			gui::register_menu("netconststrings", "NetConstStrings List", ncs_window);
-
-			// Pre-fill once so list isn't empty at startup
-			refresh_configstrings();
 		}
 	};
 }

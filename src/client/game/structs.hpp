@@ -2566,4 +2566,10 @@ namespace game
 		unsigned int csMax;
 		int a2;
 	};
+
+	enum ConfigString : __int32
+	{
+		CS_FIRST = 0x0,
+		MAX_CONFIGSTRINGS = 5617,
+	};
 }
