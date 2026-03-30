@@ -410,6 +410,7 @@ namespace game
 	WEAK symbol<ComWorld> comWorld{0x0, 0xA97C0E0};
 	
 	WEAK symbol<NetConstStringMap> s_netConstStringMaps{0x0, 0x3881CD0};
+	WEAK symbol<NetConstStringMapList> s_netConstStringMapLists{0x0, 0x2B1A10};
 	WEAK symbol<NetConstStringConfigStringTypeData> s_oldConfigStringToNetStringMap{0x0, 0x8F6264};
 
 	namespace mp
