@@ -60,17 +60,20 @@ namespace arena
 			parse_arena("mp/basemaps.arena");
 
 			// read all usermap arenas for map list
-			for (const auto& entry : std::filesystem::directory_iterator("usermaps"))
+			if (std::filesystem::exists("usermaps"))
 			{
-				if (!entry.is_directory())
+				for (const auto& entry : std::filesystem::directory_iterator("usermaps"))
 				{
-					continue;
+					if (!entry.is_directory())
+					{
+						continue;
+					}
+
+					auto mapname = entry.path().filename().string();
+					auto arena_path = entry.path().string() + "/" + mapname + ".arena";
+
+					parse_arena(arena_path);
 				}
-
-				auto mapname = entry.path().filename().string();
-				auto arena_path = entry.path().string() + "/" + mapname + ".arena";
-
-				parse_arena(arena_path);
 			}
 		}
 	}
