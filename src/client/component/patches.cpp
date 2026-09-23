@@ -305,19 +305,19 @@ namespace patches
 
 		void sub_157FA0_stub()
 		{
-			const auto dvar_706663C2 = *reinterpret_cast<game::dvar_t**>(0x3426B90_b);
-			const auto dvar_617FB3B4 = *reinterpret_cast<game::dvar_t**>(0x3426BA0_b);
+			const auto dvar_706663C2 = *reinterpret_cast<game::dvar_t**>(SELECT_VALUE(0xB5C5338_b, 0x3426B90_b));
+			const auto dvar_617FB3B4 = *reinterpret_cast<game::dvar_t**>(SELECT_VALUE(0xB5C5340_b, 0x3426BA0_b));
 
-			if (!dvar_706663C2->current.enabled || utils::hook::invoke<bool>(0x15B2F0_b))
+			if (!dvar_706663C2->current.enabled || utils::hook::invoke<bool>(SELECT_VALUE(0x385A30_b, 0x15B2F0_b)))
 			{
-				utils::hook::invoke<void>(0x17D8D0_b, 0, 0);
+				utils::hook::invoke<void>(SELECT_VALUE(0x3A5E90_b, 0x17D8D0_b), 0, 0);
 				dvar_set_bool(dvar_706663C2, true);
 				dvar_set_bool(dvar_617FB3B4, true);
 			}
 
-			if (utils::hook::invoke<bool>(0x5B7AB0_b))
+			if (utils::hook::invoke<bool>(SELECT_VALUE(0x439B50_b, 0x5B7AB0_b)))
 			{
-				utils::hook::invoke<void>(0x17D8D0_b, 0, 0);
+				utils::hook::invoke<void>(SELECT_VALUE(0x3A5E90_b, 0x17D8D0_b), 0, 0);
 				dvar_set_bool(dvar_617FB3B4, true);
 			}
 		}
@@ -412,6 +412,9 @@ namespace patches
 			dvars::override::register_float("gpad_stick_deadzone_max", 0.01f, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_float("gpad_stick_pressed", 0.4f, 0, 1, game::DVAR_FLAG_SAVED);
 			dvars::override::register_float("gpad_stick_pressed_hysteresis", 0.1f, 0, 1, game::DVAR_FLAG_SAVED);
+
+			// Fix 'out of memory' error
+			utils::hook::call(SELECT_VALUE(0x386664_b, 0x15C7EE_b), sub_157FA0_stub);
 
 			if (!game::environment::is_sp())
 			{
@@ -518,9 +521,6 @@ namespace patches
 			utils::hook::set<uint8_t>(0x5BEEA0_b, 0xC3); // Mixer_SetWaveInRecordLevels
 
 			utils::hook::set<uint8_t>(0x556250_b, 0xC3); // disable host migration
-
-			// Fix 'out of memory' error
-			utils::hook::call(0x15C7EE_b, sub_157FA0_stub);
 
 			// Re-implement dev prints
 			com_quit_f_hook.create(0x17CD00_b, com_quit_f_stub);
