@@ -90,6 +90,17 @@ local function pc_audio(f4_arg0, f4_arg1)
             LUI.Options.ToggleDvarFunc("snd_battleChatterDisabled"))
     end
 
+    if not Engine.IsMultiplayer() and Engine.ShouldShowSubtitlesOption() then
+        LUI.Options.CreateControlProfileDataButton(menu, "subtitles", "profile_toggleSubtitles", nil,
+            "LUA_MENU_SUBTITLES", "PLATFORM_UI_OPTIONS_SUBTITLES_DESC", {{
+                text = "@LUA_MENU_DISABLED",
+                value = false
+            }, {
+                text = "@LUA_MENU_ENABLED",
+                value = true
+            }})
+    end
+
     LUI.Options.AddButtonOptionVariant(menu, GenericButtonSettings.Variants.Select, "@LUA_MENU_HITSOUND",
         "@LUA_MENU_HITSOUND_DESC", LUI.Options.GetDvarEnableTextFunc("snd_hitsoundDisabled", true),
         LUI.Options.ToggleDvarFunc("snd_hitsoundDisabled"), LUI.Options.ToggleDvarFunc("snd_hitsoundDisabled"))
@@ -101,7 +112,7 @@ local function pc_audio(f4_arg0, f4_arg1)
     end
 
     -- voice chat options
-    if not game:issingleplayer() then
+    if Engine.IsMultiplayer() then
         createdivider(menu, Engine.Localize("@LUA_MENU_VOICE_CHAT"))
 
         LUI.Options.AddButtonOptionVariant(menu, GenericButtonSettings.Variants.Select, "@LUA_MENU_VOICE_CHAT",
