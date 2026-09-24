@@ -1,6 +1,7 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 #include "game_module.hpp"
+#include "driver_profile.hpp"
 
 #include <utils/hook.hpp>
 #include <game/game.hpp>
@@ -60,6 +61,12 @@ namespace game_module
 
 		DWORD __stdcall get_module_file_name_a(HMODULE hmodule, const LPSTR filename, const DWORD size)
 		{
+			DWORD result{};
+			if (driver_profile::get_module_file_name(_ReturnAddress(), hmodule, filename, size, &result))
+			{
+				return result;
+			}
+
 			if (!hmodule || utils::nt::library(hmodule) == get_game_module())
 			{
 				hmodule = get_host_module();
@@ -70,6 +77,12 @@ namespace game_module
 
 		DWORD __stdcall get_module_file_name_w(HMODULE hmodule, const LPWSTR filename, const DWORD size)
 		{
+			DWORD result{};
+			if (driver_profile::get_module_file_name(_ReturnAddress(), hmodule, filename, size, &result))
+			{
+				return result;
+			}
+
 			if (!hmodule || utils::nt::library(hmodule) == get_game_module())
 			{
 				hmodule = get_host_module();
