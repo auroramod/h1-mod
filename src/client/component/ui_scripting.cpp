@@ -952,32 +952,35 @@ namespace ui_scripting
 			});
 
 			// remove unsafe functions
-			utils::hook::nop(0x22B5CA_b, 1);
-			utils::hook::jump(0x26EB60_b, 0x22B450_b);
+			if (game::environment::is_mp())
+			{
+				utils::hook::nop(0x22B5CA_b, 1);
+				utils::hook::jump(0x26EB60_b, 0x22B450_b);
 
-			utils::hook::jump(0x212CF0_b, removed_function_stub); // io
-			utils::hook::jump(0x213180_b, removed_function_stub); // os
-			utils::hook::jump(0x213EB0_b, removed_function_stub); // serialize
-			utils::hook::jump(0x213E80_b, removed_function_stub); // hks
-			utils::hook::jump(0x2135F0_b, removed_function_stub); // debug
-			utils::hook::nop(0x212C78_b, 5); // coroutine
+				utils::hook::jump(0x212CF0_b, removed_function_stub); // io
+				utils::hook::jump(0x213180_b, removed_function_stub); // os
+				utils::hook::jump(0x213EB0_b, removed_function_stub); // serialize
+				utils::hook::jump(0x213E80_b, removed_function_stub); // hks
+				utils::hook::jump(0x2135F0_b, removed_function_stub); // debug
+				utils::hook::nop(0x212C78_b, 5); // coroutine
 
-			// profile
-			utils::hook::jump(0x207F50_b, removed_function_stub);
-			utils::hook::jump(0x207F60_b, removed_function_stub);
-			utils::hook::jump(0x207F70_b, removed_function_stub);
-			utils::hook::jump(0x208030_b, removed_function_stub);
+				// profile
+				utils::hook::jump(0x207F50_b, removed_function_stub);
+				utils::hook::jump(0x207F60_b, removed_function_stub);
+				utils::hook::jump(0x207F70_b, removed_function_stub);
+				utils::hook::jump(0x208030_b, removed_function_stub);
 
-			utils::hook::jump(0x209CC0_b, removed_function_stub);
-			utils::hook::jump(0x209930_b, removed_function_stub);
-			utils::hook::jump(0x20C920_b, removed_function_stub);
+				utils::hook::jump(0x209CC0_b, removed_function_stub);
+				utils::hook::jump(0x209930_b, removed_function_stub);
+				utils::hook::jump(0x20C920_b, removed_function_stub);
 
-			utils::hook::jump(0x214750_b, removed_function_stub);
-			utils::hook::jump(0x2131B0_b, removed_function_stub);
-			utils::hook::jump(0x213EE0_b, removed_function_stub);
+				utils::hook::jump(0x214750_b, removed_function_stub);
+				utils::hook::jump(0x2131B0_b, removed_function_stub);
+				utils::hook::jump(0x213EE0_b, removed_function_stub);
 
-			utils::hook::jump(0x208C70_b, removed_function_stub);
-			utils::hook::jump(0x20F620_b, removed_function_stub);
+				utils::hook::jump(0x208C70_b, removed_function_stub);
+				utils::hook::jump(0x20F620_b, removed_function_stub);
+			}
 		}
 	};
 }
