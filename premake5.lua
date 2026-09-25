@@ -240,6 +240,8 @@ editandcontinue "Off"
 warnings "Extra"
 characterset "ASCII"
 
+disablewarnings {"5321"}
+
 if os.getenv("CI") then
 	defines {"CI"}
 end
