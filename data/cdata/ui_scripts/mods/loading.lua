@@ -41,24 +41,17 @@ if (game:issingleplayer()) then
 end
 
 function getmodname(path)
-    local name = path
-    game:addlocalizedstring(name, name)
-    local desc = Engine.Localize("LUA_MENU_MOD_DESC_DEFAULT", name)
-    local infofile = path .. "/info.json"
+	local modinfo = mods.getinfo(path)
 
-    if (io.fileexists(infofile)) then
-        pcall(function()
-            local data = json.decode(io.readfile(infofile))
-            game:addlocalizedstring(data.description, data.description)
-            game:addlocalizedstring(data.author, data.author)
-            game:addlocalizedstring(data.version, data.version)
-            desc = Engine.Localize("@LUA_MENU_MOD_DESC", data.description, data.author, data.version)
-            name = data.name
-        end)
-    end
-
-    return name, desc
+	if (not modinfo.isvalid) then
+		local desc = Engine.Localize("LUA_MENU_MOD_DESC_DEFAULT", string.el(path))
+		return path, desc
+	else
+		local desc = Engine.Localize("@LUA_MENU_MOD_DESC", string.el(modinfo.description), string.el(modinfo.author), string.el(modinfo.version))
+		return modinfo.name, desc
+	end
 end
+
 
 LUI.MenuBuilder.registerType("mods_menu", function(a1)
     local menu = LUI.MenuTemplate.new(a1, {
@@ -76,7 +69,7 @@ LUI.MenuBuilder.registerType("mods_menu", function(a1)
         createdivider(menu, Engine.Localize("@LUA_MENU_LOADED_MOD", name:truncate(24)))
 
         menu:AddButton("@LUA_MENU_UNLOAD", function()
-            Engine.Exec("unloadmod")
+            mods.unload()
         end, nil, true, nil, {
             desc_text = Engine.Localize("@LUA_MENU_UNLOAD_DESC")
         })
@@ -84,21 +77,17 @@ LUI.MenuBuilder.registerType("mods_menu", function(a1)
 
     createdivider(menu, Engine.Localize("@LUA_MENU_AVAILABLE_MODS"))
 
-    if (io.directoryexists("mods")) then
-        local mods = io.listfiles("mods/")
-        for i = 1, #mods do
-            if (io.directoryexists(mods[i]) and not io.directoryisempty(mods[i])) then
-                local name, desc = getmodname(mods[i])
+	local mods = mods.getlist()
+    for i = 1, #mods do
+        local name, desc = getmodname(mods[i])
 
-                if (mods[i] ~= modfolder) then
-                    game:addlocalizedstring(name, name)
-                    menu:AddButton(name, function()
-                        Engine.Exec("loadmod " .. mods[i])
-                    end, nil, true, nil, {
-                        desc_text = desc
-                    })
-                end
-            end
+        if (mods[i] ~= modfolder) then
+            game:addlocalizedstring(name, name)
+            menu:AddButton(name, function()
+                Engine.Exec("loadmod " .. mods[i])
+            end, nil, true, nil, {
+                desc_text = desc
+            })
         end
     end
 

@@ -7,6 +7,7 @@
 #include "localized_strings.hpp"
 #include "mods.hpp"
 #include "updater.hpp"
+#include "game/demonware/services.hpp"
 
 #include "game/game.hpp"
 
@@ -44,19 +45,20 @@ namespace filesystem
 
 			initialized = true;
 
-			filesystem::register_path(utils::properties::get_appdata_path() / CLIENT_DATA_FOLDER);
-			filesystem::register_path(L".");
-			filesystem::register_path(L"h1-mod");
-			filesystem::register_path(L"devraw");
-			filesystem::register_path(L"devraw_shared");
-			filesystem::register_path(L"raw_shared");
-			filesystem::register_path(L"raw");
-			filesystem::register_path(L"main");
+			register_path(utils::properties::get_appdata_path() / CLIENT_DATA_FOLDER);
+			register_path(L"h1-mod");
+			register_path(L"raw");
+			register_path(L"main");
 
 			const auto mod_path = utils::flags::get_flag("mod");
 			if (mod_path.has_value())
 			{
+				demonware::set_storage_path(mod_path.value());
 				mods::set_mod(mod_path.value());
+			}
+			else
+			{
+				demonware::set_storage_path("");
 			}
 
 			fs_startup_hook.invoke<void>(name);

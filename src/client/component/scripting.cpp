@@ -5,6 +5,7 @@
 #include "component/gsc/script_loading.hpp"
 #include "component/scheduler.hpp"
 #include "component/scripting.hpp"
+#include "component/command.hpp"
 
 #include "console.hpp"
 
@@ -275,6 +276,12 @@ namespace scripting
 			{
 				utils::hook::call(0x28AE82_b, get_spawn_point_stub);
 			}
+
+			command::add("getfunctionptr", [](const command::params& params)
+			{
+				const auto func = find_function(params.get(1), false);
+				console::info("%p\n", func);
+			});
 
 			scheduler::loop([]
 			{

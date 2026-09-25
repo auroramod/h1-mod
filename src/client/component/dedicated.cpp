@@ -148,7 +148,7 @@ namespace dedicated
 				return;
 			}
 
-#ifdef DEBUG
+#ifdef _DEBUG
 			printf("Starting dedicated server\n");
 #endif
 

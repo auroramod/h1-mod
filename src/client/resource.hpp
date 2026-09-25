@@ -12,7 +12,6 @@
 #define MENU_MAIN             305
 
 #define TLS_DLL               306
-#define RUNNER                307
 
 #define ICON_IMAGE            308
 

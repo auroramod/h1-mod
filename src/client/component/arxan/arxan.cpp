@@ -118,14 +118,6 @@ namespace arxan
 			const auto correct_checksum = *context->original_checksum;
 			*context->computed_checksum = correct_checksum;
 
-			if (current_checksum != correct_checksum)
-			{
-#ifdef DEV_BUILD
-				OutputDebugStringA(utils::string::va("Adjusting checksum (%llX): %X -> %X", handler_address,
-					current_checksum, correct_checksum));
-#endif
-			}
-
 			return correct_checksum;
 		}
 
@@ -449,7 +441,7 @@ namespace arxan
 						auto result = utils::hook::invoke<LONG>(handler.second, &fake_info);
 						if (result)
 						{
-							memset(fake_context, 0, sizeof(_CONTEXT));
+							//memset(fake_context, 0, sizeof(_CONTEXT));
 							break;
 						}
 					}
@@ -549,6 +541,8 @@ namespace arxan
 	public:
 		void* load_import(const std::string& library, const std::string& function) override
 		{
+			if (game::environment::is_sp()) return nullptr;
+
 			static auto is_wine = utils::nt::is_wine();
 			if (!is_wine)
 			{
@@ -571,6 +565,8 @@ namespace arxan
 
 		void post_load() override
 		{
+			if (game::environment::is_sp()) return;
+
 			if (!utils::nt::is_wine())
 			{
 				remove_hardware_breakpoints();
@@ -584,6 +580,7 @@ namespace arxan
 
 			const auto nt_query_information_process = ntdll.get_proc<void*>("NtQueryInformationProcess");
 			nt_query_information_process_hook.create(nt_query_information_process, nt_query_information_process_stub);
+			nt_query_information_process_hook.enable();
 			nt_query_information_process_hook.move();
 
 			AddVectoredExceptionHandler(1, exception_filter);
@@ -591,6 +588,8 @@ namespace arxan
 
 		void post_unpack() override
 		{
+			if (game::environment::is_sp()) return;
+
 			if (!utils::nt::is_wine())
 			{
 				remove_hardware_breakpoints();

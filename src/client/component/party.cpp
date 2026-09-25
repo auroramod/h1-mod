@@ -453,13 +453,7 @@ namespace party
 				}
 				else if (needs_restart || needs_vid_restart)
 				{
-					command::execute("vid_restart");
-					needs_vid_restart = false;
-					scheduler::once([=]()
-					{
-						mods::read_stats();
-						connect(target);
-					}, scheduler::pipeline::main);
+					mods::execute_restart(target);
 					return true;
 				}
 			}
@@ -1032,6 +1026,16 @@ namespace party
 
 				const auto hash = get_file_hash(params.get(1));
 				console::info("hash output: %s\n", hash.data());
+			});
+
+			command::add("xpartygogametype", [](const command::params& params)
+			{
+				if (params.size() < 2)
+				{
+					return;
+				}
+
+				command::execute( utils::string::va("ui_gametype %s;g_gametype %s;xpartygo", params.get(1), params.get(1)) );
 			});
 
 			network::on("getInfo", [](const game::netadr_s& target, const std::string& data)

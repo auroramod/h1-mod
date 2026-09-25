@@ -122,6 +122,9 @@ namespace utils::hook
 		void enable();
 		void disable();
 
+		void queue_enable();
+		void queue_disable();
+
 		void create(void* place, void* target);
 		void create(size_t place, void* target);
 		void clear();

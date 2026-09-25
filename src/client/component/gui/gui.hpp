@@ -1,4 +1,4 @@
-#ifdef DEBUG
+#ifdef _DEBUG
 #pragma once
 
 namespace gui
@@ -12,6 +12,9 @@ namespace gui
 	};
 
 	extern std::unordered_map<std::string, bool> enabled_menus;
+
+	extern ID3D11Device* device;
+	extern ID3D11DeviceContext* device_context;
 
 	bool gui_key_event(const int local_client_num, const int key, const int down);
 	bool gui_char_event(const int local_client_num, const int key);
@@ -29,5 +32,7 @@ namespace gui
 
 	bool InputU8(const char* label, unsigned char* v, int step = 1, int step_fast = 100, ImGuiInputTextFlags flags = 0);
 	bool InputUInt6(const char* label, unsigned int v[6], ImGuiInputTextFlags flags = 0);
+
+	void shutdown_gui();
 }
 #endif

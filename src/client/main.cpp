@@ -12,12 +12,14 @@
 DECLSPEC_NORETURN void WINAPI exit_hook(const int code)
 {
 	component_loader::pre_destroy();
-	exit(code);
+	std::exit(code);
 }
 
 BOOL WINAPI system_parameters_info_a(const UINT uiAction, const UINT uiParam, const PVOID pvParam, const UINT fWinIni)
 {
 	component_loader::post_unpack();
+	MH_ApplyQueued();
+
 	return SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
 }
 
@@ -243,7 +245,7 @@ int main()
 		limit_parallel_dll_loading();
 	}
 
-	srand(uint32_t(time(nullptr)));
+	std::srand(static_cast<std::uint32_t>(std::time(nullptr)) ^ ~(GetTickCount() * GetCurrentProcessId()));
 	remove_crash_file();
 
 	{
@@ -258,6 +260,12 @@ int main()
 
 		try
 		{
+			if (utils::flags::has_flag("stdout"))
+			{
+				setvbuf(stdout, NULL, _IONBF, 0);
+				setvbuf(stderr, NULL, _IONBF, 0);
+			}
+
 			if (!component_loader::post_start()) return 0;
 
 			auto mode = detect_mode_from_arguments();
@@ -277,6 +285,7 @@ int main()
 			}
 
 			if (!component_loader::post_load()) return 0;
+			MH_ApplyQueued();
 
 			premature_shutdown = false;
 		}

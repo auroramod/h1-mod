@@ -110,12 +110,6 @@ TLS_DLL               RCDATA "../../build/bin/x64/Debug/tlsdll.dll"
 TLS_DLL               RCDATA "../../build/bin/x64/Release/tlsdll.dll"
 #endif
 
-#ifdef _DEBUG
-RUNNER                RCDATA "../../build/bin/x64/Debug/runner.exe"
-#else
-RUNNER                RCDATA "../../build/bin/x64/Release/runner.exe"
-#endif
-
 ICON_IMAGE            RCDATA "resources/icon.png"
 
 LUI_COMMON            RCDATA "resources/ui_scripts/common.lua"

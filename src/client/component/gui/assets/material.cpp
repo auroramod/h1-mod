@@ -1,6 +1,6 @@
 #include <std_include.hpp>
 
-#ifdef DEBUG
+#ifdef _DEBUG
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -131,6 +131,8 @@ namespace gui::asset_list::material
 			DRAW_ASSET_PROPERTY_COPY(name);
 			DRAW_ASSET_PROPERTY_COPY(techniqueSet->name);
 
+			add_view_button(0, game::ASSET_TYPE_TECHNIQUE_SET, asset->techniqueSet->name);
+
 			ImGui::Separator();
 
 			static char buffer[64]{};
@@ -140,12 +142,11 @@ namespace gui::asset_list::material
 				if (tech)
 				{
 					asset->techniqueSet = tech;
-					memset(buffer, 0, 64);
+					std::memset(buffer, 0, 64);
 				}
 			}
 
 			ImGui::Separator();
-
 			DRAW_ASSET_PROPERTY(textureCount, "%i");
 			DRAW_ASSET_PROPERTY(constantCount, "%i");
 			if (asset->constantCount > 0)
@@ -192,6 +193,10 @@ namespace gui::asset_list::material
 
 			DRAW_ASSET_PROPERTY_INPUT_U8(info.gameFlags);
 			DRAW_ASSET_PROPERTY_INPUT_U8(info.renderFlags);
+			DRAW_ASSET_PROPERTY_INPUT_U8(info.textureAtlasRowCount);
+			DRAW_ASSET_PROPERTY_INPUT_U8(info.textureAtlasColumnCount);
+			DRAW_ASSET_PROPERTY_INPUT_U8(info.textureAtlasFrameBlend);
+			DRAW_ASSET_PROPERTY_INPUT_U8(info.textureAtlasAsArray);
 
 			DRAW_ASSET_PROPERTY_INPUT_U8(cameraRegion);
 			DRAW_ASSET_PROPERTY_INPUT_U8(stateFlags);

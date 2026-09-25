@@ -1,20 +1,19 @@
 #include <std_include.hpp>
 
-#ifdef DEBUG
+#ifdef _DEBUG
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
-#include "component/scheduler.hpp"
-#include "component/command.hpp"
 #include "gui.hpp"
+#include "component/scripting.hpp"
+#include "component/scheduler.hpp"
 
-#include "game/scripting/execution.hpp"
+#include "component/gsc/script_extension.hpp"
 
-#include <utils/string.hpp>
-#include <utils/hook.hpp>
 #include <utils/concurrency.hpp>
+#include <utils/string.hpp>
 
 namespace gui::debug
 {
@@ -33,11 +32,15 @@ namespace gui::debug
 			float origin[3];
 			float color[4];
 			bool deleted;
+			std::optional<std::string> text;
+			float thickness;
 		};
 
 		std::vector<debug_line> debug_lines;
 		std::vector<debug_square> debug_squares;
 		std::mutex debug_items_mutex;
+		
+		std::vector<size_t> debug_nodes_mapping;
 
 		game::dvar_t* cl_paused = nullptr;
 
@@ -50,15 +53,6 @@ namespace gui::debug
 			circle_fill,
 			cube,
 			cube_mesh
-		};
-
-		enum entity_type
-		{
-			other,
-			trigger_radius,
-			generic_trigger,
-			actor,
-			count
 		};
 
 		float camera[3] = {};
@@ -82,16 +76,19 @@ namespace gui::debug
 			float color[4] = { 1.f, 0.f, 0.f, 1.f };
 		} path_node_settings{};
 
+		struct entity_draw_type
+		{
+			std::string name;
+			bool enabled;
+			std::array<float, 4> color;
+			object_type draw_type;
+			std::function<bool(const std::string&)> match_func;
+		};
+
 		struct : draw_settings
 		{
-			bool enabled_types[entity_type::count];
-			float type_colors[entity_type::count][4] =
-			{
-				{0.f, 0.5f, 1.f, 0.3f},
-				{0.f, 1.f, 0.f, 0.3f},
-				{1.0f, 1.f, 0.f, 0.3f},
-				{1.f, 0.5f, 1.f, 0.3f},
-			};
+			std::vector<entity_draw_type> types;
+			entity_draw_type other_types;
 			bool mesh_only = false;
 			int point_count = 30;
 		} entity_bound_settings{};
@@ -102,12 +99,25 @@ namespace gui::debug
 			bool valid;
 		};
 
-		float vector_dot(float* a, float* b)
+		void add_entity_draw(const std::string& name, const std::array<float, 4>& color, 
+			const object_type draw_type,
+			const std::function<bool(const std::string&)>& match_func)
+		{
+			entity_draw_type entity_draw{};
+			entity_draw.name = name;
+			entity_draw.color = color;
+			entity_draw.draw_type = draw_type;
+			entity_draw.match_func = match_func;
+
+			entity_bound_settings.types.emplace_back(entity_draw);
+		}
+
+		float vector_dot(const float* a, const float* b)
 		{
 			return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
 		}
 
-		bool world_pos_to_screen_pos(float* origin, float* out)
+		bool world_pos_to_screen_pos(const float* origin, float* out)
 		{
 			float local[3] =
 			{
@@ -166,7 +176,7 @@ namespace gui::debug
 			window->DrawList->AddLine(start_, end_, color_, thickness);
 		}
 
-		void draw_square(float* origin, float width, float* color)
+		void draw_square(const float* origin, float width, const float* color)
 		{
 			const auto half = width / 2.f;
 			float p1[3] = { origin[0] - half, origin[1] + half, origin[2] };
@@ -204,7 +214,7 @@ namespace gui::debug
 			window->DrawList->AddConvexPolyFilled(points, 4, color_);
 		}
 
-		void draw_square_from_points(float* p1, float* p2, float* p3, float* p4, float* color,
+		void draw_square_from_points(const float* p1, const float* p2, const float* p3, const float* p4, const float* color,
 			float thickness, bool mesh_only)
 		{
 			float p1_screen[2] = {};
@@ -274,7 +284,7 @@ namespace gui::debug
 			return pi;
 		}
 
-		void draw_cylinder(float* center, float radius, float height, int point_count, float* color,
+		void draw_cylinder(const float* center, float radius, float height, int point_count, const float* color,
 			float thickness, bool mesh_only)
 		{
 			const auto pi = get_pi();
@@ -403,7 +413,7 @@ namespace gui::debug
 			}
 		}
 
-		void draw_rectangular_prism(float* center, game::Bounds bounds, float* color, float thickness, bool mesh_only)
+		void draw_rectangular_prism(const float* center, game::Bounds bounds, const float* color, float thickness, bool mesh_only)
 		{
 			float vertices[8][3] =
 			{
@@ -483,33 +493,27 @@ namespace gui::debug
 
 				if (ImGui::TreeNode("Types"))
 				{
-					ImGui::Checkbox("trigger_radius", &entity_bound_settings.enabled_types[entity_type::trigger_radius]);
-					if (entity_bound_settings.enabled_types[entity_type::trigger_radius] && ImGui::TreeNode("Color picker #1"))
+					auto id = 0;
+					const auto do_type = [&](entity_draw_type& e)
 					{
-						ImGui::ColorPicker4("color", entity_bound_settings.type_colors[entity_type::trigger_radius]);
-						ImGui::TreePop();
+						ImGui::Checkbox(e.name.data(), &e.enabled);
+						ImGui::PushID(id++);
+						if (e.enabled && ImGui::TreeNode("color for \"%s\"", e.name.data()))
+						{
+							ImGui::PushID(id++);
+							ImGui::ColorPicker4("color", e.color.data());
+							ImGui::TreePop();
+							ImGui::PopID();
+						}
+						ImGui::PopID();
+					};
+
+					for (auto& e : entity_bound_settings.types)
+					{
+						do_type(e);
 					}
 
-					ImGui::Checkbox("generic trigger", &entity_bound_settings.enabled_types[entity_type::generic_trigger]);
-					if (entity_bound_settings.enabled_types[entity_type::generic_trigger] && ImGui::TreeNode("Color picker #2"))
-					{
-						ImGui::ColorPicker4("color", entity_bound_settings.type_colors[entity_type::generic_trigger]);
-						ImGui::TreePop();
-					}
-
-					ImGui::Checkbox("actor", &entity_bound_settings.enabled_types[entity_type::actor]);
-					if (entity_bound_settings.enabled_types[entity_type::actor] && ImGui::TreeNode("Color picker #3"))
-					{
-						ImGui::ColorPicker4("color", entity_bound_settings.type_colors[entity_type::actor]);
-						ImGui::TreePop();
-					}
-
-					ImGui::Checkbox("other entities", &entity_bound_settings.enabled_types[entity_type::other]);
-					if (entity_bound_settings.enabled_types[entity_type::other] && ImGui::TreeNode("Color picker #4"))
-					{
-						ImGui::ColorPicker4("color", entity_bound_settings.type_colors[entity_type::other]);
-						ImGui::TreePop();
-					}
+					do_type(entity_bound_settings.other_types);
 
 					ImGui::TreePop();
 				}
@@ -527,7 +531,7 @@ namespace gui::debug
 
 		float distance_2d(float* a, float* b)
 		{
-			return sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]));
+			return std::sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]));
 		}
 
 		void get_pathnode_origin(game::pathnode_t* node, float* out)
@@ -562,8 +566,8 @@ namespace gui::debug
 			const auto& io = ImGui::GetIO();
 
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f });
-			ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0.0f, 0.0f, 0.0f, 0.0f });
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
+			ImGui::PushStyleColor(ImGuiCol_WindowBg, {0.0f, 0.0f, 0.0f, 0.0f});
 			ImGui::Begin("debug window", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs);
 
 			ImGui::SetWindowPos(ImVec2(0, 0), ImGuiCond_Always);
@@ -624,24 +628,6 @@ namespace gui::debug
 			}
 		}
 
-		entity_type get_entity_type(const char* classname)
-		{
-			if (strstr(classname, "trigger_radius"))
-			{
-				return entity_type::trigger_radius;
-			}
-			else if (strstr(classname, "trigger"))
-			{
-				return entity_type::generic_trigger;
-			}
-			else if (strstr(classname, "actor"))
-			{
-				return entity_type::actor;
-			}
-
-			return entity_type::other;
-		}
-
 		void draw_triggers()
 		{
 			if (!entity_bound_settings.enabled)
@@ -655,44 +641,72 @@ namespace gui::debug
 				const auto origin = entity->origin;
 
 				const auto distance = distance_2d(entity_bound_settings.camera, origin);
-				const auto* classname = game::SL_ConvertToString(entity->script_classname);
+				const auto classname = game::SL_ConvertToString(entity->script_classname);
 
-				if (distance > entity_bound_settings.range || !classname)
+				if (distance > entity_bound_settings.range || !classname || !std::strcmp(classname, "player"))
 				{
 					continue;
 				}
 
-				if (!strcmp(classname, "player"))
-					continue;
+				const auto iter = std::ranges::find_if(entity_bound_settings.types.begin(),
+					entity_bound_settings.types.end(), [&](const entity_draw_type& e)
+					{
+						return e.match_func(classname);
+					}
+				);
 
-				const auto type = get_entity_type(classname);
-				if (!entity_bound_settings.enabled_types[type])
+				const auto perform_draw = [&](const entity_draw_type& e)
 				{
-					continue;
-				}
+					switch (e.draw_type)
+					{
+					case object_type::circle:
+					{
+						const auto radius = entity->box.halfSize[0];
+						const auto height = entity->box.halfSize[2] * 2.f;
 
-				switch (type)
-				{
-				case entity_type::trigger_radius:
-				{
-					const auto radius = entity->box.halfSize[0];
-					const auto height = entity->box.halfSize[2] * 2.f;
+						draw_cylinder(origin, radius, height, entity_bound_settings.point_count,
+							e.color.data(), entity_bound_settings.mesh_thickness, entity_bound_settings.mesh_only);
+						break;
+					}
+					case object_type::cube:
+					default:
+					{
+						draw_rectangular_prism(origin, entity->box, e.color.data(),
+							entity_bound_settings.mesh_thickness, entity_bound_settings.mesh_only);
+						break;
+					}
+					}
 
-					draw_cylinder(origin, radius, height, entity_bound_settings.point_count,
-						entity_bound_settings.type_colors[type], entity_bound_settings.mesh_thickness, entity_bound_settings.mesh_only);
-					break;
-				}
-				default:
-				{
-					draw_rectangular_prism(origin, entity->box, entity_bound_settings.type_colors[type],
-						entity_bound_settings.mesh_thickness, entity_bound_settings.mesh_only);
 					ImGuiWindow* window = ImGui::GetCurrentWindow();
 					float screen_center[2];
 					world_pos_to_screen_pos(origin, screen_center);
-					window->DrawList->AddText(ImGui::GetDefaultFont(), ImGui::GetFontSize(), ImVec2(screen_center[0],
-						screen_center[1]), ImColor(255, 255, 0, 255), utils::string::va("%s - %.f %.f %.f", game::SL_ConvertToString(entity->script_classname), origin[0], origin[1], origin[2]), 0, 0.f, 0);
-					break;
+
+					const char* text = nullptr;
+					if (entity->targetname)
+					{
+						const auto targetname = game::SL_ConvertToString(entity->targetname);
+						text = utils::string::va("%s\n(%s)\n%.f %.f %.f", classname, targetname, origin[0], origin[1], origin[2]);
+					}
+					else
+					{
+						text = utils::string::va("%s\n%.f %.f %.f", classname, origin[0], origin[1], origin[2]);
+					}
+
+					const auto text_size = ImGui::CalcTextSize(text);
+					window->DrawList->AddText(ImGui::GetDefaultFont(), ImGui::GetFontSize() * 2.f, ImVec2(screen_center[0] - text_size[0],
+						screen_center[1]), ImColor(e.color[0], e.color[1], e.color[2], 1.f), text, 0, 0.f, 0);
+				};
+
+				if (iter != entity_bound_settings.types.end())
+				{
+					if (iter->enabled)
+					{
+						perform_draw(*iter);
+					}
 				}
+				else if (entity_bound_settings.other_types.enabled)
+				{
+					perform_draw(entity_bound_settings.other_types);
 				}
 			}
 		}
@@ -707,6 +721,11 @@ namespace gui::debug
 				{
 					continue;
 				}
+				
+				if (distance_2d(path_node_settings.camera, line.start) >= path_node_settings.range)
+				{
+					continue;
+				}
 
 				draw_line(line.start, line.end, line.color, 1.f);
 			}
@@ -717,8 +736,29 @@ namespace gui::debug
 				{
 					continue;
 				}
+				
+				if (distance_2d(path_node_settings.camera, square.origin) >= path_node_settings.range)
+				{
+					continue;
+				}
 
-				draw_square(square.origin, 50.f, square.color);
+				draw_cube(square.origin, square.thickness, square.color, 0.25f, false);
+				
+				if (square.text.has_value())
+				{
+					float screen_pos[2] = {};
+					if (world_pos_to_screen_pos(square.origin, screen_pos))
+					{
+						const auto* window = ImGui::GetCurrentWindow();
+						window->DrawList->AddText(
+							ImGui::GetDefaultFont(),
+							ImGui::GetFontSize(),
+							ImVec2(screen_pos[0], screen_pos[1]),
+							IM_COL32(255, 255, 255, 255),
+							square.text.value().c_str()
+						);
+					}
+				}
 			}
 		}
 
@@ -798,11 +838,13 @@ namespace gui::debug
 		std::memcpy(line_.color, color, sizeof(float[4]));
 	}
 
-	size_t add_debug_square(const float* origin, const float* color)
+	size_t add_debug_square(const float* origin, const float* color, const std::string& text, const float thickness)
 	{
 		debug_square line{};
 		std::memcpy(line.origin, origin, sizeof(float[3]));
 		std::memcpy(line.color, color, sizeof(float[4]));
+		line.text = text;
+		line.thickness = thickness;
 
 		std::lock_guard _0(debug_items_mutex);
 		const auto index = debug_squares.size();
@@ -838,6 +880,7 @@ namespace gui::debug
 		std::lock_guard _0(debug_items_mutex);
 		debug_lines.clear();
 		debug_squares.clear();
+		debug_nodes_mapping.clear();
 	}
 
 	class component final : public component_interface
@@ -849,6 +892,47 @@ namespace gui::debug
 			{
 				return;
 			}
+
+			// green
+			add_entity_draw("trigger_radius", {0.f, 1.f, 0.f, 0.2f}, circle, [](const std::string& classname)
+			{
+				return classname == "trigger_radius";
+			});
+
+			// yellow
+			add_entity_draw("generic trigger", {1.0f, 1.f, 0.f, 0.2f}, square, [](const std::string& classname)
+			{
+				return classname != "trigger_radius" && classname.contains("trigger");
+			});
+
+			// orange
+			add_entity_draw("script_brushmodel", {1.f, 0.7f, 0.f, 0.2f}, square, [](const std::string& classname)
+			{
+				return classname == "script_brushmodel";
+			});
+
+			// pink
+			add_entity_draw("actor", {1.f, 0.5f, 1.f, 0.2f}, square, [](const std::string& classname)
+			{
+				return classname == "actor";
+			});
+
+			// pink
+			add_entity_draw("agent", {1.f, 0.5f, 1.f, 0.2f}, square, [](const std::string& classname)
+			{
+				return classname == "agent";
+			});
+
+			// red
+			add_entity_draw("scriptable", {1.f, 0.0f, 0.f, 0.2f}, square, [](const std::string& classname)
+			{
+				return classname == "scriptable";
+			});
+
+			// blue
+			entity_bound_settings.other_types.name = "other entities";
+			entity_bound_settings.other_types.color = {0.f, 0.5f, 1.f, 0.3f};
+			entity_bound_settings.other_types.draw_type = square;
 
 			gui::register_menu("debug", "Debug", draw_window);
 
@@ -865,6 +949,18 @@ namespace gui::debug
 				draw_debug_items();
 				end_render_window();
 			}, true);
+			
+			scripting::on_shutdown([](bool, const bool post_shutdown)
+			{
+				if (!post_shutdown)
+				{
+					for (const auto node_id : debug_nodes_mapping)
+					{
+						remove_debug_square(node_id);
+					}
+					reset_debug_items();
+				}
+			});
 
 			scheduler::once([]()
 			{
@@ -881,6 +977,80 @@ namespace gui::debug
 
 				update_camera();
 			}, scheduler::pipeline::renderer);
+			
+			// GSC functions for quick node/line debugging
+			gsc::function::add("add_debug_node", [](const gsc::function_args& args)
+			{
+#ifdef _DEBUG
+				const auto origin = args[0].as<scripting::vector>();
+				const auto text = args[1].as<std::string>();
+				const auto thickness = args[2].as<float>();
+
+				float color[4] = { 0.f, 1.f, 0.f, 1.f };
+				if (args[3].as<scripting::vector>())
+				{
+					const auto color_arg = args[3].as<scripting::vector>();
+					color[0] = color_arg.get_x();
+					color[1] = color_arg.get_y();
+					color[2] = color_arg.get_z();
+				}
+
+				const size_t node_id = add_debug_square(origin, color, text, thickness);
+				debug_nodes_mapping.push_back(node_id);
+
+				return static_cast<int>(node_id);
+#else
+				return scripting::script_value{};
+#endif
+			});
+
+			gsc::function::add("add_debug_line", [](const gsc::function_args& args)
+			{
+#ifdef _DEBUG
+				const auto origin = args[0].as<scripting::vector>();
+				const auto end = args[1].as<scripting::vector>();
+
+				float color[4] = { 0.f, 1.f, 0.f, 1.f };
+				if (args[2].as<scripting::vector>())
+				{
+					const auto color_arg = args[2].as<scripting::vector>();
+					color[0] = color_arg.get_x();
+					color[1] = color_arg.get_y();
+					color[2] = color_arg.get_z();
+				}
+
+				const size_t node_id = add_debug_line(origin, end, color);
+				//debug_nodes_mapping.push_back(node_id);
+
+				return static_cast<int>(node_id);
+#else
+				return scripting::script_value{};
+#endif
+			});
+
+			gsc::function::add("remove_debug_node", [](const gsc::function_args& args)
+			{
+#ifdef _DEBUG
+				remove_debug_square(static_cast<size_t>(args[0].as<int>()));
+#endif
+				return scripting::script_value{};
+			});
+
+			gsc::function::add("remove_debug_line", [](const gsc::function_args& args)
+			{
+#ifdef _DEBUG
+				remove_debug_line(static_cast<size_t>(args[0].as<int>()));
+#endif
+				return scripting::script_value{};
+			});
+
+			gsc::function::add("reset_debug_items", [](const gsc::function_args& args)
+			{
+#ifdef _DEBUG
+				reset_debug_items();
+#endif
+				return scripting::script_value{};
+			});
 		}
 	};
 }

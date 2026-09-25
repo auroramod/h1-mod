@@ -19,8 +19,6 @@ namespace steam_proxy
 {
 	namespace
 	{
-		utils::binary_resource runner_file(RUNNER, "runner.exe");
-
 		bool is_disabled()
 		{
 			static const auto disabled = utils::flags::has_flag("nosteam");
@@ -38,19 +36,22 @@ namespace steam_proxy
 				return;
 			}
 
+			const auto app_id = game::environment::is_sp() ? 393080 : 393100;
+
+			SetEnvironmentVariableA("SteamAppId", utils::string::va("%lu", app_id));
+			SetEnvironmentVariableA("SteamGameId", utils::string::va("%llu", app_id & 0xFFFFFF));
+
 			this->load_client();
 			this->clean_up_on_error();
 
-#ifndef DEV_BUILD
 			try
 			{
-				this->start_mod("\xF0\x9F\x8E\xAE" " H1-Mod: "s + (game::environment::is_sp() ? "Singleplayer" : "Multiplayer"), game::environment::is_sp() ? 393080 : 393100);
+				this->start_mod("\xF0\x9F\x8E\xAE" " H1-Mod: "s + (game::environment::is_sp() ? "Singleplayer" : "Multiplayer"), app_id);
 			}
 			catch (std::exception& e)
 			{
 				printf("Steam: %s\n", e.what());
 			}
-#endif
 		}
 
 		void pre_destroy() override
@@ -121,8 +122,7 @@ namespace steam_proxy
 			this->steam_pipe_ = this->steam_client_module_.invoke<void*>("Steam_CreateSteamPipe");
 			this->global_user_ = this->steam_client_module_.invoke<void*>(
 				"Steam_ConnectToGlobalUser", this->steam_pipe_);
-			this->client_user_ = this->client_engine_.invoke<void*>(8, this->steam_pipe_, this->global_user_);
-			// GetIClientUser
+			this->client_user_ = client_engine_.invoke<void*>(8, steam_pipe_, global_user_); // GetIClientUser
 			this->client_utils_ = this->client_engine_.invoke<void*>(14, this->steam_pipe_); // GetIClientUtils
 		}
 
@@ -136,22 +136,6 @@ namespace steam_proxy
 			}
 
 			this->client_utils_.invoke<void>("SetAppIDForCurrentPipe", app_id, false);
-
-			char our_directory[MAX_PATH] = {0};
-			GetCurrentDirectoryA(sizeof(our_directory), our_directory);
-
-			const auto path = runner_file.get_extracted_file();
-			const std::string cmdline = utils::string::va("\"%s\" -proc %d", path.data(), GetCurrentProcessId());
-
-			steam::game_id game_id;
-			game_id.raw.type = 1; // k_EGameIDTypeGameMod
-			game_id.raw.app_id = app_id & 0xFFFFFF;
-
-			const auto* mod_id = "H1-Mod";
-			game_id.raw.mod_id = *reinterpret_cast<const unsigned int*>(mod_id) | 0x80000000;
-
-			this->client_user_.invoke<bool>("SpawnProcess", path.data(), cmdline.data(), our_directory,
-				&game_id.bits, title.data(), 0, 0, 0);
 		}
 
 		void clean_up_on_error()

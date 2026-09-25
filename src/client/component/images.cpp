@@ -59,9 +59,10 @@ namespace images
 				return false;
 			}
 
-			image->imageFormat = DXGI_FORMAT_R32G32B32A32_UINT;
-			image->flags = game::IMAGE_FLAG_USE_SRGB_READS;
-			*(int*)&image->picmip.platform = -1;
+			image->mapType = game::MAPTYPE_2D;
+			image->semantic = 2;
+			image->category = 3;
+			image->flags = 0;
 
 			D3D11_SUBRESOURCE_DATA data{};
 			data.SysMemPitch = raw_image->get_width() * 4;
@@ -69,12 +70,13 @@ namespace images
 			data.pSysMem = raw_image->get_buffer();
 
 			game::Image_Setup(image, raw_image->get_width(), raw_image->get_height(), image->depth, image->numElements,
-				*(int*)&image->mapType, DXGI_FORMAT_R8G8B8A8_UNORM, image->name, &data);
+				image->mapType, DXGI_FORMAT_R8G8B8A8_UNORM, image->name, &data);
 
 			return true;
 		}
 
-		void load_texture_stub(void* a1, game::GfxImage* image)
+		void load_texture_stub(game::GfxImage* image, void* a2, int* a3)
+		//void load_texture_stub(void* a1, game::GfxImage* image)
 		{
 			try
 			{
@@ -88,12 +90,13 @@ namespace images
 				console::error("Failed to load image %s: %s\n", image->name, e.what());
 			}
 
-			load_texture_hook.invoke<void>(a1, image);
+			load_texture_hook.invoke<void>(image, a2, a3);
+			//load_texture_hook.invoke<void>(a1, image);
 		}
 
 		int setup_texture_stub(game::GfxImage* image, void* a2, void* a3)
 		{
-			if (*(int*)&image->picmip == -1)
+			if (*(int*)&image->picmip == -1) // resourceSize
 			{
 				return 0;
 			}
@@ -121,7 +124,8 @@ namespace images
 			}
 
 			setup_texture_hook.create(SELECT_VALUE(0x83300_b, 0xA4AA0_b), setup_texture_stub);
-			load_texture_hook.create(SELECT_VALUE(0x55F870_b, 0x6829C0_b), load_texture_stub);
+			load_texture_hook.create(SELECT_VALUE(0x82050_b, 0xA37A0_b), load_texture_stub);
+			//load_texture_hook.create(SELECT_VALUE(0x55F870_b, 0x6829C0_b), load_texture_stub);
 		}
 	};
 }

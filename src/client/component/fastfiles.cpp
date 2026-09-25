@@ -81,30 +81,18 @@ namespace fastfiles
 			}
 
 			{
-				const std::string override_asset_name = "override/"s + name;
-
-				if (type == game::XAssetType::ASSET_TYPE_RAWFILE)
+				if (type == game::XAssetType::ASSET_TYPE_RAWFILE ||
+					type == game::XAssetType::ASSET_TYPE_STRINGTABLE ||
+					type == game::XAssetType::ASSET_TYPE_DDL ||
+					type == game::XAssetType::ASSET_TYPE_MENU)
 				{
+					const std::string override_asset_name = "override/"s + name;
 					if (result.rawfile)
 					{
 						const auto override_rawfile = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
 						if (override_rawfile.rawfile)
 						{
 							result.rawfile = override_rawfile.rawfile;
-							console::debug("using override asset for rawfile: \"%s\"\n", name);
-						}
-					}
-				}
-
-				if (type == game::XAssetType::ASSET_TYPE_STRINGTABLE)
-				{
-					if (result.stringTable)
-					{
-						const auto override_stringtable = db_find_xasset_header_hook.invoke<game::XAssetHeader>(type, override_asset_name.data(), 0);
-						if (override_stringtable.stringTable)
-						{
-							result.stringTable = override_stringtable.stringTable;
-							console::debug("using override asset for stringtable: \"%s\"\n", name);
 						}
 					}
 				}
@@ -414,45 +402,25 @@ namespace fastfiles
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), syncMode);
 		}
 
-		void load_lua_file_asset_stub(void* a1)
+		bool is_builtin_map(const char* name)
 		{
-			const auto fastfile = fastfiles::get_current_fastfile();
-			if (fastfile == "mod")
+			auto result = false;
+			for (auto map = &game::maps[0]; map->unk; ++map)
 			{
-				console::error("Mod tried to load a lua file!\n");
-				return;
-			}
-
-			const auto usermap = fastfiles::get_current_usermap();
-			if (usermap.has_value())
-			{
-				const auto& usermap_value = usermap.value();
-				const auto usermap_load = usermap_value + "_load";
-
-				if (fastfile == usermap_value || fastfile == usermap_load)
+				if (!std::strcmp(map->name, name))
 				{
-					console::error("Usermap tried to load a lua file!\n");
-					return;
+					result = true;
+					break;
 				}
 			}
 
-			utils::hook::invoke<void>(0x39CA90_b, a1);
+			return result;
 		}
 
 		void db_level_load_add_zone_stub(void* load, const char* name, const unsigned int alloc_flags,
 			const size_t size_est)
 		{
-			auto is_builtin_map = false;
-			for (auto map = &game::maps[0]; map->unk; ++map)
-			{
-				if (!std::strcmp(map->name, name))
-				{
-					is_builtin_map = true;
-					break;
-				}
-			}
-
-			if (is_builtin_map)
+			if (is_builtin_map(name))
 			{
 				game::DB_LevelLoadAddZone(load, name, alloc_flags, size_est);
 			}
@@ -1167,22 +1135,28 @@ namespace fastfiles
 			}
 		}
 
-		utils::hook::detour db_link_x_asset_entry_hook;
-		game::XAssetEntry* db_link_x_asset_entry_stub(game::XAssetType type, game::XAssetHeader* header)
+		void db_load_xassets_vlobby_stub(game::XZoneInfo* zone_info, unsigned int zone_count, game::DBSyncMode sync_mode)
 		{
-			if (!is_mod_pre_gfx)
+			if (!is_builtin_map(zone_info->name))
 			{
-				return db_link_x_asset_entry_hook.invoke<game::XAssetEntry*>(type, header);
+				set_usermap(zone_info->name);
+				zone_info->allocFlags |= game::DB_ZONE_CUSTOM;
 			}
 
-			static game::XAssetEntry entry{};
+			return game::DB_LoadXAssets(zone_info, zone_count, sync_mode);
+		}
 
-			if (type != game::ASSET_TYPE_STRINGTABLE)
+		char wait_for_vlobby_stub(const char* zone, int a2)
+		{
+			static const auto virtual_lobby_map = *reinterpret_cast<game::dvar_t**>(0x3426CA0_b);
+			if (*zone == 0 || exists(zone))
 			{
-				return &entry;
+				return utils::hook::invoke<char>(0x396610_b, zone, a2);
 			}
-
-			return db_link_x_asset_entry_hook.invoke<game::XAssetEntry*>(type, header);
+			else
+			{
+				return utils::hook::invoke<char>(0x396610_b, virtual_lobby_map->current.string, a2);
+			}
 		}
 	}
 
@@ -1324,11 +1298,6 @@ namespace fastfiles
 			db_print_default_assets = dvars::register_bool("db_printDefaultAssets",
 				false, game::DVAR_FLAG_SAVED, "Print default asset usage");
 
-			if (!game::environment::is_sp())
-			{
-				db_link_x_asset_entry_hook.create(0x396E80_b, db_link_x_asset_entry_stub);
-			}
-
 			g_dump_scripts = dvars::register_bool("g_dumpScripts", false, game::DVAR_FLAG_NONE, "Dump GSC scripts");
 
 			reallocate_asset_pools();
@@ -1392,12 +1361,10 @@ namespace fastfiles
 
 				// dont load localized zone for custom maps
 				utils::hook::call(0x394A99_b, db_level_load_add_zone_stub);
-			}
 
-			// prevent mod.ff from loading lua files
-			if (game::environment::is_mp())
-			{
-				utils::hook::call(0x3757B4_b, load_lua_file_asset_stub);
+				// handle custom vlobby maps
+				utils::hook::call(0x17F186_b, db_load_xassets_vlobby_stub);
+				utils::hook::call(0x17F1B0_b, wait_for_vlobby_stub); // dont wait for _path ff if it doesnt exist
 			}
 
 			command::add("loadzone", [](const command::params& params)

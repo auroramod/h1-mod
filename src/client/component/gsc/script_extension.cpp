@@ -562,6 +562,18 @@ namespace gsc
 
 					return scripting::script_value{};
 				});
+
+				function::add("lookupsoundlength", [](const function_args& args) // sp already has this function, implement for mp
+				{
+					if (args.size() == 1)
+					{
+						const auto sound_name = args[0].as<std::string>();
+						const auto sound_length = game::SND_SV_LookupSoundLength(sound_name.data());
+						return scripting::script_value{sound_length};
+					}
+
+					return scripting::script_value{0};
+				});
 			}
 		}
 	};

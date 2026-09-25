@@ -15,6 +15,7 @@ namespace logger
 		utils::hook::detour com_error_hook;
 
 		game::dvar_t* logger_dev = nullptr;
+		game::dvar_t* r_warnings_enable = nullptr;
 
 		void print_error(const char* msg, ...)
 		{
@@ -99,6 +100,11 @@ namespace logger
 
 		void r_warn_once_per_frame_vsnprintf_stub(char* buffer, size_t buffer_length, char* msg, va_list va)
 		{
+			if (!r_warnings_enable->current.enabled)
+			{
+				return;
+			}
+
 			vsnprintf(buffer, buffer_length, msg, va);
 			console::warn(buffer);
 		}
@@ -122,6 +128,8 @@ namespace logger
 
 					utils::hook::jump(0x498BD0_b, print_warning); // dmWarn
 					utils::hook::jump(0x498AD0_b, print); // dmLog
+
+					r_warnings_enable = dvars::register_bool("r_enableWarnings", false, game::DVAR_FLAG_SAVED, "enable rendering warnings");
 				}
 			}
 

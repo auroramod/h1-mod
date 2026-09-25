@@ -129,40 +129,145 @@ namespace ui_scripting
 			}
 		}
 
-		void load_scripts(const std::string& script_dir)
+		std::unordered_set<std::string> list_scripts(const std::string& script_dir, bool use_rawfiles)
 		{
-			if (!utils::io::directory_exists(script_dir))
+			std::unordered_set<std::string> list;
+
+			if (use_rawfiles)
 			{
-				return;
+				fastfiles::enum_assets(game::ASSET_TYPE_RAWFILE, [&](const game::XAssetHeader header)
+				{
+					std::string name = header.rawfile->name;
+					if (name.starts_with(script_dir) && name.ends_with("/__init__.lua"))
+					{
+						const auto idx = name.find("/__init__.lua");
+						const auto script = name.substr(0, idx);
+						list.insert(script);
+					}
+				}, true);
+			}
+			else
+			{
+				if (utils::io::directory_exists(script_dir))
+				{
+					const auto scripts = utils::io::list_files(script_dir);
+					for (const auto& script : scripts)
+					{
+						if (std::filesystem::is_directory(script) && utils::io::file_exists(script + "/__init__.lua"))
+						{
+							list.insert(script);
+						}
+					}
+				}
 			}
 
-			const auto scripts = utils::io::list_files(script_dir);
+			return list;
+		}
+
+		bool script_exists(const std::string& script, bool use_fs)
+		{
+			return (use_fs ? filesystem::exists(script) : utils::io::file_exists(script)) || game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, script.data());
+		}
+
+		bool read_script(const std::string& script, std::string* data, bool use_fs)
+		{
+			if (use_fs)
+			{
+				if (filesystem::read_file(script, data))
+				{
+					return true;
+				}
+			}
+			else
+			{
+				if (utils::io::read_file(script, data))
+				{
+					return true;
+				}
+			}
+
+			if (game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, script.data()))
+			{
+				const auto asset = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, script.data(), 0);
+				const auto len = game::DB_GetRawFileLen(asset.rawfile);
+				data->resize(len);
+				game::DB_GetRawBuffer(asset.rawfile, data->data(), len);
+				data->pop_back();
+				return true;
+			}
+
+			return false;
+		}
+
+		void load_scripts(const std::string& script_dir, bool use_rawfiles = false)
+		{
+			const auto scripts = list_scripts(script_dir, use_rawfiles);
 
 			for (const auto& script : scripts)
 			{
-				std::string data{};
-				if (std::filesystem::is_directory(script) && utils::io::read_file(script + "/__init__.lua", &data))
+				const auto init_file = script + "/__init__.lua";
+				std::string data;
+				if (read_script(init_file, &data, false))
 				{
 					print_loading_script(script);
-					load_script(script + "/__init__.lua", data);
+					load_script(init_file, data);
+				}
+				else
+				{
+					console::error("Failed to read script '%s'\n", init_file.data());
 				}
 			}
+		}
+
+		script_value json_to_lua(const nlohmann::json& json)
+		{
+			if (json.is_object())
+			{
+				table object;
+				for (const auto& [key, value] : json.items())
+				{
+					object[key] = json_to_lua(value);
+				}
+				return object;
+			}
+
+			if (json.is_array())
+			{
+				table array;
+				auto index = 1;
+				for (const auto& value : json.array())
+				{
+					array[index++] = json_to_lua(value);
+				}
+				return array;
+			}
+
+			if (json.is_boolean())
+			{
+				return json.get<bool>();
+			}
+
+			if (json.is_number_integer())
+			{
+				return json.get<int>();
+			}
+
+			if (json.is_number_float())
+			{
+				return json.get<float>();
+			}
+
+			if (json.is_string())
+			{
+				return json.get<std::string>();
+			}
+
+			return {};
 		}
 
 		void setup_functions()
 		{
 			const auto lua = get_globals();
-
-			lua["io"]["fileexists"] = utils::io::file_exists;
-			lua["io"]["writefile"] = utils::io::write_file;
-			lua["io"]["movefile"] = utils::io::move_file;
-			lua["io"]["filesize"] = utils::io::file_size;
-			lua["io"]["createdirectory"] = utils::io::create_directory;
-			lua["io"]["directoryexists"] = utils::io::directory_exists;
-			lua["io"]["directoryisempty"] = utils::io::directory_is_empty;
-			lua["io"]["listfiles"] = utils::io::list_files;
-			lua["io"]["removefile"] = utils::io::remove_file;
-			lua["io"]["readfile"] = static_cast<std::string(*)(const std::string&)>(utils::io::read_file);
 
 			using game = table;
 			auto game_type = game();
@@ -358,6 +463,116 @@ namespace ui_scripting
 				}
 			};
 
+			static std::unordered_set<std::string> available_languages =
+			{
+				"english",
+				"english_safe",
+				"french",
+				"german",
+				"italian",
+				"polish",
+				"portuguese",
+				"russian",
+				"spanish",
+				"simplified_chinese",
+				"traditional_chinese",
+				"japanese_partial",
+				"korean"
+			};
+
+			game_type["setlanguage"] = [](const game&, const std::string& language)
+			{
+				if (available_languages.contains(language))
+				{
+					utils::io::write_file("players2/default/language", language);
+				}
+			};
+
+			game_type["islanguageavailable"] = [](const game&, const std::string& language)
+			{
+				if (!available_languages.contains(language))
+				{
+					return false;
+				}
+
+				return utils::io::directory_exists("zone/" + language);
+			};
+
+			game_type["zoneexists"] = [](const game&, const std::string& zone)
+			{
+				if (fastfiles::exists(zone, false))
+				{
+					return true;
+				}
+
+				return utils::io::file_exists(utils::string::va("usermaps/%s/%s.ff", zone.data(), zone.data()));
+			};
+
+			auto mods_table = table();
+			lua["mods"] = mods_table;
+
+			mods_table["getloaded"] = []() -> script_value
+			{
+				const auto& mod = mods::get_mod();
+				if (mod.has_value())
+				{
+					return mod.value();
+				}
+
+				return {};
+			};
+
+			mods_table["getlist"] = mods::get_mod_list;
+			mods_table["getinfo"] = [](const std::string& mod)
+			{
+				table info_table{};
+				const auto info = mods::get_mod_info(mod);
+				const auto has_value = info.has_value();
+				info_table["isvalid"] = has_value;
+
+				if (!has_value)
+				{
+					return info_table;
+				}
+
+				const auto& map = info.value();
+				for (const auto& [key, value] : map.items())
+				{
+					info_table[key] = json_to_lua(value);
+				}
+
+				return info_table;
+			};
+
+			mods_table["load"] = [](const std::string& mod)
+			{
+				scheduler::once([=]()
+				{
+					mods::load(mod);
+				}, scheduler::main);
+			};
+
+			mods_table["unload"] = []
+			{
+				scheduler::once([]()
+				{
+					mods::unload();
+				}, scheduler::main);
+			};
+
+			auto depot_table = table();
+			lua["customdepot"] = depot_table;
+
+			depot_table["save"] = [](const std::string& data)
+			{
+				// todo
+			};
+
+			depot_table["load"] = []()
+			{
+				// todo
+			};
+
 			auto server_list_table = table();
 			lua["serverlist"] = server_list_table;
 
@@ -416,10 +631,45 @@ namespace ui_scripting
 				return lightuserdata(material);
 			};
 
+			lua["string"]["escapelocalization"] = [](const std::string& str)
+			{
+				return "\x1F"s.append(str);
+			};
+
+			lua["string"]["el"] = lua["string"]["escapelocalization"];
+
 			discord_table["reply"] = table();
 			discord_table["reply"]["yes"] = DISCORD_REPLY_YES;
 			discord_table["reply"]["ignore"] = DISCORD_REPLY_IGNORE;
 			discord_table["reply"]["no"] = DISCORD_REPLY_NO;
+
+			auto bits_table = table();
+			lua["bits"] = bits_table;
+
+			bits_table["lshift"] = [](const int a, const int b)
+			{
+				return a << b;
+			};
+
+			bits_table["rshift"] = [](const int a, const int b)
+			{
+				return a >> b;
+			};
+
+			bits_table["andbits"] = [](const int a, const int b)
+			{
+				return a & b;
+			};
+
+			bits_table["orbits"] = [](const int a, const int b)
+			{
+				return a | b;
+			};
+
+			bits_table["neg"] = [](const int a)
+			{
+				return ~a;
+			};
 		}
 
 		void start()
@@ -458,7 +708,10 @@ namespace ui_scripting
 			load_script("lui_updater", lui_updater);
 			load_script("lua_json", lua_json);
 
-			for (const auto& path : filesystem::get_search_paths_rev())
+			auto search_paths = filesystem::get_search_paths_rev();
+			search_paths.emplace_back("");
+
+			for (const auto& path : search_paths)
 			{
 				load_scripts(path + "/ui_scripts/");
 				if (game::environment::is_sp())
@@ -471,6 +724,15 @@ namespace ui_scripting
 				}
 			}
 
+			load_scripts("ui_scripts/", true);
+			if (game::environment::is_sp())
+			{
+				load_scripts("ui_scripts/sp/", true);
+			}
+			else
+			{
+				load_scripts("ui_scripts/mp/", true);
+			}
 		}
 
 		void try_start()
@@ -506,20 +768,45 @@ namespace ui_scripting
 			return hks_package_require_hook.invoke<void*>(state);
 		}
 
+		bool read_lua_as_rawfile(const std::string& name, std::string* data)
+		{
+			if (filesystem::read_file(name, data))
+			{
+				return true;
+			}
+
+			const auto asset = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, name.data(), 0);
+			if (asset.rawfile != nullptr)
+			{
+				const auto len = game::DB_GetRawFileLen(asset.rawfile);
+				data->resize(len);
+				game::DB_GetRawBuffer(asset.rawfile, data->data(), len);
+				return true;
+			}
+
+			return false;
+		}
+
 		game::XAssetHeader db_find_x_asset_header_stub(game::XAssetType type, const char* name, int allow_create_default)
 		{
 			game::XAssetHeader header{.luaFile = nullptr};
 
 			if (!is_loaded_script(globals.in_require_script))
 			{
-				return game::DB_FindXAssetHeader(type, name, allow_create_default);
+				header = game::DB_FindXAssetHeader(type, name, allow_create_default);
+				if (header.luaFile == nullptr && script_exists(name, true))
+				{
+					header.luaFile = reinterpret_cast<game::LuaFile*>(1);
+				}
+
+				return header;
 			}
 
 			const auto folder = globals.in_require_script.substr(0, globals.in_require_script.find_last_of("/\\"));
 			const std::string name_ = name;
 			const std::string target_script = folder + "/" + name_ + ".lua";
 
-			if (utils::io::file_exists(target_script))
+			if (script_exists(target_script, false))
 			{
 				globals.load_raw_script = true;
 				globals.raw_script_name = target_script;
@@ -540,11 +827,30 @@ namespace ui_scripting
 			{
 				globals.load_raw_script = false;
 				globals.loaded_scripts[globals.raw_script_name] = globals.in_require_script;
-				return load_buffer(globals.raw_script_name, utils::io::read_file(globals.raw_script_name));
+
+				std::string data;
+				if (read_script(globals.raw_script_name, &data, false))
+				{
+					return load_buffer(globals.raw_script_name, data);
+				}
+
+				return 0;
 			}
 
-			return hks_load_hook.invoke<int>(state, compiler_options, reader,
-				reader_data, chunk_name);
+			std::string name = chunk_name;
+			name = name.substr(1);
+
+			std::string data;
+			if (read_script(name, &data, true))
+			{
+				console::info("Overriding lua file %s\n", name.data());
+				return load_buffer(chunk_name, data);
+			}
+			else
+			{
+				return hks_load_hook.invoke<int>(state, compiler_options, reader,
+					reader_data, chunk_name);
+			}
 		}
 
 		std::string current_error;
@@ -589,6 +895,11 @@ namespace ui_scripting
 				game::hks::hksi_luaL_error(state, current_error.data());
 			}
 
+			return 0;
+		}
+
+		int removed_function_stub(game::hks::lua_State* /*state*/)
+		{
 			return 0;
 		}
 	}
@@ -639,6 +950,37 @@ namespace ui_scripting
 			{
 				utils::hook::invoke<void>(SELECT_VALUE(0x1052C0_b, 0x27BEC0_b));
 			});
+
+			// remove unsafe functions
+			if (game::environment::is_mp())
+			{
+				utils::hook::nop(0x22B5CA_b, 1);
+				utils::hook::jump(0x26EB60_b, 0x22B450_b);
+
+				utils::hook::jump(0x212CF0_b, removed_function_stub); // io
+				utils::hook::jump(0x213180_b, removed_function_stub); // os
+				utils::hook::jump(0x213EB0_b, removed_function_stub); // serialize
+				utils::hook::jump(0x213E80_b, removed_function_stub); // hks
+				utils::hook::jump(0x2135F0_b, removed_function_stub); // debug
+				utils::hook::nop(0x212C78_b, 5); // coroutine
+
+				// profile
+				utils::hook::jump(0x207F50_b, removed_function_stub);
+				utils::hook::jump(0x207F60_b, removed_function_stub);
+				utils::hook::jump(0x207F70_b, removed_function_stub);
+				utils::hook::jump(0x208030_b, removed_function_stub);
+
+				utils::hook::jump(0x209CC0_b, removed_function_stub);
+				utils::hook::jump(0x209930_b, removed_function_stub);
+				utils::hook::jump(0x20C920_b, removed_function_stub);
+
+				utils::hook::jump(0x214750_b, removed_function_stub);
+				utils::hook::jump(0x2131B0_b, removed_function_stub);
+				utils::hook::jump(0x213EE0_b, removed_function_stub);
+
+				utils::hook::jump(0x208C70_b, removed_function_stub);
+				utils::hook::jump(0x20F620_b, removed_function_stub);
+			}
 		}
 	};
 }

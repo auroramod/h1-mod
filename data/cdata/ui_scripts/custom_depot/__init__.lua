@@ -51,19 +51,11 @@ custom_depot.get_function = function(function_name)
 end
 
 custom_depot.functions["save_depot_data"] = function()
-    io.writefile(custom_depot.file_path, json.encode(custom_depot.data), false)
+    --customdepot.save(custom_depot.data)
 end
 
 custom_depot.functions["load_depot_data"] = function()
-    if not io.directoryexists(custom_depot.directory_path) then
-        io.createdirectory(custom_depot.directory_path)
-    end
-
-    if not io.fileexists(custom_depot.file_path) then
-        custom_depot.get_function("save_depot_data")()
-    end
-
-    custom_depot.data = json.decode(io.readfile(custom_depot.file_path))
+    return customdepot.load()
 end
 
 local function convert_currency_to_string(type)

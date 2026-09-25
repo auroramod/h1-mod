@@ -60,3 +60,6 @@
 [submodule "deps/imgui"]
 	path = deps/imgui
 	url = https://github.com/alicealys/imgui
+[submodule "deps/shader-tool"]
+	path = deps/shader-tool
+	url = https://github.com/alicealys/shader-tool.git
