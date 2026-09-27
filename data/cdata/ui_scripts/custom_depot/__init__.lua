@@ -51,11 +51,20 @@ custom_depot.get_function = function(function_name)
 end
 
 custom_depot.functions["save_depot_data"] = function()
-    --customdepot.save(custom_depot.data)
+    customdepot.save(json.encode(custom_depot.data))
 end
 
 custom_depot.functions["load_depot_data"] = function()
-    return customdepot.load()
+    local data = customdepot.load()
+    if not data then
+        custom_depot.get_function("save_depot_data")()
+        return
+    end
+
+    local success, decoded = pcall(json.decode, data)
+    if success and type(decoded) == "table" then
+        custom_depot.data = decoded
+    end
 end
 
 local function convert_currency_to_string(type)
