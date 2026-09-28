@@ -221,7 +221,7 @@ namespace pathnodes
 			a.mov(rdx, rsi);
 			a.call_aligned(check_traverse_node);
 
-			a.test(eax, eax);
+			a.test(al, al);
 			a.jnz(do_traverse);
 
 			a.popad64();
