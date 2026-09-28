@@ -235,7 +235,7 @@ namespace ui_scripting
 			{
 				table array;
 				auto index = 1;
-				for (const auto& value : json.array())
+				for (const auto& value : json)
 				{
 					array[index++] = json_to_lua(value);
 				}
