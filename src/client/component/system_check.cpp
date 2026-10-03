@@ -62,19 +62,18 @@ bool system_check::verify_hashes(const std::unordered_map<std::string, std::stri
 
 bool system_check::is_system_valid()
 {
-	// 1.04
+	// 1.15 zones (binary is 1.04)
 	static std::unordered_map<std::string, std::string> mp_zone_hashes =
 	{
-		{"patch_ui_mp.ff", "6AAFDDBC5A47136BF9BB29642EA3B64D"},
+		{"patch_ui_mp.ff", "A308EE76F49E7FF6B30B33CB37D77282"},
 	};
 
-	// 1.15
 	static std::unordered_map<std::string, std::string> sp_zone_hashes =
 	{
 		{"patch_icbm.ff", "05581F47DC7965C0272D50538A30660A"},
 	};
 
-	return game::environment::is_sp() ? verify_hashes(sp_zone_hashes) : verify_hashes(mp_zone_hashes);
+	return verify_hashes(mp_zone_hashes) && (game::environment::is_dedi() || verify_hashes(sp_zone_hashes));
 }
 
 void system_check::verify_binary_version()
