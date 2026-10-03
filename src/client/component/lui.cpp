@@ -25,6 +25,12 @@ void lui::post_unpack()
 		utils::hook::call(0x14016324B, begin_game_message_event_stub);
 		utils::hook::call(0x1400A124F, cg_entity_event_stub);
 
+		// increase to 1.15 MP frontend LUI heap
+		utils::hook::set<std::uint32_t>(0x1401751CC + 1, 0x900000);
+		utils::hook::set<std::uint32_t>(0x140176570 + 1, 0x900000);
+		utils::hook::set<std::uint32_t>(0x140176C1D + 2, 0x900000);
+		utils::hook::set<std::uint32_t>(0x140175AB5 + 7, 0x20000);
+
 		scheduler::loop([]()
 		{
 			if (event_count > 0)
