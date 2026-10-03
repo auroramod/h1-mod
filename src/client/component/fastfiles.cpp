@@ -7,6 +7,7 @@
 #include "filesystem.hpp"
 #include "imagefiles.hpp"
 #include "weapon.hpp"
+#include "fastfiles_material_sites.hpp"
 
 #include "game/dvars.hpp"
 #include "game/game.hpp"
@@ -39,6 +40,37 @@ static volatile int pending_asset_type = -1;
 
 static game::dvar_t* g_dump_scripts = nullptr;
 static game::dvar_t* db_print_default_assets = nullptr;
+
+namespace
+{
+	constexpr std::uint32_t image_pool_size = 24000;
+
+	struct image_stream_entry
+	{
+		std::uint64_t start;
+		std::uint64_t end;
+		void* file;
+	};
+
+	using stream_compare_t = bool(*)(std::uint32_t a, std::uint32_t b);
+
+	std::uint32_t* stream_loaded_bits = nullptr;
+	std::int32_t* stream_priorities = nullptr;
+	std::uint32_t* stream_ids = nullptr;
+	image_stream_entry* stream_entries = nullptr;
+
+	std::uint32_t stream_read_list[0x200]{}; // word_145331A00
+}
+
+struct fastfiles::stream_select_context
+{
+	char* stream;
+	char __pad0[8];
+	int urgent;
+	char __pad1[4];
+	void* current_file;
+	std::uint64_t position;
+};
 
 void fastfiles::post_unpack()
 {
@@ -122,6 +154,12 @@ void fastfiles::post_unpack()
 
 		// Show missing fastfiles
 		utils::hook::call(0x1402C0177, missing_content_error_stub);
+
+		// 1.15 zones stores aliased pointers in proto arrays
+		utils::hook::nop(0x14029F235, 6);
+		utils::hook::jump(0x14029F235, create_alias_ptr_stub(0x14029F23B, 0x14029F286));
+		utils::hook::nop(0x14029EF8D, 6);
+		utils::hook::jump(0x14029EF8D, create_alias_ptr_stub(0x14029EF93, 0x14029EFE8));
 	}
 
 	command::add("loadzone", [](const command::params& params)
@@ -211,8 +249,7 @@ game::XAssetEntry* fastfiles::db_link_xasset_entry_stub(const game::XAssetType t
 	const auto result = db_link_xasset_entry_hook.invoke<game::XAssetEntry*>(type, header);
 	pending_asset_type = -1;
 
-	game::XAsset asset{type, *header};
-	const auto* name = game::DB_GetXAssetName(&asset);
+	const auto* name = result && result->asset.header.data ? game::DB_GetXAssetName(&result->asset) : nullptr;
 	strncpy_s(last_asset_name, name ? name : "", _TRUNCATE);
 	last_asset_type = type;
 
@@ -314,6 +351,30 @@ void fastfiles::missing_content_error_stub()
 {
 	game::Com_Error(game::ERR_DROP, utils::string::va("Missing fastfile %s.ff",
 		get_current_fastfile().data()));
+}
+
+void* fastfiles::create_alias_ptr_stub(const size_t load_inline, const size_t skip)
+{
+	return utils::hook::assemble([=](utils::hook::assembler& a)
+	{
+		const auto null_ptr = a.newLabel();
+		const auto alias_ptr = a.newLabel();
+
+		a.mov(rax, qword_ptr(rcx));
+		a.test(rax, rax);
+		a.jz(null_ptr);
+
+		a.mov(rdx, 0xFDFDFDFFFFFFFFFF);
+		a.cmp(rax, rdx);
+		a.jnz(alias_ptr);
+		a.jmp(load_inline);
+
+		a.bind(alias_ptr);
+		a.call(0x1402C4AE0); // DB_ConvertOffsetToPointer
+
+		a.bind(null_ptr);
+		a.jmp(skip);
+	});
 }
 
 void fastfiles::skip_extra_zones_stub_mp(utils::hook::assembler& a)
@@ -1322,10 +1383,6 @@ void fastfiles::reallocate_material_pool()
 	replace_g_stream_offset(0x1402C8DFE + 6, g_stream_material, 0x20);
 	replace_g_stream_offset(0x1402C8E08 + 6, g_stream_material, 0x20);
 
-	replace_g_stream_offset(0x1404AABB0 + 3, g_stream_material);
-	replace_g_stream_offset(0x1404AF6A6 + 2, g_stream_material);
-	replace_g_stream_offset(0x14067FC5F + 6, g_stream_material);
-
 	replace_g_stream_offset(0x14028AFEE + 5, g_stream_material, 0x08);
 	replace_g_stream_offset(0x14028AFFB + 4, g_stream_material, 0x18);
 
@@ -1554,7 +1611,7 @@ void fastfiles::reallocate_material_pool()
 		} default_material_priority[pool_size]{};
 
 		utils::hook::set<uint32_t>(0x1402C8FD4 + 4, RVA(default_material_priority));
-		utils::hook::set<uint32_t>(0x1402C8FE0 + 4, RVA(default_material_priority + 0x4));
+		utils::hook::set<uint32_t>(0x1402C8FE0 + 4, RVA(default_material_priority) + 0x4);
 
 		replace_g_stream_offset(0x1402CA390 + 6, default_material_priority);
 		replace_g_stream_offset(0x1402CA402 + 6, default_material_priority);
@@ -1562,6 +1619,589 @@ void fastfiles::reallocate_material_pool()
 
 		replace_g_stream_offset(0x1402CA953 + 6, default_material_priority, 0x4);
 		replace_g_stream_offset(0x1402CA990 + 6, default_material_priority, 0x4);
+	}
+}
+
+void fastfiles::reallocate_material_bitsets()
+{
+	constexpr std::size_t old_set_size = 0x580;
+	constexpr std::size_t new_set_size = 0x800;
+
+	static std::uint32_t material_global[5][new_set_size / 4]{};
+	static std::uint32_t material_snapshot[5][new_set_size / 4]{};
+	static std::uint32_t material_flags[new_set_size / 4]{};
+
+	struct region
+	{
+		std::uintptr_t old_start;
+		std::size_t sets;
+		std::uintptr_t new_start;
+	};
+
+	const region regions[] =
+	{
+		{0x1451E9D80, 5, reinterpret_cast<std::uintptr_t>(material_global)},
+		{0x14320C850, 5, reinterpret_cast<std::uintptr_t>(material_snapshot)},
+		{0x14320FB40, 1, reinterpret_cast<std::uintptr_t>(material_flags)},
+	};
+
+	const auto map = [&](const std::uintptr_t address)
+	{
+		for (const auto& r : regions)
+		{
+			if (address >= r.old_start && address < r.old_start + r.sets * old_set_size)
+			{
+				const auto offset = address - r.old_start;
+				return r.new_start + (offset / old_set_size) * new_set_size + offset % old_set_size;
+			}
+		}
+
+		return address;
+	};
+
+	const auto set_field = [](const std::uintptr_t address, const std::int64_t value)
+	{
+		assert(value == static_cast<std::int32_t>(value));
+		utils::hook::set<std::int32_t>(address, static_cast<std::int32_t>(value));
+	};
+
+	for (const auto& site : material_bitset_sites::relocs)
+	{
+		const auto field = site.address + site.offset;
+		const auto current = *reinterpret_cast<std::int32_t*>(field);
+
+		auto origin = site.base;
+		if (site.kind == image_pool_sites::base)
+		{
+			origin = map(site.base);
+		}
+
+		const auto target = map(site.base + current);
+		set_field(field, static_cast<std::int64_t>(target) - static_cast<std::int64_t>(origin));
+	}
+
+	set_field(0x14028A5C6 + 6, static_cast<std::int64_t>(map(0x1451EB380)) - 0x10 - 0x145124100);
+
+	for (const auto& site : material_bitset_sites::constants)
+	{
+		const auto field = site.address + site.offset;
+		if (site.size == 1)
+		{
+			assert(*reinterpret_cast<std::uint8_t*>(field) == static_cast<std::uint8_t>(site.old_value));
+			utils::hook::set<std::uint8_t>(field, static_cast<std::uint8_t>(site.new_value));
+		}
+		else
+		{
+			assert(*reinterpret_cast<std::int32_t*>(field) == site.old_value);
+			utils::hook::set<std::int32_t>(field, site.new_value);
+		}
+	}
+
+	static void* asset_list[0x8000]{};
+	utils::hook::inject(0x14028A31C + 3, asset_list);
+	utils::hook::inject(0x14028A65F + 3, asset_list);
+
+	utils::hook::jump(0x1402899F0, append_xmodel_materials);
+}
+
+std::uint32_t fastfiles::append_xmodel_materials(void** list, const std::uint32_t count)
+{
+	struct model_materials
+	{
+		std::uint32_t count;
+		std::uint32_t* indices;
+		char __pad0[8];
+	};
+
+	static_assert(sizeof(model_materials) == 0x18);
+
+	const auto* model_material_table = reinterpret_cast<model_materials*>(0x1451BAB00);
+	std::uint32_t seen[0x800 / 4]{};
+	std::uint32_t added = 0;
+
+	for (auto i = 0u; i < count; ++i)
+	{
+		const auto model_index = utils::hook::invoke<std::uint32_t>(0x1402BBDB0, list[i]);
+		const auto& entry = model_material_table[model_index];
+
+		for (auto j = 0u; j < entry.count; ++j)
+		{
+			const auto material_index = static_cast<std::uint16_t>(entry.indices[j]);
+			const auto material = utils::hook::invoke<void*>(0x1402BBB00, material_index);
+			const auto bit = 0x80000000u >> (material_index & 0x1F);
+			auto& word = seen[material_index >> 5];
+
+			if (!(word & bit))
+			{
+				word |= bit;
+				list[count + added++] = material;
+			}
+		}
+	}
+
+	return added;
+}
+
+void fastfiles::reallocate_image_pool()
+{
+	constexpr auto pool_size = image_pool_size;
+
+	const auto pool = reallocate_asset_pool<game::ASSET_TYPE_IMAGE, pool_size>();
+	utils::hook::inject(0x1402BBAA2 + 3, pool + 8);
+	utils::hook::inject(0x1402BBAC0 + 3, pool + 8);
+
+	struct region
+	{
+		std::uintptr_t old_start;
+		std::size_t old_size;
+		std::size_t pre;
+		std::uintptr_t new_start;
+	};
+
+	static char a123[(0x1780 + 0x2EE00) * 2 + 0x17700 * 4 + 0x40]{};
+	static char a4[0x3A9800 * 2 + 0x40]{};
+	static char a5[0x5DC00 * 2 + 0x40]{};
+	static char b2[0xBB80 * 2 + 0x40]{};
+	static char b3[0x20 + 0x1780 * 2 + 0x140]{};
+	static char b4[0x119400 * 2 + 0x40]{};
+	static char b5[0x600 * 2 + 0x40]{};
+	static char b6[0x1770 * 2 + 0x140]{};
+	static char b7[0x5E0 * 2 + 0x40]{};
+	static char c1[0x1770 * 2 + 0x140]{};
+
+	const auto place = [](char* buffer, const std::uintptr_t old_start, const std::size_t pre = 0)
+	{
+		const auto start = reinterpret_cast<std::uintptr_t>(buffer) + pre;
+		return ((start + 0x3F) & ~std::uintptr_t(0x3F)) + (old_start & 0x3F);
+	};
+
+	const auto a1 = place(a123, 0x141C8B900);
+
+	region regions[] =
+	{
+		{0x141C8B900, 0x1780, 0, a1},
+		{0x141C8D080, 0x2EE00, 0, a1 + 0x1780 * 2},
+		{0x141CBBE80, 0x17700, 0, a1 + (0x1780 + 0x2EE00) * 2},
+		{0x141CD3688, 0x3A9800, 0, place(a4, 0x141CD3688)},
+		{0x14207CEA0, 0x5DC00, 0, place(a5, 0x14207CEA0)},
+		{0x1451EB900, 0xBB80, 0, place(b2, 0x1451EB900)},
+		{0x145216E80, 0x1780, 0x20, place(b3, 0x145216E80, 0x20)},
+		{0x145218600, 0x119400, 0, place(b4, 0x145218600)},
+		{0x145331E00, 0x600, 0, place(b5, 0x145331E00)},
+		{0x145339A80, 0x1770, 0, place(b6, 0x145339A80)},
+		{0x14534C580, 0x5E0, 0, place(b7, 0x14534C580)},
+		{0x14320E3D0, 0x1770, 0, place(c1, 0x14320E3D0)},
+	};
+
+	const auto map = [&](const std::uintptr_t address)
+	{
+		for (const auto& r : regions)
+		{
+			if (address >= r.old_start - r.pre && address < r.old_start + r.old_size)
+			{
+				return r.new_start + (address - r.old_start);
+			}
+		}
+
+		return address;
+	};
+
+	const auto set_field = [](const std::uintptr_t address, const std::int64_t value)
+	{
+		assert(value == static_cast<std::int32_t>(value));
+		utils::hook::set<std::int32_t>(address, static_cast<std::int32_t>(value));
+	};
+
+	for (const auto& site : image_pool_sites::relocs)
+	{
+		const auto field = site.address + site.offset;
+		const auto current = *reinterpret_cast<std::int32_t*>(field);
+
+		auto origin = site.base;
+		if (site.kind == image_pool_sites::base)
+		{
+			origin = map(site.base);
+		}
+
+		const auto target = map(site.base + current);
+		set_field(field, static_cast<std::int64_t>(target) - static_cast<std::int64_t>(origin));
+	}
+
+	set_field(0x14008B735 + 2, static_cast<std::int64_t>(map(0x14207CEA0)) - 0x40 - 0x141CD3680);
+	set_field(0x14008C6B7 + 3, static_cast<std::int64_t>(map(0x141CD3688)) - 8 - (0x14008C6B7 + 7));
+	set_field(0x1402C6406 + 4, static_cast<std::int64_t>(map(0x141CBBE80)) - static_cast<std::int64_t>(map(0x141C8B900)));
+
+	static char stream_files[0x18 * pool_size * 4]{};
+	utils::hook::inject(0x14028D726 + 3, stream_files); // sub_14028D720
+	utils::hook::inject(0x14028D8A8 + 3, stream_files); // DB_LoadXFile
+	assert(*reinterpret_cast<std::int32_t*>(0x14028D890 + 1) == 0xBB80);
+	utils::hook::set<std::int32_t>(0x14028D890 + 1, pool_size * 4);
+
+	for (const auto& site : image_pool_sites::constants)
+	{
+		const auto field = site.address + site.offset;
+		if (site.size == 1)
+		{
+			assert(*reinterpret_cast<std::uint8_t*>(field) == static_cast<std::uint8_t>(site.old_value));
+			utils::hook::set<std::uint8_t>(field, static_cast<std::uint8_t>(site.new_value));
+		}
+		else
+		{
+			assert(*reinterpret_cast<std::int32_t*>(field) == site.old_value);
+			utils::hook::set<std::int32_t>(field, site.new_value);
+		}
+	}
+
+	stream_loaded_bits = reinterpret_cast<std::uint32_t*>(map(0x141C8B900));
+	stream_priorities = reinterpret_cast<std::int32_t*>(map(0x141C8D080));
+	stream_ids = reinterpret_cast<std::uint32_t*>(map(0x141CBBE80));
+	stream_entries = reinterpret_cast<image_stream_entry*>(map(0x145218600));
+
+	widen_stream_id_access(0x14008AD40, 8);
+	widen_stream_id_access(0x14008BE80, 9);
+	widen_stream_id_access(0x1402C5B47, 9);
+	widen_stream_id_access(0x1402C5B77, 9);
+	widen_stream_id_access(0x1402C5E8E, 9);
+	widen_stream_id_access(0x1402C63C4, 8);
+	widen_stream_id_access(0x1402C648E, 5);
+
+	utils::hook::set<std::uint8_t>(0x1402C63F9 + 3, 0x82);
+	utils::hook::set<std::uint8_t>(0x1402C6406 + 3, 0x85);
+	utils::hook::call(0x1402C6417, sort_stream_ids);
+	utils::hook::set<std::uint8_t>(0x1402C6474 + 3, 0xBC);
+	utils::hook::set<std::uint8_t>(0x1402C6522 + 3, 4);
+
+	utils::hook::jump(0x1402C8640, select_stream_reads);
+
+	utils::hook::inject(0x1402C6E52 + 3, stream_read_list);
+	utils::hook::set(0x1402C6E60, std::array<std::uint8_t, 3>{0x8B, 0x3E, 0x90});
+	utils::hook::set<std::uint8_t>(0x1402C6E8B + 3, 4);
+}
+
+void fastfiles::widen_stream_id_access(const std::uintptr_t address, const std::size_t length)
+{
+	const auto code = reinterpret_cast<std::uint8_t*>(address);
+	std::vector<std::uint8_t> bytes{code, code + length};
+
+	auto i = 0u;
+	if (bytes[i] == 0x66)
+	{
+		bytes.erase(bytes.begin());
+	}
+
+	if ((bytes[i] & 0xF0) == 0x40)
+	{
+		++i;
+	}
+
+	if (bytes[i] == 0x0F && bytes[i + 1] == 0xB7)
+	{
+		bytes.erase(bytes.begin() + i);
+		bytes[i] = 0x8B;
+	}
+
+	assert(bytes[i] == 0x8B || bytes[i] == 0x89);
+
+	const auto modrm = bytes[i + 1];
+	if ((modrm & 7) == 4 && (modrm >> 6) != 3)
+	{
+		auto& sib = bytes[i + 2];
+		if ((sib >> 6) == 1 && ((sib >> 3) & 7) != 4)
+		{
+			sib = static_cast<std::uint8_t>((sib & 0x3F) | 0x80);
+		}
+	}
+
+	bytes.push_back(0x90);
+	assert(bytes.size() == length);
+	utils::hook::copy(address, bytes.data(), bytes.size());
+}
+
+void fastfiles::sort_stream_ids(std::uint32_t* begin, std::uint32_t* end, std::int64_t /*count*/, void* compare)
+{
+	const auto compare_fn = *static_cast<stream_compare_t*>(compare);
+	std::stable_sort(begin, end, [&](const std::uint32_t a, const std::uint32_t b)
+	{
+		return compare_fn(a, b);
+	});
+}
+
+void fastfiles::select_stream_reads(stream_select_context* context)
+{
+	const auto is_loaded = [](const std::uint32_t id)
+	{
+		return (stream_loaded_bits[id >> 5] & (0x80000000u >> (id & 0x1F))) != 0;
+	};
+
+	const auto get_entry = [](const std::uint32_t id) -> image_stream_entry&
+	{
+		return stream_entries[(id % image_pool_size) * 4 + id / image_pool_size];
+	};
+
+	const auto sort_ids = [](std::uint32_t* begin, std::uint32_t* end, const std::uintptr_t compare)
+	{
+		const auto compare_fn = reinterpret_cast<stream_compare_t>(compare);
+		std::stable_sort(begin, end, [&](const std::uint32_t a, const std::uint32_t b)
+		{
+			return compare_fn(a, b);
+		});
+	};
+
+	const auto stream = context->stream;
+	const auto current_file = context->current_file;
+	const auto position = context->position;
+	auto urgent = context->urgent != 0;
+
+	const auto count = *reinterpret_cast<std::uint32_t*>(0x141CD3580);
+	sort_ids(stream_ids, stream_ids + count, 0x1402C8C40);
+
+	if (urgent)
+	{
+		auto split = 0u;
+		while (split < count && stream_priorities[stream_ids[split]] < 0x2000)
+		{
+			++split;
+		}
+
+		*reinterpret_cast<void**>(0x14534C418) = current_file;
+		sort_ids(stream_ids, stream_ids + split, 0x1402C8B70);
+
+		auto end = split;
+		while (end < count && stream_priorities[stream_ids[end]] < 0x4000)
+		{
+			++end;
+		}
+
+		sort_ids(stream_ids + split, stream_ids + end, 0x1402C8B70);
+	}
+
+	void* selected_file = nullptr;
+	std::uint64_t best_start = 0xFFFFFFFF;
+	auto first_priority = 0x7F000;
+	auto priority_limit = 0;
+
+	for (auto i = 0u; i < count; ++i)
+	{
+		const auto id = stream_ids[i];
+		if (is_loaded(id))
+		{
+			continue;
+		}
+
+		const auto& entry = get_entry(id);
+		if (!entry.file)
+		{
+			continue;
+		}
+
+		const auto priority = stream_priorities[id];
+		if (!selected_file)
+		{
+			first_priority = priority;
+			priority_limit = priority > 0 ? priority + 0x1000 : priority;
+
+			if (urgent)
+			{
+				if (priority > 0x4000)
+				{
+					urgent = false;
+				}
+				else
+				{
+					priority_limit = std::min(priority_limit, 0x4000);
+				}
+			}
+		}
+
+		if (priority > priority_limit)
+		{
+			break;
+		}
+
+		const auto start = entry.start;
+		auto take = false;
+		if (entry.file == current_file)
+		{
+			const auto distance = std::abs(static_cast<std::int64_t>(start - position));
+			const auto best_distance = std::abs(static_cast<std::int64_t>(best_start - position));
+
+			take = selected_file != current_file || distance < best_distance ||
+				(start < position && best_start < position && best_start - start < 0x200000);
+		}
+		else
+		{
+			take = !selected_file || (selected_file == entry.file && best_start > start);
+		}
+
+		if (!take || (id >= image_pool_size && !is_loaded(id - image_pool_size)))
+		{
+			continue;
+		}
+
+		best_start = start;
+		selected_file = entry.file;
+
+		if (urgent)
+		{
+			break;
+		}
+	}
+
+	*reinterpret_cast<void**>(stream + 0x20EB08) = selected_file;
+	if (!selected_file)
+	{
+		return;
+	}
+
+	*reinterpret_cast<int*>(stream + 0x20EB14) = 0;
+
+	auto limit = 0x4000;
+	if (!urgent)
+	{
+		if (first_priority < 0)
+		{
+			limit = -1;
+		}
+		else if (first_priority == 0)
+		{
+			*reinterpret_cast<int*>(stream + 0x20EB18) = 0;
+			limit = 0;
+		}
+		else
+		{
+			*reinterpret_cast<int*>(stream + 0x20EB18) = std::max(1, first_priority - 0x1000);
+			limit = first_priority > 0x4000 ? first_priority + first_priority / 2 : std::max(priority_limit, 0x4000);
+		}
+	}
+
+	static std::uint64_t starts[std::size(stream_read_list)]{};
+	static std::uint32_t queued[std::size(stream_read_list)]{};
+	static std::uint32_t order[std::size(stream_read_list)]{};
+
+	auto added = 0u;
+	for (auto i = 0u; i < count; ++i)
+	{
+		const auto id = stream_ids[i];
+		if (is_loaded(id))
+		{
+			continue;
+		}
+
+		if (stream_priorities[id] > limit)
+		{
+			break;
+		}
+
+		const auto& entry = get_entry(id);
+		if (!entry.file || entry.file != selected_file || entry.start - best_start >= 0x280000)
+		{
+			continue;
+		}
+
+		if (id >= image_pool_size && !is_loaded(id - image_pool_size) &&
+			std::find(queued, queued + added, id - image_pool_size) == queued + added)
+		{
+			continue;
+		}
+
+		starts[added] = entry.start;
+		queued[added] = id;
+		order[added] = added;
+
+		if (++added >= std::size(stream_read_list))
+		{
+			break;
+		}
+	}
+
+	std::stable_sort(order, order + added, [](const std::uint32_t a, const std::uint32_t b)
+	{
+		return starts[a] < starts[b];
+	});
+
+	for (auto i = 0u; i < added; ++i)
+	{
+		stream_read_list[i] = queued[order[i]];
+	}
+
+	*reinterpret_cast<std::uint32_t*>(stream + 0x20EB04) = added;
+}
+
+void fastfiles::reallocate_customization()
+{
+	// packages (unk_140810CE8), 12 byte entries at 0x14135C1E0
+	constexpr std::uint32_t limits[4] = {2, 128, 128, 128};
+	constexpr auto entry_count = limits[0] + limits[1] + limits[2] + limits[3];
+	static char entries[entry_count * 12]{};
+
+	for (auto i = 0; i < 4; i++)
+	{
+		utils::hook::set<std::uint32_t>(0x140810CE8 + i * 4, limits[i]);
+	}
+
+	const auto base = reinterpret_cast<std::uintptr_t>(entries);
+	const auto rva = [&](const std::uintptr_t offset)
+	{
+		return static_cast<std::int32_t>(base + offset - 0x140000000);
+	};
+
+	for (const auto address : {0x14004E34C, 0x14004E44C, 0x14004F18C, 0x14004F22A, 0x14004F92C})
+	{
+		utils::hook::set<std::int32_t>(address, rva(0));
+	}
+
+	for (const auto address : {0x14004E39E, 0x14004E48D, 0x14004F237, 0x14004F3BF})
+	{
+		utils::hook::set<std::int32_t>(address, rva(4));
+	}
+
+	utils::hook::set<std::int32_t>(0x14004D3DA, static_cast<std::int32_t>(base - 0x14004D3DE));
+
+	// model name length checks, names are stored as pointers
+	utils::hook::set<std::uint8_t>(0x14004EA7D, 0xEB); // sub_14004E9C0
+	utils::hook::set<std::uint8_t>(0x14004F9C5, 0xEB); // sub_14004F990
+
+	// models (dword_140810CF8), network index bits (unk_140810CD8), 0x70 byte entries at 0x14135C690
+	constexpr std::uint32_t model_limits[4] = {1, 512, 4096, 512};
+	constexpr std::uint32_t model_bits[4] = {1, 9, 12, 9};
+	constexpr auto model_count = model_limits[0] + model_limits[1] + model_limits[2] + model_limits[3];
+	constexpr std::uint32_t model_count_bits = 13;
+	static_assert(model_count <= (1u << model_count_bits));
+	static char models[model_count * 0x70]{};
+
+	for (auto i = 0; i < 4; i++)
+	{
+		utils::hook::set<std::uint32_t>(0x140810CF8 + i * 4, model_limits[i]);
+		utils::hook::set<std::uint32_t>(0x140810CD8 + i * 4, model_bits[i]);
+	}
+
+	utils::hook::set<std::uint32_t>(0x14004DCA1, model_count);
+	utils::hook::set<std::uint32_t>(0x14041B8C4, model_count_bits);
+
+	const auto models_base = reinterpret_cast<std::uintptr_t>(models);
+	const auto lea_model = [&](const std::uintptr_t address, const std::uintptr_t offset)
+	{
+		utils::hook::set<std::int32_t>(address + 3, static_cast<std::int32_t>(models_base + offset - (address + 7)));
+	};
+
+	for (const auto address : {0x14004D066, 0x14004D11B, 0x14004DCF1, 0x14004DDAE, 0x14004DFA8, 0x14004E008,
+		0x14004E09E, 0x14004E56B, 0x14004E5AA, 0x14004EA43, 0x14004EDC9, 0x14004F560})
+	{
+		lea_model(address, 0);
+	}
+
+	lea_model(0x14004DEBA, 0x50);
+	lea_model(0x14004F62F, 0x32);
+
+	const std::pair<std::uintptr_t, std::uintptr_t> model_rva_sites[] =
+	{
+		{0x14004DE2A, 0x0}, {0x14004E42C, 0x30}, {0x14004E546, 0x33}, {0x14004DEA2, 0x48},
+		{0x14004DD7E, 0x58}, {0x14004DD54, 0x68}, {0x14004DE77, 0x68}, {0x14004DF74, 0x68},
+	};
+
+	for (const auto& [address, offset] : model_rva_sites)
+	{
+		utils::hook::set<std::int32_t>(address, static_cast<std::int32_t>(models_base + offset - 0x140000000));
 	}
 }
 
@@ -1576,6 +2216,9 @@ void fastfiles::reallocate_asset_pools()
 	reallocate_attachment_and_weapon();
 	reallocate_sound_pool();
 	reallocate_material_pool();
+	reallocate_material_bitsets();
+	reallocate_image_pool();
+	reallocate_customization();
 	reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIMPARTS, 2>();
 	reallocate_asset_pool_multiplier<game::ASSET_TYPE_TTF, 2>();
 	reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOADED_SOUND, 2>();

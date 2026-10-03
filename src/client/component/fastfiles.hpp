@@ -31,6 +31,8 @@ public:
 	static bool is_stock_map(const std::string& name);
 
 private:
+	struct stream_select_context;
+
 	static void db_init_load_x_file_stub(game::DBFile* file, std::uint64_t offset);
 	static void db_try_load_x_file_internal(const char* zone_name, int flags);
 	static game::XAssetEntry* db_link_xasset_entry_stub(game::XAssetType type, game::XAssetHeader* header);
@@ -38,6 +40,7 @@ private:
 	static game::XAssetHeader db_find_xasset_header_stub(game::XAssetType type, const char* name, int allow_create_default);
 	static void db_read_stream_file_stub(int a1, int a2);
 	static void missing_content_error_stub();
+	static void* create_alias_ptr_stub(size_t load_inline, size_t skip);
 	static void skip_extra_zones_stub_mp(utils::hook::assembler& a);
 	static void skip_extra_zones_stub_sp(utils::hook::assembler& a);
 	static bool try_load_zone(std::string name, bool localized, bool game = false);
@@ -81,5 +84,12 @@ private:
 	static void reallocate_attachment_and_weapon();
 	static void reallocate_sound_pool();
 	static void reallocate_material_pool();
+	static void reallocate_material_bitsets();
+	static std::uint32_t append_xmodel_materials(void** list, std::uint32_t count);
+	static void reallocate_image_pool();
+	static void reallocate_customization();
+	static void widen_stream_id_access(std::uintptr_t address, std::size_t length);
+	static void sort_stream_ids(std::uint32_t* begin, std::uint32_t* end, std::int64_t count, void* compare);
+	static void select_stream_reads(stream_select_context* context);
 	static void reallocate_asset_pools();
 };
