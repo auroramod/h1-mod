@@ -60,6 +60,39 @@ uint64_t auth::get_guid()
 	return get_key().get_hash();
 }
 
+std::string auth::get_player_suffix()
+{
+	static const auto suffix = []() -> std::string
+	{
+		// other player stuff starts at 2, not 1
+		for (auto i = 1; i <= 8; ++i)
+		{
+			const auto mutex = CreateMutexA(nullptr, FALSE, utils::string::va("h1-mod-player-%d", i));
+			if (!mutex)
+			{
+				break;
+			}
+
+			if (GetLastError() != ERROR_ALREADY_EXISTS)
+			{
+				return i == 1 ? std::string{} : utils::string::va("-%d", i);
+			}
+
+			ReleaseMutex(mutex);
+			CloseHandle(mutex);
+		}
+
+		return {};
+	}();
+
+	return suffix;
+}
+
+std::string auth::get_key_path(const char* name)
+{
+	return (utils::properties::get_appdata_path() / utils::string::va("h1-%s%s.key", name, get_player_suffix().data())).generic_string();
+}
+
 std::string auth::get_hdd_serial()
 {
 	DWORD serial{};
@@ -111,6 +144,7 @@ std::string auth::get_protected_data()
 std::string auth::get_key_entropy()
 {
 	std::string entropy{};
+	entropy.append(get_player_suffix());
 	entropy.append(utils::smbios::get_uuid());
 	entropy.append(get_hw_profile_guid());
 	entropy.append(get_protected_data());
@@ -129,7 +163,7 @@ bool auth::load_key(utils::cryptography::ecc::key& key)
 {
 	std::string data{};
 
-	auto key_path = (utils::properties::get_appdata_path() / "h1-private.key").generic_string();
+	auto key_path = get_key_path("private");
 	if (!utils::io::read_file(key_path, &data))
 	{
 		return false;
@@ -153,7 +187,7 @@ utils::cryptography::ecc::key auth::generate_key()
 		throw std::runtime_error("Failed to generate cryptographic key!");
 	}
 
-	auto key_path = (utils::properties::get_appdata_path() / "h1-private.key").generic_string();
+	auto key_path = get_key_path("private");
 	if (!utils::io::write_file(key_path, key.serialize()))
 	{
 		console::error("Failed to write cryptographic key!\n");
@@ -179,7 +213,7 @@ utils::cryptography::ecc::key auth::get_key_internal()
 {
 	auto key = load_or_generate_key();
 
-	auto key_path = (utils::properties::get_appdata_path() / "h1-public.key").generic_string();
+	auto key_path = get_key_path("public");
 	if (!utils::io::write_file(key_path, key.get_public_key()))
 	{
 		console::error("Failed to write public key!\n");

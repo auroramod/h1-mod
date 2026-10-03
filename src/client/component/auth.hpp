@@ -13,6 +13,8 @@ public:
 	static uint64_t get_guid();
 
 private:
+	static std::string get_player_suffix();
+	static std::string get_key_path(const char* name);
 	static std::string get_hdd_serial();
 	static std::string get_hw_profile_guid();
 	static std::string get_protected_data();
