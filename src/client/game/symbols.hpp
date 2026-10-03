@@ -343,6 +343,7 @@ namespace game
 
 	WEAK symbol<const char*(const char*)> UI_GetMapDisplayName{0x0, 0x140408CC0};
 	WEAK symbol<const char*(const char*)> UI_GetGameTypeDisplayName{0x0, 0x1404086A0};
+	WEAK symbol<const char*(const char* key, const char* mapname)> UI_GetMapCustomField{0x0, 0x140408AD0};
 	WEAK symbol<void(unsigned int localClientNum, const char** args)> UI_RunMenuScript{0x1403F3AA0, 0x1404CFE60};
 	WEAK symbol<int(const char* text, int maxChars, Font_s* font, float scale)> UI_TextWidth{0x1403F5D90, 0x0};
 	WEAK symbol<void(void* dc, void* menuList, int close)> UI_AddMenuList{0x0, 0x1404E6E30};

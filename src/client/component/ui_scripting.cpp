@@ -51,6 +51,7 @@ namespace ui_scripting
 		const auto lui_common = utils::nt::load_resource(LUI_COMMON);
 		const auto lui_updater = utils::nt::load_resource(LUI_UPDATER);
 		const auto lua_json = utils::nt::load_resource(LUA_JSON);
+		const auto lui_compat_mp = utils::nt::load_resource(LUI_COMPAT_MP);
 
 		struct globals_t
 		{
@@ -679,11 +680,18 @@ namespace ui_scripting
 				return ~a;
 			};
 
-			if (game::environment::is_mp())
+			if (::game::environment::is_mp() && lua["Lobby"].is<table>())
 			{
-				lua["Engine"]["GetDisplayDriverMeetsMinVer"] = []()
+				lua["Lobby"]["GetMapCustomField"] = [](const std::string& key) -> std::string
 				{
-					return true;
+					const auto* mapname = ::game::Dvar_FindVar("ui_mapname");
+					if (!mapname || !mapname->current.string)
+					{
+						return {};
+					}
+
+					const auto* value = ::game::UI_GetMapCustomField(key.data(), mapname->current.string);
+					return value ? value : "";
 				};
 			}
 		}
@@ -723,6 +731,11 @@ namespace ui_scripting
 			load_script("lui_common", lui_common);
 			load_script("lui_updater", lui_updater);
 			load_script("lua_json", lua_json);
+
+			if (game::environment::is_mp())
+			{
+				load_script("lui_compat_mp", lui_compat_mp);
+			}
 
 			auto search_paths = filesystem::get_search_paths_rev();
 			search_paths.emplace_back("");

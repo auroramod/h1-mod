@@ -21,3 +21,5 @@
 #define LUA_JSON              311
 
 #define DVAR_LIST			  312
+
+#define LUI_COMPAT_MP         313

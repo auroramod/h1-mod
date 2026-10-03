@@ -114,6 +114,7 @@ ICON_IMAGE            RCDATA "resources/icon.png"
 
 LUI_COMMON            RCDATA "resources/ui_scripts/common.lua"
 LUI_UPDATER           RCDATA "resources/ui_scripts/updater.lua"
+LUI_COMPAT_MP         RCDATA "resources/ui_scripts/compat_mp.lua"
 
 LUA_JSON              RCDATA "resources/json.lua"
 

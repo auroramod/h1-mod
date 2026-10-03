@@ -30,6 +30,8 @@ custom_depot = {
             bonus = 0 -- Bonus
         },
         items = {},
+        quantities = {},
+        supply_drops = {},
         reward_splashes = {},
         has_accepted_mod_eula = false,
         has_seen_mod_eula = false
@@ -63,6 +65,18 @@ custom_depot.functions["load_depot_data"] = function()
 
     local success, decoded = pcall(json.decode, data)
     if success and type(decoded) == "table" then
+        for k, v in pairs(custom_depot.data) do
+            if decoded[k] == nil then
+                decoded[k] = v
+            end
+        end
+
+        for k, v in pairs(custom_depot.data.currencies) do
+            if decoded.currencies[k] == nil then
+                decoded.currencies[k] = v
+            end
+        end
+
         custom_depot.data = decoded
     end
 end
@@ -82,20 +96,28 @@ local function convert_currency_to_string(type)
 end
 
 custom_depot.functions["add_currency"] = function(currency_type, amount)
-    local type = convert_currency_to_string(currency_type)
-    custom_depot.data.currencies[type] = custom_depot.data.currencies[type] + amount
+    local type = convert_currency_to_string(tonumber(currency_type))
+    if not type then
+        return
+    end
+
+    custom_depot.data.currencies[type] = (custom_depot.data.currencies[type] or 0) + (tonumber(amount) or 0)
 end
 
 custom_depot.functions["remove_currency"] = function(currency_type, amount)
-    local type = convert_currency_to_string(currency_type)
-    custom_depot.data.currencies[type] = custom_depot.data.currencies[type] - amount
+    local type = convert_currency_to_string(tonumber(currency_type))
+    if not type then
+        return
+    end
+
+    custom_depot.data.currencies[type] = math.max(0, (custom_depot.data.currencies[type] or 0) - (tonumber(amount) or 0))
 end
 
 custom_depot.functions["get_currency"] = function(currency_type)
-    local type = convert_currency_to_string(currency_type)
+    local type = convert_currency_to_string(tonumber(currency_type))
 
-    if not currency_type or not custom_depot.data.currencies[type] then
-        return nil
+    if not type or not custom_depot.data.currencies[type] then
+        return 0
     end
 
     return custom_depot.data.currencies[type]
@@ -107,6 +129,24 @@ end
 
 custom_depot.functions["has_item"] = function(item)
     return custom_depot.data.items[item] ~= nil
+end
+
+custom_depot.functions["get_quantity"] = function(guid)
+    return custom_depot.data.quantities[tostring(guid)] or 0
+end
+
+custom_depot.functions["add_quantity"] = function(guid, amount)
+    local key = tostring(guid)
+    custom_depot.data.quantities[key] = math.max(0, (custom_depot.data.quantities[key] or 0) + amount)
+end
+
+custom_depot.functions["get_supply_drop_count"] = function(guid)
+    return custom_depot.data.supply_drops[tostring(guid)] or 0
+end
+
+custom_depot.functions["add_supply_drops"] = function(guid, amount)
+    local key = tostring(guid)
+    custom_depot.data.supply_drops[key] = math.max(0, (custom_depot.data.supply_drops[key] or 0) + amount)
 end
 
 custom_depot.functions["add_reward_splash"] = function(item, value)
@@ -139,7 +179,12 @@ custom_depot.get_function("load_depot_data")()
 
 if Engine.InFrontend() then
     require("mod_eula")
-    require("depot_override")
+
+    if LUI.MPDepot and LUI.MPDepotBase then
+        require("depot_override")
+    else
+        print("[custom_depot] depot menus not loaded")
+    end
 end
 
 if not Engine.InFrontend() then
