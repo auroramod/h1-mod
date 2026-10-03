@@ -3988,61 +3988,6 @@ namespace game
 		WEAP_HYBRID_TOGGLE = MAX_WP_ANIMATIONS + 9
 	};
   
-	struct gameTypeScript_t
-	{
-		char pszScript[64];
-		char pszName[64];
-		int bTeamBased;
-	};
-
-	struct scr_data_t_gametype
-	{
-		int main;					// 0 (52)
-		int startupgametype;		// 4 (56)
-		int playerconnect;			// 8 (60)
-		int playerdisconnect;		// 12 (64)
-		int playerdamage;			// 16 (68)
-		int playerkilled;			// 20 (72)
-		int entityOutOfWorld;		// 24 (76)
-		int playerGrenadeSuicide;	// 28 (80)
-		int bulletHitEntity;		// 32 (84)
-		int vehicleDamage;			// 36 (88)
-		int entityDamage;			// 40 (92)
-		int votecalled;				// 44 (unused?)
-		int playervote;				// 48 (^)
-		int codeendgame;			// 52 (104)
-		int playerlaststand;		// 56 (108)
-		int playermigrated;			// 60 (112)
-		int hostmigration;			// 64 (116)
-		volatile int updateGameTypeList; // 68 (120)
-		int iNumGameTypes;			// 72 (124)
-		gameTypeScript_t list[32];	// 76 (128) (size = 0x1080)
-	};
-
-	// matched with S1 PDB
-	struct scr_data_t
-	{
-		uint32_t levelscript;           // 0
-		uint32_t gametypescript;		// 4
-		uint32_t botMain;				// 8
-		uint32_t botGameTypeMain;		// 12
-		uint32_t agentMain;				// 16
-		uint32_t agentGameTypeMain;		// 20
-		uint32_t agentAdded;			// 24
-		uint32_t agentDamaged;			// 28
-		uint32_t agentKilled;			// 32
-		uint32_t leaderDialog;			// 36
-
-		uint32_t scriptedAgentOnEnterState; // 40
-		uint32_t scriptedAgentOnDeactivate;	// 44
-
-		uint32_t partymembers;			// 48
-		scr_data_t_gametype gametype;	// 52
-		uint32_t delete_;				// 4352
-		uint32_t initstructs;			// 4356
-		uint32_t createstruct;			// 4360
-	};
-
 	struct outline_data_t
 	{
 		int refCount;

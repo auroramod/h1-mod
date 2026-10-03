@@ -10,5 +10,4 @@ public:
 
 private:
 	static const char* seh_string_ed_get_string(const char* reference);
-	static const char* seh_string_ed_get_string_mp(const char* reference);
 };

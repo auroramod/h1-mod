@@ -54,16 +54,8 @@ void script_loading::post_unpack()
 	utils::hook::call(SELECT_VALUE(0x1403C7217, 0x1404417F7), find_script);
 	utils::hook::call(SELECT_VALUE(0x1403C7227, 0x140441807), db_is_x_asset_default);
 
-	if (game::environment::is_sp())
-	{
-		// GScr_LoadScripts: initial loading of scripts
-		utils::hook::call(0x1402BA152, load_gametype_script_stub);
-	}
-	else
-	{
-		// GScr_LoadScripts: reimplemented to use the 1.15 script paths (+ our custom scripts)
-		utils::hook::call(0x140343651, gscr_load_scripts_stub);
-	}
+	// GScr_LoadScripts: initial loading of scripts
+	utils::hook::call(SELECT_VALUE(0x1402BA152, 0x14037C945), load_gametype_script_stub);
 
 	// main is called from scripting.cpp
 	// init is called from scripting.cpp
@@ -383,7 +375,7 @@ int script_loading::db_is_x_asset_default(game::XAssetType type, const char* nam
 
 void script_loading::load_gametype_script_stub(void* a1, void* a2)
 {
-	utils::hook::invoke<void>(0x1402B9DA0, a1, a2);
+	utils::hook::invoke<void>(SELECT_VALUE(0x1402B9DA0, 0x14037C220), a1, a2);
 	load_custom_scripts();
 }
 
@@ -439,132 +431,6 @@ void script_loading::scr_end_load_scripts_stub()
 	gsc_ctx->cleanup();
 
 	scr_end_load_scripts_hook.invoke<void>();
-}
-
-unsigned int script_loading::load_and_label_script(const char* filename, const char* label)
-{
-	if (!game::Scr_LoadScript(filename))
-	{
-		game::Com_Error(game::ERR_DROP, "Could not find script '%s'", filename);
-	}
-
-	const auto func = game::Scr_GetFunctionHandle(filename, gsc_ctx->token_id(label));
-	if (!func)
-	{
-		game::Com_Error(game::ERR_DROP, "Could not label '%s' in script '%s'", label, filename);
-	}
-
-	return func;
-}
-
-void script_loading::gscr_load_scripts_stub()
-{
-	scr_begin_load_scripts_stub();
-
-	game::mp::g_scr_data->delete_ = load_and_label_script("scripts/code/delete", "main");
-	game::mp::g_scr_data->initstructs = load_and_label_script("scripts/code/struct", "initstructs");
-	game::mp::g_scr_data->createstruct = load_and_label_script("scripts/code/struct", "createstruct");
-
-	load_gametype_script();
-	load_custom_scripts();
-	load_level_script();
-
-	if (game::mp::BG_BotFastFileEnabled())
-	{
-		load_bot_scripts();
-	}
-
-	if (game::mp::BG_AgentSystemEnabled())
-	{
-		load_agent_scripts();
-	}
-
-	game::mp::GScr_PostLoadScripts();
-	scr_end_load_scripts_stub();
-}
-
-const char* script_loading::get_gametype()
-{
-	static auto* const g_gametype = game::Dvar_FindVar("g_gametype");
-
-	const char* gametype = (g_gametype ? g_gametype->current.string : "");
-	if (game::VirtualLobby_Loaded() || game::Com_InFrontend())
-	{
-		gametype = "vlobby";
-	}
-
-	return gametype;
-}
-
-void script_loading::load_gametype_script()
-{
-	char buffer[64]{};
-
-	const auto gametype = get_gametype();
-	sprintf_s(buffer, sizeof(buffer), "scripts/gametypes/%s", gametype);
-
-	auto& data = *game::mp::g_scr_data;
-	data.gametype.main = load_and_label_script(buffer, "main");
-	data.gametype.startupgametype = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_startgametype");
-	data.gametype.playerconnect = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_playerconnect");
-	data.gametype.playerdisconnect = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_playerdisconnect");
-	data.gametype.playerdamage = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_playerdamage");
-	data.gametype.playerkilled = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_playerkilled");
-	data.gametype.entityOutOfWorld = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_entityoutofworld");
-	data.gametype.playerGrenadeSuicide = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_playergrenadesuicide");
-	data.gametype.bulletHitEntity = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_bullethitentity");
-	data.gametype.vehicleDamage = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_vehicledamage");
-	data.gametype.entityDamage = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_entitydamage");
-	data.gametype.codeendgame = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_codeendgame");
-	data.gametype.playerlaststand = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_playerlaststand");
-	data.gametype.playermigrated = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_playermigrated");
-	data.gametype.hostmigration = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_hostmigration");
-	data.partymembers = load_and_label_script("scripts/gametypes/_callbacksetup", "codecallback_partymembers");
-}
-
-void script_loading::load_level_script()
-{
-	if (const auto mapname = game::Dvar_FindVar("mapname"))
-	{
-		char level_script[64]{};
-
-		constexpr int max_buffer_length = sizeof(level_script);
-		if (const auto result = sprintf_s(level_script, max_buffer_length, "scripts/maps/%s/%s", mapname->current.string, mapname->current.string);
-			result < max_buffer_length)
-		{
-			game::mp::g_scr_data->levelscript = load_and_label_script(level_script, "main");
-		}
-	}
-}
-
-void script_loading::load_bot_scripts()
-{
-	char buffer[64]{};
-
-	const auto gametype = get_gametype();
-	sprintf_s(buffer, sizeof(buffer), "scripts/mp/bots/_bots_gametype_%s", gametype);
-
-	auto& data = *game::mp::g_scr_data;
-	data.botGameTypeMain = load_and_label_script(buffer, "main");
-	data.botMain = load_and_label_script("scripts/mp/bots/_bots", "main");
-	data.leaderDialog = load_and_label_script("scripts/mp/bots/_bots", "codecallback_leaderdialog");
-}
-
-void script_loading::load_agent_scripts()
-{
-	char buffer[64]{};
-
-	const auto gametype = get_gametype();
-	sprintf_s(buffer, sizeof(buffer), "scripts/common/agents/_agents_gametype_%s", gametype);
-
-	auto& data = *game::mp::g_scr_data;
-	data.agentGameTypeMain = load_and_label_script(buffer, "main");
-	data.agentMain = load_and_label_script("scripts/common/agents/_agents", "main");
-	data.agentAdded = load_and_label_script("scripts/common/agents/_agent_common", "codecallback_agentadded");
-	data.agentDamaged = load_and_label_script("scripts/common/agents/_agent_common", "codecallback_agentdamaged");
-	data.agentKilled = load_and_label_script("scripts/common/agents/_agent_common", "codecallback_agentkilled");
-	data.scriptedAgentOnEnterState = load_and_label_script("scripts/common/agents/scripted_agent_utility", "onenterstate");
-	data.scriptedAgentOnDeactivate = load_and_label_script("scripts/common/agents/scripted_agent_utility", "ondeactivate");
 }
 
 REGISTER_COMPONENT(script_loading)

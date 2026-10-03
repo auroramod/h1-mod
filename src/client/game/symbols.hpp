@@ -17,10 +17,6 @@ namespace game
 		
 		WEAK symbol<const char*(dvar_t* dvar, dvar_value* value)> Dvar_ValueToString{0x0, 0x1404FE660};
 		WEAK symbol<char*(size_t size, size_t alignment)> Hunk_AllocAlignInternal{0x0, 0x1404F5220};
-
-		WEAK symbol<void()> GScr_PostLoadScripts{0x0, 0x140370DB0};
-		WEAK symbol<bool()> BG_BotFastFileEnabled{0x0, 0x1401D92A0};
-		WEAK symbol<bool()> BG_AgentSystemEnabled{0x0, 0x1401D91E0};
 	}
 
 	namespace sp
@@ -460,8 +456,6 @@ namespace game
 
 		WEAK symbol<bool> virtualLobby_loaded{0x0, 0x142D077FD};
 
-		WEAK symbol<scr_data_t> g_scr_data{0x0, 0x14650E7C0};
-		WEAK symbol<char> s_singleCharUTF8Rep{0x0, 0x141211750};
 
 		WEAK symbol<client_state_t*> client_state{0x0, 0x142D0BCB0};
 		WEAK symbol<connect_state_t*> connect_state{0x0, 0x14318C650};

@@ -34,11 +34,4 @@ private:
 	static void scr_begin_load_scripts_stub();
 	static void scr_end_load_scripts_stub();
 
-	static unsigned int load_and_label_script(const char* filename, const char* label);
-	static void gscr_load_scripts_stub();
-	static const char* get_gametype();
-	static void load_gametype_script();
-	static void load_level_script();
-	static void load_bot_scripts();
-	static void load_agent_scripts();
 };
