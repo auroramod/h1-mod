@@ -3,6 +3,7 @@
 #include "exception.hpp"
 
 #include "callstack.hpp"
+#include "fastfiles.hpp"
 #include "scheduler.hpp"
 #include "system_check.hpp"
 #include "version.hpp"
@@ -203,6 +204,7 @@ std::string exception_component::generate_crash_info(const LPEXCEPTION_POINTERS 
 	line(utils::string::va("Base: 0x%llX", game::base_address));
 	line(utils::string::va("Main Module: %s [0x%llX]", utils::nt::library{}.get_name().data(), utils::nt::library{}.get_ptr()));
 	line(utils::string::va("Thread ID: %d (%s)", GetCurrentThreadId(), is_game_thread() ? "Main Thread" : "Auxiliary Thread"));
+	line("Fastfile: " + fastfiles::get_load_state());
 
 	if (exceptioninfo->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
 	{

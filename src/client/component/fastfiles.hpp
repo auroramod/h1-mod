@@ -18,6 +18,7 @@ public:
 
 	static bool exists(const std::string& zone, bool ignore_usermap = false);
 	static std::string get_current_fastfile();
+	static std::string get_load_state();
 	static void enum_assets(game::XAssetType type, const std::function<void(game::XAssetHeader)>& callback, bool include_override);
 	static void enum_asset_entries(game::XAssetType type, const std::function<void(game::XAssetEntry*)>& callback, bool include_override);
 	static void close_fastfile_handles();
@@ -32,6 +33,7 @@ public:
 private:
 	static void db_init_load_x_file_stub(game::DBFile* file, std::uint64_t offset);
 	static void db_try_load_x_file_internal(const char* zone_name, int flags);
+	static game::XAssetEntry* db_link_xasset_entry_stub(game::XAssetType type, game::XAssetHeader* header);
 	static void dump_gsc_script(const std::string& name, game::XAssetHeader header);
 	static game::XAssetHeader db_find_xasset_header_stub(game::XAssetType type, const char* name, int allow_create_default);
 	static void db_read_stream_file_stub(int a1, int a2);

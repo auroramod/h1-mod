@@ -30,6 +30,12 @@ static utils::hook::detour sys_createfile_hook;
 static utils::hook::detour db_file_exists_hook;
 static utils::hook::detour image_file_decrypt_value_hook;
 static utils::hook::detour db_unload_x_zones_hook;
+static utils::hook::detour db_link_xasset_entry_hook;
+
+static char last_zone_name[256]{};
+static char last_asset_name[256]{};
+static volatile int last_asset_type = -1;
+static volatile int pending_asset_type = -1;
 
 static game::dvar_t* g_dump_scripts = nullptr;
 static game::dvar_t* db_print_default_assets = nullptr;
@@ -40,6 +46,12 @@ void fastfiles::post_unpack()
 	db_init_load_x_file_hook.create(SELECT_VALUE(0x1401C46E0, 0x14028DE30), db_init_load_x_file_stub); // DB_InitLoadXFile
 	db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
 	db_unload_x_zones_hook.create(SELECT_VALUE(0x1401F6040, 0x1402C0BC0), db_unload_x_zones_stub); // DB_UnloadXZones
+
+	if (!game::environment::is_sp())
+	{
+		// track the last linked asset for crash dumps
+		db_link_xasset_entry_hook.create(0x1402BC920, db_link_xasset_entry_stub); // DB_LinkXAssetEntry
+	}
 
 	db_print_default_assets = dvars::register_bool("db_printDefaultAssets",
 		false, game::DVAR_ARCHIVE, "Print default asset usage");
@@ -188,7 +200,34 @@ void fastfiles::db_try_load_x_file_internal(const char* zone_name, const int fla
 		fastfile = zone_name;
 	});
 
+	strncpy_s(last_zone_name, zone_name, _TRUNCATE);
+
 	db_try_load_x_file_internal_hook.invoke<void>(zone_name, flags);
+}
+
+game::XAssetEntry* fastfiles::db_link_xasset_entry_stub(const game::XAssetType type, game::XAssetHeader* header)
+{
+	pending_asset_type = type;
+	const auto result = db_link_xasset_entry_hook.invoke<game::XAssetEntry*>(type, header);
+	pending_asset_type = -1;
+
+	game::XAsset asset{type, *header};
+	const auto* name = game::DB_GetXAssetName(&asset);
+	strncpy_s(last_asset_name, name ? name : "", _TRUNCATE);
+	last_asset_type = type;
+
+	return result;
+}
+
+std::string fastfiles::get_load_state()
+{
+	const auto type_name = [](const int type)
+	{
+		return type >= 0 && type < game::ASSET_TYPE_COUNT ? game::g_assetNames[type] : "none";
+	};
+
+	return utils::string::va("zone: %s, last asset: %s (%s), linking: %s",
+		last_zone_name, last_asset_name, type_name(last_asset_type), type_name(pending_asset_type));
 }
 
 void fastfiles::dump_gsc_script(const std::string& name, game::XAssetHeader header)
