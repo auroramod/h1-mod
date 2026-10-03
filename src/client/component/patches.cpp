@@ -113,6 +113,10 @@ void patches::patch_mp()
 	// fix vid_restart crash
 	utils::hook::set<uint8_t>(0x140255AE0, 0xC3);
 
+	const std::uint8_t anim_items_limit[] = {0xC7, 0x07, 0x45, 0x00, 0x00, 0x00};
+	utils::hook::copy(0x1401CB6F0, anim_items_limit, sizeof(anim_items_limit));
+	utils::hook::nop(0x1401CB6F6, 11);
+
 	// Use name dvar
 	utils::hook::jump(0x14050FF90, live_get_local_client_name);
 
