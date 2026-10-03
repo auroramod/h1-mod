@@ -21,6 +21,8 @@ private:
 	static size_t get_reset_state_stub();
 	static std::string get_timestamp();
 	static std::string generate_crash_info(LPEXCEPTION_POINTERS exceptioninfo);
+	static const char* get_exception_string(DWORD exception);
+	static std::string get_memory_registers(LPEXCEPTION_POINTERS exceptioninfo);
 	static void write_minidump(LPEXCEPTION_POINTERS exceptioninfo);
 	static bool is_harmless_error(LPEXCEPTION_POINTERS exceptioninfo);
 	static LONG WINAPI exception_filter(LPEXCEPTION_POINTERS exceptioninfo);

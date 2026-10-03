@@ -2,6 +2,7 @@
 #include "loader/component_loader.hpp"
 #include "exception.hpp"
 
+#include "callstack.hpp"
 #include "scheduler.hpp"
 #include "system_check.hpp"
 #include "version.hpp"
@@ -11,9 +12,9 @@
 
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
+#include <utils/nt.hpp>
 #include <utils/string.hpp>
 #include <utils/thread.hpp>
-#include <utils/compression.hpp>
 
 #include <exception/minidump.hpp>
 
@@ -193,9 +194,23 @@ std::string exception_component::generate_crash_info(const LPEXCEPTION_POINTERS 
 	line("Environment: "s + game::environment::get_string());
 	line("Timestamp: "s + get_timestamp());
 	line("Clean game: "s + (system_check::is_valid() ? "Yes" : "No"));
-	line(utils::string::va("Exception: 0x%08X", exceptioninfo->ExceptionRecord->ExceptionCode));
-	line(utils::string::va("Address: 0x%llX", exceptioninfo->ExceptionRecord->ExceptionAddress));
+	line("OS: "s + (utils::nt::is_wine() ? "wine" : "windows"));
+	line("");
+	line(utils::string::va("Exception: 0x%08X (%s)", exceptioninfo->ExceptionRecord->ExceptionCode,
+		get_exception_string(exceptioninfo->ExceptionRecord->ExceptionCode)));
+	line(utils::string::va("Address: 0x%llX [%s]", exceptioninfo->ExceptionRecord->ExceptionAddress,
+		utils::nt::library::get_by_address(exceptioninfo->ExceptionRecord->ExceptionAddress).get_name().data()));
 	line(utils::string::va("Base: 0x%llX", game::base_address));
+	line(utils::string::va("Main Module: %s [0x%llX]", utils::nt::library{}.get_name().data(), utils::nt::library{}.get_ptr()));
+	line(utils::string::va("Thread ID: %d (%s)", GetCurrentThreadId(), is_game_thread() ? "Main Thread" : "Auxiliary Thread"));
+
+	if (exceptioninfo->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
+	{
+		const auto access = exceptioninfo->ExceptionRecord->ExceptionInformation[0];
+		line(utils::string::va("Extended Info: Attempted to %s 0x%llX",
+			access == 1 ? "write to" : (access == 8 ? "execute" : "read from"),
+			exceptioninfo->ExceptionRecord->ExceptionInformation[1]));
+	}
 
 #pragma warning(push)
 #pragma warning(disable: 4996)
@@ -207,19 +222,89 @@ std::string exception_component::generate_crash_info(const LPEXCEPTION_POINTERS 
 
 	line(utils::string::va("OS Version: %u.%u", version_info.dwMajorVersion, version_info.dwMinorVersion));
 
+	line("");
+	line(callstack::get_summary(exceptioninfo->ContextRecord));
+	line(get_memory_registers(exceptioninfo));
+
 	return info;
+}
+
+const char* exception_component::get_exception_string(const DWORD exception)
+{
+#define EXCEPTION_CASE(CODE) case EXCEPTION_##CODE: return "EXCEPTION_" #CODE
+	switch (exception)
+	{
+		EXCEPTION_CASE(ACCESS_VIOLATION);
+		EXCEPTION_CASE(DATATYPE_MISALIGNMENT);
+		EXCEPTION_CASE(BREAKPOINT);
+		EXCEPTION_CASE(SINGLE_STEP);
+		EXCEPTION_CASE(ARRAY_BOUNDS_EXCEEDED);
+		EXCEPTION_CASE(FLT_DENORMAL_OPERAND);
+		EXCEPTION_CASE(FLT_DIVIDE_BY_ZERO);
+		EXCEPTION_CASE(FLT_INEXACT_RESULT);
+		EXCEPTION_CASE(FLT_INVALID_OPERATION);
+		EXCEPTION_CASE(FLT_OVERFLOW);
+		EXCEPTION_CASE(FLT_STACK_CHECK);
+		EXCEPTION_CASE(FLT_UNDERFLOW);
+		EXCEPTION_CASE(INT_DIVIDE_BY_ZERO);
+		EXCEPTION_CASE(INT_OVERFLOW);
+		EXCEPTION_CASE(PRIV_INSTRUCTION);
+		EXCEPTION_CASE(IN_PAGE_ERROR);
+		EXCEPTION_CASE(ILLEGAL_INSTRUCTION);
+		EXCEPTION_CASE(NONCONTINUABLE_EXCEPTION);
+		EXCEPTION_CASE(STACK_OVERFLOW);
+		EXCEPTION_CASE(INVALID_DISPOSITION);
+		EXCEPTION_CASE(GUARD_PAGE);
+		EXCEPTION_CASE(INVALID_HANDLE);
+	default:
+		return "UNKNOWN";
+	}
+#undef EXCEPTION_CASE
+}
+
+std::string exception_component::get_memory_registers(const LPEXCEPTION_POINTERS exceptioninfo)
+{
+	const auto* ctx = exceptioninfo->ContextRecord;
+	if (!ctx)
+	{
+		return {};
+	}
+
+	std::string registers("registers:\r\n{\r\n");
+	const auto add = [&registers](const char* key, const DWORD64 value)
+	{
+		registers.append(utils::string::va("\t%s = 0x%llX\r\n", key, value));
+	};
+
+	add("rax", ctx->Rax);
+	add("rbx", ctx->Rbx);
+	add("rcx", ctx->Rcx);
+	add("rdx", ctx->Rdx);
+	add("rsp", ctx->Rsp);
+	add("rbp", ctx->Rbp);
+	add("rsi", ctx->Rsi);
+	add("rdi", ctx->Rdi);
+	add("r8", ctx->R8);
+	add("r9", ctx->R9);
+	add("r10", ctx->R10);
+	add("r11", ctx->R11);
+	add("r12", ctx->R12);
+	add("r13", ctx->R13);
+	add("r14", ctx->R14);
+	add("r15", ctx->R15);
+	add("rip", ctx->Rip);
+
+	return registers.append("}");
 }
 
 void exception_component::write_minidump(const LPEXCEPTION_POINTERS exceptioninfo)
 {
-	const std::string crash_name = utils::string::va("minidumps/h1-mod-crash-%d-%s.zip",
-	                                                 game::environment::get_real_mode(),
-	                                                 get_timestamp().data());
+	const std::string crash_dir = utils::string::va("minidumps/h1-mod-crash-%d-%s",
+	                                                game::environment::get_real_mode(),
+	                                                get_timestamp().data());
 
-	utils::compression::zip::archive zip_file{};
-	zip_file.add("crash.dmp", exception::create_minidump(exceptioninfo));
-	zip_file.add("info.txt", generate_crash_info(exceptioninfo));
-	zip_file.write(crash_name, "H1-Mod Crash Dump");
+	utils::io::write_file(crash_dir + "/crash.dmp", exception::create_minidump(exceptioninfo));
+	utils::io::write_file(crash_dir + "/info.txt", generate_crash_info(exceptioninfo));
 }
 
 bool exception_component::is_harmless_error(const LPEXCEPTION_POINTERS exceptioninfo)
