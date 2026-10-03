@@ -678,6 +678,14 @@ namespace ui_scripting
 			{
 				return ~a;
 			};
+
+			if (game::environment::is_mp())
+			{
+				lua["Engine"]["GetDisplayDriverMeetsMinVer"] = []()
+				{
+					return true;
+				};
+			}
 		}
 
 		void start()
