@@ -11,11 +11,14 @@ void system_check::post_load()
 {
 	verify_binary_version();
 
-	if (!is_valid())
+	std::thread([]
 	{
-		MSG_BOX_INFO("Your game files are outdated or unsupported.\n"
-			"Please get the latest officially supported Call of Duty: Modern Warfare Remastered files, or you will get random crashes and issues.");
-	}
+		if (!is_valid())
+		{
+			MSG_BOX_INFO("Your game files are outdated or unsupported.\n"
+				"Please get the latest officially supported Call of Duty: Modern Warfare Remastered files, or you will get random crashes and issues.");
+		}
+	}).detach();
 }
 
 bool system_check::is_valid()
