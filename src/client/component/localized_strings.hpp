@@ -1,6 +1,14 @@
 #pragma once
+#include "loader/component_loader.hpp"
 
-namespace localized_strings
+class localized_strings final : public component_interface
 {
-	void override(const std::string& key, const std::string& value);
-}
+public:
+	void post_unpack() override;
+
+	static void override(const std::string& key, const std::string& value);
+
+private:
+	static const char* seh_string_ed_get_string(const char* reference);
+	static const char* seh_string_ed_get_string_mp(const char* reference);
+};

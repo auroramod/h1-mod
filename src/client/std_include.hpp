@@ -119,6 +119,7 @@
 
 #pragma warning(pop)
 #pragma warning(disable: 4100)
+#pragma warning(disable: 4459) // utils/hook.hpp `using namespace asmjit::x86` vs sol/json locals
 
 #pragma comment(lib, "ntdll.lib")
 #pragma comment(lib, "ws2_32.lib")
@@ -128,5 +129,7 @@
 #pragma comment(lib, "d3d11.lib")
 
 #include "resource.hpp"
+
+#define RVA(ptr) static_cast<uint32_t>(reinterpret_cast<size_t>(ptr) - 0x140000000)
 
 using namespace std::literals;

@@ -127,6 +127,34 @@ namespace scheduler
 			}
 			hks_frame_hook.invoke<bool>();
 		}
+
+		void r_end_frame_stub_mp()
+		{
+			execute(pipeline::renderer);
+			utils::hook::invoke<void>(0x1405FE470); // R_EndFrame
+		}
+
+		void server_frame_stub_mp()
+		{
+			utils::hook::invoke<void>(0x14033A640); // G_Glass_Update
+			execute(pipeline::server);
+		}
+
+		void main_frame_stub_mp()
+		{
+			utils::hook::invoke<void>(0x1400D8310); // Com_Frame_Try_Block_Function
+			execute(pipeline::main);
+		}
+
+		void hks_frame_stub_mp()
+		{
+			const auto state = *game::hks::lua_state;
+			if (state)
+			{
+				execute(pipeline::lui);
+			}
+			utils::hook::invoke<bool>(0x1401755B0);
+		}
 	}
 
 	void schedule(const std::function<bool()>& callback, const pipeline type,
@@ -195,22 +223,31 @@ namespace scheduler
 
 		void post_unpack() override
 		{
-			utils::hook::jump(SELECT_VALUE(0x581FB0_b, 0x6A6300_b), utils::hook::assemble([](utils::hook::assembler& a)
+			if (game::environment::is_sp())
 			{
-				a.pushad64();
-				a.call_aligned(r_end_frame_stub);
-				a.popad64();
+				utils::hook::jump(0x140581FB0, utils::hook::assemble([](utils::hook::assembler& a)
+				{
+					a.pushad64();
+					a.call_aligned(r_end_frame_stub);
+					a.popad64();
 
-				a.sub(rsp, 0x28);
-				a.call(SELECT_VALUE(0x581840_b, 0x6A5C20_b));
-				a.mov(rax, SELECT_VALUE(0x1182A680_b, 0xEAB4308_b));
-				a.mov(rax, qword_ptr(rax));
-				a.jmp(SELECT_VALUE(0x581FC0_b, 0x6A6310_b));
-			}), true);
+					a.sub(rsp, 0x28);
+					a.call(0x140581840);
+					a.mov(rax, 0x15182A680);
+					a.mov(rax, qword_ptr(rax));
+					a.jmp(0x140581FC0);
+				}), true);
 
-			g_run_frame_hook.create(SELECT_VALUE(0x2992E0_b, 0x417940_b), scheduler::server_frame_stub);
-			main_frame_hook.create(SELECT_VALUE(0x1B1DF0_b, 0x3438B0_b), scheduler::main_frame_stub);
-			hks_frame_hook.create(SELECT_VALUE(0x1028D0_b, 0x2792E0_b), scheduler::hks_frame_stub);
+				g_run_frame_hook.create(0x1402992E0, scheduler::server_frame_stub);
+				main_frame_hook.create(0x1401B1DF0, scheduler::main_frame_stub);
+				hks_frame_hook.create(0x1401028D0, scheduler::hks_frame_stub);
+				return;
+			}
+
+			utils::hook::call(0x14025B782, r_end_frame_stub_mp); // R_EndFrame
+			utils::hook::call(0x1403455E9, server_frame_stub_mp); // G_RunFrame -> G_Glass_Update
+			utils::hook::call(0x1400D82C2, main_frame_stub_mp); // Com_Frame
+			utils::hook::call(0x140178228, hks_frame_stub_mp);
 		}
 
 		void pre_destroy() override

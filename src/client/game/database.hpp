@@ -7,6 +7,79 @@
 
 namespace database
 {
+	namespace Umbra
+	{
+		struct Vector3
+		{
+			float x;
+			float y;
+			float z;
+		};
+
+		struct DataPtr
+		{
+			unsigned int m_offset;
+		};
+
+		struct SerializedTreeData
+		{
+			unsigned int m_nodeCount_mapWidth;
+			DataPtr m_treeData;
+			DataPtr m_map;
+			unsigned int m_numSplitValues;
+			DataPtr m_splitValues;
+		};
+
+		struct ImpTome
+		{
+			unsigned int m_versionMagic;
+			unsigned int m_crc32;
+			unsigned int m_size;
+			float m_lodBaseDistance;
+			unsigned int m_flags;
+			Vector3 m_treeMin;
+			Vector3 m_treeMax;
+			SerializedTreeData m_tileTree;
+			int m_numObjects;
+			DataPtr m_objBounds;
+			DataPtr m_objDistances;
+			DataPtr m_userIDStarts;
+			DataPtr m_userIDs;
+			unsigned int m_listWidths;
+			DataPtr m_objectLists;
+			int m_objectListSize;
+			DataPtr m_clusterLists;
+			int m_clusterListSize;
+			int m_numGates;
+			DataPtr m_gateIndexMap;
+			DataPtr m_gateVertices;
+			int m_numGateVertices;
+			DataPtr m_gateIndices;
+			int m_numClusters;
+			DataPtr m_clusters;
+			DataPtr m_clusterPortals;
+			DataPtr m_cellStarts;
+			int m_numLeafTiles;
+			int m_numTiles;
+			int m_bitsPerSlotPath;
+			DataPtr m_slotPaths;
+			DataPtr m_tileLodLevels;
+			DataPtr m_tiles;
+			DataPtr m_tileMatchingData;
+			DataPtr m_matchingTrees;
+			int m_numMatchingTrees;
+			int m_numTomes;
+			DataPtr m_tomeClusterStarts;
+			DataPtr m_tomeClusterPortalStarts;
+			char m_computationString[128];
+			DataPtr m_objectDepthmaps;
+			DataPtr m_depthmapFaces;
+			DataPtr m_depthmapPalettes;
+			int m_numFaces;
+			DataPtr m_tilePortalExpands;
+		};
+	}
+
 	typedef float vec_t;
 	typedef vec_t vec2_t[2];
 	typedef vec_t vec3_t[3];
@@ -140,7 +213,7 @@ namespace database
 		float bulletForceScale;
 		float explosiveForceScale;
 		float explosiveSpinScale;
-		int unk2; // 42001553
+		int contents; // 42001553
 		const char* sndAliasPrefix;
 		float piecesSpreadFraction;
 		float piecesUpwardVelocity;
@@ -1594,6 +1667,10 @@ namespace database
 		CUSTOM_BUFFER_SMODEL_LIGHTING = 0x100,
 		CUSTOM_BUFFER_SMODEL_AMBIENT = 0x200,
 		CUSTOM_BUFFER_SKINNED_CACHED_PREV_FRAME = 0x400,
+		CUSTOM_BUFFER_SUBDIV_PATCH = 0x800,
+		CUSTOM_BUFFER_REGULAR_PATCH_FLAGS = 0x1000,
+		CUSTOM_BUFFER_UNKNOWN2000 = 0x2000,
+		CUSTOM_BUFFER_UNKNOWN4000 = 0x4000,
 	};
 
 	enum PrecompiledIndex : std::uint8_t
@@ -2216,40 +2293,44 @@ namespace database
 
 	enum MaterialType : std::uint8_t
 	{
-		MTL_TYPE_DEFAULT = 0x0, // ""
-		MTL_TYPE_MODEL = 0x1, // "m"
-		MTL_TYPE_MODEL_EFFECT = 0x2, // "me"
-		MTL_TYPE_MODEL_VERTCOL = 0x3, // "mc"
-		MTL_TYPE_MODEL_VERTCOL_EFFECT = 0x4, // "mce"
-		MTL_TYPE_MODEL_VERTCOL_GREY = 0xD, // "mv"
-		MTL_TYPE_MODEL_VERTCOL_GREY_EFFECT = 0xE, // "mvc"
-		MTL_TYPE_MODEL_QUANTIZED = 0x7,
-		MTL_TYPE_MODEL_QUANTIZED_EFFECT = 0x8,
-		MTL_TYPE_MODEL_QUANTIZED_VERTCOL = 0x9,
-		MTL_TYPE_MODEL_QUANTIZED_VERTCOL_EFFECT = 0xA,
-		MTL_TYPE_MODEL_QUANTIZED_VERTCOL_GREY = 0xB,
-		MTL_TYPE_MODEL_QUANTIZED_VERTCOL_GREY_EFFECT = 0xC,
-		MTL_TYPE_MODEL_VERTLIT = 0xD,
-		MTL_TYPE_MODEL_VERTLIT_VERTCOL = 0xE,
-		MTL_TYPE_MODEL_VERTLIT_VERTCOL_GREY = 0xF,
-		MTL_TYPE_MODEL_VERTLIT_QUANTIZED = 0x10,
-		MTL_TYPE_MODEL_VERTLIT_QUANTIZED_VERTCOL = 0x11,
-		MTL_TYPE_MODEL_VERTLIT_QUANTIZED_VERTCOL_GREY = 0x12,
-		MTL_TYPE_MODEL_LMAP = 0x13, // "ml"
-		MTL_TYPE_MODEL_LMAP_VERTCOL = 0x14, // "mlc"
-		MTL_TYPE_MODEL_LMAP_VERTCOL_GREY = 0x15,
-		MTL_TYPE_MODEL_SUBDIV = 0x19, // "ms"
+		MTL_TYPE_DEFAULT = 0, // ""
+		MTL_TYPE_MODEL = 1, // "m"
+		MTL_TYPE_MODEL_EFFECT = 2, // "me"
+		MTL_TYPE_MODEL_VERTCOL = 3, // "mc"
+		MTL_TYPE_MODEL_VERTCOL_EFFECT = 4, // "mce"
+		MTL_TYPE_MODEL_UNK5 = 5,
+		MTL_TYPE_MODEL_UNK6 = 6,
+		MTL_TYPE_MODEL_QUANTIZED = 7,
+		MTL_TYPE_MODEL_QUANTIZED_EFFECT = 8,
+		MTL_TYPE_MODEL_QUANTIZED_VERTCOL = 9,
+		MTL_TYPE_MODEL_QUANTIZED_VERTCOL_EFFECT = 10,
+		MTL_TYPE_MODEL_QUANTIZED_VERTCOL_GREY = 11,
+		MTL_TYPE_MODEL_QUANTIZED_VERTCOL_GREY_EFFECT = 12,
+		MTL_TYPE_MODEL_VERTLIT = 13, // "mv"
+		MTL_TYPE_MODEL_VERTLIT_VERTCOL = 14, // "mvc"
+		MTL_TYPE_MODEL_VERTLIT_VERTCOL_GREY = 15,
+		MTL_TYPE_MODEL_VERTLIT_QUANTIZED = 16,
+		MTL_TYPE_MODEL_VERTLIT_QUANTIZED_VERTCOL = 17,
+		MTL_TYPE_MODEL_VERTLIT_QUANTIZED_VERTCOL_GREY = 18,
+		MTL_TYPE_MODEL_LMAP = 19, // "ml"
+		MTL_TYPE_MODEL_LMAP_VERTCOL = 20, // "mlc"
+		MTL_TYPE_MODEL_LMAP_VERTCOL_GREY = 21,
+		MTL_TYPE_MODEL_UNK22 = 22,
+		MTL_TYPE_MODEL_UNK23 = 23,
+		MTL_TYPE_MODEL_UNK24 = 24,
+		MTL_TYPE_MODEL_UNK25 = 25,
+		MTL_TYPE_MODEL_SUBDIV = 26, // "ms"
 		MTL_TYPE_MODEL_SUBDIV_VERTCOL = 27, // "msc"
 		MTL_TYPE_MODEL_SUBDIV_VERTCOL_GREY = 28, //
 		MTL_TYPE_MODEL_SUBDIV_TENSION = 29, //
-		MTL_TYPE_MODEL_SUBDIV_VERTLIT = 30, //
-		MTL_TYPE_MODEL_SUBDIV_VERTLIT_VERTCOL = 31, //
-		MTL_TYPE_MODEL_SUBDIV_LMAP = 32, //
-		MTL_TYPE_MODEL_SUBDIV_LMAP_VERTCOL = 33, //
-		MTL_TYPE_MODEL_SUBDIV_LMAP_VERTCOL_GREY = 34, //
-		MTL_TYPE_WORLD = 0x23, // "w"
-		MTL_TYPE_WORLD_VERTCOL = 0x24, // "wc"
-		MTL_TYPE_COUNT = 0x25,
+		MTL_TYPE_MODEL_SUBVDIV_UNK30 = 30, //
+		MTL_TYPE_MODEL_SUBDIV_VERTLIT = 31, // "msv"
+		MTL_TYPE_MODEL_SUBDIV_VERTLIT_VERTCOL = 32, // "msvc"
+		MTL_TYPE_MODEL_SUBDIV_LMAP = 33, // "msl"
+		MTL_TYPE_MODEL_SUBDIV_LMAP_VERTCOL = 34, // "mslc"
+		MTL_TYPE_WORLD = 35, // "w"
+		MTL_TYPE_WORLD_VERTCOL = 36, // "wc"
+		MTL_TYPE_COUNT = 37,
 	};
 
 	enum MaterialAssetFlags : std::uint8_t
@@ -2906,9 +2987,9 @@ namespace database
 			const char* name;
 		};
 		snd_alias_t* head;
-		snd_alias_context_list* contextList;
+		snd_alias_context_list* contextList; // contexts
 		unsigned char count;
-		unsigned char contextListCount;
+		unsigned char contextListCount; // contextCount
 	}; assert_sizeof(snd_alias_list_t, 0x20);
 
 	struct LocalizeEntry
@@ -2960,12 +3041,15 @@ namespace database
 	{
 		CLIENT_TRIGGER_NONE = 0x0,
 		CLIENT_TRIGGER_VISIONSET = 0x1,
-		CLIENT_TRIGGER_REVERB = 0x2,
+		CLIENT_TRIGGER_LIGHTSET = 0x2,
 		CLIENT_TRIGGER_AUDIO = 0x4,
 		CLIENT_TRIGGER_BLEND_VISION = 0x8,
 		CLIENT_TRIGGER_BLEND_AUDIO = 0x10,
-		CLIENT_TRIGGER_BLEND_ALL = 0x12,
+		CLIENT_TRIGGER_BLEND_ALL = CLIENT_TRIGGER_BLEND_VISION | CLIENT_TRIGGER_BLEND_AUDIO,
 		CLIENT_TRIGGER_NPC = 0x20,
+		CLIENT_TRIGGER_CLUT = 0x40,
+		CLIENT_TRIGGER_CONTEXT = 0x80,
+		CLIENT_TRIGGER_WATER = 0x100,
 	};
 
 	struct ClientTriggers
@@ -2983,10 +3067,10 @@ namespace database
 		float* scriptDelay;
 		short* audioTriggers;
 		short* blendLookup;
-		short* unkTriggers;
-		short* npcTriggers; // could be wrong
+		short* npcTriggers;
 		short* contextTriggers;
 		short* waterTriggers;
+		short* unkTriggers;
 	}; assert_sizeof(ClientTriggers, 0xB0);
 
 	struct ClientTriggerBlendNode
@@ -3009,7 +3093,7 @@ namespace database
 		scr_string_t name;
 		scr_string_t target;
 		scr_string_t script_noteworthy;
-		scr_string_t unknown;
+		scr_string_t targetname;
 		float origin[3];
 		float angles[3];
 	};
@@ -3219,6 +3303,10 @@ namespace database
 		NETCONSTSTRINGTYPE_ANIMCLASS = 21, // acl
 		NETCONSTSTRINGTYPE_LUI = 22, // lui
 		NETCONSTSTRINGTYPE_LASER = 23, // lsr
+		NETCONSTSTRINGTYPE_ASSET_COUNT = 24,
+		NETCONSTSTRINGTYPE_CODINFO_DVAR = 24,
+		NETCONSTSTRINGTYPE_CODINFOVALUE_DVAR = 25,
+		NETCONSTSTRINGTYPE_NETWORK_DVAR = 26,
 		NETCONSTSTRINGTYPE_COUNT = 27,
 		NETCONSTSTRINGTYPE_NONE = 27,
 	};
@@ -3829,7 +3917,7 @@ namespace database
 		unsigned int randomDataShortCount; // 36
 		unsigned int randomDataIntCount; // 40
 		unsigned int indexCount; // 44
-		float framerate;  // 48
+		float framerate; // 48
 		float frequency; // 56
 		scr_string_t* names; // 56
 		char* dataByte; // 64
@@ -4010,10 +4098,12 @@ namespace database
 	struct XSurfaceSubdivInfo
 	{
 		XSurfaceSubdivLevel* levels;
-		int flags; // maybe
+		int flags;
 		int totalVertCount; // foreach level: vertCount + VertOffset
-		int totalPatchCount; // foreach level: regularPatchCount + regularPatchOffset
-		int unk[3];
+		int totalRegularPatchCount; // foreach level: regularPatchCount + regularPatchOffset
+		int unk1;
+		int unk2;
+		int unk3;
 		GfxSubdivCache cache;
 	}; assert_sizeof(XSurfaceSubdivInfo, 0x38);
 
@@ -4098,11 +4188,11 @@ namespace database
 		int partBits[8];
 	}; assert_sizeof(XModelSurfs, 0x38);
 
-	enum XModelLodFlags
+	enum XModelLodInfoFlags
 	{
-		XMODEL_LOD_FLAG_NONE = 0x0,
-		XMODEL_LOD_FLAG_SUBDIV = 0x1,
-		XMODEL_LOD_FLAG_SUBDIV_UNK = 0x2,
+		XMODEL_LODINFO_FLAG_NONE = 0x0,
+		XMODEL_LODINFO_FLAG_SUBDIV = 0x1,
+		XMODEL_LODINFO_FLAG_SUBDIV_NON_ADAPTIVE = 0x2,
 	};
 
 	struct XModelLodInfo
@@ -4113,7 +4203,7 @@ namespace database
 		XModelSurfs* modelSurfs;
 		int partBits[8];
 		XSurface* surfs;
-		int unk;
+		int subdivLodValidMask;
 		char flags;
 		char pad[3];
 	};
@@ -4273,7 +4363,7 @@ namespace database
 		short u3; // 634
 		float quantization; // 636
 		MdaoVolume* mdaoVolumes; // 640
-		int u4; // 648
+		float subdivRadius; // 648
 		int u5; // 652
 		SkeletonScript* skeletonScript; // 656
 		XModel** compositeModels; // 664
@@ -4305,7 +4395,7 @@ namespace database
 		PLAYERANIMTYPE_LAPTOP = 0xC,
 		PLAYERANIMTYPE_THROWINGKNIFE = 0xD,
 		PLAYERANIMTYPE_MINIGUN = 0xE,
-		PLAYERANIMTYPE_SMG_BULLPUP = 0x1F,
+		PLAYERANIMTYPE_SMG_BULLPUP = 0xF,
 		PLAYERANIMTYPE_AUTOFILE_BULLPUP = 0x10,
 		PLAYERANIMTYPE_SNIPER_BULLPUP = 0x11,
 		PLAYERANIMTYPE_KILLSTREAKTRIGGER = 0x12,
@@ -5512,6 +5602,7 @@ namespace database
 		vec2_t* accuracyGraphKnots[2]; // 3088
 		vec2_t* originalAccuracyGraphKnots[2]; // 3104
 		short accuracyGraphKnotCount[2]; // 3120
+		short originalAccuracyGraphKnotCount[2]; // 3124
 		float leftArc; // 3128
 		float rightArc; // 3132
 		float topArc; // 3136
@@ -6153,7 +6244,7 @@ namespace database
 		Operand lastResult[4];
 	};
 
-	struct __declspec(align(8)) Statement_s
+	struct Statement_s
 	{
 		int numEntries;
 		expressionEntry* entries;
@@ -6193,7 +6284,7 @@ namespace database
 		EVENT_COUNT = 0x7,
 	};
 
-	struct __declspec(align(8)) MenuEventHandler
+	struct MenuEventHandler
 	{
 		EventData eventData;
 		EventType eventType;
@@ -6222,7 +6313,7 @@ namespace database
 		int endTriggerType;
 	};
 
-	struct __declspec(align(8)) menuData_t
+	struct menuData_t
 	{
 		int fullScreen;
 		int fadeCycle;
@@ -6256,14 +6347,14 @@ namespace database
 		unsigned char priority;
 	};
 
-	struct __declspec(align(4)) rectDef_s
+	struct rectDef_s
 	{
 		float x;
 		float y;
 		float w;
 		float h;
-		unsigned __int8 horzAlign;
-		unsigned __int8 vertAlign;
+		unsigned char horzAlign;
+		unsigned char vertAlign;
 	};
 
 	struct windowDef_t
@@ -6361,7 +6452,7 @@ namespace database
 		void* data;
 	};
 
-	enum ItemFloatExpressionTarget
+	enum ItemFloatExpressionTarget : std::int32_t
 	{
 		ITEM_FLOATEXP_TGT_RECT_X = 0x0,
 		ITEM_FLOATEXP_TGT_RECT_Y = 0x1,
@@ -8113,6 +8204,7 @@ namespace database
 		GfxStaticModelVertexLighting* lightingValues;
 		ID3D11Buffer* lightingValuesVb;
 		int numLightingValues;
+		int subdivVertexLightingInfoIndex;
 	};
 
 	struct GfxStaticModelLightmapInfo
@@ -8140,6 +8232,7 @@ namespace database
 	struct GfxSubdivVertexLightingInfo
 	{
 		int vertexLightingIndex;
+		int flags;
 		ID3D11Buffer* vb;
 		GfxSubdivCache cache;
 	}; assert_sizeof(GfxSubdivVertexLightingInfo, 40);
@@ -8797,7 +8890,7 @@ namespace database
 		float steeringLerpCentering;
 		float minSteeringScale;
 		float minSteeringSpeed;
-		float disableWheelsTurning;
+		int disableWheelsTurning;
 		float pad2;
 		FxEffectDef* treadDefaultFx;
 		FxEffectDef* handBrakeDefaultFx;
@@ -9521,7 +9614,7 @@ namespace database
 	{
 		const char* name;
 		SndGlobalSettings_t settings;
-		XaReverbSettings* reverbSettings;  // array: 26
+		XaReverbSettings* reverbSettings; // array: 26
 	}; assert_sizeof(SndDriverGlobals, 0x38);
 	assert_offsetof(SndDriverGlobals, reverbSettings, 48);
 
@@ -9807,5 +9900,45 @@ namespace database
 		char __pad0[32];
 		char name[64];
 		char __pad1[408];
+	};
+
+	enum LeafTableVersion : std::int8_t
+	{
+		h2 = 0i8,
+		h1 = 0i8,
+		s1 = 0i8,
+		iw6 = 1i8,
+	};
+
+	struct LightGridLeafIndexRaw
+	{
+		int indexMin;
+		int indexBitCount;
+		int indexDefault;
+		int indexTable[16];
+	};
+
+	struct LightGridLeafRaw
+	{
+		unsigned __int8 format;
+		LightGridLeafIndexRaw colorIndex;
+		LightGridLeafIndexRaw lightIndex;
+		unsigned int voxels;
+	};
+
+	struct LightGridNodeIndexRaw
+	{
+		unsigned __int8 indexBitCount;
+		unsigned __int8 indexTableSize;
+		unsigned __int8 indexTableSizeBitCount;
+		int indexMin;
+		int indexDefault;
+		int indexTable[15];
+	};
+
+	struct LightGridNodeRaw
+	{
+		LightGridNodeIndexRaw colorIndex;
+		LightGridNodeIndexRaw lightIndex;
 	};
 }

@@ -1,17 +1,22 @@
 #ifdef _DEBUG
 #pragma once
 #include "game/structs.hpp"
+#include "loader/component_loader.hpp"
 #include "gui.hpp"
+#include "game/game.hpp"
 
-namespace gui::asset_list
+class asset_list final : public component_interface
 {
-	void add_asset_view_callback(const game::XAssetType, const std::function<void(const std::string&)>& callback);
-	void add_asset_button(const game::XAssetType, const std::string& name, const std::function<void(const game::XAssetHeader)>& callback,
+public:
+	void post_unpack() override;
+
+	static void add_asset_view_callback(const game::XAssetType, const std::function<void(const std::string&)>& callback);
+	static void add_asset_button(const game::XAssetType, const std::string& name, const std::function<void(const game::XAssetHeader)>& callback,
 		const std::optional<std::function<bool()>>& enabled_callback);
-	void add_view_button(int id, game::XAssetType type, const char* name);
+	static void add_view_button(int id, game::XAssetType type, const char* name);
 
 	template <typename T>
-	void add_asset_view(const game::XAssetType type, const std::function<bool(T*)>& draw_callback, ImVec2 min_size = ImVec2(0, 0))
+	static void add_asset_view(const game::XAssetType type, const std::function<bool(T*)>& draw_callback, ImVec2 min_size = ImVec2(0, 0))
 	{
 		static std::unordered_set<std::string> opened_assets;
 		add_asset_view_callback(type, [](const std::string& name)
@@ -60,7 +65,7 @@ namespace gui::asset_list
 	}
 
 	template <typename T>
-	void add_asset_button(const game::XAssetType type, const std::string& name, const std::function<void(T*)>& callback, 
+	static void add_asset_button(const game::XAssetType type, const std::string& name, const std::function<void(T*)>& callback, 
 		const std::optional<std::function<bool()>>& enabled_callback = {})
 	{
 		add_asset_button(type, name, [=](const game::XAssetHeader header)
@@ -68,5 +73,13 @@ namespace gui::asset_list
 			callback(reinterpret_cast<T*>(header.data));
 		}, enabled_callback);
 	}
-}
+
+private:
+	static void draw_table_row(const game::XAssetType type, const game::XAssetEntry* entry, bool should_add_view_btn);
+	static void draw_asset_type_list();
+	static void draw_asset_list_filter(const game::XAssetType type);
+	static void draw_asset_list_entries(const game::XAssetType type);
+	static void draw_asset_list(const game::XAssetType type);
+	static void render_window();
+};
 #endif

@@ -1,5 +1,6 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+#include "arena.hpp"
 
 #include "game/game.hpp"
 
@@ -10,88 +11,83 @@
 #include <utils/io.hpp>
 #include <utils/memory.hpp>
 
-#define MAX_ARENAS 64
+static std::recursive_mutex arena_mutex;
 
-namespace arena
+char* arena::s_arena_infos_[MAX_ARENAS];
+
+void arena::post_unpack()
 {
-	namespace
+	if (!game::environment::is_mp())
 	{
-		std::recursive_mutex arena_mutex;
-
-		bool parse_arena(const std::string& path)
-		{
-			std::lock_guard<std::recursive_mutex> _0(arena_mutex);
-
-			std::string buffer{};
-			if (utils::io::read_file(path, &buffer) && !buffer.empty())
-			{
-				*game::ui_num_arenas += game::GameInfo_ParseArenas(buffer.data(), MAX_ARENAS - *game::ui_num_arenas,
-					&game::ui_arena_infos[*game::ui_num_arenas]);
-				return true;
-			}
-
-			if (!game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, path.data()) ||
-				game::DB_IsXAssetDefault(game::ASSET_TYPE_RAWFILE, path.data()))
-			{
-				return false;
-			}
-
-			const auto* rawfile = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, path.data(), 0).rawfile;
-			const auto len = game::DB_GetRawFileLen(rawfile);
-
-			const auto rawfile_buffer = utils::memory::get_allocator()->allocate_array<char>(len);
-			const auto _1 = gsl::finally([&]
-			{
-				utils::memory::get_allocator()->free(rawfile_buffer);
-			});
-
-			game::DB_GetRawBuffer(rawfile, rawfile_buffer, len);
-			*game::ui_num_arenas += game::GameInfo_ParseArenas(rawfile_buffer, MAX_ARENAS - *game::ui_num_arenas,
-				&game::ui_arena_infos[*game::ui_num_arenas]);
-			
-			return true;
-		}
-
-		void load_arenas_stub()
-		{
-			*game::ui_num_arenas = 0;
-			*game::ui_arena_buf_pos = 0;
-
-			parse_arena("mp/basemaps.arena");
-
-			// read all usermap arenas for map list
-			if (std::filesystem::exists("usermaps"))
-			{
-				for (const auto& entry : std::filesystem::directory_iterator("usermaps"))
-				{
-					if (!entry.is_directory())
-					{
-						continue;
-					}
-
-					auto mapname = entry.path().filename().string();
-					auto arena_path = entry.path().string() + "/" + mapname + ".arena";
-
-					parse_arena(arena_path);
-				}
-			}
-		}
+		return;
 	}
 
-	class component final : public component_interface
-	{
-	public:
-		void post_unpack() override
-		{
-			if (!game::environment::is_mp())
-			{
-				return;
-			}
+	// load custom arenas
+	utils::hook::jump(0x140408E10, load_arenas_stub); // UI_LoadArenasFromFile_FastFile
 
-			// load custom arenas
-			utils::hook::jump(0x4DE030_b, load_arenas_stub);
-		}
-	};
+	// expand arena infos (MAX_ARENAS)
+	utils::hook::inject(0x140409289 + 3, &s_arena_infos_);
+	utils::hook::inject(0x140409333 + 3, &s_arena_infos_);
+	utils::hook::inject(0x14040935B + 3, &s_arena_infos_);
 }
 
-REGISTER_COMPONENT(arena::component)
+bool arena::parse_arena(const std::string& path)
+{
+	std::lock_guard<std::recursive_mutex> _0(arena_mutex);
+
+	std::string buffer{};
+	if (utils::io::read_file(path, &buffer) && !buffer.empty())
+	{
+		*game::ui_num_arenas += game::GameInfo_ParseArenas(buffer.data(), MAX_ARENAS - *game::ui_num_arenas,
+			&s_arena_infos_[*game::ui_num_arenas]);
+		return true;
+	}
+
+	if (!game::DB_XAssetExists(game::ASSET_TYPE_RAWFILE, path.data()) ||
+		game::DB_IsXAssetDefault(game::ASSET_TYPE_RAWFILE, path.data()))
+	{
+		return false;
+	}
+
+	const auto* rawfile = game::DB_FindXAssetHeader(game::ASSET_TYPE_RAWFILE, path.data(), 0).rawfile;
+	const auto len = game::DB_GetRawFileLen(rawfile);
+
+	const auto rawfile_buffer = utils::memory::get_allocator()->allocate_array<char>(len);
+	const auto _1 = gsl::finally([&]
+	{
+		utils::memory::get_allocator()->free(rawfile_buffer);
+	});
+
+	game::DB_GetRawBuffer(rawfile, rawfile_buffer, len);
+	*game::ui_num_arenas += game::GameInfo_ParseArenas(rawfile_buffer, MAX_ARENAS - *game::ui_num_arenas,
+		&s_arena_infos_[*game::ui_num_arenas]);
+
+	return true;
+}
+
+void arena::load_arenas_stub()
+{
+	*game::ui_num_arenas = 0;
+	*game::ui_arena_buf_pos = 0;
+
+	parse_arena("mp/basemaps.arena");
+
+	// read all usermap arenas for map list
+	if (std::filesystem::exists("usermaps"))
+	{
+		for (const auto& entry : std::filesystem::directory_iterator("usermaps"))
+		{
+			if (!entry.is_directory())
+			{
+				continue;
+			}
+
+			auto mapname = entry.path().filename().string();
+			auto arena_path = entry.path().string() + "/" + mapname + ".arena";
+
+			parse_arena(arena_path);
+		}
+	}
+}
+
+REGISTER_COMPONENT(arena)

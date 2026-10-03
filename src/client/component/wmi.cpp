@@ -1,45 +1,52 @@
 #include <std_include.hpp>
-#include "loader/component_loader.hpp"
+#include "wmi.hpp"
 
 #include "game/game.hpp"
 
 #include <utils/hook.hpp>
 
-namespace wmi
+void wmi::post_load()
 {
-	namespace
+	if (game::environment::is_sp())
 	{
-		HRESULT WINAPI co_initialize_ex_stub(LPVOID pvReserved, DWORD dwCoInit)
-		{
-			if ((uint64_t)_ReturnAddress() == SELECT_VALUE(0x6CF89E_b, 0x81A3BE_b))
-			{
-				return E_FAIL;
-			}
-			
-			return CoInitializeEx(pvReserved, dwCoInit);
-		}
+		return;
 	}
 
-	class component final : public component_interface
-	{
-	public:
-		void* load_import(const std::string& library, const std::string& function) override
-		{
-			if (function == "CoInitializeEx")
-			{
-				return co_initialize_ex_stub;
-			}
-
-			return nullptr;
-		}
-
-		void post_unpack() override
-		{
-			// disable WMI and remove Hardware Query (uses WMI)
-			utils::hook::set<uint8_t>(SELECT_VALUE(0x450C0_b, 0x4D360_b), 0xC3); // WMI
-			utils::hook::set<uint8_t>(SELECT_VALUE(0x311790_b, 0xB6D20_b), 0xC3); // Hardware query
-		}
-	};
+	// disable WMI and remove Hardware Query (uses WMI)
+	utils::hook::set<uint8_t>(0x140046588, 0xC3); // WMI
+	utils::hook::set<uint8_t>(0x14009CA40, 0xC3); // Hardware query
 }
 
-REGISTER_COMPONENT(wmi::component)
+void wmi::post_unpack()
+{
+	if (!game::environment::is_sp())
+	{
+		return;
+	}
+
+	// disable WMI and remove Hardware Query (uses WMI)
+	utils::hook::set<uint8_t>(0x1400450C0, 0xC3); // WMI
+	utils::hook::set<uint8_t>(0x140311790, 0xC3); // Hardware query
+}
+
+void* wmi::load_import(const std::string& library, const std::string& function)
+{
+	if (function == "CoInitializeEx")
+	{
+		return co_initialize_ex_stub;
+	}
+
+	return nullptr;
+}
+
+HRESULT WINAPI wmi::co_initialize_ex_stub(LPVOID pvReserved, DWORD dwCoInit)
+{
+	if (reinterpret_cast<size_t>(_ReturnAddress()) == static_cast<size_t>(SELECT_VALUE(0x1406CF89E, 0x14076DFA6)))
+	{
+		return E_FAIL;
+	}
+
+	return CoInitializeEx(pvReserved, dwCoInit);
+}
+
+REGISTER_COMPONENT(wmi)

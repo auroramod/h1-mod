@@ -758,14 +758,24 @@ namespace ui_scripting
 		void* hks_start_stub(char a1)
 		{
 			const auto _0 = gsl::finally(&try_start);
-			return hks_start_hook.invoke<void*>(a1);
+			if (game::environment::is_sp())
+			{
+				return hks_start_hook.invoke<void*>(a1);
+			}
+
+			return utils::hook::invoke<void*>(0x140176A40, a1); // hks_start
 		}
 
 		void hks_shutdown_stub()
 		{
 			converted_functions.clear();
 			globals = {};
-			return hks_shutdown_hook.invoke<void>();
+			if (game::environment::is_sp())
+			{
+				return hks_shutdown_hook.invoke<void>();
+			}
+
+			return utils::hook::invoke<void>(0x14016CA80); // hks_shutdown
 		}
 
 		void* hks_package_require_stub(game::hks::lua_State* state)
@@ -773,7 +783,12 @@ namespace ui_scripting
 			const auto script = get_current_script();
 			const auto root = get_root_script(script);
 			globals.in_require_script = root;
-			return hks_package_require_hook.invoke<void*>(state);
+			if (game::environment::is_sp())
+			{
+				return hks_package_require_hook.invoke<void*>(state);
+			}
+
+			return utils::hook::invoke<void*>(0x140115730, state); // package_require
 		}
 
 		bool read_lua_as_rawfile(const std::string& name, std::string* data)
@@ -856,8 +871,14 @@ namespace ui_scripting
 			}
 			else
 			{
-				return hks_load_hook.invoke<int>(state, compiler_options, reader,
-					reader_data, chunk_name);
+				if (game::environment::is_sp())
+				{
+					return hks_load_hook.invoke<int>(state, compiler_options, reader,
+						reader_data, chunk_name);
+				}
+
+				return utils::hook::invoke<int>(0x14012BC20, state, compiler_options, reader,
+					reader_data, chunk_name); // hks_load
 			}
 		}
 
@@ -943,51 +964,72 @@ namespace ui_scripting
 				return;
 			}
 
-			dvars::register_bool("r_preloadShadersFrontendAllow", true, game::DVAR_FLAG_SAVED, "Allow shader popup on startup");
+			dvars::register_bool("r_preloadShadersFrontendAllow", true, game::DVAR_ARCHIVE, "Allow shader popup on startup");
 
-			utils::hook::call(SELECT_VALUE(0xE7419_b, 0x25E809_b), db_find_x_asset_header_stub);
-			utils::hook::call(SELECT_VALUE(0xE72CB_b, 0x25E6BB_b), db_find_x_asset_header_stub);
+			utils::hook::call(SELECT_VALUE(0x1400E7419, 0x14015B3C9), db_find_x_asset_header_stub);
+			utils::hook::call(SELECT_VALUE(0x1400E72CB, 0x14015B27B), db_find_x_asset_header_stub);
 
-			hks_load_hook.create(SELECT_VALUE(0xB46F0_b, 0x22C180_b), hks_load_stub);
+			if (game::environment::is_sp())
+			{
+				hks_load_hook.create(0x1400B46F0, hks_load_stub);
 
-			hks_package_require_hook.create(SELECT_VALUE(0x90070_b, 0x214040_b), hks_package_require_stub);
-			hks_start_hook.create(SELECT_VALUE(0x103C50_b, 0x27A790_b), hks_start_stub);
-			hks_shutdown_hook.create(SELECT_VALUE(0xFB370_b, 0x2707C0_b), hks_shutdown_stub);
+				hks_package_require_hook.create(0x140090070, hks_package_require_stub);
+				hks_start_hook.create(0x140103C50, hks_start_stub);
+				hks_shutdown_hook.create(0x1400FB370, hks_shutdown_stub);
+			}
+			else
+			{
+				// hks_load
+				utils::hook::call(0x14015B454, hks_load_stub);
+				utils::hook::call(0x14015B679, hks_load_stub);
+
+				// package_require
+				utils::hook::set(reinterpret_cast<void**>(0x1408192A8), reinterpret_cast<void*>(hks_package_require_stub));
+
+				// hks_start
+				utils::hook::call(0x140178164, hks_start_stub);
+				utils::hook::call(0x14025C148, hks_start_stub);
+
+				// hks_shutdown
+				utils::hook::call(0x140176133, hks_shutdown_stub);
+				utils::hook::call(0x140178125, hks_shutdown_stub);
+				utils::hook::call(0x140178407, hks_shutdown_stub);
+			}
 
 			command::add("lui_restart", []
 			{
-				utils::hook::invoke<void>(SELECT_VALUE(0x1052C0_b, 0x27BEC0_b));
+				utils::hook::invoke<void>(SELECT_VALUE(0x1401052C0, 0x1401780D0));
 			});
 
 			// remove unsafe functions
 			if (game::environment::is_mp())
 			{
-				utils::hook::nop(0x22B5CA_b, 1);
-				utils::hook::jump(0x26EB60_b, 0x22B450_b);
+				utils::hook::nop(0x14012AE3A, 1); // int3 in traceback handler
+				utils::hook::jump(0x14016AE20, 0x14012ACE0); // lua panic handler -> traceback handler
 
-				utils::hook::jump(0x212CF0_b, removed_function_stub); // io
-				utils::hook::jump(0x213180_b, removed_function_stub); // os
-				utils::hook::jump(0x213EB0_b, removed_function_stub); // serialize
-				utils::hook::jump(0x213E80_b, removed_function_stub); // hks
-				utils::hook::jump(0x2135F0_b, removed_function_stub); // debug
-				utils::hook::nop(0x212C78_b, 5); // coroutine
+				utils::hook::jump(0x1401142F0, removed_function_stub); // io
+				utils::hook::jump(0x140114870, removed_function_stub); // os
+				utils::hook::jump(0x1401155A0, removed_function_stub); // serialize
+				utils::hook::jump(0x140115570, removed_function_stub); // hks
+				utils::hook::jump(0x140114CE0, removed_function_stub); // debug
+				utils::hook::nop(0x14011425A, 5); // coroutine
 
 				// profile
-				utils::hook::jump(0x207F50_b, removed_function_stub);
-				utils::hook::jump(0x207F60_b, removed_function_stub);
-				utils::hook::jump(0x207F70_b, removed_function_stub);
-				utils::hook::jump(0x208030_b, removed_function_stub);
+				utils::hook::jump(0x140108F00, removed_function_stub); // profile_tick
+				utils::hook::jump(0x140108F10, removed_function_stub); // profile_stats
+				utils::hook::jump(0x140108F20, removed_function_stub);
+				utils::hook::jump(0x140108FE0, removed_function_stub); // profile_graphheap
 
-				utils::hook::jump(0x209CC0_b, removed_function_stub);
-				utils::hook::jump(0x209930_b, removed_function_stub);
-				utils::hook::jump(0x20C920_b, removed_function_stub);
+				utils::hook::jump(0x14010ABE0, removed_function_stub); // base_loadfile
+				utils::hook::jump(0x14010A850, removed_function_stub); // base_dofile
+				utils::hook::jump(0x14010D9A0, removed_function_stub);
 
-				utils::hook::jump(0x214750_b, removed_function_stub);
-				utils::hook::jump(0x2131B0_b, removed_function_stub);
-				utils::hook::jump(0x213EE0_b, removed_function_stub);
+				utils::hook::jump(0x140115E40, removed_function_stub);
+				utils::hook::jump(0x1401148A0, removed_function_stub);
+				utils::hook::jump(0x1401155D0, removed_function_stub); // all_in_one_loader
 
-				utils::hook::jump(0x208C70_b, removed_function_stub);
-				utils::hook::jump(0x20F620_b, removed_function_stub);
+				utils::hook::jump(0x140109C00, removed_function_stub);
+				utils::hook::jump(0x140110740, removed_function_stub);
 			}
 		}
 	};

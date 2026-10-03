@@ -100,15 +100,29 @@ namespace scripting
 				lua::engine::start();
 			}
 
-			gsc::load_main_handles();
+			script_loading::load_main_handles();
 
-			g_load_structs_hook.invoke<void>();
+			if (game::environment::is_sp())
+			{
+				g_load_structs_hook.invoke<void>();
+			}
+			else
+			{
+				utils::hook::invoke<void>(0x140383C60); // G_LoadStructs
+			}
 		}
 
 		void scr_load_level_stub()
 		{
-			gsc::load_init_handles();
-			scr_load_level_hook.invoke<void>();
+			script_loading::load_init_handles();
+			if (game::environment::is_sp())
+			{
+				scr_load_level_hook.invoke<void>();
+			}
+			else
+			{
+				utils::hook::invoke<void>(0x1403727C0); // Scr_LoadLevel
+			}
 		}
 
 		void g_shutdown_game_stub(const int free_scripts)
@@ -132,7 +146,14 @@ namespace scripting
 			game::G_LogPrintf("ShutdownGame:\n");
 			game::G_LogPrintf("------------------------------------------------------------\n");
 
-			g_shutdown_game_hook.invoke<void>(free_scripts);
+			if (game::environment::is_sp())
+			{
+				g_shutdown_game_hook.invoke<void>(free_scripts);
+			}
+			else
+			{
+				utils::hook::invoke<void>(0x140345A60, free_scripts); // G_ShutdownGame
+			}
 
 			for (const auto& callback : shutdown_callbacks)
 			{
@@ -149,7 +170,14 @@ namespace scripting
 				fields_table[classnum][name_str] = offset;
 			}
 
-			scr_add_class_field_hook.invoke<void>(classnum, name, canonical_string, offset);
+			if (game::environment::is_sp())
+			{
+				scr_add_class_field_hook.invoke<void>(classnum, name, canonical_string, offset);
+			}
+			else
+			{
+				utils::hook::invoke<void>(0x14043E2C0, classnum, name, canonical_string, offset); // Scr_AddClassField
+			}
 		}
 
 		void process_script_stub(const char* filename)
@@ -168,7 +196,14 @@ namespace scripting
 				current_file = filename;
 			}
 
-			process_script_hook.invoke<void>(filename);
+			if (game::environment::is_sp())
+			{
+				process_script_hook.invoke<void>(filename);
+			}
+			else
+			{
+				utils::hook::invoke<void>(0x1404417E0, filename); // ProcessScript
+			}
 		}
 
 		void add_function_sort(unsigned int id, const char* pos)
@@ -177,7 +212,7 @@ namespace scripting
 
 			if (!script_function_table_sort.contains(filename))
 			{
-				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_script_file_name, false);
+				const auto script = script_loading::find_script(game::ASSET_TYPE_SCRIPTFILE, current_script_file_name, false);
 				if (script)
 				{
 					const auto end = &script->bytecode[script->bytecodeLen];
@@ -203,19 +238,28 @@ namespace scripting
 
 			add_function(current_file, thread_name, code_pos);
 
-			scr_set_thread_position_hook.invoke<void>(thread_name, code_pos);
+			if (game::environment::is_sp())
+			{
+				scr_set_thread_position_hook.invoke<void>(thread_name, code_pos);
+			}
+			else
+			{
+				utils::hook::invoke<void>(0x140437D10, thread_name, code_pos); // Scr_SetThreadPosition
+			}
 		}
 
 		unsigned int sl_get_canonical_string_stub(const char* str)
 		{
-			const auto result = sl_get_canonical_string_hook.invoke<unsigned int>(str);
+			const auto result = game::environment::is_sp()
+				? sl_get_canonical_string_hook.invoke<unsigned int>(str)
+				: game::SL_GetCanonicalString(str);
 			canonical_string_table[result] = str;
 			return result;
 		}
 
 		void* get_spawn_point_stub()
 		{
-			const auto spawn_point = utils::hook::invoke<void*>(0x28BD50_b);
+			const auto spawn_point = utils::hook::invoke<void*>(0x14028BD50);
 			if (spawn_point == nullptr)
 			{
 				console::warn("No spawnpoint found for this map, using (0, 0, 0)\n");
@@ -255,26 +299,53 @@ namespace scripting
 	public:
 		void post_unpack() override
 		{
-			vm_notify_hook.create(SELECT_VALUE(0x3CD500_b, 0x514560_b), vm_notify_stub);
+			vm_notify_hook.create(SELECT_VALUE(0x1403CD500, 0x1404479F0), vm_notify_stub); // VM_Notify
 
-			scr_add_class_field_hook.create(SELECT_VALUE(0x3C3CE0_b, 0x50AE20_b), scr_add_class_field_stub);
-
-			scr_set_thread_position_hook.create(SELECT_VALUE(0x3BD890_b, 0x504870_b), scr_set_thread_position_stub);
-			process_script_hook.create(SELECT_VALUE(0x3C7200_b, 0x50E340_b), process_script_stub);
-			sl_get_canonical_string_hook.create(game::SL_GetCanonicalString, sl_get_canonical_string_stub);
-
-			g_load_structs_hook.create(SELECT_VALUE(0x2E7970_b, 0x458520_b), g_load_structs_stub);
-			scr_load_level_hook.create(SELECT_VALUE(0x2D4CD0_b, 0x450FC0_b), scr_load_level_stub);
 			if (game::environment::is_sp())
 			{
-				vm_execute_hook.create(0x3CA080_b, vm_execute_stub);
+				scr_add_class_field_hook.create(0x1403C3CE0, scr_add_class_field_stub);
+
+				scr_set_thread_position_hook.create(0x1403BD890, scr_set_thread_position_stub);
+				process_script_hook.create(0x1403C7200, process_script_stub);
+				sl_get_canonical_string_hook.create(game::SL_GetCanonicalString, sl_get_canonical_string_stub);
+
+				g_load_structs_hook.create(0x1402E7970, g_load_structs_stub);
+				scr_load_level_hook.create(0x1402D4CD0, scr_load_level_stub);
+				vm_execute_hook.create(0x1403CA080, vm_execute_stub);
+
+				g_shutdown_game_hook.create(0x1402A5130, g_shutdown_game_stub);
+
+				utils::hook::call(0x14028AE82, get_spawn_point_stub);
 			}
-
-			g_shutdown_game_hook.create(SELECT_VALUE(0x2A5130_b, 0x422F30_b), g_shutdown_game_stub);
-
-			if (game::environment::is_sp())
+			else
 			{
-				utils::hook::call(0x28AE82_b, get_spawn_point_stub);
+				// Scr_AddClassField
+				utils::hook::call(0x1403198B6, scr_add_class_field_stub);
+				utils::hook::call(0x140322E19, scr_add_class_field_stub);
+				utils::hook::call(0x1403277CB, scr_add_class_field_stub);
+				utils::hook::call(0x14033CEC7, scr_add_class_field_stub);
+				utils::hook::call(0x1403837E4, scr_add_class_field_stub);
+				utils::hook::call(0x140449F6B, scr_add_class_field_stub);
+				utils::hook::call(0x14055AAF6, scr_add_class_field_stub);
+				utils::hook::call(0x140563D69, scr_add_class_field_stub);
+
+				utils::hook::call(0x14044190E, scr_set_thread_position_stub); // Scr_SetThreadPosition
+				utils::hook::call(0x140437DA3, process_script_stub); // ProcessScript
+
+				// SL_GetCanonicalString
+				utils::hook::call(0x140319BA7, sl_get_canonical_string_stub);
+				utils::hook::call(0x140319BE4, sl_get_canonical_string_stub);
+				utils::hook::call(0x14034206E, sl_get_canonical_string_stub);
+				utils::hook::call(0x14043E4D1, sl_get_canonical_string_stub);
+				utils::hook::call(0x1404418F3, sl_get_canonical_string_stub);
+				utils::hook::call(0x140443253, sl_get_canonical_string_stub);
+
+				utils::hook::call(0x1403439CD, g_load_structs_stub); // G_LoadStructs
+				utils::hook::call(0x1403439E6, scr_load_level_stub); // Scr_LoadLevel
+
+				// G_ShutdownGame
+				utils::hook::call(0x140484EC0, g_shutdown_game_stub);
+				utils::hook::call(0x1404853C1, g_shutdown_game_stub);
 			}
 
 			command::add("getfunctionptr", [](const command::params& params)
