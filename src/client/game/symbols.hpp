@@ -17,6 +17,35 @@ namespace game
 		
 		WEAK symbol<const char*(dvar_t* dvar, dvar_value* value)> Dvar_ValueToString{0x0, 0x1404FE660};
 		WEAK symbol<char*(size_t size, size_t alignment)> Hunk_AllocAlignInternal{0x0, 0x1404F5220};
+
+		WEAK symbol<void(const char* name, void* zone, void* memory, bool flag)> DB_LoadXFile{0x0, 0x14028D740};
+		WEAK symbol<void(unsigned char* pos, std::uint64_t size, int imageCopy)> DB_ReadXFile{0x0, 0x14028E050};
+		WEAK symbol<void()> DB_WaitXFileStage{0x0, 0x14028E4B0};
+		WEAK symbol<void()> DB_ParseImageFileHeaders{0x0, 0x1402C6060};
+		WEAK symbol<int(const void* src, void* dst, int srcLen, int dstLen)> DB_Block_DecompressZlib{0x0, 0x14028D2F0};
+		WEAK symbol<int(const void* src, void* dst, int srcLen, int dstLen)> DB_Block_DecompressLZ4{0x0, 0x14028D2D0};
+		WEAK symbol<void()> DB_LoadPackedLoadedSounds{0x0, 0x1402C6000};
+		WEAK symbol<void(int unused)> DB_ReadPackedLoadedSounds{0x0, 0x1402C6590};
+
+		WEAK symbol<void(StreamFile* file, std::int16_t* name)> StreamFileOpen{0x0, 0x140506E70};
+		WEAK symbol<void(StreamFile* file)> StreamFileClose{0x0, 0x140506C40};
+		WEAK symbol<DB_IFileSysFile*(DB_IFileSysFile** cache, int count, int isImageFile, int index,
+			std::uint64_t isLocalized)> StreamFile_OpenPak{0x0, 0x140506A00};
+
+		WEAK symbol<std::uint64_t(void* channel, int index, unsigned int startMsec)> SD_StartAlias{0x0, 0x1404A8BD0};
+
+		WEAK symbol<std::uint64_t(PMemRange* range)> PMem_CommitMemory{0x0, 0x140501BF0};
+		WEAK symbol<std::uint64_t(std::uint64_t a1, std::uint64_t a2, std::uint64_t a3, std::uint64_t a4)> PMem_DecommitMemory{0x0, 0x140501E00};
+
+		WEAK symbol<void()> SV_ClearServer{0x0, 0x140485840};
+
+		WEAK symbol<std::uint32_t(void* model)> DB_GetXModelIndex{0x0, 0x1402BBDB0};
+		WEAK symbol<void*(std::uint32_t index)> DB_GetMaterialAtIndex{0x0, 0x1402BBB00};
+		WEAK symbol<char(const char* zone, int flags)> DB_IsFileLoaded{0x0, 0x1402BC110};
+
+		WEAK symbol<void(void* state)> sha256_init{0x0, 0x1406ECF00};
+		WEAK symbol<int(void* state, const std::uint8_t* data, unsigned long size)> sha256_process{0x0, 0x1406ECF40};
+		WEAK symbol<int(void* state, std::uint8_t* digest)> sha256_done{0x0, 0x1406ED020};
 	}
 
 	namespace sp
@@ -466,6 +495,20 @@ namespace game
 
 		WEAK symbol<int> db_hashTable{0x0, 0x143411FA0};
 		WEAK symbol<XAssetEntry> g_assetEntryPool{0x0, 0x144CFDCD0};
+
+		WEAK symbol<PackedLoadedSound*> db_packedLoadedSounds{0x0, 0x14533C9F0};
+		WEAK symbol<int> db_packedLoadedSoundCount{0x0, 0x14534C3F0};
+		WEAK symbol<std::uint64_t> db_packedLoadedSoundSize{0x0, 0x14534C400};
+		WEAK symbol<std::uint64_t> db_xfileStageReadSize{0x0, 0x14338E038};
+		WEAK symbol<XModelMaterialList> db_xmodelMaterialLists{0x0, 0x1451BAB00};
+
+		WEAK symbol<std::uint32_t> streamImageCount{0x0, 0x141CD3580};
+		WEAK symbol<void*> streamSortFile{0x0, 0x14534C418};
+
+		WEAK symbol<TransientMemPool> s_transientPools{0x0, 0x1413B8320};
+		WEAK symbol<std::uint32_t> s_transientPoolCount{0x0, 0x1413B88D0};
+		WEAK symbol<std::uint8_t*> s_transientCurrentFile{0x0, 0x1413D2F70};
+		WEAK symbol<void*> s_transientTempBuffer{0x0, 0x1413D2F78};
 
 		WEAK symbol<playerState_s*> playerState{0x0, 0x14CAAC780};
 	}

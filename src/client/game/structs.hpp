@@ -262,6 +262,67 @@ namespace game
 		DB_FileSysInterface_vtbl* vftbl;
 	};
 
+	struct StreamFile
+	{
+		DB_IFileSysFile* handle;
+		std::uint64_t length;
+		std::uint64_t startOffset;
+		bool isPak;
+		char __pad0[7];
+	};
+
+	static_assert(sizeof(StreamFile) == 0x20);
+
+	struct PackedLoadedSound
+	{
+		char __pad0[8];
+		std::uint8_t isLocalized;
+		char __pad1;
+		std::uint16_t fileIndex;
+		char __pad2[4];
+		std::uint64_t offset;
+		std::uint64_t length;
+		char* dest;
+	};
+
+	static_assert(offsetof(PackedLoadedSound, isLocalized) == 0x8);
+	static_assert(offsetof(PackedLoadedSound, fileIndex) == 0xA);
+	static_assert(offsetof(PackedLoadedSound, offset) == 0x10);
+	static_assert(offsetof(PackedLoadedSound, length) == 0x18);
+	static_assert(offsetof(PackedLoadedSound, dest) == 0x20);
+
+	struct PMemRange
+	{
+		char* base;
+		std::uint32_t blocks;
+	};
+
+	struct TransientMemPool
+	{
+		char name[0x40];
+		std::uint64_t slotSize;
+		std::uint32_t slotCount;
+		std::uint32_t fileCount;
+		char __pad0[0x20];
+	};
+
+	static_assert(sizeof(TransientMemPool) == 0x70);
+
+	struct TransientRequestList
+	{
+		std::uint16_t count;
+		std::uint32_t* ids;
+	};
+
+	struct XModelMaterialList
+	{
+		std::uint32_t count;
+		std::uint32_t* indices;
+		char __pad0[8];
+	};
+
+	static_assert(sizeof(XModelMaterialList) == 0x18);
+
 	enum CodPlayMode
 	{
 		CODPLAYMODE_NONE = 0x0,
@@ -5118,7 +5179,7 @@ namespace game
 	enum ConfigString : __int32
 	{
 		CS_FIRST = 0x0,
-		MAX_CONFIGSTRINGS = 5617,
+		MAX_CONFIGSTRINGS = 0x13F1, // 1.04 0x1371
 	};
 
 	namespace sp

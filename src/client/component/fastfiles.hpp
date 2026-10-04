@@ -49,6 +49,8 @@ private:
 	static HANDLE find_usermap(const std::string& mapname);
 	static HANDLE sys_create_file(game::Sys_Folder folder, const char* base_filename, bool ignore_usermap);
 	static HANDLE sys_create_file_stub(game::Sys_Folder folder, const char* base_filename);
+	static void db_process_transient_asset_list_stub(const char* name, int is_patch, int is_dlc);
+	static void* cl_transient_temp_alloc_stub(std::uint64_t size, std::uint32_t alignment);
 	static bool db_file_exists_stub(const char* file, int a2);
 
 	template <typename T>
@@ -85,9 +87,13 @@ private:
 	static void reallocate_sound_pool();
 	static void reallocate_material_pool();
 	static void reallocate_material_bitsets();
+	static void widen_sorted_materials();
+	static std::uint64_t effect_surf_sort_key(void* surf, std::uint32_t index);
 	static std::uint32_t append_xmodel_materials(void** list, std::uint32_t count);
 	static void reallocate_image_pool();
 	static void reallocate_customization();
+	static void reallocate_transient_files();
+	static void reallocate_transient_assets();
 	static void widen_stream_id_access(std::uintptr_t address, std::size_t length);
 	static void sort_stream_ids(std::uint32_t* begin, std::uint32_t* end, std::int64_t count, void* compare);
 	static void select_stream_reads(stream_select_context* context);

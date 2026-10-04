@@ -8,6 +8,7 @@
 #include "imagefiles.hpp"
 #include "weapon.hpp"
 #include "fastfiles_material_sites.hpp"
+#include "fastfiles_sorted_material_sites.hpp"
 
 #include "game/dvars.hpp"
 #include "game/game.hpp"
@@ -32,6 +33,8 @@ static utils::hook::detour db_file_exists_hook;
 static utils::hook::detour image_file_decrypt_value_hook;
 static utils::hook::detour db_unload_x_zones_hook;
 static utils::hook::detour db_link_xasset_entry_hook;
+static utils::hook::detour db_process_transient_asset_list_hook;
+
 
 static char last_zone_name[256]{};
 static char last_asset_name[256]{};
@@ -83,6 +86,9 @@ void fastfiles::post_unpack()
 	{
 		// track the last linked asset for crash dumps
 		db_link_xasset_entry_hook.create(0x1402BC920, db_link_xasset_entry_stub); // DB_LinkXAssetEntry
+
+		db_process_transient_asset_list_hook.create(0x1402BEBE0, db_process_transient_asset_list_stub); // DB_ProcessTransientAssetList
+		utils::hook::call(0x1402B819D, cl_transient_temp_alloc_stub); // DB_AllocXZoneMemoryInternal transient XFILE_BLOCK_TEMP
 	}
 
 	db_print_default_assets = dvars::register_bool("db_printDefaultAssets",
@@ -567,6 +573,49 @@ HANDLE fastfiles::sys_create_file_stub(game::Sys_Folder folder, const char* base
 	return sys_create_file(folder, base_filename, false);
 }
 
+
+void* fastfiles::cl_transient_temp_alloc_stub(const std::uint64_t size, [[maybe_unused]] const std::uint32_t alignment)
+{
+	// transient zones put XFILE_BLOCK_TEMP in the 0x1000 byte mp_transient_temp buffer without a size check,
+	// some 1.15 zones (mp_vm_rpg_base_tr, mp_vm_febsnp_base_tr) need more than its 64KB commit
+	constexpr std::uint64_t game_buffer_size = 0x1000;
+	static void* buffer = nullptr;
+	static std::uint64_t buffer_size = 0;
+
+	if (size <= game_buffer_size)
+	{
+		return *game::mp::s_transientTempBuffer;
+	}
+
+#ifdef _DEBUG
+	console::info("[transient] temp block %s: 0x%llX bytes\n", last_zone_name, size);
+#endif
+
+	if (size > buffer_size)
+	{
+		if (buffer)
+		{
+			VirtualFree(buffer, 0, MEM_RELEASE);
+		}
+
+		buffer_size = (size + 0xFFFF) & ~0xFFFFull;
+		buffer = VirtualAlloc(nullptr, buffer_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+		if (!buffer)
+		{
+			buffer_size = 0;
+			game::Com_Error(game::ERR_FATAL, "Failed to allocate 0x%llX bytes of transient temp memory", size);
+		}
+	}
+
+	return buffer;
+}
+
+void fastfiles::db_process_transient_asset_list_stub(const char* name, int is_patch, int is_dlc)
+{
+	// 1.04 only dedupes dlc lists, 1.15 also dedupes the _patch lists that re-register base files and assets
+	db_process_transient_asset_list_hook.invoke<void>(name, is_patch, is_patch || is_dlc);
+}
+
 bool fastfiles::db_file_exists_stub(const char* file, int a2)
 {
 	if (const auto file_exists = db_file_exists_hook.invoke<bool>(file, a2))
@@ -748,10 +797,10 @@ char fastfiles::wait_for_vlobby_stub(const char* zone, int a2)
 	static const auto virtual_lobby_map = *reinterpret_cast<game::dvar_t**>(0x1425F6DA0); // virtualLobbyMap
 	if (*zone == 0 || exists(zone))
 	{
-		return utils::hook::invoke<char>(0x1402BC110, zone, a2); // DB_IsFileLoaded
+		return game::mp::DB_IsFileLoaded(zone, a2);
 	}
 
-	return utils::hook::invoke<char>(0x1402BC110, virtual_lobby_map->current.string, a2);
+	return game::mp::DB_IsFileLoaded(virtual_lobby_map->current.string, a2);
 }
 
 constexpr unsigned int fastfiles::get_asset_type_size(const game::XAssetType type)
@@ -1309,7 +1358,6 @@ void fastfiles::reallocate_material_pool()
 	utils::hook::set(0x1402899CA + 3, pool_size);
 
 	utils::hook::set(0x14028B049 + 2, pool_size);
-	utils::hook::set(0x140094CE3 + 1, pool_size);
 	utils::hook::set(0x14063EE7F + 2, pool_size);
 	utils::hook::set(0x14063DAE0 + 2, pool_size);
 	utils::hook::set(0x1405EAAA7 + 2, pool_size);
@@ -1386,106 +1434,6 @@ void fastfiles::reallocate_material_pool()
 	replace_g_stream_offset(0x14028AFEE + 5, g_stream_material, 0x08);
 	replace_g_stream_offset(0x14028AFFB + 4, g_stream_material, 0x18);
 
-	// material sorting
-	{
-		static uint16_t sorted_materials[pool_size]{};
-		static uint8_t sorted_material_keys[pool_size]{};
-
-		utils::hook::set<uint32_t>(0x1405EC5DB + 1, pool_size);
-
-		utils::hook::inject(0x1400EA82C + 3, sorted_materials);
-		utils::hook::inject(0x14059EB5A + 3, sorted_materials);
-		utils::hook::inject(0x1405A04B8 + 3, sorted_materials);
-		utils::hook::inject(0x1405A1D42 + 3, sorted_materials);
-		utils::hook::inject(0x1405B1705 + 3, sorted_materials);
-		utils::hook::inject(0x1405B1B2D + 3, sorted_materials);
-
-		//utils::hook::inject(0x1405DEDAA + 3, sorted_materials); // bad hook, used to set the global rgp struct
-		//utils::hook::inject(0x1405E8EED + 3, sorted_materials);
-
-		utils::hook::inject(0x1405EA0AE + 3, sorted_materials);
-		utils::hook::inject(0x1405EC57F + 3, sorted_materials);
-		utils::hook::inject(0x1405EC63E + 3, sorted_materials);
-		utils::hook::inject(0x1405EC96F + 3, sorted_materials);
-		utils::hook::inject(0x140606F4E + 3, sorted_materials);
-		utils::hook::inject(0x1406210F7 + 3, sorted_materials);
-		utils::hook::inject(0x140621167 + 3, sorted_materials);
-
-		// these access other fields in rgp
-		//utils::hook::inject(0x14063069A + 3, sorted_materials);
-		//utils::hook::inject(0x140634CE6 + 3, sorted_materials);
-		//utils::hook::inject(0x1406355C2 + 3, sorted_materials);
-		//utils::hook::inject(0x140635ED0 + 3, sorted_materials);
-
-		utils::hook::set<uint32_t>(0x14059F3E1 + 5, RVA(sorted_materials));
-		utils::hook::set<uint32_t>(0x14059FC61 + 5, RVA(sorted_materials));
-		utils::hook::set<uint32_t>(0x1405A0CFF + 5, RVA(sorted_materials));
-		utils::hook::set<uint32_t>(0x1405A153F + 5, RVA(sorted_materials));
-		utils::hook::set<uint32_t>(0x1405A25A0 + 5, RVA(sorted_materials));
-		utils::hook::set<uint32_t>(0x1405A2DE0 + 5, RVA(sorted_materials));
-		utils::hook::set<uint32_t>(0x1405C387E + 5, RVA(sorted_materials));
-
-		constexpr auto g_draw_consts = 0x1524CC280;
-		const auto replace_g_draw_consts_offset = [](const size_t ptr, const void* arr, const int64_t off = 0)
-		{
-			const auto offset = reinterpret_cast<int64_t>(arr) - g_draw_consts + off;
-			utils::hook::set<int32_t>(ptr, static_cast<int32_t>(offset));
-		};
-
-		utils::hook::inject(0x1405EC648 + 3, sorted_material_keys);
-		utils::hook::inject(0x140615DC7 + 3, sorted_material_keys);
-		utils::hook::inject(0x140615FD7 + 3, sorted_material_keys);
-		utils::hook::inject(0x1406160F7 + 3, sorted_material_keys);
-		utils::hook::inject(0x140616230 + 3, sorted_material_keys);
-		utils::hook::inject(0x140616360 + 3, sorted_material_keys);
-		utils::hook::inject(0x140617242 + 3, sorted_material_keys);
-		utils::hook::inject(0x1406172D6 + 3, sorted_material_keys);
-		utils::hook::inject(0x140617416 + 3, sorted_material_keys);
-		utils::hook::inject(0x1406174B7 + 3, sorted_material_keys);
-		utils::hook::inject(0x140617556 + 3, sorted_material_keys);
-		utils::hook::inject(0x1406175E9 + 3, sorted_material_keys);
-		utils::hook::inject(0x140617686 + 3, sorted_material_keys);
-		utils::hook::inject(0x140617726 + 3, sorted_material_keys);
-		utils::hook::inject(0x1406177C2 + 3, sorted_material_keys);
-		utils::hook::inject(0x140617C46 + 3, sorted_material_keys);
-		utils::hook::inject(0x140617CD9 + 3, sorted_material_keys);
-		utils::hook::inject(0x140617D76 + 3, sorted_material_keys);
-		utils::hook::inject(0x140617E16 + 3, sorted_material_keys);
-		utils::hook::inject(0x140617EFC + 3, sorted_material_keys);
-		utils::hook::inject(0x140618009 + 3, sorted_material_keys);
-		utils::hook::inject(0x1406180CE + 3, sorted_material_keys);
-		utils::hook::inject(0x140618167 + 3, sorted_material_keys);
-		utils::hook::inject(0x140618277 + 3, sorted_material_keys);
-		utils::hook::inject(0x140618317 + 3, sorted_material_keys);
-		utils::hook::inject(0x1406183D2 + 3, sorted_material_keys);
-		utils::hook::inject(0x140618482 + 3, sorted_material_keys);
-		utils::hook::inject(0x140618535 + 3, sorted_material_keys);
-		utils::hook::inject(0x1406185E5 + 3, sorted_material_keys);
-		utils::hook::inject(0x140618677 + 3, sorted_material_keys);
-		utils::hook::inject(0x140618DEA + 3, sorted_material_keys);
-		utils::hook::inject(0x140618E0A + 3, sorted_material_keys);
-		utils::hook::inject(0x140618E4A + 3, sorted_material_keys);
-		utils::hook::inject(0x140618E6B + 3, sorted_material_keys);
-		utils::hook::inject(0x140618E97 + 3, sorted_material_keys);
-		utils::hook::inject(0x140618EB7 + 3, sorted_material_keys);
-		utils::hook::inject(0x140618ED7 + 3, sorted_material_keys);
-		utils::hook::inject(0x140618EF7 + 3, sorted_material_keys);
-		utils::hook::inject(0x140618F1A + 3, sorted_material_keys);
-		utils::hook::inject(0x140618F3A + 3, sorted_material_keys);
-		utils::hook::inject(0x140618F5A + 3, sorted_material_keys);
-
-		replace_g_draw_consts_offset(0x1400EAAC5 + 4, sorted_material_keys);
-		replace_g_draw_consts_offset(0x1400EAB23 + 4, sorted_material_keys);
-		replace_g_draw_consts_offset(0x1406259EE + 5, sorted_material_keys);
-		replace_g_draw_consts_offset(0x140625A74 + 5, sorted_material_keys);
-		replace_g_draw_consts_offset(0x140625AFA + 5, sorted_material_keys);
-		replace_g_draw_consts_offset(0x140625B80 + 5, sorted_material_keys);
-		replace_g_draw_consts_offset(0x140625D2B + 5, sorted_material_keys);
-		replace_g_draw_consts_offset(0x140625DB2 + 5, sorted_material_keys);
-		replace_g_draw_consts_offset(0x140625E39 + 5, sorted_material_keys);
-		replace_g_draw_consts_offset(0x140625EC4 + 5, sorted_material_keys);
-	}
-
 	// material stream
 	{
 		/*
@@ -1543,55 +1491,6 @@ void fastfiles::reallocate_material_pool()
 		utils::hook::set<uint32_t>(0x1402C8FCC + 4, RVA(material_touch));
 		utils::hook::set<uint32_t>(0x1402C94A9 + 4, RVA(material_touch));
 		utils::hook::set<uint32_t>(0x1402CB607 + 4, RVA(material_touch));
-
-		static struct
-		{
-			float world_priority[pool_size]{};
-			uint16_t layer[106304 * 2];
-		} stream_info;
-
-		// world priority
-
-		utils::hook::inject(0x1402C76BA + 3, stream_info.world_priority);
-		utils::hook::inject(0x1402CB550 + 3, stream_info.world_priority);
-		utils::hook::inject(0x1402CB56B + 3, stream_info.world_priority);
-		utils::hook::inject(0x1402CB583 + 3, stream_info.world_priority);
-		utils::hook::inject(0x1402CB592 + 3, stream_info.world_priority);
-		utils::hook::inject(0x1405A4CB6 + 3, stream_info.world_priority);
-		utils::hook::inject(0x1405EC8BC + 3, stream_info.world_priority);
-
-		utils::hook::set<uint32_t>(0x1402C7353 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C7365 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C737C + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C7395 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C73C2 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C73D4 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C73EF + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C7404 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C744F + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C7468 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C7563 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C7571 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C7598 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C75A6 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C94D6 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C94E0 + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C94EA + 6, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C7D09 + 4, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402C8FC0 + 4, RVA(stream_info.world_priority));
-		utils::hook::set<uint32_t>(0x1402CB619 + 4, RVA(stream_info.world_priority));
-
-		// layer
-
-		utils::hook::inject(0x1402CB546 + 3, stream_info.layer);
-		utils::hook::inject(0x1402CB561 + 3, stream_info.layer);
-
-		utils::hook::set<uint32_t>(0x1402C72EB + 5, RVA(stream_info.layer));
-		utils::hook::set<uint32_t>(0x1402C7342 + 5, RVA(stream_info.layer));
-		utils::hook::set<uint32_t>(0x1402C736F + 5, RVA(stream_info.layer));
-		utils::hook::set<uint32_t>(0x1402C73A9 + 5, RVA(stream_info.layer));
-		utils::hook::set<uint32_t>(0x1402C73E2 + 5, RVA(stream_info.layer));
-		utils::hook::set<uint32_t>(0x1402C7442 + 5, RVA(stream_info.layer));
 
 		static float base_material_priority[pool_size]{};
 
@@ -1704,30 +1603,121 @@ void fastfiles::reallocate_material_bitsets()
 	utils::hook::jump(0x1402899F0, append_xmodel_materials);
 }
 
-std::uint32_t fastfiles::append_xmodel_materials(void** list, const std::uint32_t count)
+void fastfiles::widen_sorted_materials()
 {
-	struct model_materials
+	constexpr std::size_t count = 0x4480; // 1.04 0x2980
+
+	struct material_sort_info
 	{
-		std::uint32_t count;
-		std::uint32_t* indices;
-		char __pad0[8];
+		float distance[count];
+		char entries[count][20];
+		char __pad0[0x80];
 	};
 
-	static_assert(sizeof(model_materials) == 0x18);
+	alignas(16) static std::uint16_t sorted_materials[count]{};
+	alignas(16) static material_sort_info sort_info{};
+	alignas(16) static std::uint32_t used_bits[0x200]{};
+	alignas(16) static std::uint8_t sorted_flags[count]{};
 
-	const auto* model_material_table = reinterpret_cast<model_materials*>(0x1451BAB00);
+	struct region
+	{
+		std::uintptr_t old_start;
+		std::size_t old_size;
+		std::uintptr_t new_start;
+	};
+
+	const region regions[] =
+	{
+		{0x14FD6AC00, 0x5300, reinterpret_cast<std::uintptr_t>(sorted_materials)},
+		{0x14E06D700, 0xA600, reinterpret_cast<std::uintptr_t>(sort_info.distance)},
+		{0x14E077D00, 0x33E00, reinterpret_cast<std::uintptr_t>(sort_info.entries)},
+		{0x14FE70FF0, 0x400, reinterpret_cast<std::uintptr_t>(used_bits)},
+		{0x1524CC380, 0x2980, reinterpret_cast<std::uintptr_t>(sorted_flags)},
+	};
+
+	const auto map = [&](const std::uintptr_t address)
+	{
+		for (const auto& r : regions)
+		{
+			if (address >= r.old_start && address < r.old_start + r.old_size)
+			{
+				return r.new_start + (address - r.old_start);
+			}
+		}
+
+		return address;
+	};
+
+	for (const auto& site : sorted_material_sites::relocs)
+	{
+		const auto field = site.address + site.offset;
+		const auto current = *reinterpret_cast<std::int32_t*>(field);
+		const auto origin = site.kind == image_pool_sites::base ? map(site.base) : site.base;
+		const auto value = static_cast<std::int64_t>(map(site.base + current)) - static_cast<std::int64_t>(origin);
+
+		assert(value == static_cast<std::int32_t>(value));
+		utils::hook::set<std::int32_t>(field, static_cast<std::int32_t>(value));
+	}
+
+	for (const auto& site : sorted_material_sites::constants)
+	{
+		const auto field = site.address + site.offset;
+		switch (site.size)
+		{
+		case 1:
+			assert(*reinterpret_cast<std::uint8_t*>(field) == static_cast<std::uint8_t>(site.old_value));
+			utils::hook::set<std::uint8_t>(field, static_cast<std::uint8_t>(site.new_value));
+			break;
+		case 4:
+			assert(*reinterpret_cast<std::uint32_t*>(field) == static_cast<std::uint32_t>(site.old_value));
+			utils::hook::set<std::uint32_t>(field, static_cast<std::uint32_t>(site.new_value));
+			break;
+		default:
+			assert(*reinterpret_cast<std::uint64_t*>(field) == site.old_value);
+			utils::hook::set<std::uint64_t>(field, site.new_value);
+			break;
+		}
+	}
+
+	utils::hook::jump(0x140606E20, effect_surf_sort_key);
+
+	// draw surf masks are built before we run
+	utils::hook::set<std::uint64_t>(0x1420DBD30, *reinterpret_cast<std::uint64_t*>(0x1420DBD30) & ~(1ull << 63));
+	for (const auto address : {0x1420DBD40ull, 0x1420DBD50ull, 0x1420DBD60ull})
+	{
+		utils::hook::set<std::uint64_t>(address, *reinterpret_cast<std::uint64_t*>(address) | 1ull << 63);
+	}
+}
+
+std::uint64_t fastfiles::effect_surf_sort_key(void* surf, const std::uint32_t index)
+{
+	const auto key = **reinterpret_cast<std::uint64_t**>(reinterpret_cast<std::uintptr_t>(surf) + 8);
+
+	auto high = (key & 0xFFFC000000) << 8;
+	if ((key & 0x3FFFF00) == 0xFF00 && static_cast<std::uint8_t>(key) == 0x7F)
+	{
+		high |= 0x100000000;
+	}
+
+	const auto low = (high & 0x100000000) ? 0 : (key >> 8) & 0x3FFFF;
+	const auto packed = (((index & 0x3F) | (low << 6)) << 2) | (key & 0xFFFFF00000000000);
+	return (packed << 4) | high;
+}
+
+std::uint32_t fastfiles::append_xmodel_materials(void** list, const std::uint32_t count)
+{
 	std::uint32_t seen[0x800 / 4]{};
 	std::uint32_t added = 0;
 
 	for (auto i = 0u; i < count; ++i)
 	{
-		const auto model_index = utils::hook::invoke<std::uint32_t>(0x1402BBDB0, list[i]);
-		const auto& entry = model_material_table[model_index];
+		const auto model_index = game::mp::DB_GetXModelIndex(list[i]);
+		const auto& entry = game::mp::db_xmodelMaterialLists[model_index];
 
 		for (auto j = 0u; j < entry.count; ++j)
 		{
 			const auto material_index = static_cast<std::uint16_t>(entry.indices[j]);
-			const auto material = utils::hook::invoke<void*>(0x1402BBB00, material_index);
+			const auto material = game::mp::DB_GetMaterialAtIndex(material_index);
 			const auto bit = 0x80000000u >> (material_index & 0x1F);
 			auto& word = seen[material_index >> 5];
 
@@ -1832,7 +1822,7 @@ void fastfiles::reallocate_image_pool()
 	set_field(0x1402C6406 + 4, static_cast<std::int64_t>(map(0x141CBBE80)) - static_cast<std::int64_t>(map(0x141C8B900)));
 
 	static char stream_files[0x18 * pool_size * 4]{};
-	utils::hook::inject(0x14028D726 + 3, stream_files); // sub_14028D720
+	utils::hook::inject(0x14028D726 + 3, stream_files); // sub_14028D720 (idk)
 	utils::hook::inject(0x14028D8A8 + 3, stream_files); // DB_LoadXFile
 	assert(*reinterpret_cast<std::int32_t*>(0x14028D890 + 1) == 0xBB80);
 	utils::hook::set<std::int32_t>(0x14028D890 + 1, pool_size * 4);
@@ -2205,6 +2195,71 @@ void fastfiles::reallocate_customization()
 	}
 }
 
+void fastfiles::reallocate_transient_files()
+{
+	// s_transientFiles (1.04 2048, 1.15 7144)
+	constexpr std::uint32_t file_count = 0x2000;
+	constexpr std::uint32_t file_size = 0x30;
+	static char files[file_count * file_size]{};
+
+	const auto files_base = reinterpret_cast<std::uintptr_t>(files);
+	for (const auto address : {0x14005D6C3, 0x14005D730, 0x14005D81C, 0x14005D859, 0x14005DB00})
+	{
+		utils::hook::set<std::int32_t>(address + 3, static_cast<std::int32_t>(files_base - (address + 7)));
+	}
+
+	utils::hook::set<std::int32_t>(0x14005DD08 + 3, static_cast<std::int32_t>(files_base - 0x140000000));
+	utils::hook::set<std::int32_t>(0x14005DD17 + 4, static_cast<std::int32_t>(files_base + 4 - 0x140000000));
+
+	utils::hook::set<std::uint32_t>(0x14005D737 + 2, file_count * file_size);
+	utils::hook::set<std::uint32_t>(0x14005DB07 + 2, file_count * file_size);
+	utils::hook::set<std::uint32_t>(0x14005D83B + 2, file_count);
+}
+
+void fastfiles::reallocate_transient_assets()
+{
+	// s_transientAssetEntries (1.04 4096, 1.15 9216)
+	constexpr std::uint32_t asset_count = 0x4000;
+	constexpr std::uint32_t asset_size = 0xC;
+	static char assets[asset_count * asset_size]{};
+
+	const auto assets_base = reinterpret_cast<std::uintptr_t>(assets);
+
+	const std::pair<std::uintptr_t, std::uintptr_t> rip_sites[] =
+	{
+		{0x14005DF7D, 0}, {0x14005E39A, 0}, {0x14005E676, 9}, {0x14005EB36, 9}, {0x14005EB71, 0},
+		{0x14005EC51, 9}, {0x14005EE51, 9}, {0x14005F236, 9}, {0x14005F473, 9}, {0x14005F59B, 0},
+	};
+
+	for (const auto& [address, offset] : rip_sites)
+	{
+		utils::hook::set<std::int32_t>(address + 3, static_cast<std::int32_t>(assets_base + offset - (address + 7)));
+	}
+
+	const std::pair<std::uintptr_t, std::uintptr_t> rva_sites[] =
+	{
+		{0x14005E0A7 + 4, 0}, {0x14005E0B1 + 5, 4}, {0x14005E147 + 4, 0}, {0x14005E151 + 5, 4},
+		{0x14005E4A5 + 3, 0}, {0x14005E4BB + 5, 6}, {0x14005E737 + 4, 0}, {0x14005E748 + 5, 6},
+		{0x14005E751 + 5, 4}, {0x14005E75A + 5, 8}, {0x14005E796 + 5, 4}, {0x14005E7B1 + 5, 4},
+		{0x14005EA58 + 4, 0}, {0x14005EA62 + 5, 4},
+	};
+
+	for (const auto& [address, offset] : rva_sites)
+	{
+		utils::hook::set<std::int32_t>(address, static_cast<std::int32_t>(assets_base + offset - 0x140000000));
+	}
+
+	utils::hook::set<std::uint32_t>(0x14005E702 + 3, asset_count);
+
+	// DB_ProcessTransientAssetList reads asset list max 0x30000 bytes (1.15 0x44C00)
+	constexpr std::uint32_t asslist_size = 0x80000;
+	utils::hook::set<std::uint32_t>(0x1402BEC16 + 1, asslist_size);
+	utils::hook::set<std::uint32_t>(0x1402BEC32 + 2, asslist_size);
+
+	// CL_TransientMem_RegisterPool (1.04 1mb 1.15 3mb)
+	utils::hook::set<std::uint32_t>(0x14005DA76 + 2, 0x300000);
+}
+
 void fastfiles::reallocate_asset_pools()
 {
 	if (game::environment::is_sp())
@@ -2217,8 +2272,11 @@ void fastfiles::reallocate_asset_pools()
 	reallocate_sound_pool();
 	reallocate_material_pool();
 	reallocate_material_bitsets();
+	widen_sorted_materials();
 	reallocate_image_pool();
 	reallocate_customization();
+	reallocate_transient_files();
+	reallocate_transient_assets();
 	reallocate_asset_pool_multiplier<game::ASSET_TYPE_XANIMPARTS, 2>();
 	reallocate_asset_pool_multiplier<game::ASSET_TYPE_TTF, 2>();
 	reallocate_asset_pool_multiplier<game::ASSET_TYPE_LOADED_SOUND, 2>();
