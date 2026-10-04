@@ -3,6 +3,8 @@
 
 #include "game/dvars.hpp"
 #include "game/game.hpp"
+#include "game/scripting/array.hpp"
+#include "game/scripting/execution.hpp"
 #include "game/scripting/functions.hpp"
 
 #include "component/logfile.hpp"
@@ -15,6 +17,7 @@
 #include "script_loading.hpp"
 
 #include <utils/hook.hpp>
+#include <utils/io.hpp>
 
 using namespace gsc;
 
@@ -39,7 +42,7 @@ static std::vector<devmap_entry> devmap_entries{};
 
 void script_extension::post_unpack()
 {
-	function_id_start = SELECT_VALUE(0x30A, 0x301);
+	function_id_start = 0x30A;
 
 	developer_script = dvars::register_bool("developer_script", false, 0, "Enable developer script comments");
 
@@ -94,6 +97,8 @@ void script_extension::post_unpack()
 		utils::hook::nop(0x140445BE7 + 5, 3);
 
 		utils::hook::call(0x140446EE3, vm_error_stub); // LargeLocalResetToMark
+
+		add_1_15_builtins();
 	}
 
 	if (game::environment::is_dedi())
@@ -667,6 +672,133 @@ scripting::value_wrap function_args::get(const int index) const
 	}
 
 	return {this->values_[index], index};
+}
+
+void script_extension::add_1_15_builtins()
+{
+	functions[0x302] = [](const function_args&) -> scripting::script_value // getnumberofclients
+	{
+		return scripting::call_function("getdvarint", {"sv_maxclients"});
+	};
+
+	functions[0x303] = [](const function_args& args) // tablelookup
+	{
+		return scripting::call_function("tablelookup", args.get_raw());
+	};
+
+	functions[0x304] = [](const function_args& args) // tablelookuprownum
+	{
+		auto values = args.get_raw();
+		values.resize(std::min(values.size(), std::size_t(3)));
+		return scripting::call_function("tablelookuprownum", values);
+	};
+
+	functions[0x305] = [](const function_args& args) -> scripting::script_value // currency balance (controller, type)
+	{
+		static const char* names[] = {nullptr, "launchCredits", "credits", "parts", "codPoints", "bonus"};
+		const auto type = args[1].as<int>();
+		if (type <= 0 || type >= static_cast<int>(std::size(names)))
+		{
+			return 0;
+		}
+
+		std::string data{};
+		if (!utils::io::read_file("players2/user/depot.json", &data))
+		{
+			return 0;
+		}
+
+		const auto json = nlohmann::json::parse(data, nullptr, false);
+		if (json.is_discarded() || !json.contains("currencies") || !json["currencies"].contains(names[type]))
+		{
+			return 0;
+		}
+
+		return json["currencies"][names[type]].get<int>();
+	};
+
+	functions[0x306] = [](const function_args&) -> scripting::script_value // supply drop count (controller, type)
+	{
+		return 0;
+	};
+
+	functions[0x307] = [](const function_args&) -> scripting::script_value // bundle price info (name)
+	{
+		scripting::array price{};
+		price.set(std::string("amount"), 999999);
+		return price;
+	};
+
+	functions[0x2FA] = [](const function_args& args) -> scripting::script_value // getcacplayerdataforgroup
+	{
+		const auto values = args.get_raw();
+		if (!values.empty() && values.back().is<std::string>() && values.back().as<std::string>() == "hasEverVisitedDepot")
+		{
+			// playerdata has no hasEverVisitedDepot, so this covers it
+			return utils::io::file_exists("players2/user/depot_visited") ? 1 : 0;
+		}
+
+		return scripting::call_function("getcacplayerdataforgroup", values);
+	};
+
+	functions[0x308] = [](const function_args& args) // setplayerdataforgroup (controller, group, path?, value)
+	{
+		const auto values = args.get_raw();
+		if (values.size() >= 2 && values[values.size() - 2].is<std::string>() && values[values.size() - 2].as<std::string>() == "hasEverVisitedDepot")
+		{
+			// ^ same as above
+			if (values.back().is<int>() && values.back().as<int>())
+			{
+				utils::io::write_file("players2/user/depot_visited", "1", false);
+			}
+			else
+			{
+				utils::io::remove_file("players2/user/depot_visited");
+			}
+		}
+
+		return scripting::script_value{};
+	};
+
+	functions[0x309] = [](const function_args&) -> scripting::script_value // inpartywithotherplayers
+	{
+		return 0;
+	};
+
+	functions[0x30A] = [](const function_args&) -> scripting::script_value // getglasspieces
+	{
+		return scripting::array{};
+	};
+
+	methods[0x8487] = [](const game::scr_entref_t ent_ref, const function_args& args) // scriptmodelplayanimdeltamotionfrompos
+	{
+		// TODO: blend trees are not ported, the 5th arg is ignored (1.15 doesn't do this though, so check it out)
+		const auto count = game::scr_VmPub->outparamcount;
+		game::scr_VmPub->outparamcount = std::min(count, 4u);
+		reinterpret_cast<void(*)(game::scr_entref_t)>(0x140380630)(ent_ref);
+		game::scr_VmPub->outparamcount = count;
+		return scripting::script_value{};
+	};
+
+	methods[0x8583] = [](const game::scr_entref_t, const function_args&)
+	{
+		return scripting::script_value{}; // some hodgepodge only thing
+	};
+
+	methods[0x8584] = [](const game::scr_entref_t, const function_args&)
+	{
+		return scripting::script_value{}; // idk
+	};
+
+	methods[0x8585] = [](const game::scr_entref_t, const function_args&) -> scripting::script_value
+	{
+		return 1; // has stats
+	};
+
+	methods[0x8586] = [](const game::scr_entref_t, const function_args&) -> scripting::script_value 
+	{
+		return 1; // matchmaking ranked check
+	};
 }
 
 REGISTER_COMPONENT(script_extension)

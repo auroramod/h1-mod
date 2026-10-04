@@ -95,6 +95,7 @@ private:
 	static void print_callstack();
 	static void vm_error_stub(int mark_pos);
 	static void print(const gsc::function_args& args);
+	static void add_1_15_builtins();
 	static scripting::script_value typeof(const gsc::function_args& args);
 	static void* store_func_id_stub();
 	static void* store_func_id_pointer_stub();
