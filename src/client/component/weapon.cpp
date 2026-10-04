@@ -16,6 +16,17 @@ static utils::hook::detour g_setup_level_weapon_def_hook;
 static utils::hook::detour xmodel_get_bone_index_hook;
 
 static utils::memory::allocator ddl_allocator;
+
+/*
+	1.04 - 128 camos, idx 0-7, model variant 8, camo 9-15, reticle 16-21, attachment combo 22-30
+	1.15 - 512 camos, idx 0-7, camo 8-16, attachment combo 17-26 (no variant or reticle)
+*/
+static constexpr std::uint32_t camo_shift = 8;
+static constexpr std::uint32_t camo_mask = 0x1FF;
+static constexpr std::uint32_t max_camos = 0x200;
+
+static std::int8_t camo_flags[max_camos]{};
+static void* camo_materials[max_camos]{};
 static std::unordered_set<void*> modified_enums;
 
 void weapon::post_unpack()
@@ -27,6 +38,7 @@ void weapon::post_unpack()
 
 		// use tag_weapon if tag_weapon_right or tag_knife_attach are not found on model
 		xmodel_get_bone_index_hook.create(0x14051E0C0, xmodel_get_bone_index_stub);
+
 		// make custom weapon index mismatch not drop in CG_SetupCustomWeapon
 		utils::hook::call(0x1400C708F, cw_mismatch_error_stub);
 
@@ -38,8 +50,8 @@ void weapon::post_unpack()
 		dvars::register_bool("sv_disableCustomClasses", 
 			false, game::DVAR_CODINFO, "Disable custom classes on server");
 
-		// change register used for BG_GetNumWeapons loops to 32 bits
-		patch_num_weapons_reg();
+		patch_camo_bits();			// use the 1.15 weapon camo layout (9 bit)
+		patch_num_weapons_reg();	// change register used for BG_GetNumWeapons loops to 32 bits
 	}
 
 #ifdef _DEBUG
@@ -78,6 +90,76 @@ void weapon::post_unpack()
 void weapon::clear_modifed_enums()
 {
 	modified_enums.clear();
+}
+
+int weapon::camo_table_get_id_stub(const char* value)
+{
+	const auto id = std::atoi(value);
+	return id > static_cast<int>(max_camos) ? 0 : id;
+}
+
+std::uint32_t weapon::get_weapon_camo(const std::uint32_t weapon)
+{
+	return (weapon >> camo_shift) & camo_mask;
+}
+
+void weapon::get_weapon_model_info_stub(const std::uint32_t weapon, bool /*alt*/, int* variant, std::uint32_t* camo, int* emblem)
+{
+	*variant = 0;
+	*camo = get_weapon_camo(weapon);
+	*emblem = utils::hook::invoke<int>(0x1401F8610, weapon);
+}
+
+std::uint32_t weapon::weapon_to_stream_key_stub(const std::uint32_t weapon)
+{
+	auto key = ((weapon >> 14) & 0x1FF00) | (weapon & 0xFF);
+	if (const auto camo = get_weapon_camo(weapon); camo && camo_flags[camo - 1] >= 0)
+	{
+		key |= 1 << 17;
+	}
+
+	return key;
+}
+
+std::uint32_t weapon::stream_key_to_weapon_stub(const std::uint32_t key)
+{
+	auto weapon = ((key & 0x1FF00) << 14) | (key & 0xFF);
+	if (key & (1 << 17))
+	{
+		const auto default_camo = *reinterpret_cast<std::uint32_t*>(0x146520604);
+		weapon |= (default_camo & camo_mask) << camo_shift;
+	}
+
+	return weapon;
+}
+
+char* weapon::append_camo_name(char* dest, const std::uint32_t weapon, const char separator)
+{
+	auto camo = get_weapon_camo(weapon);
+	if (!camo)
+	{
+		return dest;
+	}
+
+	*dest++ = separator;
+	std::memcpy(dest, "camo", 4);
+	dest += 4;
+
+	dest[2] = static_cast<char>('0' + camo % 10);
+	camo /= 10;
+	dest[1] = static_cast<char>('0' + camo % 10);
+	dest[0] = static_cast<char>('0' + camo / 10);
+	return dest + 3;
+}
+
+void weapon::patch_camo_call(const std::uintptr_t address, const std::size_t size, const std::function<void(utils::hook::assembler&)>& body)
+{
+	utils::hook::nop(address, size);
+	utils::hook::call(address, utils::hook::assemble([&](utils::hook::assembler& a)
+	{
+		body(a);
+		a.ret();
+	}));
 }
 
 void weapon::g_setup_level_weapon_def_stub()
@@ -334,6 +416,130 @@ void weapon::patch_num_weapons_reg()
 	utils::hook::nop(0x1401F7D10, 5);
 	utils::hook::set<std::uint16_t>(0x1401F7D15, 0xD889);
 	utils::hook::nop(0x1401F7D17, 1);
+}
+
+void weapon::patch_camo_bits()
+{
+	using namespace asmjit::x86;
+
+	// camo tables (sub_14038C9E0 loads mp/camoTable.csv)
+	const auto flags = reinterpret_cast<std::uintptr_t>(camo_flags);
+	const auto materials = reinterpret_cast<std::uintptr_t>(camo_materials);
+	for (const auto address : {0x14038CA0D, 0x14038CB39, 0x14038CB6E, 0x140050F96, 0x1400510B6, 0x1400511A3, 0x140051236, 0x140051346, 0x1400CBCBB})
+	{
+		utils::hook::inject(address + 3, flags);
+	}
+
+	for (const auto address : {0x14038CA21, 0x14038D8C3})
+	{
+		utils::hook::inject(address + 3, materials);
+	}
+
+	utils::hook::set<std::int32_t>(0x14038D61A + 4, static_cast<std::int32_t>(materials - 0x140000000));
+	utils::hook::set<std::int32_t>(0x14038D640 + 4, static_cast<std::int32_t>(materials - 0x140000000));
+	utils::hook::set<std::int32_t>(0x14038D660 + 5, static_cast<std::int32_t>(flags - 0x140000000));
+	utils::hook::set<std::uint32_t>(0x14038CA03 + 1, max_camos); // rep stosb count
+	utils::hook::set<std::uint8_t>(0x14038CA2F + 4, max_camos / 8 - 1); // material clear loop
+	utils::hook::call(0x14038CB12, camo_table_get_id_stub);
+
+	// shr 9, and 7Fh -> shr 8, and 1FFh
+	for (const auto& [address, reg] : {std::pair{0x140050F8C, ecx}, {0x1400510AC, ecx}, {0x140051196, eax}, {0x14005122C, ecx}, {0x140051339, eax}})
+	{
+		patch_camo_call(address, 6, [reg](utils::hook::assembler& a)
+		{
+			a.shr(reg, camo_shift);
+			a.and_(reg, camo_mask);
+		});
+	}
+
+	// Scr_GetWeaponCamoName
+	patch_camo_call(0x1403588EA, 13, [](utils::hook::assembler& a)
+	{
+		a.shr(eax, camo_shift);
+		a.and_(eax, camo_mask);
+		a.mov(r8, 0x1408532C0); // "camo%02d"
+	});
+
+	// camo material apply (sub_14038D5B0)
+	patch_camo_call(0x14038D69E, 11, [](utils::hook::assembler& a)
+	{
+		a.shr(r10d, camo_shift);
+		a.mov(r9d, edi);
+		a.and_(r10d, camo_mask);
+	});
+
+	patch_camo_call(0x14038D6B0, 11, [](utils::hook::assembler& a)
+	{
+		a.mov(edx, dword_ptr(rcx, -4));
+		a.mov(eax, edx);
+		a.shr(eax, camo_shift);
+		a.and_(eax, camo_mask);
+	});
+
+	// weapon model variant + camo getters
+	utils::hook::jump(0x140201650, get_weapon_model_info_stub);
+	utils::hook::jump(0x140201710, get_weapon_model_info_stub);
+
+	// weapon stream keys
+	utils::hook::jump(0x14041B800, weapon_to_stream_key_stub);
+	utils::hook::jump(0x14041BA40, stream_key_to_weapon_stub);
+
+	// BG_GetWeaponNameComplete camo suffix (far jump clobbers rax, dest is also in r8)
+	utils::hook::jump(0x1401F9778, utils::hook::assemble([](utils::hook::assembler& a)
+	{
+		a.mov(rcx, r8);
+		a.mov(edx, r9d);
+		a.movzx(r8d, bpl);
+		a.call_aligned(append_camo_name);
+		a.mov(r8, rax);
+		a.jmp(0x1401F97B7);
+	}), true);
+
+	// G_GetWeaponForName: camo clamp 7Fh -> 1FFh, reticle clamp 40h -> 20h, pack ((reticle << 9) | camo) << 8
+	patch_camo_call(0x14038C485, 7, [](utils::hook::assembler& a)
+	{
+		a.cmp(cx, camo_mask);
+		a.mov(r15d, r9d);
+	});
+
+	utils::hook::set<std::uint8_t>(0x14038C4E3 + 3, 0x20);
+	utils::hook::set<std::uint8_t>(0x14038C619 + 2, 0x1F);
+	utils::hook::nop(0x14038C628, 3);
+	utils::hook::set<std::uint8_t>(0x14038C62B + 2, 9);
+	utils::hook::set<std::uint8_t>(0x14038C630 + 2, camo_shift);
+
+	// give weapon script camo/reticle params (0x14032EA90)
+	patch_camo_call(0x14032EB84, 19, [](utils::hook::assembler& a)
+	{
+		a.cmp(eax, camo_mask);
+		a.cmovge(eax, r13d);
+		a.shl(eax, camo_shift);
+		a.xor_(eax, ebx);
+		a.and_(eax, camo_mask << camo_shift);
+		a.xor_(ebx, eax);
+	});
+
+	utils::hook::set<std::uint8_t>(0x14032EC10 + 2, 0x1F);
+	utils::hook::set<std::uint8_t>(0x14032EC17 + 2, 0x11);
+	utils::hook::set<std::uint32_t>(0x14032EC1C + 1, 0x3E0000);
+
+	// patch reticles   shr 10h, and 3Fh -> shr 11h, and 1Fh
+	utils::hook::set<std::uint8_t>(0x1401F8270 + 2, 0x11);
+	utils::hook::set<std::uint8_t>(0x1401F8273 + 2, 0x1F);
+	utils::hook::set<std::uint8_t>(0x1401F97BC + 3, 0x11);
+	utils::hook::set<std::uint8_t>(0x1401F97C0 + 3, 0x1F);
+	utils::hook::set<std::uint8_t>(0x1401FA5A0 + 3, 0x11);
+	utils::hook::set<std::uint8_t>(0x1401FA5A4 + 2, 0x1F);
+
+	// patch model variants   and 1 -> and 0 (bit 8 is camo now)
+	utils::hook::set<std::uint8_t>(0x1400E81FD + 2, 0);
+	utils::hook::set<std::uint8_t>(0x1402016F7 + 2, 0);
+	utils::hook::set<std::uint8_t>(0x1402017BA + 2, 0);
+	utils::hook::set<std::uint8_t>(0x1402203AF + 3, 0);
+	utils::hook::set<std::uint8_t>(0x140329B0A + 2, 0);
+
+	// patch BG_PlayerSetWeaponModelVariant (sub_140202340) to never write bit 8
+	utils::hook::nop(0x14020235A, 2);
 }
 
 REGISTER_COMPONENT(weapon)
