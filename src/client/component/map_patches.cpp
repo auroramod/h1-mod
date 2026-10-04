@@ -897,6 +897,61 @@ namespace
 		});
 	}
 
+	void* sp_script_brushmodel_link_stub()
+	{
+		return utils::hook::assemble([](utils::hook::assembler& a)
+		{
+			const auto link = a.newLabel();
+
+			a.mov(rax, 0x14621B82C); // g_parsingAddonEntities
+			a.cmp(dword_ptr(rax), 0);
+			a.jz(link);
+			a.or_(dword_ptr(rbx, 0xC0), 0x20);
+
+			a.bind(link);
+			a.mov(rcx, rbx);
+			a.call(0x14049DC30); // SV_LinkEntity
+			a.jmp(0x1403811E2);
+		});
+	}
+
+	void* sv_link_entity_phys_stub()
+	{
+		return utils::hook::assemble([](utils::hook::assembler& a)
+		{
+			const auto remove = a.newLabel();
+
+			a.test(eax, 0x280E691);
+			a.jz(remove);
+			a.test(byte_ptr(rsi, 0xC0), 0x20);
+			a.jnz(remove);
+			a.jmp(0x14049E338);
+
+			a.bind(remove);
+			a.jmp(0x14049E37F);
+		});
+	}
+
+	void* cg_link_entity_phys_stub()
+	{
+		return utils::hook::assemble([](utils::hook::assembler& a)
+		{
+			const auto remove = a.newLabel();
+
+			a.test(r14d, 0x280E491);
+			a.jz(remove);
+			a.test(byte_ptr(r13, 0x13C + 0xC0), 0x20);
+			a.jnz(remove);
+			a.mov(rax, 0x149465590); // physWorld brushModelCount
+			a.cmp(r12d, dword_ptr(rax));
+			a.jae(remove);
+			a.jmp(0x140241884);
+
+			a.bind(remove);
+			a.jmp(0x1402418BC);
+		});
+	}
+
 	enum leaf_table_version : std::int8_t
 	{
 		h2 = 0i8,
@@ -977,6 +1032,14 @@ void map_patches::post_unpack()
 		// patch vision set triggers to behave like old games
 		utils::hook::jump(0x1400CC597, cg_trigger_update_stub());
 		utils::hook::nop(0x1400CC597 + 5, 1);
+
+		// addon map ent brushmodels (1.15 zones)
+		utils::hook::jump(0x1403811DA, sp_script_brushmodel_link_stub());
+		utils::hook::nop(0x1403811DA + 5, 3);
+		utils::hook::jump(0x14049E331, sv_link_entity_phys_stub());
+		utils::hook::nop(0x14049E331 + 5, 2);
+		utils::hook::jump(0x14024187B, cg_link_entity_phys_stub());
+		utils::hook::nop(0x14024187B + 5, 4);
 	}
 
 	r_lightGridNonCompressed = dvars::register_bool("r_lightGridNonCompressed", true, game::DVAR_CODINFO, "Use old lightgrid data, if available.");
