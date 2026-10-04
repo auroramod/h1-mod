@@ -14,39 +14,7 @@ namespace json
 {
 	namespace
 	{
-		nlohmann::json gsc_to_json(scripting::script_value _value);
-
-		nlohmann::json entity_to_array(unsigned int id)
-		{
-			scripting::array array(id);
-			nlohmann::json obj;
-
-			auto string_indexed = -1;
-			const auto keys = array.get_keys();
-			for (auto i = 0; i < keys.size(); i++)
-			{
-				const auto is_int = keys[i].is<int>();
-				const auto is_string = keys[i].is<std::string>();
-
-				if (string_indexed == -1)
-				{
-					string_indexed = is_string;
-				}
-
-				if (!string_indexed && is_int)
-				{
-					const auto index = keys[i].as<int>();
-					obj[index] = gsc_to_json(array[index]);
-				}
-				else if (string_indexed && is_string)
-				{
-					const auto key = keys[i].as<std::string>();
-					obj.emplace(key, gsc_to_json(array[key]));
-				}
-			}
-
-			return obj;
-		}
+		nlohmann::json entity_to_array(unsigned int id);
 
 		nlohmann::json vector_to_array(const float* value)
 		{
@@ -98,6 +66,38 @@ namespace json
 			};
 		}
 
+		nlohmann::json entity_to_array(unsigned int id)
+		{
+			scripting::array array(id);
+			nlohmann::json obj;
+
+			auto string_indexed = -1;
+			const auto keys = array.get_keys();
+			for (auto i = 0; i < keys.size(); i++)
+			{
+				const auto is_int = keys[i].is<int>();
+				const auto is_string = keys[i].is<std::string>();
+
+				if (string_indexed == -1)
+				{
+					string_indexed = is_string;
+				}
+
+				if (!string_indexed && is_int)
+				{
+					const auto index = keys[i].as<int>();
+					obj[index] = gsc_to_json(array[index]);
+				}
+				else if (string_indexed && is_string)
+				{
+					const auto key = keys[i].as<std::string>();
+					obj.emplace(key, gsc_to_json(array[key]));
+				}
+			}
+
+			return obj;
+		}
+
 		scripting::script_value json_to_gsc(nlohmann::json obj)
 		{
 			const auto type = obj.type();
@@ -137,11 +137,11 @@ namespace json
 
 			return {};
 		}
-	}
 
-	std::string gsc_to_string(const scripting::script_value& value)
-	{
-		return gsc_to_json(value).dump();
+		std::string gsc_to_string(const scripting::script_value& value)
+		{
+			return gsc_to_json(value).dump();
+		}
 	}
 
 	class component final : public component_interface

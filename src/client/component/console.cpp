@@ -1,22 +1,18 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-
-#include "game/game.hpp"
+#include "console.hpp"
+#include "game_console.hpp"
 
 #include "command.hpp"
-#include "console.hpp"
 #include "rcon.hpp"
 #include "version.hpp"
+
+#include "game/game.hpp"
 
 #include <utils/thread.hpp>
 #include <utils/hook.hpp>
 
 #define OUTPUT_HANDLE GetStdHandle(STD_OUTPUT_HANDLE)
-
-namespace game_console
-{
-	void print(int type, const std::string& data);
-}
 
 namespace console
 {

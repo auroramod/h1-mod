@@ -22,12 +22,12 @@
 
 namespace command
 {
+	static std::unordered_map<std::string, std::function<void(params&)>> handlers;
+	static std::unordered_map<std::string, std::function<void(int, params_sv&)>> handlers_sv;
+
 	namespace
 	{
 		utils::hook::detour client_command_hook;
-
-		std::unordered_map<std::string, std::function<void(params&)>> handlers;
-		std::unordered_map<std::string, std::function<void(int, params_sv&)>> handlers_sv;
 
 		void main_handler()
 		{
@@ -77,8 +77,8 @@ namespace command
 			static std::string comand_line_buffer = GetCommandLineA();
 			auto* command_line = comand_line_buffer.data();
 
-			auto& com_num_console_lines = *reinterpret_cast<int*>(0x35634B8_b);
-			auto* com_console_lines = reinterpret_cast<char**>(0x35634C0_b);
+			auto& com_num_console_lines = *reinterpret_cast<int*>(SELECT_VALUE(0x1435634B8, 0x142623FB4));
+			auto* com_console_lines = reinterpret_cast<char**>(SELECT_VALUE(0x1435634C0, 0x142623FC0));
 
 			auto inq = false;
 			com_console_lines[0] = command_line;
@@ -109,8 +109,8 @@ namespace command
 
 		void parse_startup_variables()
 		{
-			auto& com_num_console_lines = *reinterpret_cast<int*>(0x35634B8_b);
-			auto* com_console_lines = reinterpret_cast<char**>(0x35634C0_b);
+			auto& com_num_console_lines = *reinterpret_cast<int*>(SELECT_VALUE(0x1435634B8, 0x142623FB4));
+			auto* com_console_lines = reinterpret_cast<char**>(SELECT_VALUE(0x1435634C0, 0x142623FC0));
 
 			for (int i = 0; i < com_num_console_lines; i++)
 			{
@@ -142,7 +142,7 @@ namespace command
 
 		void parse_commandline_stub(char* commandline)
 		{
-			//utils::hook::invoke<void>(0x17CB60_b, commandline); // Com_ParseCommandLine
+			//utils::hook::invoke<void>(0x14073FDD0, commandline); // Com_ParseCommandLine
 			parse_command_line();
 			parse_startup_variables();
 		}
@@ -394,190 +394,8 @@ namespace command
 					? "^2on"
 					: "^1off"));
 		}
-	}
 
-	void read_startup_variable(const std::string& dvar)
-	{
-		// parse the commandline if it's not parsed
-		parse_command_line();
-
-		auto& com_num_console_lines = *reinterpret_cast<int*>(0x35634B8_b);
-		auto* com_console_lines = reinterpret_cast<char**>(0x35634C0_b);
-
-		for (int i = 0; i < com_num_console_lines; i++)
-		{
-			game::Cmd_TokenizeString(com_console_lines[i]);
-
-			// only +set dvar value
-			if (game::Cmd_Argc() >= 3 && game::Cmd_Argv(0) == "set"s && game::Cmd_Argv(1) == dvar)
-			{
-				game::Dvar_SetCommand(game::generateHashValue(game::Cmd_Argv(1)), "", game::Cmd_Argv(2));
-			}
-
-			game::Cmd_EndTokenizeString();
-		}
-	}
-
-	params::params()
-		: nesting_(game::cmd_args->nesting)
-	{
-	}
-
-	int params::size() const
-	{
-		return game::cmd_args->argc[this->nesting_];
-	}
-
-	const char* params::get(const int index) const
-	{
-		if (index >= this->size())
-		{
-			return "";
-		}
-
-		return game::cmd_args->argv[this->nesting_][index];
-	}
-
-	std::string params::join(const int index) const
-	{
-		std::string result = {};
-
-		for (auto i = index; i < this->size(); i++)
-		{
-			if (i > index) result.append(" ");
-			result.append(this->get(i));
-		}
-		return result;
-	}
-
-	std::vector<std::string> params::get_all() const
-	{
-		std::vector<std::string> params_;
-		for (auto i = 0; i < this->size(); i++)
-		{
-			params_.push_back(this->get(i));
-		}
-		return params_;
-	}
-
-	params_sv::params_sv()
-		: nesting_(game::sv_cmd_args->nesting)
-	{
-	}
-
-	int params_sv::size() const
-	{
-		return game::sv_cmd_args->argc[this->nesting_];
-	}
-
-	const char* params_sv::get(const int index) const
-	{
-		if (index >= this->size())
-		{
-			return "";
-		}
-
-		return game::sv_cmd_args->argv[this->nesting_][index];
-	}
-
-	std::string params_sv::join(const int index) const
-	{
-		std::string result = {};
-
-		for (auto i = index; i < this->size(); i++)
-		{
-			if (i > index) result.append(" ");
-			result.append(this->get(i));
-		}
-		return result;
-	}
-
-	std::vector<std::string> params_sv::get_all() const
-	{
-		std::vector<std::string> params_;
-		for (auto i = 0; i < this->size(); i++)
-		{
-			params_.push_back(this->get(i));
-		}
-		return params_;
-	}
-
-	void add_raw(const char* name, void (*callback)())
-	{
-		game::Cmd_AddCommandInternal(name, callback, utils::memory::get_allocator()->allocate<game::cmd_function_s>());
-	}
-
-	void add_test(const char* name, void (*callback)())
-	{
-		static game::cmd_function_s cmd_test;
-		return game::Cmd_AddCommandInternal(name, callback, &cmd_test);
-	}
-
-	void add(const char* name, const std::function<void(const params&)>& callback)
-	{
-		const auto command = utils::string::to_lower(name);
-
-		if (handlers.find(command) == handlers.end())
-			add_raw(name, main_handler);
-
-		handlers[command] = callback;
-	}
-
-	void add(const char* name, const std::function<void()>& callback)
-	{
-		add(name, [callback](const params&)
-		{
-			callback();
-		});
-	}
-
-	void add_sv(const char* name, std::function<void(int, const params_sv&)> callback)
-	{
-		// doing this so the sv command would show up in the console
-		add_raw(name, nullptr);
-
-		const auto command = utils::string::to_lower(name);
-
-		if (handlers_sv.find(command) == handlers_sv.end())
-			handlers_sv[command] = std::move(callback);
-	}
-
-	void execute(std::string command, const bool sync)
-	{
-		command += "\n";
-
-		if (sync)
-		{
-			game::Cmd_ExecuteSingleCommand(0, 0, command.data());
-		}
-		else
-		{
-			game::Cbuf_AddText(0, 0, command.data());
-		}
-	}
-
-	class component final : public component_interface
-	{
-	public:
-		void post_unpack() override
-		{
-			if (game::environment::is_sp())
-			{
-				add_commands_sp();
-			}
-			else
-			{
-				utils::hook::call(0x15C44B_b, parse_commandline_stub);
-				add_commands_mp();
-			}
-
-			utils::hook::jump(SELECT_VALUE(0x3A7C80_b, 0x4E9F40_b), dvar_command_stub, true);
-
-			add_commands_generic();
-		}
-
-	private:
-		static void add_commands_generic()
+		void add_commands_generic()
 		{
 			add("quit", game::Quit);
 			add("crash", []
@@ -686,7 +504,7 @@ namespace command
 			});
 		}
 
-		static void add_commands_sp()
+		void add_commands_sp()
 		{
 			add("god", []()
 			{
@@ -779,9 +597,25 @@ namespace command
 			});
 		}
 
-		static void add_commands_mp()
+		void add_raw(const char* name, void (*callback)())
 		{
-			client_command_hook.create(0x4132E0_b, &client_command);
+			game::Cmd_AddCommandInternal(name, callback, utils::memory::get_allocator()->allocate<game::cmd_function_s>());
+		}
+
+		void add_sv(const char* name, std::function<void(int, const params_sv&)> callback)
+		{
+			// doing this so the sv command would show up in the console
+			add_raw(name, nullptr);
+
+			const auto command = utils::string::to_lower(name);
+
+			if (handlers_sv.find(command) == handlers_sv.end())
+				handlers_sv[command] = std::move(callback);
+		}
+
+		void add_commands_mp()
+		{
+			client_command_hook.create(0x140336000, &client_command);
 
 			add_sv("god", [](const int client_num, const params_sv&)
 			{
@@ -926,6 +760,169 @@ namespace command
 				game::mp::g_entities[client_num].client->ps.delta_angles[1] = std::strtof(params.get(2), nullptr);
 				game::mp::g_entities[client_num].client->ps.delta_angles[2] = std::strtof(params.get(3), nullptr);
 			});
+		}
+
+		void add_test(const char* name, void (*callback)())
+		{
+			static game::cmd_function_s cmd_test;
+			return game::Cmd_AddCommandInternal(name, callback, &cmd_test);
+		}
+	}
+
+	void read_startup_variable(const std::string& dvar)
+	{
+		// parse the commandline if it's not parsed
+		parse_command_line();
+
+		auto& com_num_console_lines = *reinterpret_cast<int*>(SELECT_VALUE(0x1435634B8, 0x142623FB4));
+		auto* com_console_lines = reinterpret_cast<char**>(SELECT_VALUE(0x1435634C0, 0x142623FC0));
+
+		for (int i = 0; i < com_num_console_lines; i++)
+		{
+			game::Cmd_TokenizeString(com_console_lines[i]);
+
+			// only +set dvar value
+			if (game::Cmd_Argc() >= 3 && game::Cmd_Argv(0) == "set"s && game::Cmd_Argv(1) == dvar)
+			{
+				game::Dvar_SetCommand(game::generateHashValue(game::Cmd_Argv(1)), "", game::Cmd_Argv(2));
+			}
+
+			game::Cmd_EndTokenizeString();
+		}
+	}
+
+	params::params() : nesting_(game::cmd_args->nesting)
+	{
+	}
+
+	int params::size() const
+	{
+		return game::cmd_args->argc[this->nesting_];
+	}
+
+	const char* params::get(const int index) const
+	{
+		if (index >= this->size())
+		{
+			return "";
+		}
+
+		return game::cmd_args->argv[this->nesting_][index];
+	}
+
+	std::string params::join(const int index) const
+	{
+		std::string result = {};
+
+		for (auto i = index; i < this->size(); i++)
+		{
+			if (i > index) result.append(" ");
+			result.append(this->get(i));
+		}
+		return result;
+	}
+
+	std::vector<std::string> params::get_all() const
+	{
+		std::vector<std::string> params_;
+		for (auto i = 0; i < this->size(); i++)
+		{
+			params_.push_back(this->get(i));
+		}
+		return params_;
+	}
+
+	params_sv::params_sv() : nesting_(game::sv_cmd_args->nesting)
+	{
+	}
+
+	int params_sv::size() const
+	{
+		return game::sv_cmd_args->argc[this->nesting_];
+	}
+
+	const char* params_sv::get(const int index) const
+	{
+		if (index >= this->size())
+		{
+			return "";
+		}
+
+		return game::sv_cmd_args->argv[this->nesting_][index];
+	}
+
+	std::string params_sv::join(const int index) const
+	{
+		std::string result = {};
+
+		for (auto i = index; i < this->size(); i++)
+		{
+			if (i > index) result.append(" ");
+			result.append(this->get(i));
+		}
+		return result;
+	}
+
+	std::vector<std::string> params_sv::get_all() const
+	{
+		std::vector<std::string> params_;
+		for (auto i = 0; i < this->size(); i++)
+		{
+			params_.push_back(this->get(i));
+		}
+		return params_;
+	}
+
+	void add(const char* name, const std::function<void(const params&)>& callback)
+	{
+		const auto command = utils::string::to_lower(name);
+
+		if (handlers.find(command) == handlers.end())
+			add_raw(name, main_handler);
+
+		handlers[command] = callback;
+	}
+
+	void add(const char* name, const std::function<void()>& callback)
+	{
+		add(name, [callback](const params&)
+		{
+			callback();
+		});
+	}
+
+	void execute(std::string command, const bool sync)
+	{
+		command += "\n";
+
+		if (sync)
+		{
+			game::Cmd_ExecuteSingleCommand(0, 0, command.data());
+		}
+		else
+		{
+			game::Cbuf_AddText(0, 0, command.data());
+		}
+	}
+
+	class component final : public component_interface
+	{
+	public:
+		void post_unpack() override
+		{
+			if (game::environment::is_sp())
+			{
+				add_commands_sp();
+			}
+			else
+			{
+				utils::hook::call(0x1400D9BE1, parse_commandline_stub);
+				add_commands_mp();
+			}
+
+			utils::hook::jump(SELECT_VALUE(0x1403A7C80, 0x14041D750), dvar_command_stub, true);
+
+			add_commands_generic();
 		}
 	};
 }

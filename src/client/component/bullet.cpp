@@ -37,7 +37,7 @@ namespace bullet
 			bg_surface_penetration = dvars::register_float("bg_surfacePenetration", 0.0f, 0.0f, std::numeric_limits<float>::max(), 0,
 				"Set to a value greater than 0 to override the bullet surface penetration depth");
 
-			bg_get_surface_penetration_depth_hook.create(0x2E1110_b, &bg_get_surface_penetration_depth_stub);
+			bg_get_surface_penetration_depth_hook.create(0x1401F8280, &bg_get_surface_penetration_depth_stub); // BG_GetSurfacePenetrationDepth
 		}
 	};
 }

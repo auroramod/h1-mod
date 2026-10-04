@@ -1,7 +1,7 @@
-#ifdef _DEBUG
 #pragma once
 #include "game/structs.hpp"
 #include "gui.hpp"
+#include "game/game.hpp"
 
 namespace gui::asset_list
 {
@@ -69,4 +69,3 @@ namespace gui::asset_list
 		}, enabled_callback);
 	}
 }
-#endif

@@ -1,11 +1,11 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+#include "updater.hpp"
 
 #include "console.hpp"
 #include "fastfiles.hpp"
 #include "dvars.hpp"
 #include "scheduler.hpp"
-#include "updater.hpp"
 #include "version.hpp"
 
 #include "game/game.hpp"
@@ -21,47 +21,45 @@
 
 #define FILES_PATH "files.json"
 #define FILES_PATH_DEV "files-dev.json"
-
 #define DATA_PATH "data/"
 #define DATA_PATH_DEV "data-dev/"
-
 #define ERR_UPDATE_CHECK_FAIL "Failed to check for updates:\n%s"
 #define ERR_UPDATE_CHECK_FAIL_BAD_RESPONSE "Bad response"
 #define ERR_DOWNLOAD_FAIL "Failed to download file %s:\n%s"
 #define ERR_WRITE_FAIL "Failed to write file "
-
 #define BINARY_NAME "h1-mod.exe"
 
 namespace updater
 {
 	namespace
 	{
+
 		game::dvar_t* cl_auto_update;
 		bool has_tried_update = false;
 
-		struct status
-		{
-			bool done;
-			bool success;
-		};
+			struct status
+			{
+				bool done;
+				bool success;
+			};
 
-		struct file_data
-		{
-			std::string name;
-			std::string data;
-		};
+			struct file_data
+			{
+				std::string name;
+				std::string data;
+			};
 
-		struct update_data_t
-		{
-			bool restart_required{};
-			bool cancelled{};
-			status check{};
-			status download{};
-			std::string error{};
-			std::string current_file{};
-			std::vector<std::string> required_files{};
-			std::vector<std::string> garbage_files{};
-		};
+			struct update_data_t
+			{
+				bool restart_required{};
+				bool cancelled{};
+				status check{};
+				status download{};
+				std::string error{};
+				std::string current_file{};
+				std::vector<std::string> required_files{};
+				std::vector<std::string> garbage_files{};
+			};
 
 		// remove this at some point
 		std::vector<std::string> old_data_files =
@@ -101,8 +99,11 @@ namespace updater
 				ui_scripting::notify(name, {});
 			}, scheduler::pipeline::lui);
 		}
+		void set_update_check_status(bool done, bool success, const std::string& error = {});
 
-		void set_update_check_status(bool done, bool success, const std::string& error = {})
+		void set_update_download_status(bool done, bool success, const std::string& error = {});
+
+		void set_update_check_status(bool done, bool success, const std::string& error)
 		{
 			update_data.access([done, success, error](update_data_t& data_)
 			{
@@ -114,7 +115,7 @@ namespace updater
 			});
 		}
 
-		void set_update_download_status(bool done, bool success, const std::string& error = {})
+		void set_update_download_status(bool done, bool success, const std::string& error)
 		{
 			update_data.access([done, success, error](update_data_t& data_)
 			{
@@ -158,17 +159,44 @@ namespace updater
 		{
 			return utils::string::va("%i", uint32_t(time(nullptr)));
 		}
-		
+
+		std::optional<utils::http::result> get_server_file(const std::string& endpoint)
+		{
+			static std::vector<std::string> server_urls =
+			{
+				{"https://h1-mod.auroramod.dev/"},
+			};
+
+			const auto try_url = [&](const std::string& base_url)
+			{
+				const auto url = base_url + endpoint;
+				console::debug("[HTTP] GET file \"%s\"\n", url.data());
+				const auto result = utils::http::get_data(url);
+				return result;
+			};
+
+			for (const auto& url : server_urls)
+			{
+				const auto result = try_url(url);
+				if (result.has_value())
+				{
+					return result;
+				}
+			}
+
+			return {};
+		}
+
 		std::optional<utils::http::result> download_data_file(const std::string& name)
 		{
 			const auto file = std::format("{}{}?{}", select(DATA_PATH, DATA_PATH_DEV), name, get_time_str());
-			return updater::get_server_file(file);
+			return get_server_file(file);
 		}
 
 		std::optional<utils::http::result> download_file_list()
 		{
 			const auto file = std::format("{}?{}", select(FILES_PATH, FILES_PATH_DEV), get_time_str());
-			return updater::get_server_file(file);
+			return get_server_file(file);
 		}
 
 		bool has_old_data_files()
@@ -303,33 +331,6 @@ namespace updater
 			const auto str_error = curl_easy_strerror(code);
 			return utils::string::va("%s (%i)", str_error, code);
 		}
-	}
-
-	std::optional<utils::http::result> get_server_file(const std::string& endpoint)
-	{
-		static std::vector<std::string> server_urls =
-		{
-			{"https://h1-mod.auroramod.dev/"},
-		};
-
-		const auto try_url = [&](const std::string& base_url)
-		{
-			const auto url = base_url + endpoint;
-			console::debug("[HTTP] GET file \"%s\"\n", url.data());
-			const auto result = utils::http::get_data(url);
-			return result;
-		};
-
-		for (const auto& url : server_urls)
-		{
-			const auto result = try_url(url);
-			if (result.has_value())
-			{
-				return result;
-			}
-		}
-
-		return {};
 	}
 
 	void relaunch()
@@ -625,7 +626,7 @@ namespace updater
 		void post_unpack() override
 		{
 			delete_old_file();
-			cl_auto_update = dvars::register_bool("cg_auto_update", true, game::DVAR_FLAG_SAVED, 
+			cl_auto_update = dvars::register_bool("cg_auto_update", true, game::DVAR_ARCHIVE, 
 				"Automatically check for updates");
 		}
 	};

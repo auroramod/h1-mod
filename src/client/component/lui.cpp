@@ -27,7 +27,7 @@ namespace lui
 				event_count++;
 			}
 
-			return utils::hook::invoke<bool>(0x2655A0_b, a1, name, a3);
+			return utils::hook::invoke<bool>(0x140161A00, a1, name, a3);
 		}
 
 		void cg_entity_event_stub(void* a1, void* a2, unsigned int event_type, void* a4)
@@ -37,7 +37,18 @@ namespace lui
 				return;
 			}
 
-			utils::hook::invoke<void>(0xF9400_b, a1, a2, event_type, a4);
+			utils::hook::invoke<void>(0x1400ACB60, a1, a2, event_type, a4);
+		}
+
+		void vl_depot_loaded_stub(game::dvar_t* dvar, bool value)
+		{
+			utils::hook::invoke<void>(0x1404FCDF0, dvar, value); // Dvar_SetBool
+
+			if (dvar->flags & 0x20000)
+			{
+				const auto controller = utils::hook::invoke<int>(0x140288BD0, 0); // CL_ControllerIndexFromClientNum
+				utils::hook::invoke<void>(0x14016A500, controller, dvar, *game::hks::lua_state); // LUI_NotifyDvarChanged
+			}
 		}
 	}
 
@@ -54,8 +65,17 @@ namespace lui
 			if (game::environment::is_mp())
 			{
 				// Patch game message overflow
-				utils::hook::call(0x266E6B_b, begin_game_message_event_stub);
-				utils::hook::call(0xEAC1C_b, cg_entity_event_stub);
+				utils::hook::call(0x14016324B, begin_game_message_event_stub);
+				utils::hook::call(0x1400A124F, cg_entity_event_stub);
+
+				// fix MPDepotMenu staying hidden until vlDepotLoaded is set
+				utils::hook::call(0x1400DC0EE, vl_depot_loaded_stub);
+
+				// increase to 1.15 MP frontend LUI heap
+				utils::hook::set<std::uint32_t>(0x1401751CC + 1, 0x900000);
+				utils::hook::set<std::uint32_t>(0x140176570 + 1, 0x900000);
+				utils::hook::set<std::uint32_t>(0x140176C1D + 2, 0x900000);
+				utils::hook::set<std::uint32_t>(0x140175AB5 + 7, 0x20000);
 
 				scheduler::loop([]()
 				{
@@ -70,24 +90,6 @@ namespace lui
 					obituary_count = 0;
 				}, scheduler::pipeline::lui, 0ms);
 			}
-
-			// Increase max extra LUI memory
-			/*const auto max_memory = 0x900000 * 2;
-			utils::hook::set<uint32_t>(0x278E61_b - 4, max_memory);
-			utils::hook::set<uint32_t>(0x27A2C5_b - 4, max_memory);
-			utils::hook::set<uint32_t>(0x27A993_b - 4, max_memory);
-			utils::hook::set<uint32_t>(0x27AB3A_b - 4, max_memory);
-			utils::hook::set<uint32_t>(0x27AB35_b - 4, max_memory);
-			utils::hook::set<uint32_t>(0x27C002_b - 4, max_memory);*/
-
-			// Increase max extra frontend memory
-			/*const auto max_frontend_memory = 0x180000 * 2;
-			utils::hook::set<uint32_t>(0x278EA6_b - 4, max_frontend_memory);
-			utils::hook::set<uint32_t>(0x278F01_b - 4, max_frontend_memory);
-			utils::hook::set<uint32_t>(0x27A2D4_b - 4, max_frontend_memory);
-			utils::hook::set<uint32_t>(0x27A2E3_b - 4, max_frontend_memory);
-			utils::hook::set<uint32_t>(0x27F9E9_b - 4, max_frontend_memory);
-			utils::hook::set<uint32_t>(0x27FA84_b - 4, max_frontend_memory);*/
 
 			command::add("lui_open", [](const command::params& params)
 			{

@@ -7,14 +7,14 @@
 #include "component/gsc/script_extension.hpp"
 
 #include "game/dvars.hpp"
+#include "game/game.hpp"
 
 #include <utils/hook.hpp>
 #include <utils/io.hpp>
+#include <utils/string.hpp>
 
 namespace logfile
 {
-	bool hook_enabled = true;
-
 	namespace
 	{
 		struct gsc_hook_t
@@ -23,6 +23,8 @@ namespace logfile
 			const char* target_pos{};
 			sol::protected_function lua_function;
 		};
+
+		bool hook_enabled = true;
 
 		std::unordered_map<const char*, gsc_hook_t> vm_execute_hooks;
 		utils::hook::detour scr_player_killed_hook;
@@ -37,14 +39,15 @@ namespace logfile
 
 		std::vector<scripting::function> say_callbacks;
 
-		game::dvar_t* logfile;
+		game::dvar_t* logfile_dvar;
 		game::dvar_t* g_log;
 
 		utils::hook::detour vm_execute_hook;
-		char empty_function[2] = {0x32, 0x34}; // CHECK_CLEAR_PARAMS, END
+		char empty_function[2] = {0x32, 0x34};
+		 // CHECK_CLEAR_PARAMS, END
 		const char* target_function = nullptr;
 
-		sol::lua_value convert_entity(lua_State* state, const game::mp::gentity_s* ent)
+		sol::lua_value convert_entity(lua_State* state, const game::gentity_s* ent)
 		{
 			if (!ent)
 			{
@@ -75,17 +78,17 @@ namespace logfile
 
 		std::string convert_mod(const int meansOfDeath)
 		{
-			const auto value = reinterpret_cast<game::scr_string_t**>(0x10B5290_b)[meansOfDeath];
+			const auto value = reinterpret_cast<game::scr_string_t**>(0x140FEC3F0)[meansOfDeath];
 			const auto string = game::SL_ConvertToString(*value);
 			return string;
 		}
 
-		void scr_player_killed_stub(game::mp::gentity_s* self, const game::mp::gentity_s* inflictor, 
-			game::mp::gentity_s* attacker, int damage, const int meansOfDeath, const unsigned int weapon, 
+		void scr_player_killed_stub(game::gentity_s* self, const game::gentity_s* inflictor, 
+			game::gentity_s* attacker, int damage, const int meansOfDeath, const unsigned int weapon, 
 			const bool isAlternate, const float* vDir, const unsigned int hitLoc, int psTimeOffset, int deathAnimDuration)
 		{
 			{
-				const std::string hitloc = reinterpret_cast<const char**>(0x10B5370_b)[hitLoc];
+				const std::string hitloc = reinterpret_cast<const char**>(0x140FEC4D0)[hitLoc];
 				const auto mod_ = convert_mod(meansOfDeath);
 
 				const auto weapon_ = get_weapon_name(weapon, isAlternate);
@@ -121,13 +124,13 @@ namespace logfile
 				weapon, isAlternate, vDir, hitLoc, psTimeOffset, deathAnimDuration);
 		}
 
-		void scr_player_damage_stub(game::mp::gentity_s* self, const game::mp::gentity_s* inflictor, 
-			game::mp::gentity_s* attacker, int damage, int dflags, const int meansOfDeath, 
+		void scr_player_damage_stub(game::gentity_s* self, const game::gentity_s* inflictor, 
+			game::gentity_s* attacker, int damage, int dflags, const int meansOfDeath, 
 			const unsigned int weapon, const bool isAlternate, const float* vPoint, 
 			const float* vDir, const unsigned int hitLoc, const int timeOffset)
 		{
 			{
-				const std::string hitloc = reinterpret_cast<const char**>(0x10B5370_b)[hitLoc];
+				const std::string hitloc = reinterpret_cast<const char**>(0x140FEC4D0)[hitLoc];
 				const auto mod_ = convert_mod(meansOfDeath);
 
 				const auto weapon_ = get_weapon_name(weapon, isAlternate);
@@ -235,7 +238,7 @@ namespace logfile
 			a.inc(r14);
 			a.mov(dword_ptr(rbp, 0xA4), r15d);
 
-			a.jmp(SELECT_VALUE(0x3CA153_b, 0x5111B3_b));
+			a.jmp(SELECT_VALUE(0x1403CA153, 0x140444653));
 
 			a.bind(replace);
 
@@ -247,7 +250,7 @@ namespace logfile
 
 		void g_log_printf_stub(const char* fmt, ...)
 		{
-			if (!logfile->current.enabled)
+			if (!logfile_dvar->current.enabled)
 			{
 				return;
 			}
@@ -378,21 +381,21 @@ namespace logfile
 	public:
 		void post_unpack() override
 		{
-			utils::hook::jump(SELECT_VALUE(0x3CA145_b, 0x5111A5_b), utils::hook::assemble(vm_execute_stub), true);
+			utils::hook::jump(SELECT_VALUE(0x1403CA145, 0x140444645), utils::hook::assemble(vm_execute_stub), true); // VM_Execute
 
 			if (game::environment::is_sp())
 			{
 				return;
 			}
 
-			scr_player_damage_hook.create(0x1CE780_b, scr_player_damage_stub);
-			scr_player_killed_hook.create(0x1CEA60_b, scr_player_killed_stub);
+			scr_player_damage_hook.create(0x14037DC50, scr_player_damage_stub); // Scr_PlayerDamage
+			scr_player_killed_hook.create(0x14037DF30, scr_player_killed_stub); // Scr_PlayerKilled
 
 			// Reimplement game log
 			scheduler::once([]()
 			{
-				logfile = dvars::register_bool("logfile", true, game::DVAR_FLAG_NONE, "Enable game logging");
-				g_log = dvars::register_string("g_log", "h1-mod\\logs\\games_mp.log", game::DVAR_FLAG_NONE, "Log file path");
+				logfile_dvar = dvars::register_bool("logfile", true, game::DVAR_NOFLAG, "Enable game logging");
+				g_log = dvars::register_string("g_log", "h1-mod\\logs\\games_mp.log", game::DVAR_NOFLAG, "Log file path");
 			}, scheduler::pipeline::main);
 			g_log_printf_hook.create(game::G_LogPrintf, g_log_printf_stub);
 

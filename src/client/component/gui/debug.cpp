@@ -100,13 +100,13 @@ namespace gui::debug
 		};
 
 		void add_entity_draw(const std::string& name, const std::array<float, 4>& color, 
-			const object_type draw_type,
+			const int draw_type,
 			const std::function<bool(const std::string&)>& match_func)
 		{
 			entity_draw_type entity_draw{};
 			entity_draw.name = name;
 			entity_draw.color = color;
-			entity_draw.draw_type = draw_type;
+			entity_draw.draw_type = static_cast<object_type>(draw_type);
 			entity_draw.match_func = match_func;
 
 			entity_bound_settings.types.emplace_back(entity_draw);
@@ -638,7 +638,7 @@ namespace gui::debug
 			for (auto i = 0; i < *game::mp::num_entities; i++)
 			{
 				const auto entity = &game::mp::g_entities[i];
-				const auto origin = entity->origin;
+				const auto origin = entity->r.currentOrigin;
 
 				const auto distance = distance_2d(entity_bound_settings.camera, origin);
 				const auto classname = game::SL_ConvertToString(entity->script_classname);
@@ -661,8 +661,8 @@ namespace gui::debug
 					{
 					case object_type::circle:
 					{
-						const auto radius = entity->box.halfSize[0];
-						const auto height = entity->box.halfSize[2] * 2.f;
+						const auto radius = entity->r.box.halfSize[0];
+						const auto height = entity->r.box.halfSize[2] * 2.f;
 
 						draw_cylinder(origin, radius, height, entity_bound_settings.point_count,
 							e.color.data(), entity_bound_settings.mesh_thickness, entity_bound_settings.mesh_only);
@@ -671,7 +671,7 @@ namespace gui::debug
 					case object_type::cube:
 					default:
 					{
-						draw_rectangular_prism(origin, entity->box, e.color.data(),
+						draw_rectangular_prism(origin, entity->r.box, e.color.data(),
 							entity_bound_settings.mesh_thickness, entity_bound_settings.mesh_only);
 						break;
 					}
@@ -800,7 +800,6 @@ namespace gui::debug
 				entity_bound_settings.camera[2] = camera[2];
 			}
 		}
-	}
 
 	size_t add_debug_line(const float* start, const float* end, const float* color)
 	{
@@ -881,6 +880,7 @@ namespace gui::debug
 		debug_lines.clear();
 		debug_squares.clear();
 		debug_nodes_mapping.clear();
+	}
 	}
 
 	class component final : public component_interface
@@ -965,7 +965,7 @@ namespace gui::debug
 			scheduler::once([]()
 			{
 				cl_paused = game::Dvar_FindVar("cl_paused");
-				r_drawModelBoundingBoxes = dvars::register_int("r_drawModelBoundingBoxes", 0, 1, 3, game::DVAR_FLAG_CHEAT, "Draw model bounding boxes");
+				r_drawModelBoundingBoxes = dvars::register_int("r_drawModelBoundingBoxes", 0, 1, 3, game::DVAR_CHEAT, "Draw model bounding boxes");
 			}, scheduler::pipeline::main);
 
 			scheduler::loop([]()
@@ -1056,4 +1056,4 @@ namespace gui::debug
 }
 
 REGISTER_COMPONENT(gui::debug::component)
-#endif // DEBUG
+#endif

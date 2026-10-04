@@ -6,19 +6,19 @@
 #include <utils/hook.hpp>
 #include <utils/vector.hpp>
 
-// https://github.com/xoxor4d/iw3xo-dev/blob/develop/src/components/modules/movement.cpp :)
-
 namespace movement
 {
 	namespace
 	{
+		// https://github.com/xoxor4d/iw3xo-dev/blob/develop/src/components/modules/movement.cpp :)
+
 		utils::hook::detour pm_airmove_hook;
 
 		game::dvar_t* pm_cs_airAccelerate;
 		game::dvar_t* pm_cs_airSpeedCap;
 		game::dvar_t* pm_cs_strafing;
 
-		void pm_air_accelerate(game::vec3_t wishdir, float wishspeed, game::mp::playerState_s* ps, game::mp::pml_t* pml)
+		void pm_air_accelerate(game::vec3_t wishdir, float wishspeed, game::playerState_s* ps, game::pml_t* pml)
 		{
 			float wishspd = wishspeed, accelspeed, currentspeed, addspeed;
 
@@ -73,7 +73,7 @@ namespace movement
 			}
 		}
 
-		void pm_try_playermove(game::mp::pmove_t* pm, game::mp::pml_t* pml)
+		void pm_try_playermove(game::pmove_t* pm, game::pml_t* pml)
 		{
 			const auto surf_slope = 0.7f;
 			const auto ps = pm->ps;
@@ -87,7 +87,7 @@ namespace movement
 			}
 
 			utils::vector::ma(ps->origin, pml->frametime, ps->velocity, end);
-			utils::hook::invoke<void>(0x2D14C0_b, pm, &trace, ps->origin, end, 
+			utils::hook::invoke<void>(0x1401E8BE0, pm, &trace, ps->origin, end, 
 				&pm->bounds, ps->clientNum, pm->tracemask); // PM_playerTrace
 
 			if (trace.fraction == 1)
@@ -103,7 +103,7 @@ namespace movement
 			pm_clip_velocity(ps->velocity, trace.normal, ps->velocity, 1.0f);
 		}
 
-		void pm_airmove_stub(game::mp::pmove_t* pm, game::mp::pml_t* pml)
+		void pm_airmove_stub(game::pmove_t* pm, game::pml_t* pml)
 		{
 			if (!pm_cs_strafing->current.enabled)
 			{
@@ -144,7 +144,7 @@ namespace movement
 
 			pm_air_accelerate(wishdir, wishspeed, ps, pml);
 
-			utils::hook::invoke<void>(0x2D3380_b, pm, pml, 1, 1); // PM_StepSlideMove
+			utils::hook::invoke<void>(0x1401EA9C0, pm, pml, 1, 1); // PM_StepSlideMove
 
 			pm_try_playermove(pm, pml);
 		}
@@ -160,18 +160,18 @@ namespace movement
 				return;
 			}
 
-			pm_airmove_hook.create(0x2C93B0_b, pm_airmove_stub);
+			pm_airmove_hook.create(0x1401E1230, pm_airmove_stub); // PM_AirMove
 
 			pm_cs_airAccelerate = dvars::register_float("pm_cs_airAccelerate", 100.0f, 1.0f, 500.0f,
-				game::DvarFlags::DVAR_FLAG_REPLICATED,
+				game::DvarFlags::DVAR_CODINFO,
 				"Defines player acceleration mid-air");
 
 			pm_cs_airSpeedCap = dvars::register_float("pm_cs_airSpeedCap", 30.0f, 1.0f, 500.0f,
-				game::DvarFlags::DVAR_FLAG_REPLICATED,
+				game::DvarFlags::DVAR_CODINFO,
 				"Maximum speed mid-air");
 
 			pm_cs_strafing = dvars::register_bool("pm_cs_strafing", false,
-				game::DvarFlags::DVAR_FLAG_REPLICATED,
+				game::DvarFlags::DVAR_CODINFO,
 				"Enable CS like strafing");
 		}
 	};

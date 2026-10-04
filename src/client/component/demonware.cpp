@@ -22,13 +22,13 @@ namespace demonware
 		volatile bool exit_server;
 		std::thread server_thread;
 		utils::concurrency::container<std::unordered_map<SOCKET, bool>> blocking_sockets;
-		utils::concurrency::container<std::unordered_map<SOCKET, tcp_server*>> socket_map;
-		server_registry<tcp_server> tcp_servers;
-		server_registry<udp_server> udp_servers;
+		utils::concurrency::container<std::unordered_map<SOCKET, demonware::tcp_server*>> socket_map;
+		demonware::server_registry<demonware::tcp_server> tcp_servers;
+		demonware::server_registry<demonware::udp_server> udp_servers;
 
-		tcp_server* find_server(const SOCKET socket)
+		demonware::tcp_server* find_server(const SOCKET socket)
 		{
-			return socket_map.access<tcp_server*>([&](const std::unordered_map<SOCKET, tcp_server*>& map) -> tcp_server*
+			return socket_map.access<demonware::tcp_server*>([&](const std::unordered_map<SOCKET, demonware::tcp_server*>& map) -> demonware::tcp_server*
 			{
 				const auto entry = map.find(socket);
 				if (entry == map.end())
@@ -48,7 +48,7 @@ namespace demonware
 				return false;
 			}
 
-			socket_map.access([&](std::unordered_map<SOCKET, tcp_server*>& map)
+			socket_map.access([&](std::unordered_map<SOCKET, demonware::tcp_server*>& map)
 			{
 				map[socket] = server;
 			});
@@ -58,7 +58,7 @@ namespace demonware
 
 		void socket_unlink(const SOCKET socket)
 		{
-			socket_map.access([&](std::unordered_map<SOCKET, tcp_server*>& map)
+			socket_map.access([&](std::unordered_map<SOCKET, demonware::tcp_server*>& map)
 			{
 				const auto entry = map.find(socket);
 				if (entry != map.end())
@@ -114,8 +114,6 @@ namespace demonware
 			}
 		}
 
-		namespace io
-		{
 			int getaddrinfo_stub(const char* name, const char* service,
 				const addrinfo* hints, addrinfo** res)
 			{
@@ -123,7 +121,7 @@ namespace demonware
 				printf("[ network ]: [getaddrinfo]: \"%s\" \"%s\"\n", name, service);
 #endif
 
-				base_server* server = tcp_servers.find(name);
+			demonware::base_server* server = tcp_servers.find(name);
 				if (!server)
 				{
 					server = udp_servers.find(name);
@@ -206,7 +204,7 @@ namespace demonware
 				printf("[ network ]: [gethostbyname]: \"%s\"\n", name);
 #endif
 
-				base_server* server = tcp_servers.find(name);
+			demonware::base_server* server = tcp_servers.find(name);
 				if (!server)
 				{
 					server = udp_servers.find(name);
@@ -314,7 +312,7 @@ namespace demonware
 				}
 
 				size_t result = 0;
-				udp_servers.for_each([&](udp_server& server)
+			udp_servers.for_each([&](demonware::udp_server& server)
 				{
 					if (server.pending_data(s))
 					{
@@ -343,7 +341,7 @@ namespace demonware
 				std::vector<SOCKET> read_sockets;
 				std::vector<SOCKET> write_sockets;
 
-				socket_map.access([&](std::unordered_map<SOCKET, tcp_server*>& sockets)
+			socket_map.access([&](std::unordered_map<SOCKET, demonware::tcp_server*>& sockets)
 				{
 					for (auto& s : sockets)
 					{
@@ -423,90 +421,10 @@ namespace demonware
 				// Allow offline play
 				return TRUE;
 			}
-		}
 
 		void bd_logger_stub()
 		{
 			//printf("logged\n");
-		}
-
-#ifdef DW_DEBUG
-		void a(unsigned int n)
-		{
-			printf("bdAuth: Auth task failed with HTTP code [%u]\n", n);
-		}
-
-		void b(unsigned int n)
-		{
-			printf("bdAuth: Decoded client ticket of unexpected size [%u]\n", n);
-		}
-
-		void c(unsigned int n)
-		{
-			printf("bdAuth: Decoded server ticket of unexpected size [%u]\n", n);
-		}
-
-		void d()
-		{
-			printf("bdAuth: Auth ticket magic number mismatch\n");
-		}
-
-		void e()
-		{
-			printf("bdAuth: Cross Authentication completed\n");
-		}
-
-		void f()
-		{
-			printf("bdAuth: Auth task reply contains invalid data / format\n");
-		}
-
-		void g(unsigned int n)
-		{
-			printf("bdAuth: Auth task returned with error code [%u]\n", n);
-		}
-
-		void h(unsigned int n)
-		{
-			printf("bdAuth: Invalid or No Task ID [%u] in Auth reply\n", n);
-		}
-
-		void i()
-		{
-			printf("bdAuth: Received reply from DemonWare Auth server\n");
-		}
-
-		void l()
-		{
-			printf("bdAuth: Unknown error\n");
-		}
-#endif
-
-		utils::hook::detour handle_auth_reply_hook;
-		bool handle_auth_reply_stub(void* a1, void* a2, void* a3)
-		{
-			// Skip bdAuth::validateResponseSignature
-			utils::hook::set(0x7D4AB0_b, 0xC301B0);
-			// Skip bdAuth::processPlatformData
-			utils::hook::set(0x7D55C0_b, 0xC301B0);
-
-			return handle_auth_reply_hook.invoke<bool>(a1, a2, a3);
-		}
-
-		void* allocate_somewhere_near(uint8_t* base_address)
-		{
-			const size_t PAGE_SIZE = 0x1000;
-			size_t offset = 0;
-			while (true)
-			{
-				offset += PAGE_SIZE;
-				auto res = VirtualAlloc(base_address - offset, PAGE_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-				if (res)
-				{
-					std::memset(res, 0, PAGE_SIZE);
-					return res;
-				}
-			}
 		}
 
 		void request_start_match_stub()
@@ -521,19 +439,19 @@ namespace demonware
 	public:
 		component()
 		{
-			udp_servers.create<stun_server>("phoenix.stun.us.demonware.net");
-			udp_servers.create<stun_server>("phoenix.stun.eu.demonware.net");
-			udp_servers.create<stun_server>("phoenix.stun.jp.demonware.net");
-			udp_servers.create<stun_server>("phoenix.stun.au.demonware.net");
+			udp_servers.create<demonware::stun_server>("phoenix.stun.us.demonware.net");
+			udp_servers.create<demonware::stun_server>("phoenix.stun.eu.demonware.net");
+			udp_servers.create<demonware::stun_server>("phoenix.stun.jp.demonware.net");
+			udp_servers.create<demonware::stun_server>("phoenix.stun.au.demonware.net");
 
-			udp_servers.create<stun_server>("stun.us.demonware.net");
-			udp_servers.create<stun_server>("stun.eu.demonware.net");
-			udp_servers.create<stun_server>("stun.jp.demonware.net");
-			udp_servers.create<stun_server>("stun.au.demonware.net");
+			udp_servers.create<demonware::stun_server>("stun.us.demonware.net");
+			udp_servers.create<demonware::stun_server>("stun.eu.demonware.net");
+			udp_servers.create<demonware::stun_server>("stun.jp.demonware.net");
+			udp_servers.create<demonware::stun_server>("stun.au.demonware.net");
 
-			tcp_servers.create<auth3_server>("mwr-pc-steam-auth3.prod.demonware.net");
-			tcp_servers.create<lobby_server>("mwr-pc-steam-lobby.prod.demonware.net");
-			tcp_servers.create<umbrella_server>("prod.umbrella.demonware.net");
+			tcp_servers.create<demonware::auth3_server>("mwr-pc-steam-auth3.prod.demonware.net");
+			tcp_servers.create<demonware::lobby_server>("mwr-pc-steam-lobby.prod.demonware.net");
+			tcp_servers.create<demonware::umbrella_server>("prod.umbrella.demonware.net");
 		}
 
 		void post_load() override
@@ -546,75 +464,48 @@ namespace demonware
 			server_thread = utils::thread::create_named_thread("Demonware", server_main);
 		}
 
-		void* load_import(const std::string& library, const std::string& function) override
-		{
-			if (library == "WS2_32.dll")
-			{
-				if (function == "#3") return io::closesocket_stub;
-				if (function == "#4") return io::connect_stub;
-				if (function == "#5") return io::getpeername_stub;
-				if (function == "#6") return io::getsockname_stub;
-				if (function == "#10") return io::ioctlsocket_stub;
-				if (function == "#16") return io::recv_stub;
-				if (function == "#17") return io::recvfrom_stub;
-				if (function == "#18") return io::select_stub;
-				if (function == "#19") return io::send_stub;
-				if (function == "#20") return io::sendto_stub;
-				if (function == "#52") return io::gethostbyname_stub;
-				if (function == "getaddrinfo") return io::getaddrinfo_stub;
-				if (function == "freeaddrinfo") return io::freeaddrinfo_stub;
-			}
-
-			if (function == "InternetGetConnectedState")
-			{
-				return io::internet_get_connected_state_stub;
-			}
-
-			return nullptr;
-		}
-
 		void post_unpack() override
 		{
 			if (game::environment::is_sp())
 			{
-				utils::hook::set<uint8_t>(0x68DDA0_b, 0xC3); // bdAuthSteam
-				utils::hook::set<uint8_t>(0x366600_b, 0xC3); // dwNet
+				utils::hook::set<uint8_t>(0x14068DDA0, 0xC3); // bdAuthSteam
+				utils::hook::set<uint8_t>(0x140366600, 0xC3); // dwNet
 				return;
 			}
 
-			utils::hook::set<uint8_t>(0x7C0AD9_b, 0x0);  // CURLOPT_SSL_VERIFYPEER
-			utils::hook::set<uint8_t>(0x7C0AC5_b, 0xAF); // CURLOPT_SSL_VERIFYHOST
-			utils::hook::set<uint8_t>(0xA1327C_b, 0x0);  // HTTPS -> HTTP
+			utils::hook::set<uint8_t>(0x140715039, 0x0);  // CURLOPT_SSL_VERIFYPEER
+			utils::hook::set<uint8_t>(0x140715025, 0xAF); // CURLOPT_SSL_VERIFYHOST
+			utils::hook::set<uint8_t>(0x14095433C, 0x0);  // HTTPS -> HTTP
 
-			std::memcpy(reinterpret_cast<void*>(0x8D0298_b), 
-				"http://prod.umbrella.demonware.net/v1.0/", sizeof("http://prod.umbrella.demonware.net/v1.0/"));
-			std::memcpy(reinterpret_cast<void*>(0x8D05A8_b),
-				"http://prod.uno.demonware.net/v1.0/", sizeof("http://prod.uno.demonware.net/v1.0/"));
-			std::memcpy(reinterpret_cast<void*>(0x9EDB08_b), "http://%s:%d/auth/", sizeof("http://%s:%d/auth/"));
+			utils::hook::inject(0x14006DDA9, "http://prod.umbrella.demonware.net/v1.0/");
+			utils::hook::inject(0x14006E11C, "http://prod.umbrella.demonware.net/v1.0/");
+			utils::hook::inject(0x14006E2FB, "http://prod.umbrella.demonware.net/v1.0/");
+			utils::hook::inject(0x14006E9A9, "http://prod.uno.demonware.net/v1.0/");
+			utils::hook::inject(0x14006ED49, "http://prod.uno.demonware.net/v1.0/");
+			utils::hook::inject(0x140728170, "http://%s:%d/auth/");
 
-			// utils::hook::set<uint8_t>(0x19F8C0_b, 0xC3); // SV_SendMatchData, not sure
-			utils::hook::nop(0x19BB67_b, 5); // LiveStorage_SendMatchDataComplete (crashes at the end of match)
-			utils::hook::nop(0x19BC3F_b, 5); // LiveStorage_GettingStoreConfigComplete probably (crashes randomly)
-			utils::hook::nop(0x19BC48_b, 5); // similar to above (crashes in killcam)
-			utils::hook::nop(0x19BBA3_b, 5); // LiveStorage_LogComplete (crashes when prestiging, LiveStorage_LogPrestige?)
-			utils::hook::set<uint8_t>(0x1A3340_b, 0xC3); // Live_CheckForFullDisconnect
+			utils::hook::set<uint8_t>(0x14047F290, 0xC3); // SV_SendMatchData
+			utils::hook::set<uint8_t>(0x140598990, 0xC3); // Live_CheckForFullDisconnect
+			utils::hook::set<uint8_t>(0x1404155D0, 0xC3); // LiveStorage_SendMatchRecipeComplete?
+			utils::hook::set<uint8_t>(0x140417630, 0xC3); // causes some weird DDL crash idk what it is
 
-			// Remove some while loop that freezes the rendering for a few secs while connecting
-			utils::hook::nop(0x625555_b, 5);
-
-			handle_auth_reply_hook.create(0x7AC600_b, handle_auth_reply_stub);
+			utils::hook::set(0x140728380, 0xC301B0); // Skip bdAuth::validateResponseSignature
+			utils::hook::set(0x140728E90, 0xC301B0); // Skip bdAuth::processPlatformData
 
 			// Skip update check in Live_SyncOnlineDataFlags
-			utils::hook::set(0x47A6D0_b, 0xC301B0);
+			utils::hook::set(0x1403A47B0, 0xC301B0);
 			// Remove update failed popup
-			utils::hook::set(0x47B2B0_b, 0xC301B0);
+			utils::hook::set(0x1403A5390, 0xC301B0);
+
+			// Remove some while loop that freezes the rendering for a few secs while connecting
+			utils::hook::nop(0x14057DBC5, 5);
 
 			// xpartygo -> just start the match
-			utils::hook::jump(0x355B80_b, request_start_match_stub);
+			utils::hook::jump(0x140279750, request_start_match_stub);
 
-			utils::hook::set(0x396AD0_b, 0xC301B0); // DB_IsZoneLoaded("ffotd")
-			utils::hook::set(0x4DD600_b, 0xC300B0); // dont use ffotd
-			utils::hook::set(0x4DD5B0_b, 0xC300B0); // dont dl ffotd
+			utils::hook::set(0x1402BC580, 0xC301B0); // DB_IsZoneLoaded("ffotd")
+			utils::hook::set(0x1404083E0, 0xC300B0); // dont use ffotd
+			utils::hook::set(0x140408390, 0xC300B0); // dont dl ffotd
 		}
 
 		void pre_destroy() override
@@ -624,6 +515,33 @@ namespace demonware
 			{
 				server_thread.join();
 			}
+		}
+
+		void* load_import(const std::string& library, const std::string& function) override
+		{
+			if (library == "WS2_32.dll")
+			{
+				if (function == "#3") return closesocket_stub;
+				if (function == "#4") return connect_stub;
+				if (function == "#5") return getpeername_stub;
+				if (function == "#6") return getsockname_stub;
+				if (function == "#10") return ioctlsocket_stub;
+				if (function == "#16") return recv_stub;
+				if (function == "#17") return recvfrom_stub;
+				if (function == "#18") return select_stub;
+				if (function == "#19") return send_stub;
+				if (function == "#20") return sendto_stub;
+				if (function == "#52") return gethostbyname_stub;
+				if (function == "getaddrinfo") return getaddrinfo_stub;
+				if (function == "freeaddrinfo") return freeaddrinfo_stub;
+			}
+
+			if (function == "InternetGetConnectedState")
+			{
+				return internet_get_connected_state_stub;
+			}
+
+			return nullptr;
 		}
 	};
 }

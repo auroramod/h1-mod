@@ -4,7 +4,6 @@
 #include "loader/component_loader.hpp"
 
 #include "dvars.hpp"
-#include "scheduler.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -162,7 +161,7 @@ namespace experimental
 				return;
 			}
 
-			static const auto* gfx_map = *reinterpret_cast<game::GfxWorld**>(0xE973AE0_b);
+			static const auto* gfx_map = *game::s_world;
 			if (gfx_map == nullptr)
 			{
 				return;
@@ -188,10 +187,10 @@ namespace experimental
 
 			game::vec3_t origin{};
 			const auto client = game::mp::g_entities[0].client;
-			utils::hook::invoke<void>(0x4057F0_b, client, origin); // G_GetPlayerViewOrigin
+			utils::hook::invoke<void>(0x140328D70, client, origin); // G_GetPlayerViewOrigin
 
 			game::vec3_t forward{};
-			utils::hook::invoke<void>(0x59C600_b, client->ps.delta_angles, forward, nullptr, nullptr); // AngleVectors
+			utils::hook::invoke<void>(0x1404F4390, client->ps.viewangles, forward, nullptr, nullptr); // AngleVectors
 
 			float min_distance = -1.f;
 			float second_min_distance = -1.f;
@@ -284,7 +283,7 @@ namespace experimental
 			// Surface materials info
 			const char* text = nullptr;
 
-			auto format_material_info = [&](const game::GfxSurface* surface) 
+			auto format_material_info = [](const game::GfxSurface* surface) 
 			{
 				if (!surface || !surface->material || !surface->material->name)
 				{
@@ -305,10 +304,9 @@ namespace experimental
 				8.0, 240.0f, 0.2f, text_color, 6, 0, &text_rect, 0);
 		}
 
-		utils::hook::detour cg_draw2d_hook;
 		void cg_draw2d_stub(int local_client_num)
 		{
-			cg_draw2d_hook.invoke<void>(local_client_num);
+			utils::hook::invoke<void>(0x1400A9090, local_client_num); // CG_Draw2D
 
 			if (game::CL_IsCgameInitialized() && !game::VirtualLobby_Loaded())
 			{
@@ -328,10 +326,11 @@ namespace experimental
 			}
 
 			// change minimum cap to -2000 instead of -1000 (culling issue)
-			dvars::override::register_float("r_lodBiasRigid", 0, -2000, 0, game::DVAR_FLAG_SAVED);
+			dvars::override::register_float("r_lodBiasRigid", 0.0f, -2000.0f, 0.0f, game::DVAR_CODINFO);
+			dvars::override::register_float("r_lodBiasSkinned", 0.0f, -2000.0f, 0.0f, game::DVAR_CODINFO);
 
-			cg_draw_material = dvars::register_bool("cg_drawMaterial", false, game::DVAR_FLAG_NONE, "Draws material name on screen");
-			cg_draw2d_hook.create(0xF57D0_b, cg_draw2d_stub);
+			cg_draw_material = dvars::register_bool("cg_drawMaterial", false, game::DVAR_NOFLAG, "Draws material name on screen");
+			utils::hook::call(0x1400EBF2E, cg_draw2d_stub);
 		}
 	};
 }

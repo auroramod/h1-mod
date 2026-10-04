@@ -23,10 +23,10 @@
 
 namespace mods
 {
-	std::optional<std::string> mod_path;
-
 	namespace
 	{
+		std::optional<std::string> mod_path;
+
 		utils::hook::detour db_release_xassets_hook;
 		bool release_assets = false;
 
@@ -56,15 +56,21 @@ namespace mods
 
 		void reload_omnvars()
 		{
-			*reinterpret_cast<int*>(0x12E9390_b) = -1;
-			*reinterpret_cast<int*>(0x10AD67C_b) = -1;
-			utils::hook::invoke<void>(0x5A4880_b); // reload omnvars
+			*reinterpret_cast<int*>(0x1412215B0) = -1;
+			*reinterpret_cast<int*>(0x140FE3884) = -1;
+			utils::hook::invoke<void>(0x1405013E0); // Omnvar_RegisterFromStringTable
+		}
+
+		void read_stats()
+		{
+			demonware::set_storage_path(mod_path.value_or(""));
+			utils::hook::invoke<void>(0x14041A740, 0); // read stats
 		}
 
 		void reset_fonts()
 		{
-			*reinterpret_cast<int*>(0xE962188_b) = 0;
-			std::memset(reinterpret_cast<void*>(0xE962190_b), 0, 128 * 24);
+			*reinterpret_cast<int*>(0x14FD61EE8) = 0; // s_fontInstanceCount
+			std::memset(reinterpret_cast<void*>(0x14FD61EF0), 0, 128 * 24);
 		}
 
 		bool mod_requires_restart(const std::string& path)
@@ -111,7 +117,7 @@ namespace mods
 			command::execute("vid_restart");
 			scheduler::once([=]
 			{
-				mods::read_stats();
+				read_stats();
 				reload_omnvars();
 
 				if (server.has_value())
@@ -146,6 +152,11 @@ namespace mods
 
 			utils::nt::relaunch_self(cmd, true);
 			utils::nt::terminate();
+		}
+
+		bool mod_exists(const std::string& folder)
+		{
+			return utils::io::directory_exists(utils::string::va("%s\\%s", MOD_FOLDER, folder.data()));
 		}
 	}
 
@@ -189,11 +200,6 @@ namespace mods
 		}
 
 		return mod_list;
-	}
-
-	bool mod_exists(const std::string& folder)
-	{
-		return utils::io::directory_exists(utils::string::va("%s\\%s", MOD_FOLDER, folder.data()));
 	}
 
 	std::optional<nlohmann::json> get_mod_info(const std::string& name)
@@ -261,12 +267,6 @@ namespace mods
 		}
 	}
 
-	void read_stats()
-	{
-		demonware::set_storage_path(mod_path.value_or(""));
-		utils::hook::invoke<void>(0x4E6B60_b, 0); // read stats
-	}
-
 	void execute_restart(const std::optional<game::netadr_s>& server)
 	{
 		if (can_use_vid_restart())
@@ -289,7 +289,7 @@ namespace mods
 				utils::io::create_directory("mods");
 			}
 
-			db_release_xassets_hook.create(SELECT_VALUE(0x1F4DB0_b, 0x399740_b), db_release_xassets_stub);
+			db_release_xassets_hook.create(SELECT_VALUE(0x1401F4DB0, 0x1402BF160), db_release_xassets_stub);
 
 			dvars::callback::on_new_value("fs_game", [](game::dvar_value* value)
 			{

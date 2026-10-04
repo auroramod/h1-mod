@@ -68,7 +68,7 @@ namespace anims
 			a.call_aligned(root_motion_stub);
 			a.popad64();
 
-			a.jmp(0x2B70F0_b);
+			a.jmp(0x1401CF834);
 		}
 
 		void set_anim_rate_stub(utils::hook::assembler& a)
@@ -83,10 +83,10 @@ namespace anims
 			a.mov(edx, edi);
 			a.mov(rcx, rsi);
 			a.mulss(xmm7, xmm9);
-			a.jmp(0x1CCF24_b);
+			a.jmp(0x1400F3E74);
 
 			a.bind(is_zero);
-			a.jmp(0x1CCF2C_b);
+			a.jmp(0x1400F3E7C);
 		}
 	}
 
@@ -100,10 +100,10 @@ namespace anims
 				return;
 			}
 
-			utils::hook::jump(0x2B7628_b, utils::hook::assemble(bg_parse_commands_stub), true);
+			utils::hook::jump(0x1401CFD6C, utils::hook::assemble(bg_parse_commands_stub), true);
 
 			// prevent division by zero 
-			utils::hook::jump(0x1CCF15_b, utils::hook::assemble(set_anim_rate_stub), true);
+			utils::hook::jump(0x1400F3E65, utils::hook::assemble(set_anim_rate_stub), true);
 		}
 	};
 }

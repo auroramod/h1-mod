@@ -4,11 +4,11 @@
 #include "game/scripting/execution.hpp"
 #include "game/scripting/lua/value_conversion.hpp"
 #include "game/scripting/lua/error.hpp"
+#include "game/game.hpp"
+#include <utils/hook.hpp>
 
 namespace logfile
 {
-	extern bool hook_enabled;
-
 	void set_lua_hook(const char* pos, const sol::protected_function&);
 	void set_gsc_hook(const char* source, const char* target);
 	void clear_hook(const char* pos);

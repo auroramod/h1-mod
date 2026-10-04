@@ -51,6 +51,9 @@ namespace logger
 			va_end(ap);
 
 			console::error("Error: %s\n", buffer);
+#ifdef _DEBUG
+			console::error("Com_Error called from 0x%p\n", _ReturnAddress());
+#endif
 
 			party::clear_sv_motd(); // clear sv_motd on error if it exists
 
@@ -118,24 +121,24 @@ namespace logger
 			if (!game::environment::is_dedi())
 			{
 				// lua stuff
-				utils::hook::jump(SELECT_VALUE(0x106010_b, 0x27CBB0_b), print_dev);   // debug
-				utils::hook::jump(SELECT_VALUE(0x107680_b, 0x27E210_b), print_error); // error
-				utils::hook::jump(SELECT_VALUE(0x0E6E30_b, 0x1F6140_b), print);      // print
+				utils::hook::jump(SELECT_VALUE(0x140106010, 0x140178DC0), print_dev);   // debug
+				utils::hook::jump(SELECT_VALUE(0x140107680, 0x14017A410), print_error); // error
+				utils::hook::jump(SELECT_VALUE(0x1400E6E30, 0x14015ADE0), print);      	// print
 
 				if (game::environment::is_mp())
 				{
-					utils::hook::call(0x6BBB81_b, r_warn_once_per_frame_vsnprintf_stub);
+					utils::hook::call(0x1406133B1, r_warn_once_per_frame_vsnprintf_stub);
 
-					utils::hook::jump(0x498BD0_b, print_warning); // dmWarn
-					utils::hook::jump(0x498AD0_b, print); // dmLog
+					utils::hook::jump(0x1403C2A20, print_warning); // dmWarn
+					utils::hook::jump(0x1403C2930, print); // dmLog
 
-					r_warnings_enable = dvars::register_bool("r_enableWarnings", false, game::DVAR_FLAG_SAVED, "enable rendering warnings");
+					r_warnings_enable = dvars::register_bool("r_enableWarnings", false, game::DVAR_ARCHIVE, "enable rendering warnings");
 				}
 			}
 
 			com_error_hook.create(game::Com_Error, com_error_stub);
 
-			logger_dev = dvars::register_bool("logger_dev", false, game::DVAR_FLAG_SAVED, "Print dev stuff");
+			logger_dev = dvars::register_bool("logger_dev", false, game::DVAR_ARCHIVE, "Print dev stuff");
 		}
 	};
 }

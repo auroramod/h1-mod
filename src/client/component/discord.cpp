@@ -1,9 +1,9 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+#include "discord.hpp"
 
 #include "console.hpp"
 #include "command.hpp"
-#include "discord.hpp"
 #include "materials.hpp"
 #include "party.hpp"
 #include "scheduler.hpp"
@@ -52,6 +52,7 @@ namespace discord
 		std::mutex avatar_map_mutex;
 		std::unordered_map<std::string, game::Material*> avatar_material_map;
 		game::Material* default_avatar_material{};
+		bool initialized = false;
 
 		void update_discord_frontend()
 		{
@@ -426,7 +427,7 @@ namespace discord
 			scheduler::loop(Discord_RunCallbacks, scheduler::async, 500ms);
 			scheduler::loop(update_discord, scheduler::async, 5s);
 
-			initialized_ = true;
+			initialized = true;
 
 			command::add("discord_accept", []()
 			{
@@ -441,16 +442,13 @@ namespace discord
 
 		void pre_destroy() override
 		{
-			if (!initialized_ || game::environment::is_dedi())
+			if (!initialized || game::environment::is_dedi())
 			{
 				return;
 			}
 
 			Discord_Shutdown();
 		}
-
-	private:
-		bool initialized_ = false;
 	};
 }
 

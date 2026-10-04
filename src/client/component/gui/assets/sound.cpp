@@ -15,10 +15,6 @@
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 
-namespace gui::asset_list::sound
-{
-	namespace
-	{
 #define DRAW_ASSET_FLOAT_SLIDER(__name__, __property__, __min__, __max__, __step__) \
 		ImGui::DragFloat(__name__, &asset->__property__, __step__, __min__, __max__); \
 
@@ -33,6 +29,11 @@ namespace gui::asset_list::sound
 			gui::copy_to_clipboard(asset->__name__); \
 		} \
 
+
+namespace gui::asset_list::sound
+{
+	namespace
+	{
 		std::array<const char*, game::SND_VOLMOD_COUNT> volume_mod_groups =
 		{
 			"default",
@@ -326,8 +327,8 @@ namespace gui::asset_list::sound
 	public:
 		void post_unpack() override
 		{
-			gui::asset_list::add_asset_view<game::snd_alias_list_t>(game::ASSET_TYPE_SOUND, draw_sound_window);
-			gui::asset_list::add_asset_button<game::snd_alias_list_t>(game::ASSET_TYPE_SOUND, "play", play_sound);
+			asset_list::add_asset_view<game::snd_alias_list_t>(game::ASSET_TYPE_SOUND, draw_sound_window);
+			asset_list::add_asset_button<game::snd_alias_list_t>(game::ASSET_TYPE_SOUND, "play", play_sound);
 		}
 	};
 }

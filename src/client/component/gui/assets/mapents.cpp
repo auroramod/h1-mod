@@ -35,7 +35,7 @@ namespace gui::asset_list::mapents
 			std::atomic_bool done_parsing = false;
 		};
 
-		utils::concurrency::container<mapents_t, std::recursive_mutex> mapents;
+		utils::concurrency::container<mapents_t, std::recursive_mutex> mapents_data;
 
 		void parse_mapents(game::MapEnts* asset, mapents_t& data)
 		{
@@ -70,7 +70,7 @@ namespace gui::asset_list::mapents
 					converted_mapents.append("}\n");
 				}
 
-				mapents.access([=](mapents_t& data)
+				mapents_data.access([=](mapents_t& data)
 				{
 					data.is_parsing = false;
 					data.done_parsing = true;
@@ -98,7 +98,7 @@ namespace gui::asset_list::mapents
 
 		bool draw_asset(game::MapEnts* asset)
 		{
-			return mapents.access<bool>([&](mapents_t& data)
+			return mapents_data.access<bool>([&](mapents_t& data)
 			{
 				if (!data.is_parsing && data.done_parsing)
 				{
@@ -129,7 +129,7 @@ namespace gui::asset_list::mapents
 	public:
 		void post_unpack() override
 		{
-			gui::asset_list::add_asset_view<game::MapEnts>(game::ASSET_TYPE_MAP_ENTS, draw_asset);
+			asset_list::add_asset_view<game::MapEnts>(game::ASSET_TYPE_MAP_ENTS, draw_asset);
 		}
 
 		void pre_destroy() override

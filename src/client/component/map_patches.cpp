@@ -1,4 +1,4 @@
-﻿#include <std_include.hpp>
+#include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -77,11 +77,11 @@ namespace map_patches
 		};
 
 		//WEAK game::symbol<bool(const game::GfxLightGrid* lightGrid, const game::GfxLightGridEntry* entry, int cornerIndex, const unsigned int* pos, const float* samplePos)> R_IsValidLightGridSample{ 0x0, 0x6D7E40 };
-		WEAK game::symbol<void(float*)> Vec3Normalize{ 0x5E090, 0x68D20 };
-		WEAK game::symbol<int(int, float const* const, float const* const, struct game::Bounds const*, unsigned int, int)> SV_BrushModelSightTrace{ 0x19F830, 0x3370A0 };
+			game::symbol<void(float*)> Vec3Normalize{ 0x14005E090, 0x140054090 };
 
-		game::symbol<game::ComWorld*> comWorld{ 0xECA078, 0x10B4528 };
-		game::symbol<game::GfxWorld*> s_world{ 0xF7A2BE0, 0xE973AE0 };
+			game::symbol<int(int, float const* const, float const* const, struct game::Bounds const*, unsigned int, int)> SV_BrushModelSightTrace{ 0x14019F830, 0x140240440 };
+
+			game::symbol<game::GfxWorld*> s_world{ 0x14F7A2BE0, 0x14FD70160 };
 
 		game::dvar_t* r_lightGridNonCompressed;
 
@@ -133,6 +133,48 @@ namespace map_patches
 			}
 		}
 
+			enum leaf_table_version : std::int8_t
+			{
+				h2 = 0i8,
+				h1 = 0i8,
+				s1 = 0i8,
+				iw6 = 1i8,
+			};
+
+			struct LightGridLeafIndexRaw
+			{
+				int indexMin;
+				int indexBitCount;
+				int indexDefault;
+				int indexTable[16];
+			};
+
+			struct LightGridLeafRaw
+			{
+				unsigned __int8 format;
+				LightGridLeafIndexRaw colorIndex;
+				LightGridLeafIndexRaw lightIndex;
+				unsigned int voxels;
+			};
+
+			struct LightGridNodeIndexRaw
+			{
+				unsigned __int8 indexBitCount;
+				unsigned __int8 indexTableSize;
+				unsigned __int8 indexTableSizeBitCount;
+				int indexMin;
+				int indexDefault;
+				int indexTable[15];
+			};
+
+			struct LightGridNodeRaw
+			{
+				LightGridNodeIndexRaw colorIndex;
+				LightGridNodeIndexRaw lightIndex;
+			};
+
+			utils::hook::detour r_decode_light_grid_block_hook;
+
 		void blend_colors(game::GfxLightGridColors* colorsa, game::GfxLightGridColors* colorsb, float blendFactor = 0.5f)
 		{
 			for (auto i = 0; i < 56; i++)
@@ -149,6 +191,12 @@ namespace map_patches
 			}
 		}
 
+		game::ComWorld* get_com_world()
+		{
+			// SP stores a pointer, MP 1.04 has the struct itself
+			return SELECT_VALUE(*reinterpret_cast<game::ComWorld**>(0x140ECA078), game::comWorld.get());
+		}
+
 		bool R_IsBetterPrimaryLightEnv(unsigned short oldPrimaryLightEnvIndex, unsigned short newPrimaryLightEnvIndex, float oldWeight, float newWeight)
 		{
 			if (!oldPrimaryLightEnvIndex)
@@ -156,7 +204,7 @@ namespace map_patches
 			if (!newPrimaryLightEnvIndex)
 				return false;
 
-			auto comWorld_ptr = *comWorld;
+				const auto comWorld_ptr = get_com_world();
 			if (comWorld_ptr->primaryLightEnvs[oldPrimaryLightEnvIndex].numIndices == 1
 				&& comWorld_ptr->primaryLightEnvs[oldPrimaryLightEnvIndex].primaryLightIndices[0] >= 2048
 				- (*s_world)->lastSunPrimaryLightIndex)
@@ -515,7 +563,7 @@ namespace map_patches
 				{
 					bool effect_callback = false;
 					auto address = _ReturnAddress();
-					if (address == (void*)SELECT_VALUE(0x5BF0B5_b, 0x6D6EE5_b))
+						if (address == (void*)SELECT_VALUE(0x1405BF0B5, 0x14062D9E5))
 					{
 						effect_callback = true;
 						//return primaryLightIndex;
@@ -875,10 +923,7 @@ namespace map_patches
 
 			r_get_lighting_info_for_effects_hook.invoke<void>(samplePos, tryUseCache, radiometricUnit, outColor, outPrimaryLightsAndWeights);
 		}
-	}
 
-	namespace
-	{
 		void* cg_trigger_update_stub()
 		{
 			return utils::hook::assemble([](utils::hook::assembler& a)
@@ -886,66 +931,76 @@ namespace map_patches
 				const auto patch = a.newLabel();
 
 				a.jnb(patch);
-
-				a.mov(dword_ptr(rdi, 0x179914), eax);
-				a.mov(r15d, eax);
-				a.mov(r14, 0xA975F40_b);
-				a.jmp(0x120FA6_b);
+					a.jmp(0x1400CC59D);
 
 				a.bind(patch);
-				a.mov(dword_ptr(rdi, 0x179918), 0xFFFFFFFF);
-				a.jmp(0x121035_b);
+					a.push(rax);
+					a.mov(rax, 0x142AB7498);
+					a.mov(dword_ptr(rax), 0xFFFFFFFF);
+					a.pop(rax);
+					a.jmp(0x1400CC64B);
 			});
 		}
-	}
 
-	namespace
+			void* sp_script_brushmodel_link_stub()
 	{
-		enum leaf_table_version : std::int8_t
+				return utils::hook::assemble([](utils::hook::assembler& a)
 		{
-			h2 = 0i8,
-			h1 = 0i8,
-			s1 = 0i8,
-			iw6 = 1i8,
-		};
+					const auto link = a.newLabel();
 
-		struct LightGridLeafIndexRaw
+					a.mov(rax, 0x14621B82C); // g_parsingAddonEntities
+					a.cmp(dword_ptr(rax), 0);
+					a.jz(link);
+					a.or_(dword_ptr(rbx, 0xC0), 0x20);
+
+					a.bind(link);
+					a.mov(rcx, rbx);
+					a.call(0x14049DC30); // SV_LinkEntity
+					a.jmp(0x1403811E2);
+				});
+			}
+
+			void* sv_link_entity_phys_stub()
 		{
-			int indexMin;
-			int indexBitCount;
-			int indexDefault;
-			int indexTable[16];
-		};
+				return utils::hook::assemble([](utils::hook::assembler& a)
+				{
+					const auto remove = a.newLabel();
 
-		struct LightGridLeafRaw
+					a.test(eax, 0x280E691);
+					a.jz(remove);
+					a.test(byte_ptr(rsi, 0xC0), 0x20);
+					a.jnz(remove);
+					a.jmp(0x14049E338);
+
+					a.bind(remove);
+					a.jmp(0x14049E37F);
+				});
+			}
+
+			void* cg_link_entity_phys_stub()
 		{
-			unsigned __int8 format;
-			LightGridLeafIndexRaw colorIndex;
-			LightGridLeafIndexRaw lightIndex;
-			unsigned int voxels;
-		};
+				return utils::hook::assemble([](utils::hook::assembler& a)
+				{
+					const auto remove = a.newLabel();
 
-		struct LightGridNodeIndexRaw
-		{
-			unsigned __int8 indexBitCount;
-			unsigned __int8 indexTableSize;
-			unsigned __int8 indexTableSizeBitCount;
-			int indexMin;
-			int indexDefault;
-			int indexTable[15];
-		};
+					a.test(r14d, 0x280E491);
+					a.jz(remove);
+					a.test(byte_ptr(r13, 0x13C + 0xC0), 0x20);
+					a.jnz(remove);
+					a.mov(rax, 0x149465590); // physWorld brushModelCount
+					a.cmp(r12d, dword_ptr(rax));
+					a.jae(remove);
+					a.jmp(0x140241884);
 
-		struct LightGridNodeRaw
-		{
-			LightGridNodeIndexRaw colorIndex;
-			LightGridNodeIndexRaw lightIndex;
-		};
+					a.bind(remove);
+					a.jmp(0x1402418BC);
+				});
+			}
 
-		utils::hook::detour r_decode_light_grid_block_hook;
 		void r_decode_light_grid_block_stub(game::GfxLightGridTree* p_tree, int child_mask,
 			char child_index, int encoded_node_address, LightGridNodeRaw* p_node_raw, LightGridLeafRaw* p_leaf_raw)
 		{
-			static const auto p_address = SELECT_VALUE(0x57BCCE_b + 1, 0x6A032E_b + 1);
+				static const auto p_address = SELECT_VALUE(0x14057BCCE + 1, 0x1405F845E + 1);
 			auto value = *(uint8_t*)p_address;
 			if (p_tree->unused[0] == leaf_table_version::iw6)
 			{
@@ -972,25 +1027,34 @@ namespace map_patches
 			// skip fx name prefix checks
 			if (game::environment::is_mp())
 			{
-				utils::hook::set<uint8_t>(0x2F377D_b, 0xEB); // createfx parse
-				utils::hook::set<uint8_t>(0x4444E0_b, 0xEB); // scr_loadfx
+				utils::hook::set<uint8_t>(0x14020A1AD, 0xEB); // createfx parse
+				utils::hook::set<uint8_t>(0x1403583F0, 0xEB); // scr_loadfx
 
 				// patch static model lighting
-				utils::hook::set<uint8_t>(0x6971EF_b, 0xEB);
-				utils::hook::nop(0x697249_b, 2);
+				utils::hook::set<uint8_t>(0x1405EF379, 0xEB);
+				utils::hook::nop(0x1405EF3D3, 2);
 
 				// patch iw6 leafTable decoding
-				map_patches::r_decode_light_grid_block_hook.create(0x69E7D0_b, map_patches::r_decode_light_grid_block_stub);
+				r_decode_light_grid_block_hook.create(0x1405F6900, r_decode_light_grid_block_stub); // R_DecodeLightGridBlock
 
 				// patch vision set triggers to behave like old games
-				utils::hook::jump(0x120F90_b, cg_trigger_update_stub(), true);
+				utils::hook::jump(0x1400CC597, cg_trigger_update_stub());
+				utils::hook::nop(0x1400CC597 + 5, 1);
+
+				// addon map ent brushmodels (1.15 zones)
+				utils::hook::jump(0x1403811DA, sp_script_brushmodel_link_stub());
+				utils::hook::nop(0x1403811DA + 5, 3);
+				utils::hook::jump(0x14049E331, sv_link_entity_phys_stub());
+				utils::hook::nop(0x14049E331 + 5, 2);
+				utils::hook::jump(0x14024187B, cg_link_entity_phys_stub());
+				utils::hook::nop(0x14024187B + 5, 4);
 			}
 
-			r_lightGridNonCompressed = dvars::register_bool("r_lightGridNonCompressed", true, game::DVAR_FLAG_REPLICATED, "Use old lightgrid data, if available.");
-			r_lightgrid_lookup_hook.create(SELECT_VALUE(0x5C02F0_b, 0x6D8120_b), r_lightgrid_lookup_stub);
-			r_get_lightgrid_colors_from_indices_hook.create(SELECT_VALUE(0x5BE870_b, 0x6D66A0_b), r_get_lightgrid_colors_from_indices_stub);
-			r_get_lightgrid_average_color_hook.create(SELECT_VALUE(0x5BE7B0_b, 0x6D65E0_b), r_get_lightgrid_average_color_stub);
-			r_get_lighting_info_for_effects_hook.create(SELECT_VALUE(0x5BEF20_b, 0x6D6D50_b), r_get_lighting_info_for_effects_stub);
+			r_lightGridNonCompressed = dvars::register_bool("r_lightGridNonCompressed", true, game::DVAR_CODINFO, "Use old lightgrid data, if available.");
+			r_lightgrid_lookup_hook.create(SELECT_VALUE(0x1405C02F0, 0x14062EC30), r_lightgrid_lookup_stub); // R_LightgridLookup
+			r_get_lightgrid_colors_from_indices_hook.create(SELECT_VALUE(0x1405BE870, 0x14062D1B0), r_get_lightgrid_colors_from_indices_stub); // R_GetLightgridColorsFromIndices
+			r_get_lightgrid_average_color_hook.create(SELECT_VALUE(0x1405BE7B0, 0x14062D0F0), r_get_lightgrid_average_color_stub); // R_GetLightgridAverageColor
+			r_get_lighting_info_for_effects_hook.create(SELECT_VALUE(0x1405BEF20, 0x14062D850), r_get_lighting_info_for_effects_stub); // R_GetLightingInfoForEffects
 		}
 	};
 }

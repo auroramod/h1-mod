@@ -60,7 +60,7 @@ namespace gui::asset_list::rawfile
 	public:
 		void post_unpack() override
 		{
-			gui::asset_list::add_asset_view<game::RawFile>(game::ASSET_TYPE_RAWFILE, draw_asset, ImVec2(450, 450));
+			asset_list::add_asset_view<game::RawFile>(game::ASSET_TYPE_RAWFILE, draw_asset, ImVec2(450, 450));
 		}
 	};
 }

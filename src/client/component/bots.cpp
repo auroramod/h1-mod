@@ -20,13 +20,17 @@ namespace bots
 {
 	namespace
 	{
+		utils::hook::detour get_bot_name_hook;
+		std::vector<std::string> bot_names{};
+		size_t bot_id = 0;
+
 		bool can_add()
 		{
 			return party::get_client_count() < *game::mp::svs_numclients
 				&& game::SV_Loaded() && !game::VirtualLobby_Loaded();
 		}
 
-		void bot_team_join(const int entity_num)
+		void join_team(const int entity_num)
 		{
 			const game::scr_entref_t entref{static_cast<uint16_t>(entity_num), 0};
 			scheduler::once([entref]
@@ -40,16 +44,16 @@ namespace bots
 			}, scheduler::pipeline::server, 2s);
 		}
 
-		void spawn_bot(const int entity_num)
+		void spawn(const int entity_num)
 		{
 			game::SV_SpawnTestClient(&game::mp::g_entities[entity_num]);
 			if (game::Com_GetCurrentCoDPlayMode() == game::CODPLAYMODE_CORE)
 			{
-				bot_team_join(entity_num);
+				join_team(entity_num);
 			}
 		}
 
-		void add_bot()
+		void add()
 		{
 			if (!can_add())
 			{
@@ -57,23 +61,19 @@ namespace bots
 			}
 
 			const auto* const bot_name = game::SV_BotGetRandomName();
-			const auto* bot_ent = game::SV_AddBot(bot_name);
 
-			if (bot_ent)
+			if (const auto* bot_ent = game::SV_AddBot(bot_name))
 			{
-				spawn_bot(bot_ent->s.number);
+				spawn(bot_ent->s.number);
 			}
 			else
 			{
 				scheduler::once([]
 				{
-					add_bot();
+					add();
 				}, scheduler::pipeline::server, 100ms);
 			}
 		}
-
-		utils::hook::detour get_bot_name_hook;
-		std::vector<std::string> bot_names{};
 
 		void load_bot_data()
 		{
@@ -95,8 +95,6 @@ namespace bots
 				}
 			}
 		}
-		
-		size_t bot_id = 0;
 
 		const char* get_random_bot_name()
 		{
@@ -146,7 +144,7 @@ namespace bots
 
 				for (auto i = 0; i < num_bots; i++)
 				{
-					scheduler::once(add_bot, scheduler::pipeline::server, 100ms * i);
+					scheduler::once(add, scheduler::pipeline::server, 100ms * i);
 				}
 			});
 

@@ -25,6 +25,14 @@ namespace gui
 
 	namespace
 	{
+		struct notification_t
+		{
+			std::string title;
+			std::string text;
+			std::chrono::milliseconds duration{};
+			std::chrono::high_resolution_clock::time_point creation_time{};
+		};
+
 		struct frame_callback
 		{
 			std::function<void()> callback;
@@ -59,7 +67,7 @@ namespace gui
 			ImGui::CreateContext();
 			ImGui::StyleColorsDark();
 
-			ImGui_ImplWin32_Init(*reinterpret_cast<HWND*>(0xC9DD2E0_b));
+			ImGui_ImplWin32_Init(*reinterpret_cast<HWND*>(0x14DDFCB80)); // hWnd
 			ImGui_ImplDX11_Init(device, device_context);
 
 			initialized = true;
@@ -76,6 +84,21 @@ namespace gui
 
 					queue.clear();
 				});
+		}
+
+		void toggle()
+		{
+			if (!toggled)
+			{
+				*reinterpret_cast<std::uint8_t*>(0x14DDF84D5) = 0;
+				*game::keyCatchers |= 0x10;
+			}
+			else
+			{
+				*reinterpret_cast<std::uint8_t*>(0x14DDF84D5) = 1;
+				*game::keyCatchers &= ~0x10;
+			}
+			toggled = !toggled;
 		}
 
 		std::vector<int> imgui_colors =
@@ -263,6 +286,20 @@ namespace gui
 		}
 
 		utils::hook::detour wnd_proc_hook;
+
+		char gui_frame_stub()
+		{
+			const auto result = utils::hook::invoke<char>(0x14064CF80);
+
+			// only draw on frames the game renders
+			if (result == 0 && *reinterpret_cast<int*>(0x14DDFCBE0) <= 0)
+			{
+				gui_on_frame();
+			}
+
+			return result;
+		}
+
 		LRESULT wnd_proc_stub(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			if (wParam != VK_ESCAPE && toggled)
@@ -275,21 +312,11 @@ namespace gui
 
 			return wnd_proc_hook.invoke<LRESULT>(hWnd, msg, wParam, lParam);
 		}
-	}
 
-	void toggle()
-	{
-		if (!toggled)
+		bool is_menu_open(const std::string& name)
 		{
-			*reinterpret_cast<int*>(0xC9DC405_b) = 0;
-			*game::keyCatchers |= 0x10;
+			return enabled_menus[name];
 		}
-		else
-		{
-			*reinterpret_cast<int*>(0xC9DC405_b) = 1;
-			*game::keyCatchers &= ~0x10;
-		}
-		toggled = !toggled;
 	}
 
 	bool gui_key_event(const int local_client_num, const int key, const int down)
@@ -327,11 +354,6 @@ namespace gui
 		});
 	}
 
-	bool is_menu_open(const std::string& name)
-	{
-		return enabled_menus[name];
-	}
-
 	void notification(const std::string& title, const std::string& text, const std::chrono::milliseconds duration)
 	{
 		notification_t notification{};
@@ -349,7 +371,7 @@ namespace gui
 	void copy_to_clipboard(const std::string& text)
 	{
 		utils::string::set_clipboard_data(text);
-		gui::notification("Text copied to clipboard", utils::string::va("\"%s\"", text.data()));
+		notification("Text copied to clipboard", utils::string::va("\"%s\"", text.data()));
 	}
 
 	void register_menu(const std::string& name, const std::string& title,
@@ -377,7 +399,6 @@ namespace gui
 
 	bool InputU8(const char* label, unsigned char* v, int step, int step_fast, ImGuiInputTextFlags flags)
 	{
-		// Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
 		const char* format = (flags & ImGuiInputTextFlags_CharsHexadecimal) ? "%08X" : "%d";
 		return ImGui::InputScalar(label, ImGuiDataType_U8, (void*)v, (void*)(step > 0 ? &step : NULL), (void*)(step_fast > 0 ? &step_fast : NULL), format, flags);
 	}
@@ -408,9 +429,11 @@ namespace gui
 				return;
 			}
 
-			utils::hook::nop(0x6CB16D_b, 9);
-			utils::hook::call(0x6CB170_b, gui_on_frame);
-			wnd_proc_hook.create(0x5BFF60_b, wnd_proc_stub);
+			utils::hook::call(0x1406222A7, gui_frame_stub);
+			wnd_proc_hook.create(0x1405162D0, wnd_proc_stub); // WndProc
+
+			// weird build number that renders when gui is shown
+			utils::hook::nop(0x1404CE03E, 5);
 
 			on_frame([]
 			{

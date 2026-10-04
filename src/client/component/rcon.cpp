@@ -1,5 +1,6 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+#include "rcon.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -85,7 +86,7 @@ namespace rcon
 			buffer.append(
 				"--- ----- --- ---- -------------------------------- ---------------- --------------------- -----\n");
 
-			const auto svs_clients = *game::mp::svs_clients;
+			const auto svs_clients = game::mp::svs_clients.get();
 			if (svs_clients == nullptr)
 			{
 				return buffer;
@@ -148,7 +149,7 @@ namespace rcon
 
 			scheduler::once([]()
 			{
-				dvars::register_string("rcon_password", "", game::DvarFlags::DVAR_FLAG_NONE,
+				dvars::register_string("rcon_password", "", game::DvarFlags::DVAR_NOFLAG,
 				                          "The password for remote console");
 			}, scheduler::pipeline::main);
 

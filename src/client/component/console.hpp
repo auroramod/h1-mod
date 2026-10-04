@@ -2,10 +2,6 @@
 
 namespace console
 {
-	HWND get_window();
-	void set_title(std::string title);
-	void set_size(int width, int height);
-
 	enum console_type
 	{
 		con_type_error = 1,

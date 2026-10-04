@@ -13,11 +13,11 @@ namespace security
 		{
 			if (index1 >= 0 && index1 < 18 && index2 >= 0 && index2 < 42)
 			{
-				utils::hook::invoke<void>(0x61A9D0_b, localclient, index1, index2);
+				utils::hook::invoke<void>(0x14056FEA0, localclient, index1, index2);
 			}
 		}
 
-		void remap_cached_entities(game::mp::cachedSnapshot_t& snapshot)
+		void remap_cached_entities(game::cachedSnapshot_t& snapshot)
 		{
 			static bool printed = false;
 			if (snapshot.num_clients > 1200 && !printed)
@@ -37,7 +37,7 @@ namespace security
 			a.call_aligned(remap_cached_entities);
 
 			a.popad64();
-			a.jmp(0x55E4D8_b);
+			a.jmp(0x140493988);
 		}
 	}
 
@@ -52,10 +52,10 @@ namespace security
 			}
 
 			// Patch vulnerability in PlayerCards_SetCachedPlayerData
-			utils::hook::call(0xF4632_b, set_cached_playerdata_stub);
+			utils::hook::call(0x1402328DD, set_cached_playerdata_stub);
 
 			// Patch entity overflow
-			utils::hook::jump(0x55E4C7_b, assemble(remap_cached_entities_stub), true);
+			utils::hook::jump(0x140493977, assemble(remap_cached_entities_stub), true);
 		}
 	};
 }

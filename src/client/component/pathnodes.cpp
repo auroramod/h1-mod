@@ -17,10 +17,10 @@ namespace pathnodes
 	namespace
 	{
 		game::dvar_t* scr_enable_jump_nodes = nullptr;
-		
+
 		utils::memory::allocator path_allocator;
 
-		static const std::unordered_map<std::string, unsigned short> waypoint_types =
+		const std::unordered_map<std::string, unsigned short> waypoint_types =
 		{
 			{"stand", 13},
 			{"crouch", 14},
@@ -65,29 +65,29 @@ namespace pathnodes
 
 			const auto trigger = &game::mp::g_entities[entref.entnum];
 
-			const auto x1 = std::abs(trigger->box.midPoint[0]);
-			const auto y1 = std::abs(trigger->box.midPoint[1]);
+			const auto x1 = std::abs(trigger->r.box.midPoint[0]);
+			const auto y1 = std::abs(trigger->r.box.midPoint[1]);
 
-			const auto max_height = ((trigger->box.halfSize[2] + trigger->box.halfSize[2]) + 256.f) + 1.f;
+			const auto max_height = ((trigger->r.box.halfSize[2] + trigger->r.box.halfSize[2]) + 256.f) + 1.f;
 
 			const auto distance = std::sqrtf(
-				(y1 + trigger->box.halfSize[1]) * (y1 + trigger->box.halfSize[1]) +
-				(x1 + trigger->box.halfSize[0]) * (x1 + trigger->box.halfSize[0])
+				(y1 + trigger->r.box.halfSize[1]) * (y1 + trigger->r.box.halfSize[1]) +
+				(x1 + trigger->r.box.halfSize[0]) * (x1 + trigger->r.box.halfSize[0])
 			);
 
 			game::pathsort_s nodes[256]{};
-			const auto count = game::Path_NodesInCylinder(trigger->origin, nullptr, (distance + 256.f) + 1.f, max_height, nodes, 256, -1);
+			const auto count = game::Path_NodesInCylinder(trigger->r.currentOrigin, nullptr, (distance + 256.f) + 1.f, max_height, nodes, 256, -1);
 
 			float midpoint[3]{};
 			float halfsize[3]{};
 
-			midpoint[0] = trigger->absBox.midPoint[0];
-			midpoint[1] = trigger->absBox.midPoint[1];
-			midpoint[2] = trigger->absBox.midPoint[2];
+			midpoint[0] = trigger->r.absBox.midPoint[0];
+			midpoint[1] = trigger->r.absBox.midPoint[1];
+			midpoint[2] = trigger->r.absBox.midPoint[2];
 
-			halfsize[0] = trigger->absBox.halfSize[0] + 128.f;
-			halfsize[1] = trigger->absBox.halfSize[1] + 128.f;
-			halfsize[2] = trigger->absBox.halfSize[2] + 128.f;
+			halfsize[0] = trigger->r.absBox.halfSize[0] + 128.f;
+			halfsize[1] = trigger->r.absBox.halfSize[1] + 128.f;
+			halfsize[2] = trigger->r.absBox.halfSize[2] + 128.f;
 
 			for (auto i = 0; i < count; i++)
 			{
@@ -96,7 +96,7 @@ namespace pathnodes
 				pos[0] = node->constant.vLocalOrigin[0];
 				pos[1] = node->constant.vLocalOrigin[1];
 				pos[2] = node->constant.vLocalOrigin[2];
-			
+
 				game::WorldifyPosFromParent(node, pos);
 
 				const auto delta_x = std::abs(midpoint[0] - pos[0]);
@@ -225,13 +225,13 @@ namespace pathnodes
 			a.jnz(do_traverse);
 
 			a.popad64();
-			a.jmp(0x3EAD2A_b);
+			a.jmp(0x14030E87A);
 
 			a.bind(do_traverse);
 			a.popad64();
-			a.jmp(0x3EAD0A_b);
+			a.jmp(0x14030E85A);
 		}
-		
+
 		float distance(float* a, float* b)
 		{
 			return std::sqrtf((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]));
@@ -333,21 +333,21 @@ namespace pathnodes
 				result->dist = dist;
 				result->u.child[0] = child[0];
 				result->u.child[1] = child[1];
-				
+
 				return result;
 			}
-			
+
 			const auto result = allocate_tree(asset);
 			result->axis = -1;
 			result->u.s.nodeCount = num_nodes;
 			result->u.s.nodes = node_indexes;
 			return result;
 		}
-		
-		void path_init_stub()
+
+		void path_init_stub(const int restart)
 		{
 			// Path_Init
-			utils::hook::invoke<void>(0x3F8370_b);
+			utils::hook::invoke<void>(0x14031BB80, restart);
 
 			if (game::VirtualLobby_Loaded())
 			{
@@ -358,22 +358,22 @@ namespace pathnodes
 			std::string buffer;
 
 			auto mapname = game::Dvar_FindVar("mapname");
-			
+
 			if (const auto file_path = std::format("maps/mp/{}_wp.csv", mapname->current.string); filesystem::read_file(file_path, &buffer))
 			{
 				console::debug("Loading paths '%s' from disk", file_path.data());
-				
+
 				auto table = utils::csv::parser(buffer);
 
 				auto* asset = path_allocator.allocate<game::PathData>(); // stringtable allocator lul
 
 				asset->name = path_allocator.duplicate_string(std::string(mapname->current.string));
-				
+
 				if (table.get_num_rows() <= 0)
 				{
 					return;
 				}
-				
+
 				const auto rows = table.get_rows();
 				asset->nodeCount = std::atoi(rows[0]->fields[0]);
 				asset->nodes = path_allocator.allocate_array<game::pathnode_t>(asset->nodeCount);
@@ -473,20 +473,20 @@ namespace pathnodes
 				return;
 			}
 
-			scr_enable_jump_nodes = dvars::register_bool("scr_enableJumpNodes", false, game::DVAR_FLAG_REPLICATED, "enable jump nodes");
+			scr_enable_jump_nodes = dvars::register_bool("scr_enableJumpNodes", false, game::DVAR_CODINFO, "enable jump nodes");
 
 			// implement jump nodes from iw6
-			utils::hook::inject(0x3F5F03_b + 3, node_types);
-			utils::hook::inject(0x3F66A0_b + 3, node_types);
-			utils::hook::set<std::uint8_t>(0x3F66E7_b + 2, node_type_end);
+			utils::hook::inject(0x140319713 + 3, node_types);
+			utils::hook::inject(0x140319EB0 + 3, node_types);
+			utils::hook::set<std::uint8_t>(0x140319EF7 + 2, node_type_end);
 
-			utils::hook::jump(0x3EACE0_b, utils::hook::assemble(path_generate_path_stub), true);
+			utils::hook::jump(0x14030E830, utils::hook::assemble(path_generate_path_stub), true);
 
 			gsc::function::add("markdangerousnodes", mark_dangerous_nodes);
 			gsc::function::add("markdangerousnodesintrigger", mark_dangerous_nodes_in_trigger);
-			
+
 			// add bot warfare CSV loading on map loading
-			utils::hook::call(0x420911_b, path_init_stub);
+			utils::hook::call(0x140343461, path_init_stub); // G_InitGame -> Path_Init
 		}
 	};
 }

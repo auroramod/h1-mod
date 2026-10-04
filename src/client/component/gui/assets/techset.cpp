@@ -303,7 +303,7 @@ namespace gui::asset_list::techet
 					{ \
 						gui::copy_to_clipboard(pass->__name__->name); \
 					} \
-					gui::asset_list::add_view_button(__type__, __type__, pass->__name__->name); \
+					asset_list::add_view_button(__type__, __type__, pass->__name__->name); \
 				} \
 				else \
 				{ \
@@ -420,7 +420,7 @@ namespace gui::asset_list::techet
 			ImGui::SetNextItemOpen(true, ImGuiCond_FirstUseEver);
 
 #define DRAW_ASSET_PROPERTY_INPUT_U8(__name__) \
-				InputU8(#__name__, &asset->__name__); \
+				gui::InputU8(#__name__, &asset->__name__); \
 
 #define DRAW_ASSET_PROPERTY_INPUT_S32(__name__) \
 				ImGui::InputInt(#__name__, &asset->__name__); \
@@ -486,7 +486,7 @@ namespace gui::asset_list::techet
 	public:
 		void post_unpack() override
 		{
-			gui::asset_list::add_asset_view<game::MaterialTechniqueSet>(game::ASSET_TYPE_TECHNIQUE_SET, draw_techset_window);
+			asset_list::add_asset_view<game::MaterialTechniqueSet>(game::ASSET_TYPE_TECHNIQUE_SET, draw_techset_window);
 		}
 	};
 }

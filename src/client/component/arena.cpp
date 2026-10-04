@@ -10,13 +10,15 @@
 #include <utils/io.hpp>
 #include <utils/memory.hpp>
 
-#define MAX_ARENAS 64
-
 namespace arena
 {
 	namespace
 	{
+		constexpr int MAX_ARENAS = 128;
+
 		std::recursive_mutex arena_mutex;
+
+		char* s_arena_infos_[MAX_ARENAS];
 
 		bool parse_arena(const std::string& path)
 		{
@@ -26,7 +28,7 @@ namespace arena
 			if (utils::io::read_file(path, &buffer) && !buffer.empty())
 			{
 				*game::ui_num_arenas += game::GameInfo_ParseArenas(buffer.data(), MAX_ARENAS - *game::ui_num_arenas,
-					&game::ui_arena_infos[*game::ui_num_arenas]);
+					&s_arena_infos_[*game::ui_num_arenas]);
 				return true;
 			}
 
@@ -47,8 +49,8 @@ namespace arena
 
 			game::DB_GetRawBuffer(rawfile, rawfile_buffer, len);
 			*game::ui_num_arenas += game::GameInfo_ParseArenas(rawfile_buffer, MAX_ARENAS - *game::ui_num_arenas,
-				&game::ui_arena_infos[*game::ui_num_arenas]);
-			
+				&s_arena_infos_[*game::ui_num_arenas]);
+
 			return true;
 		}
 
@@ -89,7 +91,12 @@ namespace arena
 			}
 
 			// load custom arenas
-			utils::hook::jump(0x4DE030_b, load_arenas_stub);
+			utils::hook::jump(0x140408E10, load_arenas_stub); // UI_LoadArenasFromFile_FastFile
+
+			// expand arena infos (MAX_ARENAS)
+			utils::hook::inject(0x140409289 + 3, &s_arena_infos_);
+			utils::hook::inject(0x140409333 + 3, &s_arena_infos_);
+			utils::hook::inject(0x14040935B + 3, &s_arena_infos_);
 		}
 	};
 }

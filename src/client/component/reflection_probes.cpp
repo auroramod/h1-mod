@@ -13,14 +13,82 @@
 #pragma warning( push )
 #pragma warning( disable : 4459 )
 #include <DirectXTex.h>
-#pragma warning( pop )
 
+#include <utils/memory.hpp>
+
+#pragma warning( pop )
 #define DUMP_DDS
 
 namespace reflection_probes
 {
 	namespace
 	{
+		const char* cubemap_suffix[] = 
+		{
+			"_rf",
+			"_lf",
+			"_bk",
+			"_ft",
+			"_up",
+			"_dn"
+		};
+
+		std::vector<std::string> dvar_names =
+		{
+			"fx_enable",
+			"cg_draw2d",
+			"cg_drawgun",
+			"branding",
+		};
+		int dvar_values[3];
+
+		const char* basename = nullptr;
+		float probe_origin[3];
+		int do_render;
+
+		utils::hook::detour cg_calc_cubemap_view_values_hook;
+		utils::hook::detour scr_update_frame_hook;
+		utils::hook::detour cl_cgame_rendering_hook;
+		utils::hook::detour cg_load_light_set_hook;
+
+		// Function to flip an RGBA image diagonally
+		void flip_diagonally(uint8_t* image, int width, int height) {
+			int channels = 4; // Number of channels for RGBA
+			for (int i = 0; i < height; ++i) {
+				for (int j = 0; j < width; ++j) {
+					if (i < j) {
+						for (int k = 0; k < channels; ++k) {
+							std::swap(image[(i * width + j) * channels + k], image[(j * width + i) * channels + k]);
+						}
+					}
+				}
+			}
+		}
+
+		// Function to flip an RGBA image horizontally
+		void flip_horizontally(uint8_t* image, int width, int height) {
+			int channels = 4; // Number of channels for RGBA
+			for (int i = 0; i < height; ++i) {
+				for (int j = 0; j < width / 2; ++j) {
+					for (int k = 0; k < channels; ++k) {
+						std::swap(image[(i * width + j) * channels + k], image[(i * width + (width - 1 - j)) * channels + k]);
+					}
+				}
+			}
+		}
+
+		// Function to flip an RGBA image vertically
+		void flip_vertically(uint8_t* image, int width, int height) {
+			int channels = 4; // Number of channels for RGBA
+			for (int i = 0; i < height / 2; ++i) {
+				for (int j = 0; j < width; ++j) {
+					for (int k = 0; k < channels; ++k) {
+						std::swap(image[(i * width + j) * channels + k], image[((height - 1 - i) * width + j) * channels + k]);
+					}
+				}
+			}
+		}
+
 		std::string clean_name(const std::string& name)
 		{
 			auto new_name = name;
@@ -169,69 +237,6 @@ namespace reflection_probes
 				console::error("Failed to dump image \"%s\"", spath.data());
 			}
 		}
-	}
-
-	namespace
-	{
-		// Function to flip an RGBA image diagonally
-		void flip_diagonally(uint8_t* image, int width, int height) {
-			int channels = 4; // Number of channels for RGBA
-			for (int i = 0; i < height; ++i) {
-				for (int j = 0; j < width; ++j) {
-					if (i < j) {
-						for (int k = 0; k < channels; ++k) {
-							std::swap(image[(i * width + j) * channels + k], image[(j * width + i) * channels + k]);
-						}
-					}
-				}
-			}
-		}
-
-		// Function to flip an RGBA image horizontally
-		void flip_horizontally(uint8_t* image, int width, int height) {
-			int channels = 4; // Number of channels for RGBA
-			for (int i = 0; i < height; ++i) {
-				for (int j = 0; j < width / 2; ++j) {
-					for (int k = 0; k < channels; ++k) {
-						std::swap(image[(i * width + j) * channels + k], image[(i * width + (width - 1 - j)) * channels + k]);
-					}
-				}
-			}
-		}
-
-		// Function to flip an RGBA image vertically
-		void flip_vertically(uint8_t* image, int width, int height) {
-			int channels = 4; // Number of channels for RGBA
-			for (int i = 0; i < height / 2; ++i) {
-				for (int j = 0; j < width; ++j) {
-					for (int k = 0; k < channels; ++k) {
-						std::swap(image[(i * width + j) * channels + k], image[((height - 1 - i) * width + j) * channels + k]);
-					}
-				}
-			}
-		}
-	}
-
-	namespace
-	{
-		const char* cubemap_suffix[] = 
-		{
-			"_rf",
-			"_lf",
-			"_bk",
-			"_ft",
-			"_up",
-			"_dn"
-		};
-
-		std::vector<std::string> dvar_names =
-		{
-			"fx_enable",
-			"cg_draw2d",
-			"cg_drawgun",
-			"branding",
-		};
-		int dvar_values[3];
 
 		void disableDvars()
 		{
@@ -258,16 +263,7 @@ namespace reflection_probes
 			}
 		}
 
-		const char* basename = nullptr;
-		float probe_origin[3];
-		int do_render;
-
-		utils::hook::detour cg_calc_cubemap_view_values_hook;
-		utils::hook::detour scr_update_frame_hook;
-		utils::hook::detour cl_cgame_rendering_hook;
-		utils::hook::detour cg_load_light_set_hook;
-
-		void cg_calc_cubemap_view_values_stub(game::mp::refdef_t* refdef, int cubemapShot, int cubemapSize, int unk)
+		void cg_calc_cubemap_view_values_stub(game::refdef_t* refdef, int cubemapShot, int cubemapSize, int unk)
 		{
 			if (dvars::r_reflectionProbeGenerate->current.enabled)
 			{
@@ -332,9 +328,9 @@ namespace reflection_probes
 				auto pixel_buffer_size = pixels_size * 6; // cube map has 6 images
 				auto pixel_buffer = allocator.allocate_array<unsigned char>(pixel_buffer_size);
 
-				for (int shot = game::mp::CUBEMAPSHOT_RIGHT; shot < game::mp::CUBEMAPSHOT_COUNT; shot++)
+				for (int shot = game::CUBEMAPSHOT_RIGHT; shot < game::CUBEMAPSHOT_COUNT; shot++)
 				{
-					cg->cubemapShot = (game::mp::CubemapShot)shot;
+					cg->cubemapShot = (game::CubemapShot)shot;
 					cg->cubemapSize = size;
 
 					probe_origin[0] = probe->origin[0];
@@ -350,7 +346,7 @@ namespace reflection_probes
 							__debugbreak();
 						}
 
-						*reinterpret_cast<int*>(0x392E8BC_b) = 3;
+						*reinterpret_cast<int*>(0x14320C32C) = 3;
 						game::R_EndFrame();
 						game::R_IssueRenderCommands(-1);
 					};
@@ -386,14 +382,14 @@ namespace reflection_probes
 				}
 
 #ifdef DUMP_DDS
-				flip_diagonally(&pixel_buffer[pixels_size * (game::mp::CUBEMAPSHOT_RIGHT - 1)], size, size);
-				flip_diagonally(&pixel_buffer[pixels_size * (game::mp::CUBEMAPSHOT_LEFT - 1)], size, size);
-				flip_horizontally(&pixel_buffer[pixels_size * (game::mp::CUBEMAPSHOT_LEFT - 1)], size, size);
-				flip_vertically(&pixel_buffer[pixels_size * (game::mp::CUBEMAPSHOT_LEFT - 1)], size, size);
-				flip_vertically(&pixel_buffer[pixels_size * (game::mp::CUBEMAPSHOT_BACK - 1)], size, size);
-				flip_horizontally(&pixel_buffer[pixels_size * (game::mp::CUBEMAPSHOT_FRONT - 1)], size, size);
-				flip_diagonally(&pixel_buffer[pixels_size * (game::mp::CUBEMAPSHOT_UP - 1)], size, size);
-				flip_diagonally(&pixel_buffer[pixels_size * (game::mp::CUBEMAPSHOT_DOWN - 1)], size, size);
+				flip_diagonally(&pixel_buffer[pixels_size * (game::CUBEMAPSHOT_RIGHT - 1)], size, size);
+				flip_diagonally(&pixel_buffer[pixels_size * (game::CUBEMAPSHOT_LEFT - 1)], size, size);
+				flip_horizontally(&pixel_buffer[pixels_size * (game::CUBEMAPSHOT_LEFT - 1)], size, size);
+				flip_vertically(&pixel_buffer[pixels_size * (game::CUBEMAPSHOT_LEFT - 1)], size, size);
+				flip_vertically(&pixel_buffer[pixels_size * (game::CUBEMAPSHOT_BACK - 1)], size, size);
+				flip_horizontally(&pixel_buffer[pixels_size * (game::CUBEMAPSHOT_FRONT - 1)], size, size);
+				flip_diagonally(&pixel_buffer[pixels_size * (game::CUBEMAPSHOT_UP - 1)], size, size);
+				flip_diagonally(&pixel_buffer[pixels_size * (game::CUBEMAPSHOT_DOWN - 1)], size, size);
 
 				auto* image = R_GenerateReflectionImage(probe_index + 1, pixel_buffer, pixel_buffer_size, size, &allocator);
 				dump_image_dds(image);
@@ -462,13 +458,13 @@ namespace reflection_probes
 				return;
 			}
 
-			dvars::r_reflectionProbeGenerate = dvars::register_bool("r_reflectionProbeGenerate", false, game::DVAR_FLAG_NONE, "Generate cube maps for reflection probes.");
-			dvars::r_reflectionProbeGenerateExit = dvars::register_bool("r_reflectionProbeGenerateExit", false, game::DVAR_FLAG_NONE, "Exit when done generating reflection cubes.");
+			dvars::r_reflectionProbeGenerate = dvars::register_bool("r_reflectionProbeGenerate", false, game::DVAR_NOFLAG, "Generate cube maps for reflection probes.");
+			dvars::r_reflectionProbeGenerateExit = dvars::register_bool("r_reflectionProbeGenerateExit", false, game::DVAR_NOFLAG, "Exit when done generating reflection cubes.");
 
-			cl_cgame_rendering_hook.create(0x3433A0_b, cl_cgame_rendering_stub);
-			scr_update_frame_hook.create(0x343830_b, scr_update_frame_stub);
-			cg_calc_cubemap_view_values_hook.create(0x6A2D80_b, cg_calc_cubemap_view_values_stub);
-			cg_load_light_set_hook.create(0x1090B0_b, cg_load_light_set_stub);
+			cl_cgame_rendering_hook.create(0x14025B2A0, cl_cgame_rendering_stub);
+			scr_update_frame_hook.create(0x14025B730, scr_update_frame_stub);
+			cg_calc_cubemap_view_values_hook.create(0x1405FAEF0, cg_calc_cubemap_view_values_stub);
+			cg_load_light_set_hook.create(0x1400B9A70, cg_load_light_set_stub);
 		}
 	};
 }

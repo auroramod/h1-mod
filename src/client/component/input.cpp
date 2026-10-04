@@ -34,7 +34,7 @@ namespace input
 			cl_char_event_hook.invoke<void>(local_client_num, key);
 		}
 
-		void cl_key_event_stub(const int local_client_num, const int key, const int down)
+		void cl_key_event_stub(const int local_client_num, const int key, const int down, const unsigned int time)
 		{
 			if (!game_console::console_key_event(local_client_num, key, down))
 			{
@@ -48,20 +48,20 @@ namespace input
 			}
 #endif
 
-			cl_key_event_hook.invoke<void>(local_client_num, key, down);
+			cl_key_event_hook.invoke<void>(local_client_num, key, down, time);
 		}
 
-#ifdef _DEBUG
 		void cl_mouse_move_stub(const int local_client_num, int x, int y)
 		{
+#ifdef _DEBUG
 			if (!gui::gui_mouse_event(local_client_num, x, y))
 			{
 				return;
 			}
+#endif
 
 			cl_mouse_move_hook.invoke<void>(local_client_num, x, y);
 		}
-#endif
 	}
 
 	class component final : public component_interface
@@ -74,12 +74,12 @@ namespace input
 				return;
 			}
 
-			cl_char_event_hook.create(SELECT_VALUE(0x1AB8F0_b, 0x12C8F0_b), cl_char_event_stub);
-			cl_key_event_hook.create(SELECT_VALUE(0x1ABC20_b, 0x135A70_b), cl_key_event_stub);
+			cl_char_event_hook.create(SELECT_VALUE(0x1401AB8F0, 0x14024E810), cl_char_event_stub); // CL_CharEvent
+			cl_key_event_hook.create(SELECT_VALUE(0x1401ABC20, 0x14024EA60), cl_key_event_stub); // CL_KeyEvent
 #ifdef _DEBUG
-			if (game::environment::is_sp())
+			if (!game::environment::is_sp())
 			{
-				cl_mouse_move_hook.create(SELECT_VALUE(0x0_b, 0x27B310_b), cl_mouse_move_stub);
+				cl_mouse_move_hook.create(0x140177550, cl_mouse_move_stub); // CL_MouseMove
 			}
 #endif
 		}

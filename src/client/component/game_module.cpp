@@ -17,6 +17,13 @@ namespace game_module
 		utils::hook::detour file_name_a_hook;
 		utils::hook::detour file_name_w_hook;
 
+		decltype(&GetModuleHandleA) orig_get_module_handle_a = &GetModuleHandleA;
+		decltype(&GetModuleHandleW) orig_get_module_handle_w = &GetModuleHandleW;
+		decltype(&GetModuleHandleExA) orig_get_module_handle_ex_a = &GetModuleHandleExA;
+		decltype(&GetModuleHandleExW) orig_get_module_handle_ex_w = &GetModuleHandleExW;
+		decltype(&GetModuleFileNameA) orig_get_module_file_name_a = &GetModuleFileNameA;
+		decltype(&GetModuleFileNameW) orig_get_module_file_name_w = &GetModuleFileNameW;
+
 		HMODULE __stdcall get_module_handle_a(const LPCSTR module_name)
 		{
 			if (!module_name)
@@ -24,7 +31,7 @@ namespace game_module
 				return get_game_module();
 			}
 
-			return handle_a_hook.invoke<HMODULE>(module_name);
+			return orig_get_module_handle_a(module_name);
 		}
 
 		HMODULE __stdcall get_module_handle_w(const LPWSTR module_name)
@@ -34,7 +41,7 @@ namespace game_module
 				return get_game_module();
 			}
 
-			return handle_w_hook.invoke<HMODULE>(module_name);
+			return orig_get_module_handle_w(module_name);
 		}
 
 		BOOL __stdcall get_module_handle_ex_a(const DWORD flags, const LPCSTR module_name, HMODULE* hmodule)
@@ -45,7 +52,7 @@ namespace game_module
 				return TRUE;
 			}
 
-			return handle_ex_a_hook.invoke<BOOL>(flags, module_name, hmodule);
+			return orig_get_module_handle_ex_a(flags, module_name, hmodule);
 		}
 
 		BOOL __stdcall get_module_handle_ex_w(const DWORD flags, const LPCWSTR module_name, HMODULE* hmodule)
@@ -56,7 +63,7 @@ namespace game_module
 				return TRUE;
 			}
 
-			return handle_ex_w_hook.invoke<BOOL>(flags, module_name, hmodule);
+			return orig_get_module_handle_ex_w(flags, module_name, hmodule);
 		}
 
 		DWORD __stdcall get_module_file_name_a(HMODULE hmodule, const LPSTR filename, const DWORD size)
@@ -72,7 +79,7 @@ namespace game_module
 				hmodule = get_host_module();
 			}
 
-			return file_name_a_hook.invoke<DWORD>(hmodule, filename, size);
+			return orig_get_module_file_name_a(hmodule, filename, size);
 		}
 
 		DWORD __stdcall get_module_file_name_w(HMODULE hmodule, const LPWSTR filename, const DWORD size)
@@ -88,17 +95,36 @@ namespace game_module
 				hmodule = get_host_module();
 			}
 
-			return file_name_w_hook.invoke<DWORD>(hmodule, filename, size);
+			return orig_get_module_file_name_w(hmodule, filename, size);
 		}
 
 		void hook_module_resolving()
 		{
+			if (game::environment::is_sp())
+			{
+				// SP is still the 1.15 binary, so we keep global detours there
 			handle_a_hook.create(&GetModuleHandleA, &get_module_handle_a);
 			handle_w_hook.create(&GetModuleHandleW, &get_module_handle_w);
-			handle_ex_w_hook.create(&GetModuleHandleExA, &get_module_handle_ex_a);
+				handle_ex_a_hook.create(&GetModuleHandleExA, &get_module_handle_ex_a);
 			handle_ex_w_hook.create(&GetModuleHandleExW, &get_module_handle_ex_w);
 			file_name_a_hook.create(&GetModuleFileNameA, &get_module_file_name_a);
 			file_name_w_hook.create(&GetModuleFileNameW, &get_module_file_name_w);
+
+				orig_get_module_handle_a = handle_a_hook.get<std::remove_pointer_t<decltype(orig_get_module_handle_a)>>();
+				orig_get_module_handle_w = handle_w_hook.get<std::remove_pointer_t<decltype(orig_get_module_handle_w)>>();
+				orig_get_module_handle_ex_a = handle_ex_a_hook.get<std::remove_pointer_t<decltype(orig_get_module_handle_ex_a)>>();
+				orig_get_module_handle_ex_w = handle_ex_w_hook.get<std::remove_pointer_t<decltype(orig_get_module_handle_ex_w)>>();
+				orig_get_module_file_name_a = file_name_a_hook.get<std::remove_pointer_t<decltype(orig_get_module_file_name_a)>>();
+				orig_get_module_file_name_w = file_name_w_hook.get<std::remove_pointer_t<decltype(orig_get_module_file_name_w)>>();
+				return;
+			}
+
+			// patch the game's IAT only (GetModuleHandleExA is not imported by 1.04 mp)
+			utils::hook::set(0x14080F4C0, get_module_handle_a);
+			utils::hook::set(0x14080F5A0, get_module_handle_w);
+			utils::hook::set(0x14080F230, get_module_handle_ex_w);
+			utils::hook::set(0x14080F4B8, get_module_file_name_a);
+			utils::hook::set(0x14080F5E8, get_module_file_name_w);
 		}
 	}
 

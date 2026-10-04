@@ -99,7 +99,7 @@ namespace fps
 		{
 			if (cg_drawfps->current.integer > 0)
 			{
-				const auto fps = fps::get_fps();
+				const auto fps = get_fps();
 
 				const auto font = game::R_RegisterFont("fonts/fira_mono_regular.ttf", 25);
 				if (font)
@@ -158,19 +158,8 @@ namespace fps
 			const auto start = std::chrono::high_resolution_clock::now();
 			com_frame_hook.invoke<void>();
 
-			auto max_fps = 0;
 			static const auto com_max_fps = game::Dvar_FindVar("com_maxfps");
-
-			if (game::environment::is_mp())
-			{
-				max_fps = utils::hook::invoke<int>(0x183490_b, com_max_fps);
-
-			}
-			else
-			{
-				max_fps = com_max_fps->current.integer;
-			}
-
+			auto max_fps = com_max_fps->current.integer;
 			if (max_fps == 0)
 			{
 				max_fps = 1000;
@@ -199,6 +188,13 @@ namespace fps
 				}
 			}
 		}
+
+		game::dvar_t* cg_draw_fps_register_stub(const char* /*name*/, const char** /*value_list*/, const int /*default_index*/,
+			unsigned int /*flags*/, const char* /*description*/)
+		{
+			cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_ARCHIVE, "Draw frames per second");
+			return cg_drawfps;
+		}
 	}
 
 	int get_fps()
@@ -223,52 +219,56 @@ namespace fps
 
 			if (game::environment::is_mp())
 			{
-				utils::hook::jump(SELECT_VALUE(0, 0x343847_b), utils::hook::assemble([](utils::hook::assembler& a)
+				dvars::override::register_int("com_maxfps", 0, 0, 1000, game::DVAR_ARCHIVE);
+
+				// Unlock fps in main menu
+				utils::hook::set<uint8_t>(0x14025B86B, 0xEB);
+
+				utils::hook::jump(0x14025B747, utils::hook::assemble([](utils::hook::assembler& a)
 				{
 					a.pushad64();
 					a.call_aligned(perf_update);
 					a.popad64();
 
-					a.call(0x702250_b);
+					a.call(0x1406575A0);
 					a.mov(edx, 3);
 					a.xor_(ecx, ecx);
-					a.jmp(0x343853_b);
+					a.jmp(0x14025B753);
 				}), true);
 
-				// Don't register cg_drawfps
-				utils::hook::nop(0x31D74F_b, 0x1C);
-				utils::hook::nop(0x31D76F_b, 0x7);
+				// register cg_drawFps as saved int
+				utils::hook::call(0x140222A46, cg_draw_fps_register_stub);
 			}
 			else
 			{
-				sub_5D6810_hook.create(0x5D6810_b, sub_5D6810_stub);
+				sub_5D6810_hook.create(0x1405D6810, sub_5D6810_stub);
 
 				// Don't register cg_drawfps
-				utils::hook::nop(0x15C97D_b, 0x20);
-				utils::hook::nop(0x15C9A1_b, 0x7);
+				utils::hook::nop(0x14015C97D, 0x20);
+				utils::hook::nop(0x14015C9A1, 0x7);
+
+				cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_ARCHIVE, "Draw frames per second");
 			}
 
 			scheduler::loop(cg_draw_fps, scheduler::pipeline::renderer);
 
-			cg_drawfps = dvars::register_int("cg_drawFps", 0, 0, 2, game::DVAR_FLAG_SAVED, "Draw frames per second");
-
 			if (game::environment::is_mp())
 			{
 				// fix ping value
-				utils::hook::nop(0x342C6C_b, 2);
+				utils::hook::nop(0x14025AC41, 2);
 
-				cg_drawping = dvars::register_int("cg_drawPing", 0, 0, 1, game::DVAR_FLAG_SAVED, "Choose to draw ping");
+				cg_drawping = dvars::register_int("cg_drawPing", 0, 0, 1, game::DVAR_ARCHIVE, "Choose to draw ping");
 
 				scheduler::loop(cg_draw_ping, scheduler::pipeline::renderer);
 			}
 
-			dvars::register_bool("cg_infobar_fps", false, game::DVAR_FLAG_SAVED, "Show server latency");
-			dvars::register_bool("cg_infobar_ping", false, game::DVAR_FLAG_SAVED, "Show FPS counter");
+			dvars::register_bool("cg_infobar_fps", false, game::DVAR_ARCHIVE, "Show server latency");
+			dvars::register_bool("cg_infobar_ping", false, game::DVAR_ARCHIVE, "Show FPS counter");
 
 			// Make fps capping accurate
-			com_wait_end_frame_mode = dvars::register_int("com_waitEndFrameMode", 0, 0, 2, game::DVAR_FLAG_SAVED, "Wait end frame mode (0 = default, 1 = sleep(n), 2 = loop sleep(0)");
-			r_wait_end_time_hook.create(SELECT_VALUE(0x3A7330_b, 0x1C2420_b), r_wait_end_frame_stub);
-			com_frame_hook.create(SELECT_VALUE(0x385210_b, 0x15A960_b), com_frame_stub);
+			com_wait_end_frame_mode = dvars::register_int("com_waitEndFrameMode", 0, 0, 2, game::DVAR_ARCHIVE, "Wait end frame mode (0 = default, 1 = sleep(n), 2 = loop sleep(0)");
+			r_wait_end_time_hook.create(SELECT_VALUE(0x1403A7330, 0x1400EDD20), r_wait_end_frame_stub);
+			com_frame_hook.create(SELECT_VALUE(0x140385210, 0x1400D82A0), com_frame_stub);
 		}
 	};
 }

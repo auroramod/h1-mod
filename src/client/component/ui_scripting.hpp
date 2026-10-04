@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/game.hpp"
+
 namespace ui_scripting
 {
 	template <class... Args, std::size_t... I>

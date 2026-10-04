@@ -34,7 +34,7 @@ namespace gui::asset_list::gfxworld
 	public:
 		void post_unpack() override
 		{
-			gui::asset_list::add_asset_view<game::GfxWorld>(game::ASSET_TYPE_GFXWORLD, draw_window);
+			asset_list::add_asset_view<game::GfxWorld>(game::ASSET_TYPE_GFXWORLD, draw_window);
 		}
 	};
 }

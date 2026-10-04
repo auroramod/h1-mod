@@ -243,12 +243,12 @@ namespace filesystem
 	public:
 		void post_unpack() override
 		{
-			fs_startup_hook.create(SELECT_VALUE(0x40D890_b, 0x189A40_b), fs_startup_stub);
+			fs_startup_hook.create(SELECT_VALUE(0x14040D890, 0x1404EDD30), fs_startup_stub);
 
-			utils::hook::jump(SELECT_VALUE(0x42CE00_b, 0x5B3440_b), sys_default_install_path_stub);
+			utils::hook::jump(SELECT_VALUE(0x14042CE00, 0x140507CF0), sys_default_install_path_stub);
 
 			// fs_game flags
-			utils::hook::set<uint32_t>(SELECT_VALUE(0x40D2A5_b, 0x189275_b), 0);
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x14040D2A5, 0x1404ED715), 0);
 		}
 	};
 }

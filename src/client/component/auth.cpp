@@ -15,11 +15,45 @@
 #include <utils/info_string.hpp>
 #include <utils/cryptography.hpp>
 #include <utils/properties.hpp>
+#include <utils/io.hpp>
 
 namespace auth
 {
 	namespace
 	{
+		std::string get_player_suffix()
+		{
+			static const auto suffix = []() -> std::string
+			{
+				// other player stuff starts at 2, not 1
+				for (auto i = 1; i <= 8; ++i)
+				{
+					const auto mutex = CreateMutexA(nullptr, FALSE, utils::string::va("h1-mod-player-%d", i));
+					if (!mutex)
+					{
+						break;
+					}
+
+					if (GetLastError() != ERROR_ALREADY_EXISTS)
+					{
+						return i == 1 ? std::string{} : utils::string::va("-%d", i);
+					}
+
+					ReleaseMutex(mutex);
+					CloseHandle(mutex);
+				}
+
+				return {};
+			}();
+
+			return suffix;
+		}
+
+		std::string get_key_path(const char* name)
+		{
+			return (utils::properties::get_appdata_path() / utils::string::va("h1-%s%s.key", name, get_player_suffix().data())).generic_string();
+		}
+
 		std::string get_hdd_serial()
 		{
 			DWORD serial{};
@@ -71,6 +105,7 @@ namespace auth
 		std::string get_key_entropy()
 		{
 			std::string entropy{};
+			entropy.append(get_player_suffix());
 			entropy.append(utils::smbios::get_uuid());
 			entropy.append(get_hw_profile_guid());
 			entropy.append(get_protected_data());
@@ -89,7 +124,7 @@ namespace auth
 		{
 			std::string data{};
 
-			auto key_path = (utils::properties::get_appdata_path() / "h1-private.key").generic_string();
+			auto key_path = get_key_path("private");
 			if (!utils::io::read_file(key_path, &data))
 			{
 				return false;
@@ -113,7 +148,7 @@ namespace auth
 				throw std::runtime_error("Failed to generate cryptographic key!");
 			}
 
-			auto key_path = (utils::properties::get_appdata_path() / "h1-private.key").generic_string();
+			auto key_path = get_key_path("private");
 			if (!utils::io::write_file(key_path, key.serialize()))
 			{
 				console::error("Failed to write cryptographic key!\n");
@@ -139,7 +174,7 @@ namespace auth
 		{
 			auto key = load_or_generate_key();
 
-			auto key_path = (utils::properties::get_appdata_path() / "h1-public.key").generic_string();
+			auto key_path = get_key_path("public");
 			if (!utils::io::write_file(key_path, key.get_public_key()))
 			{
 				console::error("Failed to write public key!\n");
@@ -154,14 +189,13 @@ namespace auth
 			return key;
 		}
 
-		// need to move this somewhere else probably
 		std::string hash_string(const std::string& str)
 		{
 			const auto value = game::generateHashValue(str.data());
 			return utils::string::va("0x%lX", value);
 		}
 
-		bool send_connect_data(game::netsrc_t sock, game::netadr_s* adr, const char* format, const int len)
+		int send_connect_data_stub(game::netsrc_t sock, game::netadr_s* adr, const char* format, const int len)
 		{
 			std::string connect_string(format, len);
 			game::SV_Cmd_TokenizeString(connect_string.data());
@@ -259,29 +293,7 @@ namespace auth
 				a.call_aligned(direct_connect);
 				a.popad64();
 
-				a.jmp(0x1CAF64_b);
-			});
-		}
-
-		void* get_send_connect_data_stub()
-		{
-			return utils::hook::assemble([](utils::hook::assembler& a)
-			{
-				const auto false_ = a.newLabel();
-				const auto original = a.newLabel();
-
-				a.mov(ecx, eax);
-				a.lea(r8, qword_ptr(rbp, 0x4C0));
-				a.mov(r9d, ebx);
-				a.lea(rdx, qword_ptr(rsp, 0x30));
-
-				a.pushad64();
-				a.call_aligned(send_connect_data);
-				a.test(al, al);
-				a.popad64();
-
-				a.mov(rbx, qword_ptr(rsp, 0x9F0));
-				a.jmp(0x12D446_b);
+				a.jmp(0x140488CE2);
 			});
 		}
 	}
@@ -304,20 +316,26 @@ namespace auth
 			// Patch steam id bit check
 			if (game::environment::is_sp())
 			{
-				utils::hook::jump(0x4FA1B3_b, 0x4FA21A_b, true);
-				utils::hook::jump(0x4FB272_b, 0x4FB2B7_b, true);
-				utils::hook::jump(0x4FB781_b, 0x4FB7D3_b, true);
+				utils::hook::jump(0x1404FA1B3, 0x1404FA21A, true);
+				utils::hook::jump(0x1404FB272, 0x1404FB2B7, true);
+				utils::hook::jump(0x1404FB781, 0x1404FB7D3, true);
 			}
 			else
 			{
-				// kill "disconnected from steam" error
-				utils::hook::nop(0x1D61DF_b, 0x11);
+				utils::hook::jump(0x140571E07, 0x140571E5A); // also kills "disconnected from steam" error
+				utils::hook::jump(0x14004B223, 0x14004B4F2);
+				utils::hook::jump(0x14004B4AD, 0x14004B4F2);
+				utils::hook::jump(0x140572F6F, 0x140572FB0);
+				utils::hook::jump(0x140573470, 0x1405734B6);
 
-				utils::hook::jump(0x1CAE70_b, get_direct_connect_stub(), true);
-				utils::hook::jump(0x12D426_b, get_send_connect_data_stub(), true);
+				utils::hook::jump(0x140488BC1, get_direct_connect_stub(), true);
+				utils::hook::call(0x140250ED2, send_connect_data_stub);
+
+				// Skip checks for sending connect packet
+				utils::hook::jump(0x1402508FC, 0x140250946);
 
 				// Don't instantly timeout the connecting client ? not sure about this
-				utils::hook::set(0x12D93C_b, 0xC3);
+				utils::hook::set(0x14025136B, 0xC3);
 			}
 
 			command::add("guid", []() -> void

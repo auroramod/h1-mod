@@ -26,6 +26,8 @@ namespace dvars
 	extern game::dvar_t* con_inputDvarValueColor;
 	extern game::dvar_t* con_inputDvarInactiveValueColor;
 	extern game::dvar_t* con_inputCmdMatchColor;
+	extern game::dvar_t* con_inputGhostColor;
+	extern game::dvar_t* con_inputSelectedColor;
 
 	extern game::dvar_t* g_speed;
 	extern game::dvar_t* g_gravity;

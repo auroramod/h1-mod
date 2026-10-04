@@ -93,11 +93,11 @@ namespace gui::asset_list::shader
 		{
 			const auto size = ImVec2(900, 700);
 
-			gui::asset_list::add_asset_view<game::MaterialPixelShader>(game::ASSET_TYPE_PIXELSHADER, draw_asset<game::MaterialPixelShader>, size);
-			gui::asset_list::add_asset_view<game::MaterialVertexShader>(game::ASSET_TYPE_VERTEXSHADER, draw_asset<game::MaterialVertexShader>, size);
-			gui::asset_list::add_asset_view<game::MaterialDomainShader>(game::ASSET_TYPE_DOMAINSHADER, draw_asset<game::MaterialDomainShader>, size);
-			gui::asset_list::add_asset_view<game::MaterialHullShader>(game::ASSET_TYPE_HULLSHADER, draw_asset<game::MaterialHullShader>, size);
-			gui::asset_list::add_asset_view<game::ComputeShader>(game::ASSET_TYPE_COMPUTESHADER, draw_asset<game::ComputeShader>, size);
+			asset_list::add_asset_view<game::MaterialPixelShader>(game::ASSET_TYPE_PIXELSHADER, draw_asset<game::MaterialPixelShader>, size);
+			asset_list::add_asset_view<game::MaterialVertexShader>(game::ASSET_TYPE_VERTEXSHADER, draw_asset<game::MaterialVertexShader>, size);
+			asset_list::add_asset_view<game::MaterialDomainShader>(game::ASSET_TYPE_DOMAINSHADER, draw_asset<game::MaterialDomainShader>, size);
+			asset_list::add_asset_view<game::MaterialHullShader>(game::ASSET_TYPE_HULLSHADER, draw_asset<game::MaterialHullShader>, size);
+			asset_list::add_asset_view<game::ComputeShader>(game::ASSET_TYPE_COMPUTESHADER, draw_asset<game::ComputeShader>, size);
 		}
 	};
 }

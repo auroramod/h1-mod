@@ -8,8 +8,8 @@
 #include "console.hpp"
 #include "command.hpp"
 
-#include "utils/hook.hpp"
-#include "utils/string.hpp"
+#include <utils/hook.hpp>
+#include <utils/string.hpp>
 
 namespace menus
 {
@@ -20,12 +20,7 @@ namespace menus
 		bool keys_bypass_menu()
 		{
 			const auto* cl_bypass_mouse_input = game::Dvar_FindVar("cl_bypassMouseInput");
-			if (cl_bypass_mouse_input && cl_bypass_mouse_input->current.enabled)
-			{
-				return true;
-			}
-
-			return false;
+			return (cl_bypass_mouse_input && cl_bypass_mouse_input->current.enabled);
 		}
 
 		game::XAssetHeader load_script_menu_internal(const char* menu)
@@ -36,8 +31,7 @@ namespace menus
 
 		bool load_script_menu(int client_num, const char* menu)
 		{
-			game::XAssetHeader asset = load_script_menu_internal(menu);
-			if (asset.data != nullptr)
+			if (const auto asset = load_script_menu_internal(menu); asset.data != nullptr)
 			{
 				game::UI_AddMenuList(game::ui_info_array, asset.data, 1);
 				return true;
@@ -48,8 +42,7 @@ namespace menus
 
 		void precache_script_menu(int client_num, int config_string_index)
 		{
-			const char* menu = game::CL_GetConfigString(config_string_index);
-			if (menu)
+			if (const char* menu = game::CL_GetConfigString(config_string_index))
 			{
 				if (!load_script_menu(client_num, menu))
 				{
@@ -58,10 +51,9 @@ namespace menus
 			}
 		}
 
-		utils::hook::detour cg_set_config_values_hook;
 		void cg_set_config_values_stub(int client_num)
 		{
-			cg_set_config_values_hook.invoke<void>(client_num);
+			utils::hook::invoke<void>(0x140236300, client_num);
 
 			auto nesting = game::R_PopRemoteScreenUpdate();
 			for (auto i = 3432; i < (3432 + 50); i++)
@@ -80,7 +72,7 @@ namespace menus
 			const auto v_y = y / (game::ScrPlace_HiResGetScaleY() * scr_place->scaleVirtualToFull[1]);
 
 			game::ui_info_array->cursor_x = v_x;
-			game::ui_info_array->cursor_x = v_y;
+			game::ui_info_array->cursor_y = v_y;
 
 			const auto cursor_visible = v_x >= 0.0 && v_x <= 640.0 && v_y >= 0.0 && v_y <= 480.0;
 			if (!cursor_visible)
@@ -88,7 +80,7 @@ namespace menus
 				return;
 			}
 
-			const auto menu_count = *reinterpret_cast<int*>(0x352F9B8_b);
+			const auto menu_count = *reinterpret_cast<int*>(0x14CF1F658);
 			if (menu_count > 0)
 			{
 				game::ui_info_array->cursor_x = v_x;
@@ -112,7 +104,7 @@ namespace menus
 				return 0;
 			}
 
-			return utils::hook::invoke<int>(0x1384C0_b, cx_, cy_, dx_, dy_);
+			return utils::hook::invoke<int>(0x14024CD10, cx_, cy_, dx_, dy_);
 		}
 
 		bool open_script_main_menu()
@@ -150,7 +142,7 @@ namespace menus
 			}
 
 			// LUI_ToggleMenu
-			return utils::hook::invoke<void>(0x270A90_b, controller_index, context);
+			return utils::hook::invoke<void>(0x14016CD30, controller_index, context);
 		}
 
 		constexpr auto patch_menu_list_name = "ui_mp/patch_code.txt";
@@ -184,14 +176,15 @@ namespace menus
 			}
 
 			// add back legacy menu precache
-			cg_set_config_values_hook.create(0x11AC50_b, cg_set_config_values_stub);
+			utils::hook::call(0x1402218A5, cg_set_config_values_stub);
+			utils::hook::call(0x1402458E2, cg_set_config_values_stub);
 
 			// add legacy menu mouse fix
-			utils::hook::call(0x5BA535_b, ui_mouse_fix);
+			utils::hook::call(0x14050EB85, ui_mouse_fix);
 
 			// add script main menu
-			utils::hook::call(0x1E5143_b, lui_toggle_menu_stub); // (CL_ExecBinding)
-			utils::hook::call(0x131377_b, lui_toggle_menu_stub); // (UI_SetActiveMenu)
+			utils::hook::call(0x14024BA34, lui_toggle_menu_stub); // (CL_ExecuteKey)
+			utils::hook::call(0x1404D15CE, lui_toggle_menu_stub); // (UI_SetActiveMenu)
 
 			command::add("openmenu", [](const command::params& params)
 			{
@@ -205,7 +198,7 @@ namespace menus
 				game::Menus_OpenByName(0, params.get(1));
 			});
 
-			utils::hook::call(0x1E0756_b, ui_add_menu_list_stub);
+			utils::hook::call(0x1404CCCF4, ui_add_menu_list_stub);
 		}
 	};
 }

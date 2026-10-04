@@ -5,6 +5,7 @@
 #include "console.hpp"
 #include "map_rotation.hpp"
 #include "scheduler.hpp"
+#include "gsc/script_extension.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -271,16 +272,20 @@ namespace map_rotation
 
 			scheduler::once([]
 			{
-				sv_map_rotation = dvars::register_string("sv_mapRotation", "", game::DVAR_FLAG_NONE, "");
-				sv_map_rotation_current = dvars::register_string("sv_mapRotationCurrent", "", game::DVAR_FLAG_NONE, "");
+				sv_map_rotation = dvars::register_string("sv_mapRotation", "", game::DVAR_NOFLAG, "");
+				sv_map_rotation_current = dvars::register_string("sv_mapRotationCurrent", "", game::DVAR_NOFLAG, "");
 			}, scheduler::pipeline::main);
 
-			sv_random_map_rotation = dvars::register_bool("sv_randomMapRotation", false, game::DVAR_FLAG_NONE, "Randomize map rotation");
+			sv_random_map_rotation = dvars::register_bool("sv_randomMapRotation", false, game::DVAR_NOFLAG, "Randomize map rotation");
 
 			command::add("map_rotate", &perform_map_rotation);
 
-			// Hook GScr_ExitLevel 
-			utils::hook::jump(0xE2670_b, &trigger_map_rotation, true); // not sure if working
+			// override GScr_ExitLevel
+			gsc::function::add("exitlevel", [](const gsc::function_args&)
+			{
+				trigger_map_rotation();
+				return scripting::script_value{};
+			});
 		}
 	};
 }

@@ -10,16 +10,26 @@
 
 namespace memory
 {
+	 // default: 0x100000
+	static constexpr auto script_mem_high_size = 0x100000ui64 + custom_script_mem_size;
+
 	namespace
 	{
-		constexpr auto mem_low_size = 0x80000000ui64 * 2; // default: 0x80000000
-		constexpr auto mem_high_size = 0x80000000ui64 * 2; // default: 0x80000000
+		constexpr auto mem_low_size = 0x80000000ui64 * 2;
+		 // default: 0x80000000
+		constexpr auto mem_high_size = 0x80000000ui64 * 2;
 
-		constexpr auto script_mem_low_size = 0x100000ui64; // default: 0x100000
-		constexpr auto script_mem_high_size = 0x100000ui64 + custom_script_mem_size; // default: 0x100000
+		 // default: 0x80000000
 
-		constexpr auto phys_mem_low_size = 0x700000000ui64; // default: 0x700000000
-		constexpr auto phys_mem_high_size = 0x300000000i64; // default: 0x300000000
+		constexpr auto script_mem_low_size = 0x100000ui64;
+
+		 // default: 0x100000
+
+		constexpr auto phys_mem_low_size = 0x700000000ui64;
+		 // default: 0x700000000
+		constexpr auto phys_mem_high_size = 0x300000000i64;
+
+		 // default: 0x300000000
 
 		constexpr auto pmem_alloc_size =
 			mem_low_size +
@@ -43,8 +53,8 @@ namespace memory
 		void pmem_init()
 		{
 			const auto size = pmem_alloc_size;
-			const auto allocated_buffer = VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_READWRITE);
-			auto buffer = reinterpret_cast<unsigned char*>(allocated_buffer);
+			const auto allocated_buffer = VirtualAlloc(nullptr, size, MEM_RESERVE, PAGE_READWRITE);
+			const auto buffer = static_cast<unsigned char*>(allocated_buffer);
 			*game::pmem_size = size;
 			*game::pmem_buffer = buffer;
 
@@ -79,7 +89,7 @@ namespace memory
 			game::g_physmem->prim[game::PHYS_ALLOC_HIGH].unk1 = 2;
 
 			*game::stream_size = stream_mem_size;
-			*game::stream_buffer = reinterpret_cast<unsigned char*>(VirtualAlloc(NULL, *game::stream_size, MEM_COMMIT, PAGE_READWRITE));
+			*game::stream_buffer = static_cast<unsigned char*>(VirtualAlloc(nullptr, *game::stream_size, MEM_COMMIT, PAGE_READWRITE));
 		}
 
 		void pmem_init_stub()
@@ -87,13 +97,10 @@ namespace memory
 			// call our own init
 			pmem_init();
 
-			const auto script_mem_size = script_mem_low_size + script_mem_high_size;
-			utils::hook::set<uint32_t>(SELECT_VALUE(0x420252_b, 0x5A5582_b), static_cast<uint32_t>(script_mem_size));
-		}
+			constexpr auto script_mem_size = script_mem_low_size + script_mem_high_size;
+			utils::hook::set<uint32_t>(SELECT_VALUE(0x140420252, 0x1405020B2), static_cast<uint32_t>(script_mem_size));
 	}
 
-	namespace
-	{
 		int out_of_memory_text_stub(char* dest, int size, const char* fmt, ...)
 		{
 			fmt = "%s (%d)\n\n"
@@ -110,7 +117,7 @@ namespace memory
 				va_end(ap);
 			}
 
-			return utils::hook::invoke<int>(SELECT_VALUE(0x429200_b, 0x5AF0F0_b), dest, size, "%s", buffer);
+			return utils::hook::invoke<int>(SELECT_VALUE(0x140429200, 0x140503B10), dest, size, "%s", buffer); // Com_sprintf
 		}
 	}
 
@@ -120,10 +127,10 @@ namespace memory
 		void post_unpack() override
 		{
 			// patch PMem_Init, so we can use whatever memory size we want
-			utils::hook::call(SELECT_VALUE(0x38639C_b, 0x15C4D6_b), pmem_init_stub);
+			utils::hook::call(SELECT_VALUE(0x14038639C, 0x1400D9C35), pmem_init_stub);
 
 			// Com_sprintf for "Out of memory. You are probably low on disk space."
-			utils::hook::call(SELECT_VALUE(0x457BC9_b, 0x1D8E09_b), out_of_memory_text_stub);
+			utils::hook::call(SELECT_VALUE(0x140457BC9, 0x140511D29), out_of_memory_text_stub);
 		}
 	};
 }

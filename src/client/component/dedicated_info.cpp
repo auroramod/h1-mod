@@ -22,7 +22,7 @@ namespace dedicated_info
 			scheduler::loop([]
 			{
 				const auto sv_running = game::Dvar_FindVar("sv_running");
-				if (!sv_running || !sv_running->current.enabled || (*game::mp::svs_clients) == nullptr)
+				if (!sv_running || !sv_running->current.enabled)
 				{
 					SetConsoleTitle("H1-Mod Dedicated Server");
 					return;
@@ -35,14 +35,12 @@ namespace dedicated_info
 				auto bot_count = 0;
 				auto client_count = 0;
 
-				const auto svs_clients = *game::mp::svs_clients;
-
 				for (auto i = 0; i < *game::mp::svs_numclients; i++)
 				{
-					const auto client = svs_clients[i];
+					auto* client = &game::mp::svs_clients[i];
 					auto* self = &game::mp::g_entities[i];
 
-					if (client.header.state >= 1 && self && self->client)
+					if (client->header.state >= 1 && self && self->client)
 					{
 						client_count++;
 						if (game::SV_BotIsBot(i))

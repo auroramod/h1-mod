@@ -1,5 +1,8 @@
 #pragma once
 #include "game/game.hpp"
+#include "download.hpp"
+#include <utils/hook.hpp>
+#include <utils/info_string.hpp>
 
 namespace party
 {
@@ -20,20 +23,11 @@ namespace party
 	};
 
 	void user_download_response(bool response);
-
 	void menu_error(const std::string& error);
-
 	void reset_server_connection_state();
-
 	void connect(const game::netadr_s& target);
-	void start_map(const std::string& mapname, bool dev = false);
-
 	void clear_sv_motd();
 	connection_state get_server_connection_state();
 	std::optional<discord_information> get_server_discord_info();
-
-	int get_client_num_by_name(const std::string& name);
-
 	int get_client_count();
-	int get_bot_count();
 }

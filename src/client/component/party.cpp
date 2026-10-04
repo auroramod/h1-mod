@@ -110,7 +110,7 @@ namespace party
 			if (game::VirtualLobby_Loaded())
 			{
 				// exit from virtuallobby
-				utils::hook::invoke<void>(0x13C9C0_b, 1);
+				utils::hook::invoke<void>(0x140256D40, 1); // CL_VirtualLobbyShutdown
 			}
 
 			if (!fastfiles::is_stock_map(mapname))
@@ -120,7 +120,7 @@ namespace party
 
 			// CL_ConnectFromParty
 			char session_info[0x100] = {};
-			utils::hook::invoke<void>(0x12DFF0_b, 0, session_info, &target, mapname.data(), gametype.data());
+			utils::hook::invoke<void>(0x140251560, 0, session_info, &target, mapname.data(), gametype.data());
 		}
 
 		std::string get_dvar_string(const std::string& dvar)
@@ -156,13 +156,9 @@ namespace party
 			return false;
 		}
 
-		const char* get_didyouknow_stub(void* table, int row, int column)
-		{
-			if (server_connection_state.motd.empty())
+		std::string get_www_url()
 			{
-				return utils::hook::invoke<const char*>(0x5A0AC0_b, table, row, column);
-			}
-			return utils::string::va("%s", server_connection_state.motd.data());
+			return saved_info_response.info_string.get("sv_wwwBaseUrl");
 		}
 
 		void disconnect()
@@ -172,12 +168,12 @@ namespace party
 				if (game::CL_IsCgameInitialized())
 				{
 					// CL_AddReliableCommand
-					utils::hook::invoke<void>(0x12B810_b, 0, "disconnect");
+					utils::hook::invoke<void>(0x140250600, 0, "disconnect");
 					// CL_WritePacket
-					utils::hook::invoke<void>(0x13D490_b, 0);
+					utils::hook::invoke<void>(0x14024DB10, 0);
 				}
 				// CL_Disconnect
-				utils::hook::invoke<void>(0x12F080_b, 0);
+				utils::hook::invoke<void>(0x140252060, 0);
 			}
 		}
 
@@ -185,7 +181,7 @@ namespace party
 
 		void cl_disconnect_stub(int show_main_menu) // possibly bool
 		{
-			party::clear_sv_motd();
+			clear_sv_motd();
 			if (!game::VirtualLobby_Loaded())
 			{
 				fastfiles::clear_usermap();
@@ -215,6 +211,23 @@ namespace party
 		std::string get_usermap_file_path(const std::string& mapname, const std::string& extension)
 		{
 			return std::format("usermaps\\{}\\{}{}", mapname, mapname, extension);
+		}
+
+		void set_didyouknow_stub(const char* table, int column, const char* dvar_name)
+		{
+			// sets dvar_name to a random row of table
+			utils::hook::invoke<void>(0x1404C6E20, table, column, dvar_name);
+
+			if (server_connection_state.motd.empty())
+			{
+				return;
+			}
+
+			auto* dvar = game::Dvar_FindVar(dvar_name);
+			if (dvar)
+			{
+				game::Dvar_SetFromStringFromSource(dvar, server_connection_state.motd.data(), game::DVAR_SOURCE_INTERNAL);
+			}
 		}
 
 		// generate hashes so they are cached
@@ -405,7 +418,7 @@ namespace party
 				static_cast<int>(saved_info_response.host.ip[3]));
 		}
 
-		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download);
+		bool needs_vid_restart = false;
 
 		bool should_user_confirm(const game::netadr_s& target)
 		{
@@ -427,8 +440,6 @@ namespace party
 
 			return true;
 		}
-
-		bool needs_vid_restart = false;
 
 		bool download_files(const game::netadr_s& target, const utils::info_string& info, bool allow_download)
 		{
@@ -470,7 +481,7 @@ namespace party
 		{
 			if (game::SV_Loaded() || fastfiles::is_stock_map(mapname))
 			{
-				utils::hook::invoke<void>(0x13AAD0_b, mapname, gametype);
+				utils::hook::invoke<void>(0x140256010, mapname, gametype); // CL_SetupForNewServerMap
 				return;
 			}
 
@@ -496,7 +507,7 @@ namespace party
 				}
 			}
 
-			utils::hook::invoke<void>(0x13AAD0_b, mapname, gametype);
+			utils::hook::invoke<void>(0x140256010, mapname, gametype); // CL_SetupForNewServerMap
 		}
 
 		void loading_new_map_cl_stub(utils::hook::assembler& a)
@@ -507,12 +518,12 @@ namespace party
 			a.popad64();
 
 			a.mov(al, 1);
-			a.jmp(0x12FCAA_b);
+			a.jmp(0x140252AF8);
 		}
 
 		std::string current_sv_mapname;
 
-		void sv_spawn_server_stub(const char* map, void* a2, void* a3, void* a4, void* a5)
+		void sv_spawn_server_stub(char* map, int is_preloaded, int savegame, int is_restart)
 		{
 			if (!fastfiles::is_stock_map(map))
 			{
@@ -527,7 +538,7 @@ namespace party
 				generate_hashes(map);
 			}
 
-			utils::hook::invoke<void>(0x54BBB0_b, map, a2, a3, a4, a5);
+			utils::hook::invoke<void>(0x140486E30, map, is_preloaded, savegame, is_restart); // SV_SpawnServer
 		}
 
 		utils::hook::detour net_out_of_band_print_hook;
@@ -567,47 +578,6 @@ namespace party
 
 			net_out_of_band_print_hook.invoke<void>(sock, addr, buffer.data());
 		}
-	}
-
-	std::string get_www_url()
-	{
-		return saved_info_response.info_string.get("sv_wwwBaseUrl");
-	}
-
-	void user_download_response(bool response)
-	{
-		if (!response)
-		{
-			return;
-		}
-
-		nlohmann::json obj = get_whitelist_json_object();
-		if (obj == nullptr)
-		{
-			obj = {};
-		}
-
-		obj.push_back(target_ip_to_string(saved_info_response.host));
-
-		utils::io::write_file(get_whitelist_json_path(), obj.dump(4));
-
-		download_files(saved_info_response.host, saved_info_response.info_string, true);
-	}
-
-	void menu_error(const std::string& error)
-	{
-		console::error("%s\n", error.data());
-
-		close_joining_popups();
-
-		utils::hook::invoke<void>(0x17D770_b, error.data(), "MENU_NOTICE"); // Com_SetLocalizedErrorMessage
-		*reinterpret_cast<int*>(0x2ED2F78_b) = 1;
-	}
-
-	void clear_sv_motd()
-	{
-		server_connection_state.motd.clear();
-	}
 
 	int get_client_num_by_name(const std::string& name)
 	{
@@ -616,7 +586,7 @@ namespace party
 			if (game::mp::g_entities[i].client)
 			{
 				char client_name[16] = {0};
-				strncpy_s(client_name, game::mp::g_entities[i].client->name, sizeof(client_name));
+					strncpy_s(client_name, game::mp::g_entities[i].client->sess.name, sizeof(client_name));
 				game::I_CleanStr(client_name);
 
 				if (client_name == name)
@@ -628,35 +598,10 @@ namespace party
 		return -1;
 	}
 
-	void reset_server_connection_state()
-	{
-		server_connection_state = {};
-	}
-
-	int get_client_count()
-	{
-		auto count = 0;
-		const auto* svs_clients = *game::mp::svs_clients;
-		if (svs_clients == nullptr)
-		{
-			return count;
-		}
-
-		for (auto i = 0; i < *game::mp::svs_numclients; ++i)
-		{
-			if (svs_clients[i].header.state >= 1)
-			{
-				++count;
-			}
-		}
-
-		return count;
-	}
-
 	int get_bot_count()
 	{
 		auto count = 0;
-		const auto* svs_clients = *game::mp::svs_clients;
+			const auto* svs_clients = game::mp::svs_clients.get();
 		if (svs_clients == nullptr)
 		{
 			return count;
@@ -674,23 +619,7 @@ namespace party
 		return count;
 	}
 
-	void connect(const game::netadr_s& target)
-	{
-		if (game::environment::is_sp())
-		{
-			return;
-		}
-
-		command::execute("lui_open_popup popup_acceptinginvite", false);
-
-		server_connection_state.host = target;
-		server_connection_state.challenge = utils::cryptography::random::get_challenge();
-		server_connection_state.hostDefined = true;
-
-		network::send(target, "getInfo", server_connection_state.challenge);
-	}
-
-	void start_map(const std::string& mapname, bool dev)
+		void start_map(const std::string& mapname, bool dev = false)
 	{
 		if (game::Live_SyncOnlineDataFlags(0) > 32)
 		{
@@ -745,6 +674,83 @@ namespace party
 		const auto* args = "StartServer";
 		game::UI_RunMenuScript(0, &args);
 	}
+	}
+
+	void user_download_response(bool response)
+	{
+		if (!response)
+		{
+			return;
+		}
+
+		nlohmann::json obj = get_whitelist_json_object();
+		if (obj == nullptr)
+		{
+			obj = {};
+		}
+
+		obj.push_back(target_ip_to_string(saved_info_response.host));
+
+		utils::io::write_file(get_whitelist_json_path(), obj.dump(4));
+
+		download_files(saved_info_response.host, saved_info_response.info_string, true);
+	}
+
+	void menu_error(const std::string& error)
+	{
+		console::error("%s\n", error.data());
+
+		close_joining_popups();
+
+		utils::hook::invoke<void>(0x1400DACC0, error.data(), "MENU_NOTICE"); // Com_SetLocalizedErrorMessage
+		*reinterpret_cast<int*>(0x142C1DA98) = 1;
+	}
+
+	void clear_sv_motd()
+	{
+		server_connection_state.motd.clear();
+	}
+
+	void reset_server_connection_state()
+	{
+		server_connection_state = {};
+	}
+
+	int get_client_count()
+	{
+		auto count = 0;
+		const auto* svs_clients = game::mp::svs_clients.get();
+		if (svs_clients == nullptr)
+		{
+			return count;
+		}
+
+		for (auto i = 0; i < *game::mp::svs_numclients; ++i)
+		{
+			if (svs_clients[i].header.state >= 1)
+			{
+				++count;
+			}
+		}
+
+		return count;
+	}
+
+	void connect(const game::netadr_s& target)
+	{
+		if (game::environment::is_sp())
+		{
+			return;
+		}
+
+		command::execute("lui_open_popup popup_acceptinginvite", false);
+
+		server_connection_state.host = target;
+		server_connection_state.challenge = utils::cryptography::random::get_challenge();
+		server_connection_state.hostDefined = true;
+
+		network::send(target, "getInfo", server_connection_state.challenge);
+	}
 
 	connection_state get_server_connection_state()
 	{
@@ -767,31 +773,32 @@ namespace party
 			}
 
 			// clear motd & usermap
-			cl_disconnect_hook.create(0x12F080_b, cl_disconnect_stub);
+			cl_disconnect_hook.create(0x140252060, cl_disconnect_stub); // CL_Disconnect
 
 			if (game::environment::is_mp())
 			{
 				// show custom drop reason
-				utils::hook::nop(0x12EF4E_b, 13);
-				utils::hook::jump(0x12EF4E_b, utils::hook::assemble([](utils::hook::assembler& a)
+				utils::hook::nop(0x140251EFB, 13);
+				utils::hook::jump(0x140251EFB, utils::hook::assemble([](utils::hook::assembler& a)
 				{
-					a.mov(rdx, rsi);
+					a.mov(rdx, rdi);
 					a.mov(ecx, 2);
-					a.jmp(0x12EF27_b);
+					a.jmp(0x140251F78);
 				}), true);
 
 				command::add("disconnect", disconnect);
 			}
 
 			// enable custom kick reason in GScr_KickPlayer
-			utils::hook::set<uint8_t>(0xE423D_b, 0xEB);
+			utils::hook::set<uint8_t>(0x140376A1D, 0xEB);
 
 			// allow custom didyouknow based on sv_motd
-			utils::hook::call(0x1A8A3A_b, get_didyouknow_stub);
+			utils::hook::call(0x14025718B, set_didyouknow_stub);
 
 			// add usermaphash to loadingnewmap command
-			utils::hook::jump(0x12FA68_b, utils::hook::assemble(loading_new_map_cl_stub), true);
-			utils::hook::call(0x54CC98_b, sv_spawn_server_stub);
+			utils::hook::jump(0x140252976, utils::hook::assemble(loading_new_map_cl_stub), true);
+			utils::hook::call(0x14047F102, sv_spawn_server_stub);
+			utils::hook::call(0x14047F8C0, sv_spawn_server_stub);
 			net_out_of_band_print_hook.create(game::NET_OutOfBandPrint, net_out_of_band_print_stub);
 
 			command::add("map", [](const command::params& argument)
@@ -821,11 +828,11 @@ namespace party
 					return;
 				}
 
-				*reinterpret_cast<int*>(0xB7B8E60_b) = 1; // sv_map_restart
-				*reinterpret_cast<int*>(0xB7B8E64_b) = 1; // sv_loadScripts
-				*reinterpret_cast<int*>(0xB7B8E68_b) = 0; // sv_migrate
+				*reinterpret_cast<int*>(0x14A3A91D0) = 1; // sv_map_restart
+				*reinterpret_cast<int*>(0x14A3A91D4) = 1; // sv_loadScripts
+				*reinterpret_cast<int*>(0x14A3A91D8) = 0; // sv_migrate
 
-				utils::hook::invoke<void>(0x54BD50_b); // SV_CheckLoadGame
+				utils::hook::invoke<void>(0x14047E7F0); // SV_CheckLoadGame
 			});
 
 			command::add("fast_restart", []()
@@ -954,7 +961,7 @@ namespace party
 
 			scheduler::once([]()
 			{
-				sv_say_name = dvars::register_string("sv_sayName", "console", game::DvarFlags::DVAR_FLAG_NONE, "Custom name for RCON console");
+				sv_say_name = dvars::register_string("sv_sayName", "console", game::DvarFlags::DVAR_NOFLAG, "Custom name for RCON console");
 			}, scheduler::pipeline::main);
 
 			command::add("tell", [](const command::params& params)

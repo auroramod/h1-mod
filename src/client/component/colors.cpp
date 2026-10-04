@@ -7,10 +7,12 @@
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 
-constexpr auto MAX_COLOR_INDEX = 15;
-
 namespace colors
 {
+	namespace
+	{
+		constexpr auto MAX_COLOR_INDEX = 15;
+
 	struct hsv_color
 	{
 		unsigned char h;
@@ -18,8 +20,6 @@ namespace colors
 		unsigned char v;
 	};
 
-	namespace
-	{
 		enum color_mode_t
 		{
 			mode_original,
@@ -29,7 +29,7 @@ namespace colors
 
 		game::dvar_t* r_color_mode = nullptr;
 
-		std::vector<DWORD> color_table[mode_count];
+		std::vector<DWORD> color_table[2];
 
 		DWORD hsv_to_rgb(const hsv_color hsv)
 		{
@@ -128,7 +128,7 @@ namespace colors
 			const size_t unk, const size_t unk2)
 		{
 			// CL_GetClientName (CL_GetClientNameAndClantag?)
-			const auto result = utils::hook::invoke<size_t>(0x343BA0_b, local_client_num, index, buf, size, unk, unk2);
+			const auto result = utils::hook::invoke<size_t>(0x14025BAA0, local_client_num, index, buf, size, unk, unk2);
 
 			utils::string::strip(buf, buf, size);
 
@@ -142,16 +142,16 @@ namespace colors
 			switch (index)
 			{
 			case '8':
-				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0xF79D288_b, 0xEA749B4_b));
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F79D288, 0x14FE70634));
 				break;
 			case '9':
-				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0xF79D28C_b, 0xEA749B8_b));
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F79D28C, 0x14FE70638));
 				break;
 			case ':':
 				*color = hsv_to_rgb({ static_cast<uint8_t>((game::Sys_Milliseconds() / 100) % 256), 255, 255 });
 				break;
 			case ';':
-				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0xF79D294_b, 0xEA749C0_b));
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F79D294, 0x14FE70640));
 				break;
 			case '<':
 				*color = 0xFFFCFF80;
@@ -176,27 +176,27 @@ namespace colors
 			static const char* color_modes[2]{};
 			color_modes[mode_original] = "original";
 			color_modes[mode_custom] = "custom";
-			r_color_mode = dvars::register_enum("r_colorMode", color_modes, mode_custom, game::DVAR_FLAG_SAVED, "which color table to use");
+			r_color_mode = dvars::register_enum("r_colorMode", color_modes, mode_custom, game::DVAR_ARCHIVE, "which color table to use");
 
 			if (!game::environment::is_sp())
 			{
 				// allows colored name in-game (ClientUserinfoChanged)
-				utils::hook::call(0x404F77_b, com_clean_name_stub);
-				utils::hook::call(0x404FBA_b, com_clean_name_stub);
+				utils::hook::call(0x140328527, com_clean_name_stub);
+				utils::hook::call(0x14032856A, com_clean_name_stub);
 
 				// don't apply colors to overhead names
-				utils::hook::call(0xF7B85_b, get_client_name_stub);
+				utils::hook::call(0x1400AB416, get_client_name_stub);
 
 				// patch I_CleanStr
-				utils::hook::jump(0x5AF2E0_b, i_clean_str_stub, true);
+				utils::hook::jump(0x140503D00, i_clean_str_stub, true);
 			}
 
 			// make color index higher for more colors (TODO: add to SP later)
-			utils::hook::jump(SELECT_VALUE(0x428F00_b, 0x5AEDE0_b), color_index, true);
-			utils::hook::set<uint8_t>(SELECT_VALUE(0x5AB13E_b, 0x6C2DDE_b), MAX_COLOR_INDEX);
+			utils::hook::jump(SELECT_VALUE(0x140428F00, 0x140503800), color_index, true);
+			utils::hook::set<uint8_t>(SELECT_VALUE(0x1405AB13E, 0x14061A1EE), MAX_COLOR_INDEX);
 
 			// force new colors
-			utils::hook::jump(SELECT_VALUE(0x5B17E0_b, 0x6C9460_b), rb_lookup_color_stub, true);
+			utils::hook::jump(SELECT_VALUE(0x1405B17E0, 0x1406206A0), rb_lookup_color_stub, true);
 
 			// add colors
 			add(mode_original, 0, 0, 0);		// ^0 black (original)

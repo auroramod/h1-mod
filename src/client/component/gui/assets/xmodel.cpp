@@ -335,7 +335,7 @@ namespace gui::asset_list::xmodel
 						gui::copy_to_clipboard(asset->materialHandles[i]->name);
 					}
 
-					add_view_button(i, game::ASSET_TYPE_MATERIAL, asset->materialHandles[i]->name);
+					asset_list::add_view_button(i, game::ASSET_TYPE_MATERIAL, asset->materialHandles[i]->name);
 				}
 
 				ImGui::TreePop();
@@ -352,7 +352,7 @@ namespace gui::asset_list::xmodel
 							gui::copy_to_clipboard(asset->compositeModels[i]->name);
 						}
 
-						gui::asset_list::add_view_button(i, game::ASSET_TYPE_XMODEL, asset->compositeModels[i]->name);
+						asset_list::add_view_button(i, game::ASSET_TYPE_XMODEL, asset->compositeModels[i]->name);
 					}
 
 					ImGui::TreePop();
@@ -467,12 +467,12 @@ namespace gui::asset_list::xmodel
 	public:
 		void post_unpack() override
 		{
-			r_generate_sorted_draw_surfs_hook.create(0x1BFC60_b, r_generate_sorted_draw_surfs_stub);
+			r_generate_sorted_draw_surfs_hook.create(SELECT_VALUE(0x1401BFC60, 0x1400EB7A0), r_generate_sorted_draw_surfs_stub); // R_GenerateSortedDrawSurfs
 
 			scheduler::loop(update, scheduler::main);
 
-			gui::asset_list::add_asset_view<game::XModel>(game::ASSET_TYPE_XMODEL, draw_xmodel_window);
-			gui::asset_list::add_asset_button<game::XModel>(game::ASSET_TYPE_XMODEL, "spawn", spawn_xmodel_button, game::CL_IsCgameInitialized);
+			asset_list::add_asset_view<game::XModel>(game::ASSET_TYPE_XMODEL, draw_xmodel_window);
+			asset_list::add_asset_button<game::XModel>(game::ASSET_TYPE_XMODEL, "spawn", spawn_xmodel_button, game::CL_IsCgameInitialized);
 
 			command::add("spawn_xmodel", [](const command::params& params)
 			{

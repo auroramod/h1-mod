@@ -132,7 +132,7 @@ namespace gui::asset_list::stringtable
 	public:
 		void post_unpack() override
 		{
-			gui::asset_list::add_asset_view<game::StringTable>(game::ASSET_TYPE_STRINGTABLE, draw_asset, ImVec2(200, 200));
+			asset_list::add_asset_view<game::StringTable>(game::ASSET_TYPE_STRINGTABLE, draw_asset, ImVec2(200, 200));
 		}
 	};
 }

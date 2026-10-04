@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "images.hpp"
 #include "console.hpp"
 #include "filesystem.hpp"
 #include "fastfiles.hpp"
@@ -14,6 +13,7 @@
 #include <utils/string.hpp>
 #include <utils/io.hpp>
 #include <utils/concurrency.hpp>
+#include <utils/memory.hpp>
 
 #define CUSTOM_IMAGE_FILE_INDEX 96
 
@@ -21,70 +21,60 @@ namespace imagefiles
 {
 	namespace
 	{
+			struct image_file_unk_mp
+			{
+				char __pad0[120];
+			};
+
+			struct image_file_unk_sp
+			{
+				char __pad0[96];
+			};
+
 		utils::memory::allocator image_file_allocator;
 		std::unordered_map<std::string, game::DB_IFileSysFile*> image_file_handles;
+		std::unordered_map<std::string, image_file_unk_mp*> image_file_unk_map_mp;
+		std::unordered_map<std::string, image_file_unk_sp*> image_file_unk_map_sp;
 
 		std::string get_image_file_name()
 		{
 			return fastfiles::get_current_fastfile();
 		}
-		
-		namespace mp
+
+		void* get_image_file_unk_mp(unsigned int index)
 		{
-			struct image_file_unk
+			if (index != CUSTOM_IMAGE_FILE_INDEX)
 			{
-				char __pad0[120];
-			};
-
-			std::unordered_map<std::string, image_file_unk*> image_file_unk_map;
-
-			void* get_image_file_unk_mp(unsigned int index)
-			{
-				if (index != CUSTOM_IMAGE_FILE_INDEX)
-				{
-					return &reinterpret_cast<image_file_unk*>(
-						SELECT_VALUE(0x4802090_b, 0x6306770_b))[index];
-				}
-
-				const auto name = get_image_file_name();
-				if (image_file_unk_map.find(name) == image_file_unk_map.end())
-				{
-					const auto unk = image_file_allocator.allocate<image_file_unk>();
-					image_file_unk_map[name] = unk;
-					return unk;
-				}
-
-				return image_file_unk_map[name];
+				return &reinterpret_cast<image_file_unk_mp*>(0x145332C90)[index];
 			}
+
+			const auto name = get_image_file_name();
+			if (image_file_unk_map_mp.find(name) == image_file_unk_map_mp.end())
+			{
+				const auto unk = image_file_allocator.allocate<image_file_unk_mp>();
+				image_file_unk_map_mp[name] = unk;
+				return unk;
+			}
+
+			return image_file_unk_map_mp[name];
 		}
 
-		namespace sp
+		void* get_image_file_unk_sp(unsigned int index)
 		{
-			struct image_file_unk
+			if (index != CUSTOM_IMAGE_FILE_INDEX)
 			{
-				char __pad0[96];
-			};
-
-			std::unordered_map<std::string, image_file_unk*> image_file_unk_map;
-
-			void* get_image_file_unk_mp(unsigned int index)
-			{
-				if (index != CUSTOM_IMAGE_FILE_INDEX)
-				{
-					return &reinterpret_cast<image_file_unk*>(
-						SELECT_VALUE(0x4802090_b, 0x6306770_b))[index];
-				}
-
-				const auto name = get_image_file_name();
-				if (image_file_unk_map.find(name) == image_file_unk_map.end())
-				{
-					const auto unk = image_file_allocator.allocate<image_file_unk>();
-					image_file_unk_map[name] = unk;
-					return unk;
-				}
-
-				return image_file_unk_map[name];
+				return &reinterpret_cast<image_file_unk_sp*>(0x144802090)[index];
 			}
+
+			const auto name = get_image_file_name();
+			if (image_file_unk_map_sp.find(name) == image_file_unk_map_sp.end())
+			{
+				const auto unk = image_file_allocator.allocate<image_file_unk_sp>();
+				image_file_unk_map_sp[name] = unk;
+				return unk;
+			}
+
+			return image_file_unk_map_sp[name];
 		}
 
 		game::DB_IFileSysFile* get_image_file_handle(unsigned int index)
@@ -92,7 +82,7 @@ namespace imagefiles
 			if (index != CUSTOM_IMAGE_FILE_INDEX)
 			{
 				return reinterpret_cast<game::DB_IFileSysFile**>(
-					SELECT_VALUE(0x4801D80_b, 0x6306180_b))[index];
+					SELECT_VALUE(0x144801D80, 0x145123B20))[index];
 			}
 
 			const auto name = get_image_file_name();
@@ -101,7 +91,6 @@ namespace imagefiles
 
 		void db_create_gfx_image_stream_stub(utils::hook::assembler& a)
 		{
-			const auto check_image_file_handle = a.newLabel();
 			const auto handle_is_open = a.newLabel();
 
 			a.movzx(eax, cx);
@@ -109,7 +98,7 @@ namespace imagefiles
 			a.push(rax);
 			a.pushad64();
 			a.mov(rcx, rax);
-			a.call_aligned(SELECT_VALUE(sp::get_image_file_unk_mp, mp::get_image_file_unk_mp));
+			a.call_aligned(SELECT_VALUE(get_image_file_unk_sp, get_image_file_unk_mp));
 			a.mov(qword_ptr(rsp, 0x80), rax);
 			a.popad64();
 			a.pop(rax);
@@ -129,13 +118,13 @@ namespace imagefiles
 
 			a.cmp(r12, r13);
 			a.jnz(handle_is_open);
-			a.jmp(SELECT_VALUE(0x1FAD49_b, 0x3A0CA5_b));
+			a.jmp(SELECT_VALUE(0x1401FAD49, 0x1402C5A15));
 
 			a.bind(handle_is_open);
-			a.jmp(SELECT_VALUE(0x1FAD99_b, 0x3A0CF5_b));
+			a.jmp(SELECT_VALUE(0x1401FAD99, 0x1402C5A65));
 		}
 
-		void* pakfile_open_stub(void* /*handles*/, unsigned int count, int is_imagefile, 
+		void* pakfile_open_stub(void* /*handles*/, unsigned int count, int is_imagefile,
 			unsigned int index, short is_localized)
 		{
 			console::debug("Opening %s%d.pak (localized:%d)\n", is_imagefile ? "imagefile" : "soundfile", index, is_localized);
@@ -143,8 +132,8 @@ namespace imagefiles
 			if (index != CUSTOM_IMAGE_FILE_INDEX)
 			{
 				return utils::hook::invoke<void*>(
-					SELECT_VALUE(0x42BC00_b, 0x5B2030_b),
-					SELECT_VALUE(0x4801D80_b, 0x6306180_b), 
+					SELECT_VALUE(0x14042BC00, 0x140506A00),
+					SELECT_VALUE(0x144801D80, 0x145123B20),
 					count, is_imagefile, index, is_localized
 				);
 			}
@@ -184,8 +173,8 @@ namespace imagefiles
 		}
 
 		image_file_handles.clear();
-		sp::image_file_unk_map.clear();
-		mp::image_file_unk_map.clear();
+		image_file_unk_map_sp.clear();
+		image_file_unk_map_mp.clear();
 		image_file_allocator.clear();
 	}
 
@@ -206,13 +195,13 @@ namespace imagefiles
 		image_file_handles.erase(fastfile);
 		if (game::environment::is_sp())
 		{
-			image_file_allocator.free(sp::image_file_unk_map[fastfile]);
-			sp::image_file_unk_map.erase(fastfile);
+			image_file_allocator.free(image_file_unk_map_sp[fastfile]);
+			image_file_unk_map_sp.erase(fastfile);
 		}
 		else
 		{
-			image_file_allocator.free(mp::image_file_unk_map[fastfile]);
-			mp::image_file_unk_map.erase(fastfile);
+			image_file_allocator.free(image_file_unk_map_mp[fastfile]);
+			image_file_unk_map_mp.erase(fastfile);
 		}
 	}
 
@@ -221,10 +210,10 @@ namespace imagefiles
 	public:
 		void post_unpack() override
 		{
-			utils::hook::jump(SELECT_VALUE(0x1FAD35_b, 0x3A0C95_b),
+			utils::hook::jump(SELECT_VALUE(0x1401FAD35, 0x1402C5A05),
 				utils::hook::assemble(db_create_gfx_image_stream_stub), true);
-			utils::hook::call(SELECT_VALUE(0x1FAD7B_b, 0x3A0CD7_b), pakfile_open_stub);
-			utils::hook::call(SELECT_VALUE(0x1FAD5D_b, 0x3A0CB9_b), com_sprintf_stub);
+			utils::hook::call(SELECT_VALUE(0x1401FAD7B, 0x1402C5A47), pakfile_open_stub);
+			utils::hook::call(SELECT_VALUE(0x1401FAD5D, 0x1402C5A29), com_sprintf_stub);
 		}
 	};
 }

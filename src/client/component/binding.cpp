@@ -16,7 +16,7 @@ namespace binding
 
 		int get_num_keys()
 		{
-			return 110;
+			return SELECT_VALUE(110, 103);
 		}
 
 		int key_write_bindings_to_buffer_stub(int /*localClientNum*/, char* buffer, const int buffer_size)
@@ -96,7 +96,6 @@ namespace binding
 			return get_num_keys() + get_binding_for_custom_command(command);
 		}
 
-
 		std::optional<std::string> get_custom_binding_for_key(int key)
 		{
 			key -= get_num_keys();
@@ -153,18 +152,18 @@ namespace binding
 			}
 
 			// write all bindings to config file
-			utils::hook::jump(SELECT_VALUE(0x1AC980_b, 0x199ED0_b), key_write_bindings_to_buffer_stub);
+			utils::hook::jump(SELECT_VALUE(0x1401AC980, 0x140250370), key_write_bindings_to_buffer_stub);
 
 			// links a custom command to an index
-			utils::hook::jump(SELECT_VALUE(0x377280_b, 0x1572B0_b), key_get_binding_for_cmd_stub);
+			utils::hook::jump(SELECT_VALUE(0x140377280, 0x1404041E0), key_get_binding_for_cmd_stub);
 
 			// execute custom binds
-			cl_execute_key_hook.create(SELECT_VALUE(0x1A8350_b, 0x130610_b), &cl_execute_key_stub);
+			cl_execute_key_hook.create(SELECT_VALUE(0x1401A8350, 0x14024ACF0), &cl_execute_key_stub);
 
 			if (game::environment::is_sp())
 			{
 				// called from getcommandfromkey in gsc
-				utils::hook::jump(0x3772E0_b, cmd_get_binding_for_key_stub);
+				utils::hook::jump(0x1403772E0, cmd_get_binding_for_key_stub);
 			}
 		}
 	};

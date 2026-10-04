@@ -45,8 +45,8 @@ launcher::mode detect_mode_from_arguments()
 
 void apply_aslr_patch(std::string* data)
 {
-	// mp binary, sp binary
-	if (data->size() != 0x1B97788 && data->size() != 0x1346D88)
+	// mp binary (1.04), sp binary (1.15)
+	if (data->size() != 0x13EE810 && data->size() != 0x1346D88)
 	{
 		throw std::runtime_error("File size mismatch, bad game files");
 	}
@@ -68,7 +68,10 @@ void get_aslr_patched_binary(std::string* binary, std::string* data)
 	try
 	{
 		apply_aslr_patch(data);
-		if (!utils::io::file_exists(patched_binary) && !utils::io::write_file(patched_binary, *data, false))
+
+		std::string cached{};
+		if ((!utils::io::read_file(patched_binary, &cached) || cached != *data)
+			&& !utils::io::write_file(patched_binary, *data, false))
 		{
 			throw std::runtime_error("Could not write file");
 		}

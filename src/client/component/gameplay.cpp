@@ -35,7 +35,7 @@ namespace gameplay
 		game::dvar_t* pm_iw4_mechanics = nullptr;
 		game::dvar_t* pm_glide_on_inspect = nullptr;
 
-		void jump_apply_slowdown_stub(game::mp::playerState_s* ps)
+		void jump_apply_slowdown_stub(game::playerState_s* ps)
 		{
 			if (dvars::jump_slowDownEnable->current.enabled)
 			{
@@ -61,7 +61,7 @@ namespace gameplay
 			}
 		}
 
-		void pm_crashland_stub(game::mp::playerState_s* ps, void* pml)
+		void pm_crashland_stub(game::playerState_s* ps, void* pml)
 		{
 			if (dvars::jump_enableFallDamage->current.enabled)
 			{
@@ -78,30 +78,57 @@ namespace gameplay
 			}
 		}
 
-		void* pm_bouncing_stub_mp()
+		void* pm_bouncing_stub_sp()
 		{
 			return utils::hook::assemble([](utils::hook::assembler& a)
 			{
 				const auto no_bounce = a.newLabel();
-				const auto loc_2D395D = a.newLabel();
+				const auto loc_4A2F18 = a.newLabel();
 
 				a.push(rax);
 
 				a.mov(rax, qword_ptr(reinterpret_cast<int64_t>(&dvars::pm_bouncing)));
 				a.mov(al, byte_ptr(rax, 0x10));
-				a.cmp(byte_ptr(rbp, SELECT_VALUE(-0x5D, -0x7D)), al);
+				a.cmp(byte_ptr(rbp, -0x5D), al);
 
 				a.pop(rax);
 				a.jz(no_bounce);
-				a.jmp(SELECT_VALUE(0x4A2E81_b, 0x2D39C0_b));
+				a.jmp(0x1404A2E81);
 
 				a.bind(no_bounce);
 				a.cmp(dword_ptr(rsp, 0x44), 0);
-				a.jnz(loc_2D395D);
-				a.jmp(SELECT_VALUE(0x4A2E6F_b, 0x2D39B1_b));
+				a.jnz(loc_4A2F18);
+				a.jmp(0x1404A2E6F);
 
-				a.bind(loc_2D395D);
-				a.jmp(SELECT_VALUE(0x4A2F18_b, 0x2D395D_b));
+				a.bind(loc_4A2F18);
+				a.jmp(0x1404A2F18);
+			});
+		}
+
+		void* pm_bouncing_stub_mp()
+		{
+			return utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				const auto no_bounce = a.newLabel();
+				const auto loc_1401EAF9D = a.newLabel();
+
+				a.push(rax);
+
+				a.mov(rax, qword_ptr(reinterpret_cast<int64_t>(&dvars::pm_bouncing)));
+				a.mov(al, byte_ptr(rax, 0x10));
+				a.cmp(byte_ptr(rbp, -0x2D), al);
+
+				a.pop(rax);
+				a.jz(no_bounce);
+				a.jmp(0x1401EB000);
+
+				a.bind(no_bounce);
+				a.cmp(dword_ptr(rsp, 0x70), 0);
+				a.jnz(loc_1401EAF9D);
+				a.jmp(0x1401EAFF1);
+
+				a.bind(loc_1401EAF9D);
+				a.jmp(0x1401EAF9D);
 			});
 		}
 
@@ -116,7 +143,7 @@ namespace gameplay
 				a.mov(dword_ptr(r14, 0x36), ax);
 				a.movzx(eax, word_ptr(r14, 0x3A));
 
-				a.jmp(0x4006BC_b);
+				a.jmp(0x140323DBC);
 			});
 		}
 
@@ -133,14 +160,14 @@ namespace gameplay
 				a.pop(rax);
 
 				// Game code hook skipped
-				a.mov(eax, dword_ptr(rbx, 0x495C));
+				a.mov(eax, dword_ptr(rbx, 0x494C));
 				a.mov(rdi, rcx);
 
-				a.jmp(0x3FF822_b);
+				a.jmp(0x140322F82);
 			});
 		}
 
-		void pm_player_trace_stub(game::mp::pmove_t* pm, game::trace_t* trace, const float* f3,
+		void pm_player_trace_stub(game::pmove_t* pm, game::trace_t* trace, const float* f3,
 			const float* f4, const game::Bounds* bounds, int a6, int a7)
 		{
 			pm_player_trace_hook.invoke<void>(pm, trace, f3, f4, bounds, a6, a7);
@@ -152,12 +179,12 @@ namespace gameplay
 			}
 		}
 
-		void pm_trace_stub(utils::hook::assembler& a)
+		void pm_trace_stub_sp(utils::hook::assembler& a)
 		{
 			const auto stand = a.newLabel();
 			const auto allsolid = a.newLabel();
 
-			a.call(rsi); // Game code 
+			a.call(rsi); // Game code
 
 			a.push(rax);
 
@@ -173,14 +200,42 @@ namespace gameplay
 			a.jnz(allsolid);
 
 			a.bind(stand);
-			a.and_(dword_ptr(SELECT_VALUE(r14, r15), 0x54), 0xFFFFFFFD);
-			a.jmp(SELECT_VALUE(0x499628_b, 0x2C9F9D_b));
+			a.and_(dword_ptr(r14, 0x54), 0xFFFFFFFD);
+			a.jmp(0x140499628);
 
 			a.bind(allsolid);
-			a.jmp(SELECT_VALUE(0x6878D4_b, 0x2C9F9F_b));
-		};
+			a.jmp(0x1406878D4);
+		}
 
-		void client_end_frame_stub2(game::mp::gentity_s* entity)
+		void pm_trace_stub(utils::hook::assembler& a)
+		{
+			const auto stand = a.newLabel();
+			const auto allsolid = a.newLabel();
+
+			a.call(qword_ptr(r10, r15)); // Game code
+
+			a.push(rax);
+
+			a.mov(rax, qword_ptr(reinterpret_cast<int64_t>(&dvars::g_enableElevators)));
+			a.mov(al, byte_ptr(rax, 0x10));
+			a.cmp(al, 1);
+
+			a.pop(rax);
+
+			a.jz(stand); // Always stand up
+
+			a.cmp(byte_ptr(rbp, 0x18), sil); // Game code trace[0].allsolid == false (esi is 0)
+			a.jnz(allsolid);
+
+			a.bind(stand);
+			a.and_(dword_ptr(rbx, 0x54), 0xFFFFFFFD);
+			a.jmp(0x1401E1CDF);
+
+			a.bind(allsolid);
+			a.jmp(0x1401E1CE1);
+		}
+
+		void client_end_frame_stub2(game::gentity_s* entity)
 		{
 			client_end_frame_hook.invoke<void>(entity);
 
@@ -194,7 +249,7 @@ namespace gameplay
 			}
 		}
 
-		void g_damage_client_stub(game::mp::gentity_s* targ, const game::mp::gentity_s* inflictor, game::mp::gentity_s* attacker, 
+		void g_damage_client_stub(game::gentity_s* targ, const game::gentity_s* inflictor, game::gentity_s* attacker, 
 			const float* dir, const float* point, int damage, int dflags, int mod, 
 			const unsigned int weapon, bool is_alternate, unsigned int hit_loc, int time_offset)
 		{
@@ -207,7 +262,7 @@ namespace gameplay
 				weapon, is_alternate, hit_loc, time_offset);
 		}
 
-		void g_damage_stub(game::mp::gentity_s* targ, const game::mp::gentity_s* inflictor, game::mp::gentity_s* attacker,
+		void g_damage_stub(game::gentity_s* targ, const game::gentity_s* inflictor, game::gentity_s* attacker,
 			const float* dir, const float* point, int damage, int dflags, int mod,
 			const unsigned int weapon, bool is_alternate, unsigned int hit_loc,
 			unsigned int model_index, unsigned int part_name, int time_offset, int a15)
@@ -238,13 +293,13 @@ namespace gameplay
 
 				a.pop(rax);
 
-				a.jmp(0x2BD71C_b);
+				a.jmp(0x1401D599C);
 			});
 		}
 
 		void jump_start_stub(game::pmove_t* pm, game::pml_t* pml, float /*height*/)
 		{
-			utils::hook::invoke<void>(0x2BD800_b, pm, pml, dvars::jump_height->current.value);
+			utils::hook::invoke<void>(0x1401D5A70, pm, pml, dvars::jump_height->current.value);
 		}
 
 		void pm_project_velocity_stub(const float* vel_in, const float* normal, float* vel_out)
@@ -312,11 +367,11 @@ namespace gameplay
 				a.mov(rcx, rbx);
 
 				// the section of code that was overwritten by our jump is finished so we can jump back to the game code
-				a.jmp(0x2C98CC_b);
+				a.jmp(0x1401E16BC);
 
 				// original code
 				a.bind(loc_2C98EF);
-				a.jmp(0x2C98EF_b);
+				a.jmp(0x1401E16DF);
 			});
 		}
 
@@ -337,17 +392,17 @@ namespace gameplay
 			a.mulss(xmm1, xmm3);
 
 			a.pop(rax);
-			a.jmp(0x463CE4_b);
+			a.jmp(0x14038E5D4);
 
 			a.bind(loc_463D2A);
 			a.pop(rax);
-			a.jmp(0x463D2A_b);
+			a.jmp(0x14038E61A);
 		}
 
 		// https://github.com/REVLIIS/IW4-mechanics-for-H2M
-		bool check_for_righty_tighty(game::mp::pmove_t* pm)
+		bool check_for_righty_tighty(game::pmove_t* pm)
 		{
-			if ((pm->oldcmd.buttons & game::BUTTON_USERELOAD) == 0 && ((pm->cmd.buttons & game::BUTTON_USERELOAD) != 0) ||
+			if ((pm->oldcmd.buttons & game::BUTTON_USE_RELOAD) == 0 && ((pm->cmd.buttons & game::BUTTON_USE_RELOAD) != 0) ||
 				((pm->oldcmd.buttons & game::BUTTON_RELOAD) == 0 && ((pm->cmd.buttons & game::BUTTON_RELOAD) != 0)))
 			{
 				if ((pm->ps->sprintState.lastSprintEnd - pm->ps->sprintState.lastSprintStart) < 50)
@@ -363,9 +418,9 @@ namespace gameplay
 			return false;
 		}
 
-		bool check_for_wrist_twist(game::mp::pmove_t* pm)
+		bool check_for_wrist_twist(game::pmove_t* pm)
 		{
-			if ((pm->cmd.buttons & game::BUTTON_USERELOAD) == 0 && ((pm->oldcmd.buttons & game::BUTTON_USERELOAD) != 0) ||
+			if ((pm->cmd.buttons & game::BUTTON_USE_RELOAD) == 0 && ((pm->oldcmd.buttons & game::BUTTON_USE_RELOAD) != 0) ||
 				(pm->cmd.buttons & game::BUTTON_RELOAD) == 0 && ((pm->oldcmd.buttons & game::BUTTON_RELOAD) != 0))
 			{
 				// if we are allowed to reload our left gun, and NOT allowed to reload right gun, start wrist twist
@@ -380,9 +435,9 @@ namespace gameplay
 			return false;
 		}
 
-		void sprint_drop(game::mp::pmove_t* pm)
+		void sprint_drop(game::pmove_t* pm)
 		{
-			game::mp::playerState_s* ps = pm->ps;
+			game::playerState_s* ps = pm->ps;
 			auto handIndex = game::BG_PlayerLastWeaponHand(ps);
 
 			for (auto i = 0; i <= handIndex; i++)
@@ -392,31 +447,31 @@ namespace gameplay
 					continue;
 				}
 
-				ps->weapState[i].weaponState = game::WEAPON_SPRINT_DROP;
-				ps->weapState[i].weaponTime = game::BG_SprintOutTime(ps->weapCommon.weapon, false, ps->weapCommon.lastWeaponHand == game::WEAPON_HAND_LEFT);
-				ps->weapState[i].weaponDelay = 0;
+				ps->weaponState[i].weaponState = game::WEAPON_SPRINT_DROP;
+				ps->weaponState[i].weaponTime = game::BG_SprintOutTime(ps->weapCommon.weapon, false, ps->weapCommon.lastWeaponHand == game::WEAPON_HAND_LEFT);
+				ps->weaponState[i].weaponDelay = 0;
 
 				if (ps->pm_type != game::PM_DEAD && ps->pm_type != game::PM_DEAD_LINKED)
 				{
-					ps->weapState[i].weapAnim = ps->weapState[i].weaponState & ANIM_TOGGLEBIT | game::WEAP_ANIM_SPEED_RELOAD;
+					ps->weaponState[i].weapAnim = ps->weaponState[i].weaponState & ANIM_TOGGLEBIT | game::WEAP_SPRINT_OUT;
 				}
 			}
 		}
 
-		void sprint_raise(game::mp::pmove_t* pm)
+		void sprint_raise(game::pmove_t* pm)
 		{
-			game::mp::playerState_s* ps = pm->ps;
+			game::playerState_s* ps = pm->ps;
 			auto handIndex = game::BG_PlayerLastWeaponHand(ps);
 
 			for (auto i = 0; i <= handIndex; i++)
 			{
-				ps->weapState[i].weaponState = game::WEAPON_SPRINT_RAISE;
-				ps->weapState[i].weaponTime = game::BG_SprintInTime(ps->weapCommon.weapon, false, ps->weapCommon.lastWeaponHand == game::WEAPON_HAND_LEFT);
-				ps->weapState[i].weaponDelay = 0;
+				ps->weaponState[i].weaponState = game::WEAPON_SPRINT_RAISE;
+				ps->weaponState[i].weaponTime = game::BG_SprintInTime(ps->weapCommon.weapon, false, ps->weapCommon.lastWeaponHand == game::WEAPON_HAND_LEFT);
+				ps->weaponState[i].weaponDelay = 0;
 
 				if (ps->pm_type != game::PM_DEAD && ps->pm_type != game::PM_DEAD_LINKED)
 				{
-					ps->weapState[i].weapAnim = ps->weapState[i].weaponState & ANIM_TOGGLEBIT | game::WEAP_ANIM_FAST_RELOAD_END;
+					ps->weaponState[i].weapAnim = ps->weaponState[i].weaponState & ANIM_TOGGLEBIT | game::WEAP_SPRINT_IN;
 				}
 
 				if (ps->weapCommon.lastWeaponHand == game::WEAPON_HAND_LEFT)
@@ -434,15 +489,15 @@ namespace gameplay
 		}
 
 		// reversed from IW4
-		void pm_weapon_check_for_sprint_stub(game::mp::pmove_t* pm)
+		void pm_weapon_check_for_sprint_stub(game::pmove_t* pm)
 		{
 			if (!pm->cmd.weapon.data)
 			{
 				return;
 			}
 
-			int weaponStateRight = pm->ps->weapState[game::WEAPON_HAND_RIGHT].weaponState;
-			int weaponStateLeft = pm->ps->weapState[game::WEAPON_HAND_LEFT].weaponState;
+			int weaponStateRight = pm->ps->weaponState[game::WEAPON_HAND_RIGHT].weaponState;
+			int weaponStateLeft = pm->ps->weaponState[game::WEAPON_HAND_LEFT].weaponState;
 
 			// don't override the inspection animation while sprinting (added for HMW)
 			if (weaponStateRight == game::WEAPON_HEAT_COOLDOWN_END || weaponStateLeft == game::WEAPON_HEAT_COOLDOWN_END)
@@ -476,7 +531,7 @@ namespace gameplay
 			i added an additional check to see if you're pressing the usereload button when the sprint raise event is happening,
 			so if your connection isn't perfect you dont stop halfway trough a wrist twist
 		*/
-		bool pm_sprint_ending_buttons_stub(game::mp::playerState_s* ps, int8_t forwardSpeed, int buttons)
+		bool pm_sprint_ending_buttons_stub(game::playerState_s* ps, int8_t forwardSpeed, int buttons)
 		{
 			if ((ps->pm_flags & (game::POF_PLAYER | game::POF_THERMAL_VISION_OVERLAY_FOF | game::POF_THERMAL_VISION)) != 0)
 			{
@@ -490,10 +545,10 @@ namespace gameplay
 
 			//// mwr code
 			//int cancel_on_buttons =
-			//	game::BUTTON_MELEEZOOM | game::BUTTON_UNK1 |
-			//	game::BUTTON_PRONE | game::BUTTON_DUCK |
-			//	game::BUTTON_GOSTAND | game::BUTTON_ADS |
-			//	game::BUTTON_FRAG | game::BUTTON_SMOKE;
+			//	game::BUTTON_MELEE | game::BUTTON_UNK1 |
+			//	game::BUTTON_PRONE | game::BUTTON_CROUCH |
+			//	game::BUTTON_JUMP | game::BUTTON_ADS |
+			//	game::BUTTON_FRAG | game::BUTTON_OFFHANDSECONDARY;
 
 			//int is_ball_carrier = game::BG_HasPerk(ps->perks, game::PERK_BALLCARRIER);
 			//if (!is_ball_carrier)
@@ -501,24 +556,24 @@ namespace gameplay
 
 			//int has_low_profile = game::BG_HasPerk(ps->perks, game::PERK_LOWPROFILE);
 			//if (has_low_profile)
-			//	cancel_on_buttons &= ~(game::BUTTON_DUCK | game::BUTTON_USERELOAD | game::BUTTON_RELOAD);
+			//	cancel_on_buttons &= ~(game::BUTTON_CROUCH | game::BUTTON_USE_RELOAD | game::BUTTON_RELOAD);
 
 			//// this completely disables part of the previous statement, is the low profile perk even used?
-			//cancel_on_buttons |= game::BUTTON_USERELOAD | game::BUTTON_RELOAD;
+			//cancel_on_buttons |= game::BUTTON_USE_RELOAD | game::BUTTON_RELOAD;
 
 			// original iw4 checks
 			int cancel_on_buttons =
-				game::BUTTON_ATTACK | game::BUTTON_MELEEZOOM |
-				game::BUTTON_RELOAD | game::BUTTON_USERELOAD |
-				game::BUTTON_PRONE | game::BUTTON_DUCK |
-				game::BUTTON_GOSTAND | game::BUTTON_ADS |
-				game::BUTTON_FRAG | game::BUTTON_SMOKE;
+				game::BUTTON_ATTACK | game::BUTTON_MELEE |
+				game::BUTTON_RELOAD | game::BUTTON_USE_RELOAD |
+				game::BUTTON_PRONE | game::BUTTON_CROUCH |
+				game::BUTTON_JUMP | game::BUTTON_ADS |
+				game::BUTTON_FRAG | game::BUTTON_OFFHANDSECONDARY;
 
-			int weapon_state = ps->weapState[game::WEAPON_HAND_RIGHT].weaponState;
+			int weapon_state = ps->weaponState[game::WEAPON_HAND_RIGHT].weaponState;
 			if ((buttons & cancel_on_buttons) != 0)
 			{
 				// +usereload high ping fix
-				if (ps->weapCommon.lastWeaponHand == game::WEAPON_HAND_LEFT && (buttons & game::BUTTON_USERELOAD) == 0 && weapon_state == game::WEAPON_SPRINT_RAISE)
+				if (ps->weapCommon.lastWeaponHand == game::WEAPON_HAND_LEFT && (buttons & game::BUTTON_USE_RELOAD) == 0 && weapon_state == game::WEAPON_SPRINT_RAISE)
 				{
 					return false;
 				}
@@ -533,7 +588,7 @@ namespace gameplay
 			return is_in_melee_or_nade_throw || is_in_nightvision_equip || is_in_blast_or_hybrid_scope;
 		}
 
-		void begin_weapon_change_stub(game::mp::pmove_t* pm, game::Weapon new_weap, bool is_new_alt, bool quick, unsigned int* holdrand)
+		void begin_weapon_change_stub(game::pmove_t* pm, game::Weapon new_weap, bool is_new_alt, bool quick, unsigned int* holdrand)
 		{
 			if (!pm_iw4_mechanics || !pm_iw4_mechanics->current.enabled)
 			{
@@ -541,8 +596,8 @@ namespace gameplay
 				return;
 			}
 
-			auto right_anim = pm->ps->weapState[game::WEAPON_HAND_RIGHT].weapAnim;
-			auto left_anim = pm->ps->weapState[game::WEAPON_HAND_LEFT].weapAnim;
+			auto right_anim = pm->ps->weaponState[game::WEAPON_HAND_RIGHT].weapAnim;
+			auto left_anim = pm->ps->weaponState[game::WEAPON_HAND_LEFT].weapAnim;
 
 			auto stall_anim = (pm->ps->sprintState.lastSprintStart > pm->ps->sprintState.lastSprintEnd);
 
@@ -550,15 +605,15 @@ namespace gameplay
 
 			if (stall_anim)
 			{
-				pm->ps->weapState[game::WEAPON_HAND_RIGHT].weapAnim = right_anim;
-				pm->ps->weapState[game::WEAPON_HAND_LEFT].weapAnim = left_anim;
+				pm->ps->weaponState[game::WEAPON_HAND_RIGHT].weapAnim = right_anim;
+				pm->ps->weaponState[game::WEAPON_HAND_LEFT].weapAnim = left_anim;
 			}
 		}
 
 		inline bool is_previous_anim(int anim)
 		{
-			return	(anim == game::WEAP_ANIM_IDLE || anim == game::WEAP_ANIM_FAST_RELOAD_END ||
-				anim == (game::WEAP_ANIM_IDLE | ANIM_TOGGLEBIT) || anim == (game::WEAP_ANIM_FAST_RELOAD_END | ANIM_TOGGLEBIT));
+			return	(anim == game::WEAP_FORCE_IDLE || anim == game::WEAP_SPRINT_IN ||
+				anim == (game::WEAP_FORCE_IDLE | ANIM_TOGGLEBIT) || anim == (game::WEAP_SPRINT_IN | ANIM_TOGGLEBIT));
 		}
 
 		void start_weapon_anim_stub(uint64_t local_client_num, game::Weapon weapon_idx, game::PlayerHandIndex player_hand_idx,
@@ -578,7 +633,7 @@ namespace gameplay
 				do_glide |= blend_out_anim_index == game::WEAP_ANIM_INSPECTION;
 			}
 
-			if (do_glide && is_previous_anim(playerstate->weapState[player_hand_idx].weapAnim) && should_sprint)
+			if (do_glide && is_previous_anim(playerstate->weaponState[player_hand_idx].weapAnim) && should_sprint)
 			{
 				blend_out_anim_index = game::WEAP_ANIM_QUICK_DROP;
 				transition_time = 0.5f;
@@ -587,7 +642,7 @@ namespace gameplay
 			start_weapon_anim_hook.invoke<void>(local_client_num, weapon_idx, player_hand_idx, blend_in_anim_index, blend_out_anim_index, transition_time);
 		}
 
-		bool pm_sprint_start_interfering_buttons_stub(game::mp::playerState_s* ps, int forward_speed, int buttons)
+		bool pm_sprint_start_interfering_buttons_stub(game::playerState_s* ps, int forward_speed, int buttons)
 		{
 			if ((ps->pm_flags & game::PMF_LADDER) || forward_speed <= 105)
 			{
@@ -595,10 +650,10 @@ namespace gameplay
 			}
 
 			int interfere_on_buttons =
-				game::BUTTON_ATTACK | game::BUTTON_MELEEZOOM |
-				game::BUTTON_RELOAD | game::BUTTON_USERELOAD |
-				game::BUTTON_GOSTAND | game::BUTTON_ADS |
-				game::BUTTON_FRAG | game::BUTTON_SMOKE;
+				game::BUTTON_ATTACK | game::BUTTON_MELEE |
+				game::BUTTON_RELOAD | game::BUTTON_USE_RELOAD |
+				game::BUTTON_JUMP | game::BUTTON_ADS |
+				game::BUTTON_FRAG | game::BUTTON_OFFHANDSECONDARY;
 
 			if (buttons & interfere_on_buttons)
 			{
@@ -616,7 +671,7 @@ namespace gameplay
 				return false;
 			}
 
-			auto weapon_state = ps->weapState[game::WEAPON_HAND_RIGHT].weaponState;
+			auto weapon_state = ps->weaponState[game::WEAPON_HAND_RIGHT].weaponState;
 			if (weapon_state != game::WEAPON_MELEE_WAIT_FOR_RESULT
 				&& weapon_state != game::WEAPON_MELEE_FIRE
 				&& weapon_state != game::WEAPON_MELEE_END
@@ -635,105 +690,106 @@ namespace gameplay
 		void post_unpack() override
 		{
 			dvars::player_sustainAmmo = dvars::register_bool("player_sustainAmmo", false,
-				game::DVAR_FLAG_REPLICATED, "Firing weapon will not decrease clip ammo");
-			pm_weapon_use_ammo_hook.create(SELECT_VALUE(0x4AF600_b, 0x2DF830_b), &pm_weapon_use_ammo_stub);
+				game::DVAR_CODINFO, "Firing weapon will not decrease clip ammo");
+			pm_weapon_use_ammo_hook.create(SELECT_VALUE(0x1404AF600, 0x1401F6B90), &pm_weapon_use_ammo_stub);
 
 			// Influence PM_JitterPoint code flow so the trace->startsolid checks are 'ignored'
-			pm_player_trace_hook.create(SELECT_VALUE(0x4A0A90_b, 0x2D14C0_b), &pm_player_trace_stub);
+			pm_player_trace_hook.create(SELECT_VALUE(0x1404A0A90, 0x1401E8BE0), &pm_player_trace_stub);
 
 			// If g_enableElevators is 1 the 'ducked' flag will always be removed from the player state
-			utils::hook::jump(SELECT_VALUE(0x499617_b, 0x2C9F90_b), utils::hook::assemble(pm_trace_stub), true);
-			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DVAR_FLAG_REPLICATED, "Enables Elevators");
+			utils::hook::jump(SELECT_VALUE(0x140499617, 0x1401E1CD1), utils::hook::assemble(SELECT_VALUE(pm_trace_stub_sp, pm_trace_stub)), true);
+			dvars::g_enableElevators = dvars::register_bool("g_enableElevators", false, game::DVAR_CODINFO, "Enables Elevators");
 
 			dvars::pm_bouncing = dvars::register_bool("pm_bouncing", false,
-				game::DVAR_FLAG_REPLICATED, "Enable bouncing");
-			utils::hook::jump(SELECT_VALUE(0x4A2E5E_b, 0x2D39A4_b), pm_bouncing_stub_mp(), true);
+				game::DVAR_CODINFO, "Enable bouncing");
+			utils::hook::jump(SELECT_VALUE(0x1404A2E5E, 0x1401EAFE4), SELECT_VALUE(pm_bouncing_stub_sp(), pm_bouncing_stub_mp()), true);
 
 			if (game::environment::is_sp())
 			{
 				return;
 			}
-			
-			utils::hook::nop(0x4006AD_b, 15);
-			utils::hook::jump(0x4006AD_b, g_speed_stub(), true);
+
+			utils::hook::nop(0x140323DAD, 15);
+			utils::hook::jump(0x140323DAD, g_speed_stub(), true);
 			dvars::g_speed = dvars::register_int("g_speed", 190, 0, 1000,
-				game::DVAR_FLAG_REPLICATED, "changes the speed of the player");
+				game::DVAR_CODINFO, "changes the speed of the player");
 
 			dvars::pm_bouncingAllAngles = dvars::register_bool("pm_bouncingAllAngles", false,
-				game::DvarFlags::DVAR_FLAG_REPLICATED, "Enable bouncing from all angles");
-			utils::hook::call(0x2D3A74_b, pm_project_velocity_stub);
+				game::DvarFlags::DVAR_CODINFO, "Enable bouncing from all angles");
+			utils::hook::call(0x1401EB0B4, pm_project_velocity_stub);
 
-			dvars::g_gravity = dvars::register_int("g_gravity", 800, 0, 1000, game::DVAR_FLAG_REPLICATED,
+			dvars::g_gravity = dvars::register_int("g_gravity", 800, 0, 1000, game::DVAR_CODINFO,
 				"Game gravity in inches per second squared");
-			utils::hook::jump(0x3FF812_b, client_end_frame_stub(), true);
-			utils::hook::nop(0x3FF808_b, 1);
+			utils::hook::jump(0x140322F72, client_end_frame_stub(), true);
+			utils::hook::nop(0x140322F68, 1);
 
 			dvars::pm_sprintInAir = dvars::register_bool("pm_sprintInAir", false,
-				game::DVAR_FLAG_REPLICATED, "Enable Mid-Air Sprinting");
-			utils::hook::jump(0x2C98C0_b, pm_can_start_sprint_stub(), true);
+				game::DVAR_CODINFO, "Enable Mid-Air Sprinting");
+			utils::hook::jump(0x1401E16B0, pm_can_start_sprint_stub(), true);
 
-			auto* timescale = dvars::register_float("timescale", 1.0f, 0.1f, 50.0f, game::DVAR_FLAG_REPLICATED, "Changes Timescale of the game");
-			utils::hook::inject(0x15B204_b, &timescale->current.value); // Com_GetTimeScale
-			utils::hook::inject(0x17D243_b, &timescale->current.value); // Com_Restart
-			utils::hook::inject(0x17E609_b, &timescale->current.value); // Com_SetSlowMotion
-			utils::hook::inject(0x17E626_b, &timescale->current.value); // Com_SetSlowMotion
-			utils::hook::inject(0x17E69C_b, &timescale->current.value); // Com_SetSlowMotion
-			utils::hook::inject(0x17EAD0_b, &timescale->current.value); // Com_TimeScaleMsec
-			utils::hook::inject(0x17EFE2_b, &timescale->current.value); // Com_UpdateSlowMotion
-			utils::hook::inject(0x17F00C_b, &timescale->current.value); // Com_UpdateSlowMotion
+			// redirect com_codeTimeScale reads/writes to the timescale dvar
+			// (the "= 1.0f" resets in Com_Restart etc. are mov imm32 and are left alone)
+			auto* timescale = dvars::register_float("timescale", 1.0f, 0.1f, 50.0f, game::DVAR_CODINFO, "Changes Timescale of the game");
+			utils::hook::inject(0x1400D89A4, &timescale->current.value); // Com_GetTimeScale
+			utils::hook::inject(0x1400DB7A9, &timescale->current.value); // Com_SetSlowMotion
+			utils::hook::inject(0x1400DB7C6, &timescale->current.value); // Com_SetSlowMotion
+			utils::hook::inject(0x1400DB83C, &timescale->current.value); // Com_SetSlowMotion
+			utils::hook::inject(0x1400DBAF0, &timescale->current.value); // Com_TimeScaleMsec
+			utils::hook::inject(0x1400DBE72, &timescale->current.value); // Com_UpdateSlowMotion
+			utils::hook::inject(0x1400DBE9C, &timescale->current.value); // Com_UpdateSlowMotion
 
 			dvars::jump_ladderPushVel = dvars::register_float("jump_ladderPushVel", 128.0f,
-				0.0f, 1024.0f, game::DVAR_FLAG_REPLICATED, "The velocity of a jump off of a ladder");
-			utils::hook::jump(0x2BD70C_b, jump_push_off_ladder(), true);
-			utils::hook::nop(0x2BD718_b, 4); // Nop skipped opcodes
+				0.0f, 1024.0f, game::DVAR_CODINFO, "The velocity of a jump off of a ladder");
+			utils::hook::jump(0x1401D598C, jump_push_off_ladder(), true);
+			utils::hook::nop(0x1401D5998, 4); // Nop skipped opcodes
 
 			dvars::jump_height = dvars::register_float("jump_height", 39.0f,
-				0.0f, 1000.0f, game::DVAR_FLAG_REPLICATED, "The maximum height of a player\'s jump");
-			utils::hook::call(0x2BD22D_b, jump_start_stub);
+				0.0f, 1000.0f, game::DVAR_CODINFO, "The maximum height of a player\'s jump");
+			utils::hook::call(0x1401D54E1, jump_start_stub);
 
-			jump_apply_slowdown_hook.create(0x2BD0B0_b, jump_apply_slowdown_stub);
-			dvars::jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_FLAG_REPLICATED, "Slow player movement after jumping");
+			jump_apply_slowdown_hook.create(0x1401D5360, jump_apply_slowdown_stub);
+			dvars::jump_slowDownEnable = dvars::register_bool("jump_slowDownEnable", true, game::DVAR_CODINFO, "Slow player movement after jumping");
 
-			pm_crashland_hook.create(0x2CB070_b, pm_crashland_stub);
-			dvars::jump_enableFallDamage = dvars::register_bool("jump_enableFallDamage", true, game::DVAR_FLAG_REPLICATED, "Enable fall damage");
+			pm_crashland_hook.create(0x1401E2D00, pm_crashland_stub);
+			dvars::jump_enableFallDamage = dvars::register_bool("jump_enableFallDamage", true, game::DVAR_CODINFO, "Enable fall damage");
 
-			dvars::g_playerEjection = dvars::register_bool("g_playerEjection", true, game::DVAR_FLAG_REPLICATED,
+			dvars::g_playerEjection = dvars::register_bool("g_playerEjection", true, game::DVAR_CODINFO,
 				"Flag whether player ejection is on or off");
-			stuck_in_client_hook.create(0x4035F0_b, stuck_in_client_stub);
+			stuck_in_client_hook.create(0x140326CE0, stuck_in_client_stub);
 
-			dvars::g_playerCollision = dvars::register_bool("g_playerCollision", true, game::DVAR_FLAG_REPLICATED,
+			dvars::g_playerCollision = dvars::register_bool("g_playerCollision", true, game::DVAR_CODINFO,
 				"Flag whether player collision is on or off");
-			cm_transformed_capsule_trace_hook.create(0x4D63C0_b, cm_transformed_capsule_trace_stub);
+			cm_transformed_capsule_trace_hook.create(0x1403FF860, cm_transformed_capsule_trace_stub);
 
-			dvars::g_rocketJumpScale = dvars::register_float("g_rocketJumpScale", 64.0f, 0.0f, 1000.0f, game::DVAR_FLAG_REPLICATED, "Adjust rocket jump scale");
-			utils::hook::set<std::uint8_t>(0x463CC7_b, 0x48); // save rax
-			utils::hook::set<std::uint8_t>(0x463CC8_b, 0x89);
-			utils::hook::set<std::uint8_t>(0x463CC9_b, 0xC1);
-			utils::hook::jump(0x463CCA_b, utils::hook::assemble(weapon_rocket_launcher_fire_stub), true);
+			dvars::g_rocketJumpScale = dvars::register_float("g_rocketJumpScale", 64.0f, 0.0f, 1000.0f, game::DVAR_CODINFO, "Adjust rocket jump scale");
+			utils::hook::set<std::uint8_t>(0x14038E5B7, 0x48); // save rax
+			utils::hook::set<std::uint8_t>(0x14038E5B8, 0x89);
+			utils::hook::set<std::uint8_t>(0x14038E5B9, 0xC1);
+			utils::hook::jump(0x14038E5BA, utils::hook::assemble(weapon_rocket_launcher_fire_stub), true);
 
 			// Make noclip work
-			client_end_frame_hook.create(0x3FF7D0_b, client_end_frame_stub2);
-			g_damage_client_hook.create(0x414F10_b, g_damage_client_stub);
-			g_damage_hook.create(0x414A10_b, g_damage_stub);
-			
-			// let moveSpeedScale be used in GSC
-			utils::hook::set<uint32_t>(0x4406FE_b, 0x1DC);
+			client_end_frame_hook.create(0x140322F30, client_end_frame_stub2);
+			g_damage_client_hook.create(0x140337C30, g_damage_client_stub);
+			g_damage_hook.create(0x140337710, g_damage_stub);
 
-			pm_iw4_mechanics = dvars::register_bool("pm_iw4Mechanics", false, game::DVAR_FLAG_REPLICATED, "Use IW4 mechanics");
-			pm_glide_on_inspect = dvars::register_bool("pm_glideOnInspect", true, game::DVAR_FLAG_NONE, "Do a gliding animation on inspects?");
+			// let moveSpeedScale be used in GSC
+			utils::hook::set<uint32_t>(0x14036EFFE, 0x1DC);
+
+			pm_iw4_mechanics = dvars::register_bool("pm_iw4Mechanics", false, game::DVAR_CODINFO, "Use IW4 mechanics");
+			pm_glide_on_inspect = dvars::register_bool("pm_glideOnInspect", true, game::DVAR_NOFLAG, "Do a gliding animation on inspects?");
 
 			// stall animations on sprints
-			begin_weapon_change_hook.create(0x2D57E0_b, begin_weapon_change_stub);
+			begin_weapon_change_hook.create(0x1401ECE60, begin_weapon_change_stub);
 
 			// glides (thank you @girlmachinery for the help on this)
-			start_weapon_anim_hook.create(0x1D5CA0_b, start_weapon_anim_stub);
+			start_weapon_anim_hook.create(0x1400F6C20, start_weapon_anim_stub);
 
 			// sprint raise & drop events, don't stop inspecting on sprinting
-			pm_weapon_check_for_sprint_hook.create(0x2D9A10_b, pm_weapon_check_for_sprint_stub);
-			pm_sprint_ending_buttons_hook.create(0x2CEE40_b, pm_sprint_ending_buttons_stub);
+			pm_weapon_check_for_sprint_hook.create(0x1401F0F50, pm_weapon_check_for_sprint_stub);
+			pm_sprint_ending_buttons_hook.create(0x1401E65F0, pm_sprint_ending_buttons_stub);
 
 			// removes the slight "delay" for sprint whenever u shot making some still swaps possible again (from @Patoke)
-			pm_sprint_start_interfering_buttons_hook.create(0x2CEEC0_b, pm_sprint_start_interfering_buttons_stub);
+			pm_sprint_start_interfering_buttons_hook.create(0x1401E6670, pm_sprint_start_interfering_buttons_stub);
 		}
 	};
 }

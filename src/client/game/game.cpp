@@ -3,7 +3,7 @@
 
 namespace game
 {
-	uint64_t base_address;
+	uint64_t base_address = 0x140000000;
 
 	int Cmd_Argc()
 	{
@@ -32,23 +32,17 @@ namespace game
 
 	void SV_GameSendServerCommand(int client_num, svscmd_type type, const char* text)
 	{
-		const auto svs_clients = *mp::svs_clients;
-		if (svs_clients == nullptr)
-		{
-			return;
-		}
-
 		if (client_num == -1)
 		{
 			SV_SendServerCommand(0, type, "%s", text);
 		}
 		else
 		{
-			SV_SendServerCommand(&svs_clients[client_num], type, "%s", text);
+			SV_SendServerCommand(&mp::svs_clients[client_num], type, "%s", text);
 		}
 	}
 
-	void Cbuf_AddText(int local_client_num, int controller_index, const char* cmd)
+	void Cbuf_AddText(int local_client_num, [[maybe_unused]] int controller_index, const char* cmd)
 	{
 		if (game::environment::is_sp())
 		{
@@ -56,7 +50,7 @@ namespace game
 		}
 		else
 		{
-			mp::Cbuf_AddText(local_client_num, controller_index, cmd);
+			mp::Cbuf_AddText(local_client_num, cmd);
 		}
 	}
 
@@ -68,8 +62,7 @@ namespace game
 		}
 		else
 		{
-			const auto a2 = 512 - *reinterpret_cast<int*>(0x3516F40_b);
-			mp::Cmd_TokenizeStringWithLimit(text, a2);
+			mp::Cmd_TokenizeString(text);
 		}
 	}
 
@@ -77,14 +70,22 @@ namespace game
 	{
 		if (game::environment::is_sp())
 		{
-			return sp::Cmd_EndTokenizeString();
+			sp::Cmd_EndTokenizeString();
+		}
+		else
+		{
+			mp::Cmd_EndTokenizeString();
+		}
+	}
+
+	const char* Dvar_ValueToString(dvar_t* dvar, bool is_hashed, dvar_value value)
+	{
+		if (game::environment::is_sp())
+		{
+			return sp::Dvar_ValueToString(dvar, is_hashed, value);
 		}
 
-		const auto nesting = cmd_args->nesting;
-		const auto argc = cmd_args->argc[nesting];
-		--cmd_args->nesting;
-		cmd_argsPrivate->totalUsedArgvPool -= argc;
-		cmd_argsPrivate->totalUsedTextPool -= cmd_argsPrivate->usedTextPool[nesting];
+		return mp::Dvar_ValueToString(dvar, &value);
 	}
 
 	unsigned int SND_GetSoundFileLength(SoundFile* soundfile)
@@ -192,11 +193,6 @@ namespace game
 			}
 		}
 	}
-}
-
-size_t operator"" _b(const size_t ptr)
-{
-	return game::base_address + ptr;
 }
 
 size_t reverse_b(const size_t ptr)

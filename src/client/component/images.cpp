@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "images.hpp"
 #include "console.hpp"
 #include "filesystem.hpp"
 
@@ -103,7 +102,6 @@ namespace images
 
 			return setup_texture_hook.invoke<bool>(image, a2, a3);
 		}
-	}
 
 	void override_texture(std::string name, std::string data)
 	{
@@ -111,6 +109,7 @@ namespace images
 		{
 			textures[std::move(name)] = std::move(data);
 		});
+	}
 	}
 
 	class component final : public component_interface
@@ -123,9 +122,9 @@ namespace images
 				return;
 			}
 
-			setup_texture_hook.create(SELECT_VALUE(0x83300_b, 0xA4AA0_b), setup_texture_stub);
-			load_texture_hook.create(SELECT_VALUE(0x82050_b, 0xA37A0_b), load_texture_stub);
-			//load_texture_hook.create(SELECT_VALUE(0x55F870_b, 0x6829C0_b), load_texture_stub);
+			setup_texture_hook.create(SELECT_VALUE(0x140083300, 0x14008C320), setup_texture_stub); // Setup_Texture
+			load_texture_hook.create(SELECT_VALUE(0x140082050, 0x14008B190), load_texture_stub);
+			//load_texture_hook.create(SELECT_VALUE(0x14055F870, 0x1405DC050), load_texture_stub);
 		}
 	};
 }

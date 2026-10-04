@@ -111,7 +111,7 @@ namespace fonts
 				return 0;
 			}
 
-			return utils::hook::invoke<int>(SELECT_VALUE(0x3CD370_b, 0x5AF5F0_b), a1, a2);
+			return utils::hook::invoke<int>(SELECT_VALUE(0x1403CD370, 0x140503FB0), a1, a2); // I_stricmp
 		}
 
 		utils::hook::detour font_init_hook;
@@ -256,12 +256,12 @@ namespace fonts
 			a.mov(edx, dword_ptr(rdi, 0x238));
 			a.lea(r8, qword_ptr(rsp, 0x98));
 
-			a.jmp(0x181877_b);
+			a.jmp(0x1400DD917);
 		}
 
 		void hudelem_setfont_stub(__int64 a1, __int64 a2, __int64 /*a3*/, int /*a4*/)
 		{
-			utils::hook::invoke<void>(0x41A8B0_b, a1, a2, custom_hudelem_fonts.data(), custom_hudelem_fonts.size());
+			utils::hook::invoke<void>(0x14033D5B0, a1, a2, custom_hudelem_fonts.data(), custom_hudelem_fonts.size());
 		}
 
 		void* hudelem_getfont_stub_get_fonts()
@@ -281,22 +281,7 @@ namespace fonts
 			a.movsxd(rax, dword_ptr(r8, 0x1C));
 			a.and_(rdx, rax);
 			a.mov(rcx, qword_ptr(rcx, rdx, 3));
-			a.jmp(0x50EC50_b);
-		}
-
-		void hudelem_set_font_handle_stub(utils::hook::assembler& a)
-		{
-			a.push(rbx);
-			a.pushad64();
-			a.mov(edx, ebx);
-			a.xor_(rcx, rcx);
-			a.call_aligned(0x1DF8B0_b);
-			a.mov(qword_ptr(rsp, 0x80), rax);
-			a.popad64();
-			a.pop(rbx);
-
-			a.jmp(0x1818F1_b);
-		}
+			a.jmp(0x1404420F0); // Scr_AddString
 	}
 
 	void add(const std::string& name, const std::string& data)
@@ -305,6 +290,7 @@ namespace fonts
 		{
 			data_.raw_fonts[name] = data;
 		});
+	}
 	}
 
 	void clear()
@@ -317,7 +303,7 @@ namespace fonts
 			}
 
 			data_.fonts.clear();
-			utils::hook::set<int>(SELECT_VALUE(0xF793E38_b, 0xE962188_b), 0); // reset registered font count
+			utils::hook::set<int>(SELECT_VALUE(0x14F793E38, 0x14FD61EE8), 0); // reset registered font count
 		});
 	}
 
@@ -331,19 +317,18 @@ namespace fonts
 				return;
 			}
 
-			utils::hook::call(SELECT_VALUE(0x4D4137_b, 0x67F667_b), font_name_compare_stub);
-			utils::hook::call(SELECT_VALUE(0x55C596_b, 0x67F6E6_b), db_find_xasset_header_stub);
+			utils::hook::call(SELECT_VALUE(0x1404D4137, 0x1405D9217), font_name_compare_stub);
+			utils::hook::call(SELECT_VALUE(0x14055C596, 0x1405D9296), db_find_xasset_header_stub);
 
 			if (game::environment::is_mp())
 			{
-				font_init_hook.create(0x1D9B30_b, font_init_stub);
-				ui_get_font_handle_hook.create(0x1DF8B0_b, ui_get_font_handle_stub);
-				ui_get_font_handle_hook2.create(0x192360_b, ui_get_font_handle_stub2);
+				font_init_hook.create(0x1404C76F0, font_init_stub);
+				ui_get_font_handle_hook.create(0x1404E7760, ui_get_font_handle_stub);
+				ui_get_font_handle_hook2.create(0x1404DADB0, ui_get_font_handle_stub2);
 
-				utils::hook::jump(0x181869_b, utils::hook::assemble(get_hud_elem_info_stub), true);
-				utils::hook::jump(0x41868E_b, hudelem_setfont_stub);
-				utils::hook::jump(0x4186C5_b, utils::hook::assemble(hudelem_getfont_stub), true);
-				utils::hook::jump(0x1818A4_b, utils::hook::assemble(hudelem_set_font_handle_stub), true);
+				utils::hook::jump(0x1400DD909, utils::hook::assemble(get_hud_elem_info_stub), true);
+				utils::hook::jump(0x14033C95E, hudelem_setfont_stub);
+				utils::hook::jump(0x14033C995, utils::hook::assemble(hudelem_getfont_stub), true);
 			}
 		}
 	};

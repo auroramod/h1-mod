@@ -35,6 +35,14 @@ namespace driver_profile
 		std::wstring fake_command_line_w;
 		std::string fake_command_line_a;
 
+		/*
+
+			AMD's DirectX11 driver amdxx64.dll applies game app profiles based on the process executable name, which includes weird visual 
+			fixes and performance issues that do not apply otherwise. this component exists to pretty much spoof the name to AMD's driver 
+			as h1_mp64_ship.exe & h1_sp64_ship.exe instead of h1-mod.exe
+
+		*/
+
 		bool is_driver_module(const HMODULE module)
 		{
 			static std::mutex mutex;

@@ -12,13 +12,13 @@ namespace virtuallobby
 	{
 		game::dvar_t* virtual_lobby_fovscale;
 
-		void get_get_fovscale_stub(utils::hook::assembler& a)
+		void get_fovscale_stub(utils::hook::assembler& a)
 		{
 			const auto ret = a.newLabel();
 			const auto original = a.newLabel();
 
 			a.pushad64();
-			a.mov(rax, qword_ptr(0x2999CE8_b)); // virtualLobbyInFiringRange
+			a.mov(rax, qword_ptr(0x1425F7210)); // virtualLobbyInFiringRange
 			a.cmp(byte_ptr(rax, 0x10), 1);
 			a.je(original);
 			a.call_aligned(game::VirtualLobby_Loaded);
@@ -33,13 +33,12 @@ namespace virtuallobby
 			// original
 			a.bind(original);
 			a.popad64();
-			a.mov(rax, qword_ptr(0x14C4EC8_b));
+			a.mov(rax, qword_ptr(0x1413A8580)); // cg_fovScale
 			a.jmp(ret);
 
 			a.bind(ret);
-			a.mov(rdi, rax);
-			a.mov(ecx, 8);
-			a.jmp(0x104545_b);
+			a.mov(rcx, 0x142935000); // cgameGlob
+			a.jmp(0x1400B556A);
 		}
 	}
 
@@ -53,10 +52,10 @@ namespace virtuallobby
 				return;
 			}
 
-			virtual_lobby_fovscale = dvars::register_float_hashed("virtualLobby_fovScale", 0.7f, 0.0f, 2.0f, 
-				game::DVAR_FLAG_SAVED, "Field of view scaled for the virtual lobby");
+			virtual_lobby_fovscale = dvars::register_float_hashed("virtualLobby_fovScale", 0.7f, 0.0f, 2.0f,
+				game::DVAR_ARCHIVE, "Field of view scaled for the virtual lobby");
 
-			utils::hook::jump(0x104539_b, utils::hook::assemble(get_get_fovscale_stub), true);
+			utils::hook::jump(0x1400B555C, utils::hook::assemble(get_fovscale_stub), true);
 		}
 	};
 }

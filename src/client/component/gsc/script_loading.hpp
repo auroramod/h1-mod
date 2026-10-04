@@ -1,4 +1,5 @@
 #pragma once
+#include "game/game.hpp"
 #include <xsk/gsc/engine/h1.hpp>
 
 namespace gsc

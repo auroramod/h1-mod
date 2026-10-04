@@ -1,7 +1,8 @@
 #pragma once
+#include "game/game.hpp"
+#include <utils/hook.hpp>
 
 namespace fonts
 {
-	void add(const std::string& name, const std::string& data);
 	void clear();
 }

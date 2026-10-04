@@ -20,38 +20,43 @@ namespace materials
 {
 	namespace
 	{
+#ifdef _DEBUG
+		namespace
+		{
+			struct GfxBspSurfIter
+			{
+				const unsigned int* current;
+				const unsigned int* end;
+				const unsigned int* mark;
+			};
+
+			struct GfxTrianglesDrawStream
+			{
+				void* viewProjectionMatrix;
+				void* projectionMatrix;
+				float viewOrigin[3];
+				int needSubdomain;
+				GfxBspSurfIter* bspSurfIter;
+				const game::GfxTexture* reflectionProbeTexture;
+				const game::GfxTexture* lightmapPrimaryTexture;
+				const game::GfxTexture* lightmapSecondaryTexture;
+				unsigned int customSamplerFlags;
+			};
+		}
+#endif
+
+
 		utils::hook::detour db_material_streaming_fail_hook;
 		utils::hook::detour db_get_material_index_hook;
+		game::MaterialConstantDef constant_table{};
 
 #ifdef _DEBUG
 		utils::hook::detour material_compare_hook;
 		utils::hook::detour set_pixel_texture_hook;
 		utils::hook::detour r_draw_triangles_lit_hook;
-
 		const game::dvar_t* debug_materials = nullptr;
+		void r_draw_triangles_lit_stub(GfxTrianglesDrawStream* draw_stream, void* context);
 #endif
-
-		game::MaterialConstantDef constant_table{};
-		
-		int db_material_streaming_fail_stub(game::Material* material)
-		{
-			if (material->constantTable == &constant_table)
-			{
-				return 0;
-			}
-
-			return db_material_streaming_fail_hook.invoke<int>(material);
-		}
-
-		unsigned int db_get_material_index_stub(game::Material* material)
-		{
-			if (material->constantTable == &constant_table)
-			{
-				return 0;
-			}
-
-			return db_get_material_index_hook.invoke<unsigned int>(material);
-		}
 
 #ifdef _DEBUG
 		char material_compare_stub(unsigned int index_a, unsigned int index_b)
@@ -64,8 +69,8 @@ namespace materials
 			}
 			__except (EXCEPTION_EXECUTE_HANDLER)
 			{
-				const auto* material_a = utils::hook::invoke<game::Material*>(0x395FE0_b, index_a);
-				const auto* material_b = utils::hook::invoke<game::Material*>(0x395FE0_b, index_b);
+				const auto* material_a = utils::hook::invoke<game::Material*>(0x1402BBB00, index_a);
+				const auto* material_b = utils::hook::invoke<game::Material*>(0x1402BBB00, index_b);
 				console::error("Material_Compare: %s - %s (%d - %d)\n", 
 					material_a->name, material_b->name, material_a->info.sortKey, material_b->info.sortKey);
 			}
@@ -98,12 +103,11 @@ namespace materials
 			a.jnz(loc_6AD59B);
 			a.nop(dword_ptr(rax, rax, 0x00000000));
 
-			a.jmp(0x6AD570_b);
+			a.jmp(0x1406053B0);
 
 			a.bind(loc_6AD59B);
-			a.jmp(0x6AD59B_b);
+			a.jmp(0x1406053DB);
 		}
-
 		void set_pixel_texture_stub(void* cmd_buf_state, unsigned int a2, const game::GfxImage* image)
 		{
 			if (!debug_materials || !debug_materials->current.enabled)
@@ -123,27 +127,6 @@ namespace materials
 
 			set_pixel_texture_hook.invoke<void>(cmd_buf_state, a2, image);
 		}
-
-		struct GfxBspSurfIter
-		{
-			const unsigned int* current;
-			const unsigned int* end;
-			const unsigned int* mark;
-		};
-
-		struct GfxTrianglesDrawStream
-		{
-			void* viewProjectionMatrix;
-			void* projectionMatrix;
-			float viewOrigin[3];
-			int needSubdomain;
-			GfxBspSurfIter* bspSurfIter;
-			const game::GfxTexture* reflectionProbeTexture;
-			const game::GfxTexture* lightmapPrimaryTexture;
-			const game::GfxTexture* lightmapSecondaryTexture;
-			unsigned int customSamplerFlags;
-		};
-
 		void r_draw_triangles_lit_stub(GfxTrianglesDrawStream* draw_stream, void* context)
 		{
 			__try
@@ -160,6 +143,26 @@ namespace materials
 			}
 		}
 #endif
+
+		int db_material_streaming_fail_stub(game::Material* material)
+		{
+			if (material->constantTable == &constant_table)
+			{
+				return 0;
+			}
+
+			return db_material_streaming_fail_hook.invoke<int>(material);
+		}
+
+		unsigned int db_get_material_index_stub(game::Material* material)
+		{
+			if (material->constantTable == &constant_table)
+			{
+				return 0;
+			}
+
+			return db_get_material_index_hook.invoke<unsigned int>(material);
+		}
 	}
 
 	bool setup_material_image(game::Material* material, const std::string& data)
@@ -242,23 +245,23 @@ namespace materials
 				return;
 			}
 
-			db_material_streaming_fail_hook.create(SELECT_VALUE(0x1FB400_b, 0x3A1600_b), db_material_streaming_fail_stub);
-			db_get_material_index_hook.create(SELECT_VALUE(0x1F1D80_b, 0x396000_b), db_get_material_index_stub);
+			db_material_streaming_fail_hook.create(SELECT_VALUE(0x1401FB400, 0x1402C6260), db_material_streaming_fail_stub);
+			db_get_material_index_hook.create(SELECT_VALUE(0x1401F1D80, 0x1402BBB20), db_get_material_index_stub); // DB_GetMaterialIndex
 
 #ifdef _DEBUG
 			if (!game::environment::is_sp())
 			{
-				material_compare_hook.create(0x693B90_b, material_compare_stub);
-				set_pixel_texture_hook.create(0x6B33E0_b, set_pixel_texture_stub);
+				material_compare_hook.create(0x1405EBFC0, material_compare_stub); // Material_Compare
+				set_pixel_texture_hook.create(0x14060AD10, set_pixel_texture_stub); // R_SetPixelTexture
 
-				utils::hook::jump(0x6AD55C_b, utils::hook::assemble(print_current_material_stub), true);
+				utils::hook::jump(0x14060539C, utils::hook::assemble(print_current_material_stub), true);
 
 				scheduler::once([]
 				{
-					debug_materials = dvars::register_bool("debug_materials", false, game::DVAR_FLAG_NONE, "Print current material and images");
+					debug_materials = dvars::register_bool("debug_materials", false, game::DVAR_NOFLAG, "Print current material and images");
 				}, scheduler::main);
 
-				r_draw_triangles_lit_hook.create(0x666870_b, r_draw_triangles_lit_stub);
+				r_draw_triangles_lit_hook.create(0x1405C15D0, r_draw_triangles_lit_stub);
 			}
 #endif
 		}

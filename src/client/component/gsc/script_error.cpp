@@ -5,6 +5,8 @@
 #include "script_extension.hpp"
 #include "script_error.hpp"
 
+#include "component/command.hpp"
+#include "component/scheduler.hpp"
 #include "component/scripting.hpp"
 
 #include <utils/hook.hpp>
@@ -59,6 +61,22 @@ namespace gsc
 			scr_emit_function_hook.invoke<void>(filename, thread_name, code_pos);
 		}
 
+		void script_link_error()
+		{
+			if (game::environment::is_sp())
+			{
+				game::Com_Error(game::ERR_SCRIPT_DROP, "script link error\n%s", unknown_function_error.data());
+				return;
+			}
+
+			// Com_Error causes problems when it runs ingame (SV_Shutdown -> archive time), disconnect first
+			command::execute("disconnect");
+			scheduler::once([]
+			{
+				game::Com_Error(game::ERR_SCRIPT_DROP, "script link error\n%s", unknown_function_error.data());
+			});
+		}
+
 		std::string get_filename_name()
 		{
 			const auto filename_str = game::SL_ConvertToString(static_cast<game::scr_string_t>(current_filename));
@@ -100,19 +118,19 @@ namespace gsc
 			);
 		}
 
-		void compile_error_stub(const char* code_pos, [[maybe_unused]] const char* msg)
+		void compile_error_stub(const char* code_pos, const char* msg)
 		{
 			get_unknown_function_error(code_pos);
-			game::Com_Error(game::ERR_SCRIPT_DROP, "script link error\n%s", unknown_function_error.data());
+			script_link_error();
 		}
-		
+
 		std::uint32_t find_variable_stub(std::uint32_t parent_id, std::uint32_t thread_name)
 		{
 			const auto res = game::FindVariable(parent_id, thread_name);
 			if (!res)
 			{
 				get_unknown_function_error(thread_name);
-				game::Com_Error(game::ERR_SCRIPT_DROP, "script link error\n%s", unknown_function_error.data());
+				script_link_error();
 			}
 			return res;
 		}
@@ -127,10 +145,10 @@ namespace gsc
 					return value->u.pointerValue;
 				}
 
-				scr_error(va("Type %s is not an object", var_typename[value->type]));
+				gsc::scr_error(va("Type %s is not an object", var_typename[value->type]));
 			}
 
-			scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -148,7 +166,7 @@ namespace gsc
 				game::Scr_ErrorInternal();
 			}
 
-			scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -162,10 +180,10 @@ namespace gsc
 					return value->u.stringValue;
 				}
 
-				scr_error(va("Type %s is not a localized string", var_typename[value->type]));
+				gsc::scr_error(va("Type %s is not a localized string", var_typename[value->type]));
 			}
 
-			scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -183,7 +201,7 @@ namespace gsc
 			{
 				if (!std::isalnum(static_cast<unsigned char>(token[char_iter])) && token[char_iter] != '_')
 				{
-					scr_error(va("Illegal localized string reference: %s must contain only alpha-numeric characters and underscores", token));
+					gsc::scr_error(va("Illegal localized string reference: %s must contain only alpha-numeric characters and underscores", token));
 				}
 			}
 		}
@@ -199,10 +217,10 @@ namespace gsc
 					return;
 				}
 
-				scr_error(va("Type %s is not a vector", var_typename[value->type]));
+				gsc::scr_error(va("Type %s is not a vector", var_typename[value->type]));
 			}
 
-			scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 		}
 
 		int scr_get_int(unsigned int index)
@@ -215,10 +233,10 @@ namespace gsc
 					return value->u.intValue;
 				}
 
-				scr_error(va("Type %s is not an int", var_typename[value->type]));
+				gsc::scr_error(va("Type %s is not an int", var_typename[value->type]));
 			}
 
-			scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -237,10 +255,10 @@ namespace gsc
 					return static_cast<float>(value->u.intValue);
 				}
 
-				scr_error(va("Type %s is not a float", var_typename[value->type]));
+				gsc::scr_error(va("Type %s is not a float", var_typename[value->type]));
 			}
 
-			scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0.0f;
 		}
 
@@ -253,10 +271,10 @@ namespace gsc
 					return static_cast<int>(game::GetObjectType((game::scr_VmPub->top - index)->u.uintValue));
 				}
 
-				scr_error(va("Type %s is not an object", var_typename[(game::scr_VmPub->top - index)->type]));
+				gsc::scr_error(va("Type %s is not an object", var_typename[(game::scr_VmPub->top - index)->type]));
 			}
 
-			scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -267,7 +285,7 @@ namespace gsc
 				return (game::scr_VmPub->top - index)->type;
 			}
 
-			scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -278,11 +296,11 @@ namespace gsc
 				return var_typename[(game::scr_VmPub->top - index)->type];
 			}
 
-			scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return nullptr;
 		}
 
-		template <size_t rva>
+		template <size_t address>
 		void safe_func()
 		{
 			static utils::hook::detour hook;
@@ -298,8 +316,7 @@ namespace gsc
 				}
 			};
 
-			const auto ptr = rva + 0_b;
-			hook.create(reinterpret_cast<void*>(ptr), stub);
+			hook.create(reinterpret_cast<void*>(address), stub);
 		}
 	}
 
@@ -325,28 +342,28 @@ namespace gsc
 	public:
 		void post_unpack() override
 		{
-			scr_emit_function_hook.create(SELECT_VALUE(0x3BD680_b, 0x504660_b), &scr_emit_function_stub);
+			scr_emit_function_hook.create(SELECT_VALUE(0x1403BD680, 0x140437B00), &scr_emit_function_stub);
 
-			utils::hook::call(SELECT_VALUE(0x3BD626_b, 0x504606_b), compile_error_stub); // CompileError (LinkFile)
-			utils::hook::call(SELECT_VALUE(0x3BD672_b, 0x504652_b), compile_error_stub); // ^
-			utils::hook::call(SELECT_VALUE(0x3BD75A_b, 0x50473A_b), find_variable_stub); // Scr_EmitFunction
+			utils::hook::call(SELECT_VALUE(0x1403BD626, 0x140437AA6), compile_error_stub); // CompileError (LinkFile)
+			utils::hook::call(SELECT_VALUE(0x1403BD672, 0x140437AF2), compile_error_stub); // ^
+			utils::hook::call(SELECT_VALUE(0x1403BD75A, 0x140437BDA), find_variable_stub); // Scr_EmitFunction
 
 			// Restore basic error messages for commonly used scr functions
-			utils::hook::jump(SELECT_VALUE(0x3C89F0_b, 0x50F9E0_b), scr_get_object);
-			utils::hook::jump(SELECT_VALUE(0x3C84C0_b, 0x50F560_b), scr_get_const_string);
-			utils::hook::jump(SELECT_VALUE(0x3C8280_b, 0x50F320_b), scr_get_const_istring);
-			utils::hook::jump(SELECT_VALUE(0x2D6950_b, 0x452EF0_b), scr_validate_localized_string_ref);
-			utils::hook::jump(SELECT_VALUE(0x3C8F30_b, 0x50FF20_b), scr_get_vector);
-			utils::hook::jump(SELECT_VALUE(0x3C8930_b, 0x50F920_b), scr_get_int);
-			utils::hook::jump(SELECT_VALUE(0x3C87D0_b, 0x50F870_b), scr_get_float);
+			utils::hook::jump(SELECT_VALUE(0x1403C89F0, 0x140442E80), scr_get_object);
+			utils::hook::jump(SELECT_VALUE(0x1403C84C0, 0x140442A00), scr_get_const_string);
+			utils::hook::jump(SELECT_VALUE(0x1403C8280, 0x1404427C0), scr_get_const_istring);
+			utils::hook::jump(SELECT_VALUE(0x1402D6950, 0x1403746F0), scr_validate_localized_string_ref);
+			utils::hook::jump(SELECT_VALUE(0x1403C8F30, 0x1404433C0), scr_get_vector);
+			utils::hook::jump(SELECT_VALUE(0x1403C8930, 0x140442DC0), scr_get_int);
+			utils::hook::jump(SELECT_VALUE(0x1403C87D0, 0x140442D10), scr_get_float);
 
-			utils::hook::jump(SELECT_VALUE(0x3C8C10_b, 0x50FC00_b), scr_get_pointer_type);
-			utils::hook::jump(SELECT_VALUE(0x3C8DE0_b, 0x50FDD0_b), scr_get_type);
-			utils::hook::jump(SELECT_VALUE(0x3C8E50_b, 0x50FE40_b), scr_get_type_name);
+			utils::hook::jump(SELECT_VALUE(0x1403C8C10, 0x1404430A0), scr_get_pointer_type);
+			utils::hook::jump(SELECT_VALUE(0x1403C8DE0, 0x140443270), scr_get_type);
+			utils::hook::jump(SELECT_VALUE(0x1403C8E50, 0x1404432E0), scr_get_type_name);
 
 			if (!game::environment::is_sp())
 			{
-				safe_func<0xBA7A0>(); // fix vlobby cac crash
+				safe_func<0x140376DC0>(); // fix vlobby cac crash
 			}
 		}
 

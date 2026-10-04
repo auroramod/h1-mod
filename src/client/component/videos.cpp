@@ -36,7 +36,8 @@ namespace videos
 	public:
 		void post_unpack() override
 		{
-			playvid_hook.create(SELECT_VALUE(0x1404A9D00, 0x1405B0AF0), &playvid);
+			// SP address is from old 1.04 SP, not 1.15 SP
+			playvid_hook.create(SELECT_VALUE(0x1404A9D00, 0x1405B0AF0), &playvid); // R_Cinematic_StartPlayback
 
 			if (game::environment::is_mp())
 			{
@@ -53,4 +54,4 @@ namespace videos
 	};
 }
 
-//REGISTER_COMPONENT(videos::component)
+REGISTER_COMPONENT(videos::component)

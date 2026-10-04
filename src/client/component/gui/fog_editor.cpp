@@ -48,10 +48,9 @@ namespace gui::fog_editor
 	{
 		bool parse_art_file = true;
 
-		utils::hook::detour cg_parse_client_visionset_triggers;
 		void cg_parse_client_visionset_triggers_stub(const char* buffer)
 		{
-			return cg_parse_client_visionset_triggers.invoke<void>(parse_art_file ? buffer : nullptr);
+			utils::hook::invoke<void>(0x1400BEB60, parse_art_file ? buffer : nullptr); // CG_ParseClientVisionsetTriggers
 		}
 
 		bool atmos_height_fog = false;
@@ -183,7 +182,7 @@ namespace gui::fog_editor
 				return;
 			}
 
-			cg_parse_client_visionset_triggers.create(0x10F920_b, &cg_parse_client_visionset_triggers_stub);
+			utils::hook::call(0x1400CAA6F, cg_parse_client_visionset_triggers_stub);
 			gui::register_menu("fog_editor", "Fog Editor", render_window);
 		}
 	};

@@ -1,6 +1,5 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-
 #include "system_check.hpp"
 
 #include "game/game.hpp"
@@ -51,6 +50,7 @@ namespace system_check
 
 		bool is_system_valid()
 		{
+			// 1.15 zones (binary is 1.04)
 			static std::unordered_map<std::string, std::string> mp_zone_hashes =
 			{
 				{"patch_ui_mp.ff", "A308EE76F49E7FF6B30B33CB37D77282"},
@@ -66,16 +66,28 @@ namespace system_check
 
 		void verify_binary_version()
 		{
-			const auto value = *reinterpret_cast<DWORD*>(0x1337_b);
-			if (!utils::nt::is_wine())
+			if (utils::nt::is_wine())
+			{
+				return;
+			}
+
+			const auto value = *reinterpret_cast<DWORD*>(0x140001337);
+			if (game::environment::is_sp())
 			{
 				if (value == 0x60202B6A || value == 0xBC0E9FE)
 				{
 					return;
 				}
-				
-				throw std::runtime_error("Unsupported Call of Duty: Modern Warfare Remastered version (1.15)");
+
+				throw std::runtime_error("Unsupported Call of Duty: Modern Warfare Remastered singleplayer version (1.15)");
 			}
+
+			if (value == 0xFFB80080)
+			{
+				return;
+			}
+
+			throw std::runtime_error("Unsupported Call of Duty: Modern Warfare Remastered multiplayer version (1.04)");
 		}
 	}
 
@@ -92,11 +104,14 @@ namespace system_check
 		{
 			verify_binary_version();
 
-			if (!is_valid())
+			std::thread([]
 			{
-				MSG_BOX_INFO("Your game files are outdated or unsupported.\n"
-					"Please get the latest officially supported Call of Duty: Modern Warfare Remastered files, or you will get random crashes and issues.");
-			}
+				if (!is_valid())
+				{
+					MSG_BOX_INFO("Your game files are outdated or unsupported.\n"
+						"Please get the latest officially supported Call of Duty: Modern Warfare Remastered files, or you will get random crashes and issues.");
+				}
+			}).detach();
 		}
 	};
 }

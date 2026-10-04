@@ -1,4 +1,5 @@
 #pragma once
+#include "game/game.hpp"
 
 namespace fps
 {

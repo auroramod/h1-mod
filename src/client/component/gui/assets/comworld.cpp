@@ -29,10 +29,10 @@ namespace gui::asset_list::comworld
 					ImGui::PushID(i);
 
 					ImGui::Text("index: %d", i);
-					InputU8("type", (uint8_t*)&asset->primaryLights[i].type);
-					InputU8("canUseShadowMap", (uint8_t*)&asset->primaryLights[i].canUseShadowMap);
-					InputU8("physicallyBased", (uint8_t*)&asset->primaryLights[i].physicallyBased);
-					InputU8("exponent", (uint8_t*)&asset->primaryLights[i].exponent);
+					gui::InputU8("type", (uint8_t*)&asset->primaryLights[i].type);
+					gui::InputU8("canUseShadowMap", (uint8_t*)&asset->primaryLights[i].canUseShadowMap);
+					gui::InputU8("physicallyBased", (uint8_t*)&asset->primaryLights[i].physicallyBased);
+					gui::InputU8("exponent", (uint8_t*)&asset->primaryLights[i].exponent);
 					ImGui::InputFloat3("color", asset->primaryLights[i].color);
 					ImGui::InputFloat3("dir", asset->primaryLights[i].dir);
 					ImGui::InputFloat3("up", asset->primaryLights[i].up);
@@ -72,7 +72,7 @@ namespace gui::asset_list::comworld
 	public:
 		void post_unpack() override
 		{
-			gui::asset_list::add_asset_view<game::ComWorld>(game::ASSET_TYPE_COMWORLD, draw_window);
+			asset_list::add_asset_view<game::ComWorld>(game::ASSET_TYPE_COMWORLD, draw_window);
 		}
 	};
 }

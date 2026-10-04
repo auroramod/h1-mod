@@ -25,6 +25,8 @@ namespace game
 		std::string get_string();
 	}
 
+	// absolute addresses (image is always mapped at 0x140000000)
+	// sp = 1.15 singleplayer, mp = 1.04 multiplayer/dedicated
 	template <typename T>
 	class symbol
 	{
@@ -39,10 +41,10 @@ namespace game
 		{
 			if (environment::is_sp())
 			{
-				return reinterpret_cast<T*>((uint64_t)sp_object_ + base_address);
+				return sp_object_;
 			}
 
-			return reinterpret_cast<T*>((uint64_t)mp_object_ + base_address);
+			return mp_object_;
 		}
 
 		operator T* () const
@@ -75,11 +77,12 @@ namespace game
 	void Cmd_TokenizeString(const char* text);
 	void Cmd_EndTokenizeString();
 
+	const char* Dvar_ValueToString(dvar_t* dvar, bool is_hashed, dvar_value value);
+
 	unsigned int SND_GetSoundFileLength(SoundFile* soundfile);
 	unsigned int SND_SV_LookupSoundLength(const char* name);
 }
 
-size_t operator"" _b(const size_t ptr);
 size_t reverse_b(const size_t ptr);
 size_t reverse_b(const void* ptr);
 

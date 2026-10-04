@@ -1,6 +1,6 @@
 #pragma once
-
 #include "game/game.hpp"
+struct DiscordUser;
 
 namespace discord
 {

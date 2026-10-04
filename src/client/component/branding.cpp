@@ -13,15 +13,16 @@
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 
-// fonts/default.otf, fonts/defaultBold.otf, fonts/fira_mono_regular.ttf, fonts/fira_mono_bold.ttf
-
 namespace branding
 {
 	namespace
 	{
-		game::dvar_t* branding = nullptr;
+		// fonts/default.otf, fonts/defaultBold.otf, fonts/fira_mono_regular.ttf, fonts/fira_mono_bold.ttf
+
+		game::dvar_t* branding_dvar = nullptr;
 
 		utils::hook::detour ui_get_formatted_build_number_hook;
+
 		const char* ui_get_formatted_build_number_stub()
 		{
 			const auto build_num = ui_get_formatted_build_number_hook.invoke<const char*>();
@@ -30,7 +31,7 @@ namespace branding
 
 		void draw_branding()
 		{
-			if (branding == nullptr || !branding->current.enabled)
+			if (branding_dvar == nullptr || !branding_dvar->current.enabled)
 			{
 				return;
 			}
@@ -75,12 +76,12 @@ namespace branding
 
 			scheduler::once([]()
 			{
-				branding = dvars::register_bool("branding", true, game::DVAR_FLAG_SAVED, "Show brainding in the top left corner");
+				branding_dvar = dvars::register_bool("branding", true, game::DVAR_ARCHIVE, "Show brainding in the top left corner");
 			}, scheduler::renderer);
 			scheduler::loop(draw_branding, scheduler::renderer);
 
 			ui_get_formatted_build_number_hook.create(
-				SELECT_VALUE(0x406EC0_b, 0x1DF300_b), ui_get_formatted_build_number_stub);
+				SELECT_VALUE(0x140406EC0, 0x1404E74C0), ui_get_formatted_build_number_stub);
 		}
 	};
 }

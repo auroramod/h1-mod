@@ -7,6 +7,7 @@
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
+#include "component/config_strings.hpp"
 #include "component/scheduler.hpp"
 #include "component/command.hpp"
 #include "component/scripting.hpp"
@@ -33,8 +34,8 @@ namespace conststrings
 			ImGuiListClipper clipper;
 			clipper.Begin(game::MAX_CONFIGSTRINGS);
 
-			const auto config_strings = reinterpret_cast<int*>(0x2DD1E24_b);
-			const auto mt_buffer = *reinterpret_cast<std::size_t*>(0xAC87D00_b);
+			const auto config_strings = config_strings::get_server_config_strings();
+			const auto mt_buffer = *reinterpret_cast<std::size_t*>(0x149818380);
 
 			while (clipper.Step())
 			{

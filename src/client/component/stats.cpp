@@ -1,15 +1,12 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
-#include "scheduler.hpp"
 #include "dvars.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
-#include <utils/nt.hpp>
 #include <utils/hook.hpp>
-#include <utils/flags.hpp>
 
 namespace stats
 {
@@ -57,24 +54,24 @@ namespace stats
 				return;
 			}
 
-			utils::hook::jump(0x19E6E0_b, is_item_unlocked, true);
+			utils::hook::jump(0x140413E60, is_item_unlocked, true);
 
 			if (game::environment::is_dedi())
 			{
-				utils::hook::jump(0x19E070_b, is_item_unlocked, true);
-				utils::hook::jump(0x19D390_b, is_item_unlocked, true);
-				utils::hook::jump(0x19D140_b, is_item_unlocked, true);
+				utils::hook::jump(0x140413860, is_item_unlocked, true); // LiveStorage_IsItemUnlockedFromTable
+				utils::hook::jump(0x140412B70, is_item_unlocked, true);
+				utils::hook::jump(0x140412A00, is_item_unlocked, true);
 			}
 			else
 			{
-				is_item_unlocked_hook.create(0x19E070_b, is_item_unlocked_stub);
-				is_item_unlocked_hook2.create(0x19D140_b, is_item_unlocked_stub2);
+				is_item_unlocked_hook.create(0x140413860, is_item_unlocked_stub); // LiveStorage_IsItemUnlockedFromTable
+				is_item_unlocked_hook2.create(0x140412A00, is_item_unlocked_stub2);
 
-				cg_unlock_all_items = dvars::register_bool("cg_unlockall_items", false, game::DVAR_FLAG_SAVED,
+				cg_unlock_all_items = dvars::register_bool("cg_unlockall_items", false, game::DVAR_ARCHIVE,
 					"Whether items should be locked based on the player's stats or always unlocked.");
-				dvars::register_bool("cg_unlockall_classes", false, game::DVAR_FLAG_SAVED,
+				dvars::register_bool("cg_unlockall_classes", false, game::DVAR_ARCHIVE,
 					"Whether classes should be locked based on the player's stats or always unlocked.");
-				cg_unlock_all_loot = dvars::register_bool("cg_unlockall_loot", false, game::DVAR_FLAG_SAVED,
+				cg_unlock_all_loot = dvars::register_bool("cg_unlockall_loot", false, game::DVAR_ARCHIVE,
 					"Whether loot should be locked based on the player's stats or always unlocked.");
 			}
 		}

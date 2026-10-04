@@ -31,7 +31,7 @@ namespace resources
 	class component final : public component_interface
 	{
 	public:
-		~component() override
+		~component()
 		{
 			if (icon) DestroyIcon(icon);
 			if (logo) DeleteObject(logo);

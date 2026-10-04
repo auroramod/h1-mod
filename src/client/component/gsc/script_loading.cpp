@@ -75,7 +75,7 @@ namespace gsc
 			init_handles.clear();
 			loaded_scripts.clear();
 			scriptfile_allocator.clear();
-			clear_devmap();
+			gsc::clear_devmap();
 			free_script_memory();
 		}
 
@@ -176,7 +176,7 @@ namespace gsc
 				const auto devmap = std::get<2>(output_script);
 				if (devmap.size > 0 && (gsc_ctx->build() & xsk::gsc::build::dev_maps) != xsk::gsc::build::prod)
 				{
-					add_devmap_entry(reinterpret_cast<std::uint8_t*>(script_file_ptr->bytecode), byte_code_size, real_name, devmap);
+					gsc::add_devmap_entry(reinterpret_cast<std::uint8_t*>(script_file_ptr->bytecode), byte_code_size, real_name, devmap);
 				}
 
 				console::info("Loaded custom gsc '%s.gsc'", real_name.data());
@@ -190,16 +190,6 @@ namespace gsc
 				console::error("**********************************************\n");
 				return nullptr;
 			}
-		}
-
-		std::string get_raw_script_file_name(const std::string& name)
-		{
-			if (name.ends_with(".gsh"))
-			{
-				return name;
-			}
-
-			return name;
 		}
 
 		std::string get_script_file_name(const std::string& name)
@@ -281,20 +271,8 @@ namespace gsc
 			}
 		}
 
-		int db_is_x_asset_default(game::XAssetType type, const char* name)
+		void load_custom_scripts()
 		{
-			if (loaded_scripts.contains(name))
-			{
-				return 0;
-			}
-
-			return game::DB_IsXAssetDefault(type, name);
-		}
-
-		void load_gametype_script_stub(void* a1, void* a2)
-		{
-			utils::hook::invoke<void>(SELECT_VALUE(0x2B9DA0_b, 0x18BC00_b), a1, a2);
-
 			for (const auto& path : filesystem::get_search_paths())
 			{
 				if (game::environment::is_sp())
@@ -320,6 +298,22 @@ namespace gsc
 			}
 		}
 
+		int db_is_x_asset_default(game::XAssetType type, const char* name)
+		{
+			if (loaded_scripts.contains(name))
+			{
+				return 0;
+			}
+
+			return game::DB_IsXAssetDefault(type, name);
+		}
+
+		void load_gametype_script_stub(void* a1, void* a2)
+		{
+			utils::hook::invoke<void>(SELECT_VALUE(0x1402B9DA0, 0x14037C220), a1, a2);
+			load_custom_scripts();
+		}
+
 		void db_get_raw_buffer_stub(const game::RawFile* rawfile, char* buf, const int size)
 		{
 			if (rawfile->len > 0 && rawfile->compressedLen == 0)
@@ -335,6 +329,7 @@ namespace gsc
 		void scr_begin_load_scripts_stub()
 		{
 			// s1-mod reimplements this canonically, but for now, let all dev features be used in `developer_script 1`
+			const auto* developer_script = gsc::developer_script;
 			const bool dev_script = developer_script ? developer_script->current.enabled : false;
 			const auto build = dev_script ?
 				xsk::gsc::build::dev :
@@ -416,17 +411,17 @@ namespace gsc
 		void post_unpack() override
 		{
 			// Load our scripts with an uncompressed stack
-			utils::hook::call(SELECT_VALUE(0x3C7280_b, 0x50E3C0_b), db_get_raw_buffer_stub);
+			utils::hook::call(SELECT_VALUE(0x1403C7280, 0x140441860), db_get_raw_buffer_stub);
 
-			scr_begin_load_scripts_hook.create(SELECT_VALUE(0x3BDB90_b, 0x504BC0_b), scr_begin_load_scripts_stub);
-			scr_end_load_scripts_hook.create(SELECT_VALUE(0x3BDCC0_b, 0x504CF0_b), scr_end_load_scripts_stub);
+			scr_begin_load_scripts_hook.create(SELECT_VALUE(0x1403BDB90, 0x140438060), scr_begin_load_scripts_stub);
+			scr_end_load_scripts_hook.create(SELECT_VALUE(0x1403BDCC0, 0x140438190), scr_end_load_scripts_stub);
 
 			// ProcessScript: hook xasset functions to return our own custom scripts
-			utils::hook::call(SELECT_VALUE(0x3C7217_b, 0x50E357_b), find_script);
-			utils::hook::call(SELECT_VALUE(0x3C7227_b, 0x50E367_b), db_is_x_asset_default);
+			utils::hook::call(SELECT_VALUE(0x1403C7217, 0x1404417F7), find_script);
+			utils::hook::call(SELECT_VALUE(0x1403C7227, 0x140441807), db_is_x_asset_default);
 
 			// GScr_LoadScripts: initial loading of scripts
-			utils::hook::call(SELECT_VALUE(0x2BA152_b, 0x18C325_b), load_gametype_script_stub);
+			utils::hook::call(SELECT_VALUE(0x1402BA152, 0x14037C945), load_gametype_script_stub);
 
 			// main is called from scripting.cpp
 			// init is called from scripting.cpp

@@ -1,6 +1,7 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
+
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -112,7 +113,7 @@ namespace gui::asset_list::material
 			}
 
 #define DRAW_ASSET_PROPERTY_INPUT_U8(__name__) \
-				InputU8(#__name__, &asset->__name__); \
+				gui::InputU8(#__name__, &asset->__name__); \
 
 #define DRAW_ASSET_PROPERTY_INPUT_S32(__name__) \
 				ImGui::InputInt(#__name__, &asset->__name__); \
@@ -131,7 +132,7 @@ namespace gui::asset_list::material
 			DRAW_ASSET_PROPERTY_COPY(name);
 			DRAW_ASSET_PROPERTY_COPY(techniqueSet->name);
 
-			add_view_button(0, game::ASSET_TYPE_TECHNIQUE_SET, asset->techniqueSet->name);
+			asset_list::add_view_button(0, game::ASSET_TYPE_TECHNIQUE_SET, asset->techniqueSet->name);
 
 			ImGui::Separator();
 
@@ -163,7 +164,7 @@ namespace gui::asset_list::material
 					if (ImGui::DragFloat4("##constant", asset->constantTable[i].literal, 0.01f))
 					{
 						copy_constant_table_to_cbt(asset);
-						utils::hook::invoke<void>(SELECT_VALUE(0x691200_b, 0x691200_b), asset->constantBufferCount, asset); // refresh buffers
+						utils::hook::invoke<void>(SELECT_VALUE(0x140691200, 0x1405E99E0), asset->constantBufferCount, asset); // refresh buffers
 					}
 					ImGui::PopID();
 				}
@@ -177,18 +178,18 @@ namespace gui::asset_list::material
 				for (auto i = 0; i < asset->stateBitsCount; i++)
 				{
 					ImGui::PushID(i);
-					if (InputUInt6("##loadBits", asset->stateBitsTable[i].loadBits))
+					if (gui::InputUInt6("##loadBits", asset->stateBitsTable[i].loadBits))
 					{
-						
+
 					}
 					ImGui::PopID();
 				}
 				ImGui::Separator();
 			}
 
-			if (InputU8("info.sortKey", &asset->info.sortKey))
+			if (gui::InputU8("info.sortKey", &asset->info.sortKey))
 			{
-				utils::hook::invoke<void>(SELECT_VALUE(0x56E040_b, 0x6915B0_b)); // Material_DirtySort
+				utils::hook::invoke<void>(SELECT_VALUE(0x14056E040, 0x1405E9D90)); // Material_DirtySort
 			}
 
 			DRAW_ASSET_PROPERTY_INPUT_U8(info.gameFlags);
@@ -214,7 +215,7 @@ namespace gui::asset_list::material
 	public:
 		void post_unpack() override
 		{
-			gui::asset_list::add_asset_view<game::Material>(game::ASSET_TYPE_MATERIAL, draw_material_window);
+			asset_list::add_asset_view<game::Material>(game::ASSET_TYPE_MATERIAL, draw_material_window);
 		}
 	};
 }

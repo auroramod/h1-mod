@@ -26,7 +26,7 @@
 		if (__dvar__ != nullptr) ImGui::DragFloat(__string__, &__dvar__->current.value, __step__, __dvar__->domain.value.min, __dvar__->domain.value.max); \
 
 #define ADD_COLOUR(__string__, __dvar__) \
-		if (__dvar__ != nullptr) ImGui::ColorEdit3(__string__, __dvar__->current.vector); \
+		if (__dvar__ != nullptr) ImGui::ColorEdit3(__string__, __dvar__->current.vector, ImGuiColorEditFlags_Float); \
 
 #define ADD_INT(__string__, __dvar__) \
 		if (__dvar__ != nullptr) ImGui::DragInt(__string__, &__dvar__->current.integer, 1.0f, __dvar__->domain.integer.min, __dvar__->domain.integer.max); \
