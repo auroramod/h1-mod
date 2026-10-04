@@ -122,6 +122,33 @@ void config_strings::relocate_type_map()
 	{
 		relocate_lea(address, config_string_type_map, reinterpret_cast<std::size_t>(type_map));
 	}
+
+	for (const auto address : type_map_rva_references)
+	{
+		relocate_rva(address, config_string_type_map, reinterpret_cast<std::size_t>(type_map));
+	}
+}
+
+void config_strings::relocate_rva(const std::size_t address, const std::size_t old_target, const std::size_t new_target)
+{
+	const auto old_rva = static_cast<std::int64_t>(old_target - image_base);
+	const auto new_rva = static_cast<std::int64_t>(new_target) - static_cast<std::int64_t>(image_base);
+	if (new_rva != static_cast<std::int32_t>(new_rva))
+	{
+		throw std::runtime_error(utils::string::va("config string rva to %llX out of range (%llX)", new_target, address));
+	}
+
+	for (auto i = 3u; i <= 5; i++)
+	{
+		const auto disp = reinterpret_cast<std::int32_t*>(address + i);
+		if (*disp == old_rva)
+		{
+			utils::hook::set<std::int32_t>(disp, static_cast<std::int32_t>(new_rva));
+			return;
+		}
+	}
+
+	throw std::runtime_error(utils::string::va("config string rva to %llX not found (%llX)", old_target, address));
 }
 
 void config_strings::patch_value(const std::size_t address, const std::uint32_t old_value, const std::uint32_t new_value)

@@ -113,6 +113,10 @@ void patches::patch_mp()
 	// fix vid_restart crash
 	utils::hook::set<uint8_t>(0x140255AE0, 0xC3);
 
+	// send link info for agents like 1.15
+	utils::hook::nop(0x140346788, 14); // UpdateLinkInfoForClients
+	utils::hook::call(0x1400C389F, cg_calc_agent_lerp_positions_stub);
+
 	const std::uint8_t anim_items_limit[] = {0xC7, 0x07, 0x45, 0x00, 0x00, 0x00};
 	utils::hook::copy(0x1401CB6F0, anim_items_limit, sizeof(anim_items_limit));
 	utils::hook::nop(0x1401CB6F6, 11);
@@ -549,6 +553,16 @@ void patches::com_quit_f_stub()
 {
 	console::info("quitting...\n");
 	com_quit_f_hook.invoke<void>();
+}
+
+void patches::cg_calc_agent_lerp_positions_stub(const int local_client_num, std::uint8_t* cent)
+{
+	if (cent[0x146] == 18 && (*reinterpret_cast<std::uint32_t*>(cent + 0x210) & 0x7FF) != 0)
+	{
+		return;
+	}
+
+	utils::hook::invoke<void>(0x1400A4E30, local_client_num, cent); // CG_CalcEntityLerpPositions
 }
 
 REGISTER_COMPONENT(patches)

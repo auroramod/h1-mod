@@ -25,6 +25,9 @@ void lui::post_unpack()
 		utils::hook::call(0x14016324B, begin_game_message_event_stub);
 		utils::hook::call(0x1400A124F, cg_entity_event_stub);
 
+		// fix MPDepotMenu staying hidden until vlDepotLoaded is set
+		utils::hook::call(0x1400DC0EE, vl_depot_loaded_stub);
+
 		// increase to 1.15 MP frontend LUI heap
 		utils::hook::set<std::uint32_t>(0x1401751CC + 1, 0x900000);
 		utils::hook::set<std::uint32_t>(0x140176570 + 1, 0x900000);
@@ -108,6 +111,17 @@ void lui::cg_entity_event_stub(void* a1, void* a2, unsigned int event_type, void
 	}
 
 	utils::hook::invoke<void>(0x1400ACB60, a1, a2, event_type, a4);
+}
+
+void lui::vl_depot_loaded_stub(game::dvar_t* dvar, bool value)
+{
+	utils::hook::invoke<void>(0x1404FCDF0, dvar, value); // Dvar_SetBool
+
+	if (dvar->flags & 0x20000)
+	{
+		const auto controller = utils::hook::invoke<int>(0x140288BD0, 0); // CL_ControllerIndexFromClientNum
+		utils::hook::invoke<void>(0x14016A500, controller, dvar, *game::hks::lua_state); // LUI_NotifyDvarChanged
+	}
 }
 
 REGISTER_COMPONENT(lui)

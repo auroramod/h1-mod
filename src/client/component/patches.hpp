@@ -35,4 +35,5 @@ private:
 	static game::dvar_t* register_bool_stub(const int hash, __int64 name, const bool value, const unsigned int flags);
 	static void sv_shutdown_stub(const char* finalmsg);
 	static void com_quit_f_stub();
+	static void cg_calc_agent_lerp_positions_stub(int local_client_num, std::uint8_t* cent);
 };

@@ -74,6 +74,12 @@ private:
 		0x1401C97FA, 0x1401CA0EF, 0x1401CA1EA, 0x1401CA21A,
 	};
 
+	// image base relative accesses (NetConstStrings config string lookup and type map build)
+	static constexpr std::size_t type_map_rva_references[] =
+	{
+		0x1401CA12C, 0x1401CA3EE,
+	};
+
 	struct net_const_string_range
 	{
 		unsigned int start;
@@ -86,6 +92,7 @@ private:
 
 	static void patch_value(std::size_t address, std::uint32_t old_value, std::uint32_t new_value);
 	static void relocate_lea(std::size_t address, std::size_t old_target, std::size_t new_target);
+	static void relocate_rva(std::size_t address, std::size_t old_target, std::size_t new_target);
 
 	static void sv_clear_server_stub();
 };
