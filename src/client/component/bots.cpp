@@ -1,6 +1,5 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "bots.hpp"
 
 #include "command.hpp"
 #include "console.hpp"
@@ -17,139 +16,149 @@
 #include <utils/cryptography.hpp>
 #include <utils/io.hpp>
 
-static utils::hook::detour get_bot_name_hook;
-static std::vector<std::string> bot_names{};
-static size_t bot_id = 0;
-
-void bots::post_unpack()
+namespace bots
 {
-	if (game::environment::is_sp())
+	namespace
 	{
-		return;
-	}
+		utils::hook::detour get_bot_name_hook;
+		std::vector<std::string> bot_names{};
+		size_t bot_id = 0;
 
-	get_bot_name_hook.create(game::SV_BotGetRandomName, get_random_bot_name);
-
-	command::add("spawnBot", [](const command::params& params)
-	{
-		if (!bots::can_add())
+		bool can_add()
 		{
-			return;
+			return party::get_client_count() < *game::mp::svs_numclients
+				&& game::SV_Loaded() && !game::VirtualLobby_Loaded();
 		}
 
-		auto num_bots = 1;
-		if (params.size() == 2)
+		void join_team(const int entity_num)
 		{
-			num_bots = atoi(params.get(1));
+			const game::scr_entref_t entref{static_cast<uint16_t>(entity_num), 0};
+			scheduler::once([entref]
+			{
+				scripting::notify(entref, "luinotifyserver", {"team_select", 2});
+				scheduler::once([entref]
+				{
+					auto* _class = utils::string::va("class%d", utils::cryptography::random::get_integer() % 5);
+					scripting::notify(entref, "luinotifyserver", {"class_select", _class});
+				}, scheduler::pipeline::server, 2s);
+			}, scheduler::pipeline::server, 2s);
 		}
 
-		num_bots = std::min(num_bots, *game::mp::svs_numclients);
-
-		for (auto i = 0; i < num_bots; i++)
+		void spawn(const int entity_num)
 		{
-			scheduler::once(bots::add, scheduler::pipeline::server, 100ms * i);
+			game::SV_SpawnTestClient(&game::mp::g_entities[entity_num]);
+			if (game::Com_GetCurrentCoDPlayMode() == game::CODPLAYMODE_CORE)
+			{
+				join_team(entity_num);
+			}
 		}
-	});
 
-	// Clear bot names and reset ID on game shutdown to allow new names to be added without restarting
-	scripting::on_shutdown([](bool /*free_scripts*/, bool post_shutdown)
-	{
-		if (!post_shutdown)
+		void add()
 		{
-			bot_names.clear();
-			bot_id = 0;
+			if (!can_add())
+			{
+				return;
+			}
+
+			const auto* const bot_name = game::SV_BotGetRandomName();
+
+			if (const auto* bot_ent = game::SV_AddBot(bot_name))
+			{
+				spawn(bot_ent->s.number);
+			}
+			else
+			{
+				scheduler::once([]
+				{
+					add();
+				}, scheduler::pipeline::server, 100ms);
+			}
 		}
-	});
-}
 
-bool bots::can_add()
-{
-	return party::get_client_count() < *game::mp::svs_numclients
-		&& game::SV_Loaded() && !game::VirtualLobby_Loaded();
-}
-
-void bots::join_team(const int entity_num)
-{
-	const game::scr_entref_t entref{static_cast<uint16_t>(entity_num), 0};
-	scheduler::once([entref]
-	{
-		scripting::notify(entref, "luinotifyserver", {"team_select", 2});
-		scheduler::once([entref]
+		void load_bot_data()
 		{
-			auto* _class = utils::string::va("class%d", utils::cryptography::random::get_integer() % 5);
-			scripting::notify(entref, "luinotifyserver", {"class_select", _class});
-		}, scheduler::pipeline::server, 2s);
-	}, scheduler::pipeline::server, 2s);
-}
+			static const char* bots_txt = "h1-mod/bots.txt";
 
-void bots::spawn(const int entity_num)
-{
-	game::SV_SpawnTestClient(&game::mp::g_entities[entity_num]);
-	if (game::Com_GetCurrentCoDPlayMode() == game::CODPLAYMODE_CORE)
-	{
-		bots::join_team(entity_num);
-	}
-}
+			std::string bots_content;
+			if (!utils::io::read_file(bots_txt, &bots_content))
+			{
+				return;
+			}
 
-void bots::add()
-{
-	if (!can_add())
-	{
-		return;
-	}
+			auto names = utils::string::split(bots_content, '\n');
+			for (auto& name : names)
+			{
+				name = utils::string::replace(name, "\r", "");
+				if (!name.empty())
+				{
+					bot_names.emplace_back(name);
+				}
+			}
+		}
 
-	const auto* const bot_name = game::SV_BotGetRandomName();
-
-	if (const auto* bot_ent = game::SV_AddBot(bot_name))
-	{
-		bots::spawn(bot_ent->s.number);
-	}
-	else
-	{
-		scheduler::once([]
+		const char* get_random_bot_name()
 		{
-			bots::add();
-		}, scheduler::pipeline::server, 100ms);
-	}
-}
+			if (bot_names.empty())
+			{
+				load_bot_data();
+			}
 
-void bots::load_bot_data()
-{
-	static const char* bots_txt = "h1-mod/bots.txt";
+			// only use bot names once, no dupes in names
+			if (!bot_names.empty() && bot_id < bot_names.size())
+			{
+				bot_id %= bot_names.size();
+				const auto& entry = bot_names.at(bot_id++);
+				return utils::string::va("%.*s", static_cast<int>(entry.size()), entry.data());
+			}
 
-	std::string bots_content;
-	if (!utils::io::read_file(bots_txt, &bots_content))
-	{
-		return;
-	}
-
-	auto names = utils::string::split(bots_content, '\n');
-	for (auto& name : names)
-	{
-		name = utils::string::replace(name, "\r", "");
-		if (!name.empty())
-		{
-			bot_names.emplace_back(name);
+			return get_bot_name_hook.invoke<const char*>();
 		}
 	}
+
+	class component final : public component_interface
+	{
+	public:
+		void post_unpack() override
+		{
+			if (game::environment::is_sp())
+			{
+				return;
+			}
+
+			get_bot_name_hook.create(game::SV_BotGetRandomName, get_random_bot_name);
+
+			command::add("spawnBot", [](const command::params& params)
+			{
+				if (!can_add())
+				{
+					return;
+				}
+
+				auto num_bots = 1;
+				if (params.size() == 2)
+				{
+					num_bots = atoi(params.get(1));
+				}
+
+				num_bots = std::min(num_bots, *game::mp::svs_numclients);
+
+				for (auto i = 0; i < num_bots; i++)
+				{
+					scheduler::once(add, scheduler::pipeline::server, 100ms * i);
+				}
+			});
+
+			// Clear bot names and reset ID on game shutdown to allow new names to be added without restarting
+			scripting::on_shutdown([](bool /*free_scripts*/, bool post_shutdown)
+			{
+				if (!post_shutdown)
+				{
+					bot_names.clear();
+					bot_id = 0;
+				}
+			});
+		}
+	};
 }
 
-const char* bots::get_random_bot_name()
-{
-	if (bot_names.empty())
-	{
-		load_bot_data();
-	}
-
-	// only use bot names once, no dupes in names
-	if (!bot_names.empty() && bot_id < bot_names.size())
-	{
-		bot_id %= bot_names.size();
-		const auto& entry = bot_names.at(bot_id++);
-		return utils::string::va("%.*s", static_cast<int>(entry.size()), entry.data());
-	}
-
-	return get_bot_name_hook.invoke<const char*>();
-}
-
-REGISTER_COMPONENT(bots)
+REGISTER_COMPONENT(bots::component)

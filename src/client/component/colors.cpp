@@ -1,6 +1,5 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "colors.hpp"
 
 #include "game/game.hpp"
 #include "game/dvars.hpp"
@@ -8,206 +7,232 @@
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 
-static game::dvar_t* r_color_mode = nullptr;
-
-static std::vector<DWORD> color_table[2];
-
-void colors::post_unpack()
+namespace colors
 {
-	if (game::environment::is_dedi())
+	namespace
 	{
-		return;
+		constexpr auto MAX_COLOR_INDEX = 15;
+
+		struct hsv_color
+		{
+			unsigned char h;
+			unsigned char s;
+			unsigned char v;
+		};
+
+		enum color_mode_t
+		{
+			mode_original,
+			mode_custom,
+			mode_count,
+		};
+
+		game::dvar_t* r_color_mode = nullptr;
+
+		std::vector<DWORD> color_table[2];
+
+		DWORD hsv_to_rgb(const hsv_color hsv)
+		{
+			DWORD rgb;
+
+			if (hsv.s == 0)
+			{
+				return RGB(hsv.v, hsv.v, hsv.v);
+			}
+
+			// converting to 16 bit to prevent overflow
+			const unsigned int h = hsv.h;
+			const unsigned int s = hsv.s;
+			const unsigned int v = hsv.v;
+
+			const auto region = static_cast<uint8_t>(h / 43);
+			const auto remainder = (h - (region * 43)) * 6;
+
+			const auto p = static_cast<uint8_t>((v * (255 - s)) >> 8);
+			const auto q = static_cast<uint8_t>(
+				(v * (255 - ((s * remainder) >> 8))) >> 8);
+			const auto t = static_cast<uint8_t>(
+				(v * (255 - ((s * (255 - remainder)) >> 8))) >> 8);
+
+			switch (region)
+			{
+			case 0:
+				rgb = RGB(v, t, p);
+				break;
+			case 1:
+				rgb = RGB(q, v, p);
+				break;
+			case 2:
+				rgb = RGB(p, v, t);
+				break;
+			case 3:
+				rgb = RGB(p, q, v);
+				break;
+			case 4:
+				rgb = RGB(t, p, v);
+				break;
+			default:
+				rgb = RGB(v, p, q);
+				break;
+			}
+
+			return rgb;
+		}
+
+		int color_index(const char c)
+		{
+			const auto index = c - 48; // ASCII table
+			return (index > MAX_COLOR_INDEX ? 7 : index);
+		}
+
+		char add(const std::int32_t mode, const uint8_t r, const uint8_t g, const uint8_t b)
+		{
+			const char index = '0' + static_cast<char>(color_table[mode].size());
+
+			if (mode == -1)
+			{
+				color_table[mode_original].emplace_back(RGB(r, g, b));
+				color_table[mode_custom].emplace_back(RGB(r, g, b));
+
+			}
+			else
+			{
+				color_table[mode].emplace_back(RGB(r, g, b));
+			}
+
+			return index;
+		}
+
+		void com_clean_name_stub(const char* in, char* out, const int out_size)
+		{
+			// check that the name is at least 3 char without colors
+			char name[32]{};
+
+			game::I_strncpyz(out, in, std::min<int>(out_size, sizeof(name)));
+
+			utils::string::strip(out, name, std::min<int>(out_size, sizeof(name)));
+			if (std::strlen(name) < 3)
+			{
+				game::I_strncpyz(out, "UnnamedPlayer", std::min<int>(out_size, sizeof(name)));
+			}
+		}
+
+		char* i_clean_str_stub(char* string)
+		{
+			utils::string::strip(string, string, static_cast<int>(strlen(string)) + 1);
+
+			return string;
+		}
+
+		size_t get_client_name_stub(const int local_client_num, const int index, char* buf, const int size,
+			const size_t unk, const size_t unk2)
+		{
+			// CL_GetClientName (CL_GetClientNameAndClantag?)
+			const auto result = utils::hook::invoke<size_t>(0x14025BAA0, local_client_num, index, buf, size, unk, unk2);
+
+			utils::string::strip(buf, buf, size);
+
+			return result;
+		}
+
+		void rb_lookup_color_stub(const char index, DWORD* color)
+		{
+			*color = RGB(255, 255, 255);
+
+			switch (index)
+			{
+			case '8':
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F79D288, 0x14FE70634));
+				break;
+			case '9':
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F79D28C, 0x14FE70638));
+				break;
+			case ':':
+				*color = hsv_to_rgb({ static_cast<uint8_t>((game::Sys_Milliseconds() / 100) % 256), 255, 255 });
+				break;
+			case ';':
+				*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F79D294, 0x14FE70640));
+				break;
+			case '<':
+				*color = 0xFFFCFF80;
+				break;
+			default:
+				*color = color_table[r_color_mode->current.integer][color_index(index)];
+				break;
+			}
+		}
 	}
 
-	static const char* color_modes[2]{};
-	color_modes[mode_original] = "original";
-	color_modes[mode_custom] = "custom";
-	r_color_mode = dvars::register_enum("r_colorMode", color_modes, mode_custom, game::DVAR_ARCHIVE, "which color table to use");
-
-	if (!game::environment::is_sp())
+	class component final : public component_interface
 	{
-		// allows colored name in-game (ClientUserinfoChanged)
-		utils::hook::call(0x140328527, com_clean_name_stub);
-		utils::hook::call(0x14032856A, com_clean_name_stub);
+	public:
+		void post_unpack() override
+		{
+			if (game::environment::is_dedi())
+			{
+				return;
+			}
 
-		// don't apply colors to overhead names
-		utils::hook::call(0x1400AB416, get_client_name_stub);
+			static const char* color_modes[2]{};
+			color_modes[mode_original] = "original";
+			color_modes[mode_custom] = "custom";
+			r_color_mode = dvars::register_enum("r_colorMode", color_modes, mode_custom, game::DVAR_ARCHIVE, "which color table to use");
 
-		// patch I_CleanStr
-		utils::hook::jump(0x140503D00, i_clean_str_stub, true);
-	}
+			if (!game::environment::is_sp())
+			{
+				// allows colored name in-game (ClientUserinfoChanged)
+				utils::hook::call(0x140328527, com_clean_name_stub);
+				utils::hook::call(0x14032856A, com_clean_name_stub);
 
-	// make color index higher for more colors (TODO: add to SP later)
-	utils::hook::jump(SELECT_VALUE(0x140428F00, 0x140503800), color_index, true);
-	utils::hook::set<uint8_t>(SELECT_VALUE(0x1405AB13E, 0x14061A1EE), MAX_COLOR_INDEX);
+				// don't apply colors to overhead names
+				utils::hook::call(0x1400AB416, get_client_name_stub);
 
-	// force new colors
-	utils::hook::jump(SELECT_VALUE(0x1405B17E0, 0x1406206A0), rb_lookup_color_stub, true);
+				// patch I_CleanStr
+				utils::hook::jump(0x140503D00, i_clean_str_stub, true);
+			}
 
-	// add colors
-	add(mode_original, 0, 0, 0);		// ^0 black (original)
-	add(mode_original, 255, 0, 0);		// ^1 red (original)
-	add(mode_original, 0, 255, 0);		// ^2 green (original)
-	add(mode_original, 255, 255, 0);	// ^3 yellow (original)
-	add(mode_original, 0, 135, 193);	// ^4 blue (easier to see)
-	add(mode_original, 25, 200, 230);	// ^5 light blue (original)
-	add(mode_original, 255, 92, 255);	// ^6 pink (original)
-	add(mode_original, 255, 255, 255);	// ^7 white (original)
+			// make color index higher for more colors (TODO: add to SP later)
+			utils::hook::jump(SELECT_VALUE(0x140428F00, 0x140503800), color_index, true);
+			utils::hook::set<uint8_t>(SELECT_VALUE(0x1405AB13E, 0x14061A1EE), MAX_COLOR_INDEX);
 
-	add(mode_custom, 0, 0, 0); 			// 0  - Black
-	add(mode_custom, 255, 49, 49); 		// 1  - Red
-	add(mode_custom, 134, 192, 0); 		// 2  - Green
-	add(mode_custom, 255, 173, 34); 	// 3  - Yellow
-	add(mode_custom, 0, 135, 193); 		// 4  - Blue
-	add(mode_custom, 32, 197, 255); 	// 5  - Light Blue
-	add(mode_custom, 151, 80, 221); 	// 6  - Pink
-	add(mode_custom, 255, 255, 255); 	// 7  - White
+			// force new colors
+			utils::hook::jump(SELECT_VALUE(0x1405B17E0, 0x1406206A0), rb_lookup_color_stub, true);
 
-	// these are all handled in rb_lookup_color_stub
-	add(-1, 0, 0, 0);		// ^8 friendly team color (original)
-	add(-1, 0, 0, 0);		// ^9 enemy team color (original)
-	add(-1, 0, 0, 0);		// ^: rainbow color code (original is "my party")
-	add(-1, 0, 0, 0);		// ^; facebook blue (original, ';' is an illegal character for infostrings)
-	add(-1, 0, 0, 0);		// ^< sky blue (idek where this comes from)
+			// add colors
+			add(mode_original, 0, 0, 0);		// ^0 black (original)
+			add(mode_original, 255, 0, 0);		// ^1 red (original)
+			add(mode_original, 0, 255, 0);		// ^2 green (original)
+			add(mode_original, 255, 255, 0);	// ^3 yellow (original)
+			add(mode_original, 0, 135, 193);	// ^4 blue (easier to see)
+			add(mode_original, 25, 200, 230);	// ^5 light blue (original)
+			add(mode_original, 255, 92, 255);	// ^6 pink (original)
+			add(mode_original, 255, 255, 255);	// ^7 white (original)
 
-	add(mode_original, 255, 173, 34);	// ^= orange 
-	add(mode_original, 151, 80, 221);	// ^> purple
-	add(mode_original, 205, 133, 63);	// ^? brown
+			add(mode_custom, 0, 0, 0); 			// 0  - Black
+			add(mode_custom, 255, 49, 49); 		// 1  - Red
+			add(mode_custom, 134, 192, 0); 		// 2  - Green
+			add(mode_custom, 255, 173, 34); 	// 3  - Yellow
+			add(mode_custom, 0, 135, 193); 		// 4  - Blue
+			add(mode_custom, 32, 197, 255); 	// 5  - Light Blue
+			add(mode_custom, 151, 80, 221); 	// 6  - Pink
+			add(mode_custom, 255, 255, 255); 	// 7  - White
 
-	add(mode_custom, 255, 173, 34);	// ^= orange 
-	add(mode_custom, 151, 80, 221);	// ^> purple
-	add(mode_custom, 205, 133, 63);	// ^? brown
+			// these are all handled in rb_lookup_color_stub
+			add(-1, 0, 0, 0);		// ^8 friendly team color (original)
+			add(-1, 0, 0, 0);		// ^9 enemy team color (original)
+			add(-1, 0, 0, 0);		// ^: rainbow color code (original is "my party")
+			add(-1, 0, 0, 0);		// ^; facebook blue (original, ';' is an illegal character for infostrings)
+			add(-1, 0, 0, 0);		// ^< sky blue (idek where this comes from)
+
+			add(mode_original, 255, 173, 34);	// ^= orange 
+			add(mode_original, 151, 80, 221);	// ^> purple
+			add(mode_original, 205, 133, 63);	// ^? brown
+
+			add(mode_custom, 255, 173, 34);	// ^= orange 
+			add(mode_custom, 151, 80, 221);	// ^> purple
+			add(mode_custom, 205, 133, 63);	// ^? brown
+		}
+	};
 }
 
-DWORD colors::hsv_to_rgb(const hsv_color hsv)
-{
-	DWORD rgb;
-
-	if (hsv.s == 0)
-	{
-		return RGB(hsv.v, hsv.v, hsv.v);
-	}
-
-	// converting to 16 bit to prevent overflow
-	const unsigned int h = hsv.h;
-	const unsigned int s = hsv.s;
-	const unsigned int v = hsv.v;
-
-	const auto region = static_cast<uint8_t>(h / 43);
-	const auto remainder = (h - (region * 43)) * 6;
-
-	const auto p = static_cast<uint8_t>((v * (255 - s)) >> 8);
-	const auto q = static_cast<uint8_t>(
-		(v * (255 - ((s * remainder) >> 8))) >> 8);
-	const auto t = static_cast<uint8_t>(
-		(v * (255 - ((s * (255 - remainder)) >> 8))) >> 8);
-
-	switch (region)
-	{
-	case 0:
-		rgb = RGB(v, t, p);
-		break;
-	case 1:
-		rgb = RGB(q, v, p);
-		break;
-	case 2:
-		rgb = RGB(p, v, t);
-		break;
-	case 3:
-		rgb = RGB(p, q, v);
-		break;
-	case 4:
-		rgb = RGB(t, p, v);
-		break;
-	default:
-		rgb = RGB(v, p, q);
-		break;
-	}
-
-	return rgb;
-}
-
-int colors::color_index(const char c)
-{
-	const auto index = c - 48; // ASCII table
-	return (index > MAX_COLOR_INDEX ? 7 : index);
-}
-
-char colors::add(const std::int32_t mode, const uint8_t r, const uint8_t g, const uint8_t b)
-{
-	const char index = '0' + static_cast<char>(color_table[mode].size());
-
-	if (mode == -1)
-	{
-		color_table[mode_original].emplace_back(RGB(r, g, b));
-		color_table[mode_custom].emplace_back(RGB(r, g, b));
-
-	}
-	else
-	{
-		color_table[mode].emplace_back(RGB(r, g, b));
-	}
-
-	return index;
-}
-
-void colors::com_clean_name_stub(const char* in, char* out, const int out_size)
-{
-	// check that the name is at least 3 char without colors
-	char name[32]{};
-
-	game::I_strncpyz(out, in, std::min<int>(out_size, sizeof(name)));
-
-	utils::string::strip(out, name, std::min<int>(out_size, sizeof(name)));
-	if (std::strlen(name) < 3)
-	{
-		game::I_strncpyz(out, "UnnamedPlayer", std::min<int>(out_size, sizeof(name)));
-	}
-}
-
-char* colors::i_clean_str_stub(char* string)
-{
-	utils::string::strip(string, string, static_cast<int>(strlen(string)) + 1);
-
-	return string;
-}
-
-size_t colors::get_client_name_stub(const int local_client_num, const int index, char* buf, const int size,
-	const size_t unk, const size_t unk2)
-{
-	// CL_GetClientName (CL_GetClientNameAndClantag?)
-	const auto result = utils::hook::invoke<size_t>(0x14025BAA0, local_client_num, index, buf, size, unk, unk2);
-
-	utils::string::strip(buf, buf, size);
-
-	return result;
-}
-
-void colors::rb_lookup_color_stub(const char index, DWORD* color)
-{
-	*color = RGB(255, 255, 255);
-
-	switch (index)
-	{
-	case '8':
-		*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F79D288, 0x14FE70634));
-		break;
-	case '9':
-		*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F79D28C, 0x14FE70638));
-		break;
-	case ':':
-		*color = hsv_to_rgb({ static_cast<uint8_t>((game::Sys_Milliseconds() / 100) % 256), 255, 255 });
-		break;
-	case ';':
-		*color = *reinterpret_cast<DWORD*>(SELECT_VALUE(0x14F79D294, 0x14FE70640));
-		break;
-	case '<':
-		*color = 0xFFFCFF80;
-		break;
-	default:
-		*color = color_table[r_color_mode->current.integer][color_index(index)];
-		break;
-	}
-}
-
-REGISTER_COMPONENT(colors)
+REGISTER_COMPONENT(colors::component)

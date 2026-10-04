@@ -1,6 +1,5 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "demonware.hpp"
 
 #include "game/game.hpp"
 #include "game/demonware/servers/lobby_server.hpp"
@@ -16,525 +15,535 @@
 #define TCP_BLOCKING true
 #define UDP_BLOCKING false
 
-static volatile bool exit_server;
-static std::thread server_thread;
-static utils::concurrency::container<std::unordered_map<SOCKET, bool>> blocking_sockets;
-static utils::concurrency::container<std::unordered_map<SOCKET, demonware::tcp_server*>> socket_map;
-static demonware::server_registry<demonware::tcp_server> tcp_servers;
-static demonware::server_registry<demonware::udp_server> udp_servers;
-
-demonware_component::demonware_component()
+namespace demonware
 {
-	udp_servers.create<demonware::stun_server>("phoenix.stun.us.demonware.net");
-	udp_servers.create<demonware::stun_server>("phoenix.stun.eu.demonware.net");
-	udp_servers.create<demonware::stun_server>("phoenix.stun.jp.demonware.net");
-	udp_servers.create<demonware::stun_server>("phoenix.stun.au.demonware.net");
-
-	udp_servers.create<demonware::stun_server>("stun.us.demonware.net");
-	udp_servers.create<demonware::stun_server>("stun.eu.demonware.net");
-	udp_servers.create<demonware::stun_server>("stun.jp.demonware.net");
-	udp_servers.create<demonware::stun_server>("stun.au.demonware.net");
-
-	tcp_servers.create<demonware::auth3_server>("mwr-pc-steam-auth3.prod.demonware.net");
-	tcp_servers.create<demonware::lobby_server>("mwr-pc-steam-lobby.prod.demonware.net");
-	tcp_servers.create<demonware::umbrella_server>("prod.umbrella.demonware.net");
-}
-
-void demonware_component::post_load()
-{
-	if (game::environment::is_sp())
+	namespace
 	{
-		return;
-	}
+		volatile bool exit_server;
+		std::thread server_thread;
+		utils::concurrency::container<std::unordered_map<SOCKET, bool>> blocking_sockets;
+		utils::concurrency::container<std::unordered_map<SOCKET, demonware::tcp_server*>> socket_map;
+		demonware::server_registry<demonware::tcp_server> tcp_servers;
+		demonware::server_registry<demonware::udp_server> udp_servers;
 
-	server_thread = utils::thread::create_named_thread("Demonware", server_main);
-}
-
-void demonware_component::post_unpack()
-{
-	if (game::environment::is_sp())
-	{
-		utils::hook::set<uint8_t>(0x14068DDA0, 0xC3); // bdAuthSteam
-		utils::hook::set<uint8_t>(0x140366600, 0xC3); // dwNet
-		return;
-	}
-
-	utils::hook::set<uint8_t>(0x140715039, 0x0);  // CURLOPT_SSL_VERIFYPEER
-	utils::hook::set<uint8_t>(0x140715025, 0xAF); // CURLOPT_SSL_VERIFYHOST
-	utils::hook::set<uint8_t>(0x14095433C, 0x0);  // HTTPS -> HTTP
-
-	utils::hook::inject(0x14006DDA9, "http://prod.umbrella.demonware.net/v1.0/");
-	utils::hook::inject(0x14006E11C, "http://prod.umbrella.demonware.net/v1.0/");
-	utils::hook::inject(0x14006E2FB, "http://prod.umbrella.demonware.net/v1.0/");
-	utils::hook::inject(0x14006E9A9, "http://prod.uno.demonware.net/v1.0/");
-	utils::hook::inject(0x14006ED49, "http://prod.uno.demonware.net/v1.0/");
-	utils::hook::inject(0x140728170, "http://%s:%d/auth/");
-
-	utils::hook::set<uint8_t>(0x14047F290, 0xC3); // SV_SendMatchData
-	utils::hook::set<uint8_t>(0x140598990, 0xC3); // Live_CheckForFullDisconnect
-	utils::hook::set<uint8_t>(0x1404155D0, 0xC3); // LiveStorage_SendMatchRecipeComplete?
-	utils::hook::set<uint8_t>(0x140417630, 0xC3); // causes some weird DDL crash idk what it is
-
-	utils::hook::set(0x140728380, 0xC301B0); // Skip bdAuth::validateResponseSignature
-	utils::hook::set(0x140728E90, 0xC301B0); // Skip bdAuth::processPlatformData
-
-	// Skip update check in Live_SyncOnlineDataFlags
-	utils::hook::set(0x1403A47B0, 0xC301B0);
-	// Remove update failed popup
-	utils::hook::set(0x1403A5390, 0xC301B0);
-
-	// Remove some while loop that freezes the rendering for a few secs while connecting
-	utils::hook::nop(0x14057DBC5, 5);
-
-	// xpartygo -> just start the match
-	utils::hook::jump(0x140279750, request_start_match_stub);
-
-	utils::hook::set(0x1402BC580, 0xC301B0); // DB_IsZoneLoaded("ffotd")
-	utils::hook::set(0x1404083E0, 0xC300B0); // dont use ffotd
-	utils::hook::set(0x140408390, 0xC300B0); // dont dl ffotd
-}
-
-void demonware_component::pre_destroy()
-{
-	exit_server = true;
-	if (server_thread.joinable())
-	{
-		server_thread.join();
-	}
-}
-
-void* demonware_component::load_import(const std::string& library, const std::string& function)
-{
-	if (library == "WS2_32.dll")
-	{
-		if (function == "#3") return closesocket_stub;
-		if (function == "#4") return connect_stub;
-		if (function == "#5") return getpeername_stub;
-		if (function == "#6") return getsockname_stub;
-		if (function == "#10") return ioctlsocket_stub;
-		if (function == "#16") return recv_stub;
-		if (function == "#17") return recvfrom_stub;
-		if (function == "#18") return select_stub;
-		if (function == "#19") return send_stub;
-		if (function == "#20") return sendto_stub;
-		if (function == "#52") return gethostbyname_stub;
-		if (function == "getaddrinfo") return getaddrinfo_stub;
-		if (function == "freeaddrinfo") return freeaddrinfo_stub;
-	}
-
-	if (function == "InternetGetConnectedState")
-	{
-		return internet_get_connected_state_stub;
-	}
-
-	return nullptr;
-}
-
-demonware::tcp_server* demonware_component::find_server(const SOCKET socket)
-{
-	return socket_map.access<demonware::tcp_server*>([&](const std::unordered_map<SOCKET, demonware::tcp_server*>& map) -> demonware::tcp_server*
-	{
-		const auto entry = map.find(socket);
-		if (entry == map.end())
+		demonware::tcp_server* find_server(const SOCKET socket)
 		{
-			return nullptr;
+			return socket_map.access<demonware::tcp_server*>([&](const std::unordered_map<SOCKET, demonware::tcp_server*>& map) -> demonware::tcp_server*
+			{
+				const auto entry = map.find(socket);
+				if (entry == map.end())
+				{
+					return nullptr;
+				}
+
+				return entry->second;
+			});
 		}
 
-		return entry->second;
-	});
-}
-
-bool demonware_component::socket_link(const SOCKET socket, const uint32_t address)
-{
-	auto* server = tcp_servers.find(address);
-	if (!server)
-	{
-		return false;
-	}
-
-	socket_map.access([&](std::unordered_map<SOCKET, demonware::tcp_server*>& map)
-	{
-		map[socket] = server;
-	});
-
-	return true;
-}
-
-void demonware_component::socket_unlink(const SOCKET socket)
-{
-	socket_map.access([&](std::unordered_map<SOCKET, demonware::tcp_server*>& map)
-	{
-		const auto entry = map.find(socket);
-		if (entry != map.end())
+		bool socket_link(const SOCKET socket, const uint32_t address)
 		{
-			map.erase(entry);
-		}
-	});
-}
+			auto* server = tcp_servers.find(address);
+			if (!server)
+			{
+				return false;
+			}
 
-bool demonware_component::is_socket_blocking(const SOCKET socket, const bool def)
-{
-	return blocking_sockets.access<bool>([&](std::unordered_map<SOCKET, bool>& map)
-	{
-		const auto entry = map.find(socket);
-		if (entry == map.end())
-		{
-			return def;
+			socket_map.access([&](std::unordered_map<SOCKET, demonware::tcp_server*>& map)
+			{
+				map[socket] = server;
+			});
+
+			return true;
 		}
 
-		return entry->second;
-	});
-}
-
-void demonware_component::remove_blocking_socket(const SOCKET socket)
-{
-	blocking_sockets.access([&](std::unordered_map<SOCKET, bool>& map)
-	{
-		const auto entry = map.find(socket);
-		if (entry != map.end())
+		void socket_unlink(const SOCKET socket)
 		{
-			map.erase(entry);
+			socket_map.access([&](std::unordered_map<SOCKET, demonware::tcp_server*>& map)
+			{
+				const auto entry = map.find(socket);
+				if (entry != map.end())
+				{
+					map.erase(entry);
+				}
+			});
 		}
-	});
-}
 
-void demonware_component::add_blocking_socket(const SOCKET socket, const bool block)
-{
-	blocking_sockets.access([&](std::unordered_map<SOCKET, bool>& map)
-	{
-		map[socket] = block;
-	});
-}
+		bool is_socket_blocking(const SOCKET socket, const bool def)
+		{
+			return blocking_sockets.access<bool>([&](std::unordered_map<SOCKET, bool>& map)
+			{
+				const auto entry = map.find(socket);
+				if (entry == map.end())
+				{
+					return def;
+				}
 
-void demonware_component::server_main()
-{
-	exit_server = false;
+				return entry->second;
+			});
+		}
 
-	while (!exit_server)
-	{
-		tcp_servers.frame();
-		udp_servers.frame();
-		std::this_thread::sleep_for(50ms);
-	}
-}
+		void remove_blocking_socket(const SOCKET socket)
+		{
+			blocking_sockets.access([&](std::unordered_map<SOCKET, bool>& map)
+			{
+				const auto entry = map.find(socket);
+				if (entry != map.end())
+				{
+					map.erase(entry);
+				}
+			});
+		}
 
-int demonware_component::getaddrinfo_stub(const char* name, const char* service,
-			const addrinfo* hints, addrinfo** res)
-{
+		void add_blocking_socket(const SOCKET socket, const bool block)
+		{
+			blocking_sockets.access([&](std::unordered_map<SOCKET, bool>& map)
+			{
+				map[socket] = block;
+			});
+		}
+
+		void server_main()
+		{
+			exit_server = false;
+
+			while (!exit_server)
+			{
+				tcp_servers.frame();
+				udp_servers.frame();
+				std::this_thread::sleep_for(50ms);
+			}
+		}
+
+		int getaddrinfo_stub(const char* name, const char* service,
+					const addrinfo* hints, addrinfo** res)
+		{
 #ifdef DW_DEBUG
-	printf("[ network ]: [getaddrinfo]: \"%s\" \"%s\"\n", name, service);
+			printf("[ network ]: [getaddrinfo]: \"%s\" \"%s\"\n", name, service);
 #endif
 
-	demonware::base_server* server = tcp_servers.find(name);
-	if (!server)
-	{
-		server = udp_servers.find(name);
-	}
+			demonware::base_server* server = tcp_servers.find(name);
+			if (!server)
+			{
+				server = udp_servers.find(name);
+			}
 
-	if (!server)
-	{
-		return getaddrinfo(name, service, hints, res);
-	}
+			if (!server)
+			{
+				return getaddrinfo(name, service, hints, res);
+			}
 
-	const auto address = utils::memory::get_allocator()->allocate<sockaddr>();
-	const auto ai = utils::memory::get_allocator()->allocate<addrinfo>();
+			const auto address = utils::memory::get_allocator()->allocate<sockaddr>();
+			const auto ai = utils::memory::get_allocator()->allocate<addrinfo>();
 
-	auto in_addr = reinterpret_cast<sockaddr_in*>(address);
-	in_addr->sin_addr.s_addr = server->get_address();
-	in_addr->sin_family = AF_INET;
+			auto in_addr = reinterpret_cast<sockaddr_in*>(address);
+			in_addr->sin_addr.s_addr = server->get_address();
+			in_addr->sin_family = AF_INET;
 
-	ai->ai_family = AF_INET;
-	ai->ai_socktype = SOCK_STREAM;
-	ai->ai_addr = address;
-	ai->ai_addrlen = sizeof(sockaddr);
-	ai->ai_next = nullptr;
-	ai->ai_flags = 0;
-	ai->ai_protocol = 0;
-	ai->ai_canonname = const_cast<char*>(name);
+			ai->ai_family = AF_INET;
+			ai->ai_socktype = SOCK_STREAM;
+			ai->ai_addr = address;
+			ai->ai_addrlen = sizeof(sockaddr);
+			ai->ai_next = nullptr;
+			ai->ai_flags = 0;
+			ai->ai_protocol = 0;
+			ai->ai_canonname = const_cast<char*>(name);
 
-	*res = ai;
+			*res = ai;
 
-	return 0;
-}
+			return 0;
+		}
 
-void demonware_component::freeaddrinfo_stub(addrinfo* ai)
-{
-	if (!utils::memory::get_allocator()->find(ai))
-	{
-		return freeaddrinfo(ai);
-	}
+		void freeaddrinfo_stub(addrinfo* ai)
+		{
+			if (!utils::memory::get_allocator()->find(ai))
+			{
+				return freeaddrinfo(ai);
+			}
 
-	utils::memory::get_allocator()->free(ai->ai_addr);
-	utils::memory::get_allocator()->free(ai);
-}
+			utils::memory::get_allocator()->free(ai->ai_addr);
+			utils::memory::get_allocator()->free(ai);
+		}
 
-int demonware_component::getpeername_stub(const SOCKET s, sockaddr* addr, socklen_t* addrlen)
-{
-	auto* server = find_server(s);
+		int getpeername_stub(const SOCKET s, sockaddr* addr, socklen_t* addrlen)
+		{
+			auto* server = find_server(s);
 
-	if (server)
-	{
-		auto in_addr = reinterpret_cast<sockaddr_in*>(addr);
-		in_addr->sin_addr.s_addr = server->get_address();
-		in_addr->sin_family = AF_INET;
-		*addrlen = sizeof(sockaddr);
+			if (server)
+			{
+				auto in_addr = reinterpret_cast<sockaddr_in*>(addr);
+				in_addr->sin_addr.s_addr = server->get_address();
+				in_addr->sin_family = AF_INET;
+				*addrlen = sizeof(sockaddr);
 
-		return 0;
-	}
+				return 0;
+			}
 
-	return getpeername(s, addr, addrlen);
-}
+			return getpeername(s, addr, addrlen);
+		}
 
-int demonware_component::getsockname_stub(const SOCKET s, sockaddr* addr, socklen_t* addrlen)
-{
-	auto* server = find_server(s);
+		int getsockname_stub(const SOCKET s, sockaddr* addr, socklen_t* addrlen)
+		{
+			auto* server = find_server(s);
 
-	if (server)
-	{
-		auto in_addr = reinterpret_cast<sockaddr_in*>(addr);
-		in_addr->sin_addr.s_addr = server->get_address();
-		in_addr->sin_family = AF_INET;
-		*addrlen = sizeof(sockaddr);
+			if (server)
+			{
+				auto in_addr = reinterpret_cast<sockaddr_in*>(addr);
+				in_addr->sin_addr.s_addr = server->get_address();
+				in_addr->sin_family = AF_INET;
+				*addrlen = sizeof(sockaddr);
 
-		return 0;
-	}
+				return 0;
+			}
 
-	return getsockname(s, addr, addrlen);
-}
+			return getsockname(s, addr, addrlen);
+		}
 
-hostent* demonware_component::gethostbyname_stub(const char* name)
-{
+		hostent* gethostbyname_stub(const char* name)
+		{
 #ifdef DW_DEBUG
-	printf("[ network ]: [gethostbyname]: \"%s\"\n", name);
+			printf("[ network ]: [gethostbyname]: \"%s\"\n", name);
 #endif
 
-	demonware::base_server* server = tcp_servers.find(name);
-	if (!server)
-	{
-		server = udp_servers.find(name);
-	}
+			demonware::base_server* server = tcp_servers.find(name);
+			if (!server)
+			{
+				server = udp_servers.find(name);
+			}
 
-	if (!server)
-	{
+			if (!server)
+			{
 #pragma warning(push)
 #pragma warning(disable: 4996)
-		return gethostbyname(name);
+				return gethostbyname(name);
 #pragma warning(pop)
-	}
+			}
 
-	static thread_local in_addr address{};
-	address.s_addr = server->get_address();
+			static thread_local in_addr address{};
+			address.s_addr = server->get_address();
 
-	static thread_local in_addr* addr_list[2]{};
-	addr_list[0] = &address;
-	addr_list[1] = nullptr;
+			static thread_local in_addr* addr_list[2]{};
+			addr_list[0] = &address;
+			addr_list[1] = nullptr;
 
-	static thread_local hostent host{};
-	host.h_name = const_cast<char*>(name);
-	host.h_aliases = nullptr;
-	host.h_addrtype = AF_INET;
-	host.h_length = sizeof(in_addr);
-	host.h_addr_list = reinterpret_cast<char**>(addr_list);
+			static thread_local hostent host{};
+			host.h_name = const_cast<char*>(name);
+			host.h_aliases = nullptr;
+			host.h_addrtype = AF_INET;
+			host.h_length = sizeof(in_addr);
+			host.h_addr_list = reinterpret_cast<char**>(addr_list);
 
-	return &host;
-}
-
-int demonware_component::connect_stub(const SOCKET s, const struct sockaddr* addr, const int len)
-{
-	if (len == sizeof(sockaddr_in))
-	{
-		const auto* in_addr = reinterpret_cast<const sockaddr_in*>(addr);
-		if (socket_link(s, in_addr->sin_addr.s_addr)) return 0;
-	}
-
-	return connect(s, addr, len);
-}
-
-int demonware_component::closesocket_stub(const SOCKET s)
-{
-	remove_blocking_socket(s);
-	socket_unlink(s);
-
-	return closesocket(s);
-}
-
-int demonware_component::send_stub(const SOCKET s, const char* buf, const int len, const int flags)
-{
-	auto* server = find_server(s);
-
-	if (server)
-	{
-		server->handle_input(buf, len);
-		return len;
-	}
-
-	return send(s, buf, len, flags);
-}
-
-int demonware_component::recv_stub(const SOCKET s, char* buf, const int len, const int flags)
-{
-	auto* server = find_server(s);
-
-	if (server)
-	{
-		if (server->pending_data())
-		{
-			return static_cast<int>(server->handle_output(buf, len));
+			return &host;
 		}
-		else
+
+		int connect_stub(const SOCKET s, const struct sockaddr* addr, const int len)
 		{
-			WSASetLastError(WSAEWOULDBLOCK);
-			return -1;
-		}
-	}
-
-	return recv(s, buf, len, flags);
-}
-
-int demonware_component::sendto_stub(const SOCKET s, const char* buf, const int len, const int flags, const sockaddr* to,
-			const int tolen)
-{
-	const auto* in_addr = reinterpret_cast<const sockaddr_in*>(to);
-	auto* server = udp_servers.find(in_addr->sin_addr.s_addr);
-
-	if (server)
-	{
-		server->handle_input(buf, len, { s, to, tolen });
-		return len;
-	}
-
-	return sendto(s, buf, len, flags, to, tolen);
-}
-
-int demonware_component::recvfrom_stub(const SOCKET s, char* buf, const int len, const int flags, struct sockaddr* from,
-			int* fromlen)
-{
-	// Not supported yet
-	if (is_socket_blocking(s, UDP_BLOCKING))
-	{
-		return recvfrom(s, buf, len, flags, from, fromlen);
-	}
-
-	size_t result = 0;
-	udp_servers.for_each([&](demonware::udp_server& server)
-	{
-		if (server.pending_data(s))
-		{
-			result = server.handle_output(
-				s, buf, static_cast<size_t>(len), from, fromlen);
-		}
-	});
-
-	if (result)
-	{
-		return static_cast<int>(result);
-	}
-
-	return recvfrom(s, buf, len, flags, from, fromlen);
-}
-
-int demonware_component::select_stub(const int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
-			struct timeval* timeout)
-{
-	if (exit_server)
-	{
-		return select(nfds, readfds, writefds, exceptfds, timeout);
-	}
-
-	auto result = 0;
-	std::vector<SOCKET> read_sockets;
-	std::vector<SOCKET> write_sockets;
-
-	socket_map.access([&](std::unordered_map<SOCKET, demonware::tcp_server*>& sockets)
-	{
-		for (auto& s : sockets)
-		{
-			if (readfds)
+			if (len == sizeof(sockaddr_in))
 			{
-				if (FD_ISSET(s.first, readfds))
+				const auto* in_addr = reinterpret_cast<const sockaddr_in*>(addr);
+				if (socket_link(s, in_addr->sin_addr.s_addr)) return 0;
+			}
+
+			return connect(s, addr, len);
+		}
+
+		int closesocket_stub(const SOCKET s)
+		{
+			remove_blocking_socket(s);
+			socket_unlink(s);
+
+			return closesocket(s);
+		}
+
+		int send_stub(const SOCKET s, const char* buf, const int len, const int flags)
+		{
+			auto* server = find_server(s);
+
+			if (server)
+			{
+				server->handle_input(buf, len);
+				return len;
+			}
+
+			return send(s, buf, len, flags);
+		}
+
+		int recv_stub(const SOCKET s, char* buf, const int len, const int flags)
+		{
+			auto* server = find_server(s);
+
+			if (server)
+			{
+				if (server->pending_data())
 				{
-					if (s.second->pending_data())
+					return static_cast<int>(server->handle_output(buf, len));
+				}
+				else
+				{
+					WSASetLastError(WSAEWOULDBLOCK);
+					return -1;
+				}
+			}
+
+			return recv(s, buf, len, flags);
+		}
+
+		int sendto_stub(const SOCKET s, const char* buf, const int len, const int flags, const sockaddr* to,
+					const int tolen)
+		{
+			const auto* in_addr = reinterpret_cast<const sockaddr_in*>(to);
+			auto* server = udp_servers.find(in_addr->sin_addr.s_addr);
+
+			if (server)
+			{
+				server->handle_input(buf, len, { s, to, tolen });
+				return len;
+			}
+
+			return sendto(s, buf, len, flags, to, tolen);
+		}
+
+		int recvfrom_stub(const SOCKET s, char* buf, const int len, const int flags, struct sockaddr* from,
+					int* fromlen)
+		{
+			// Not supported yet
+			if (is_socket_blocking(s, UDP_BLOCKING))
+			{
+				return recvfrom(s, buf, len, flags, from, fromlen);
+			}
+
+			size_t result = 0;
+			udp_servers.for_each([&](demonware::udp_server& server)
+			{
+				if (server.pending_data(s))
+				{
+					result = server.handle_output(
+						s, buf, static_cast<size_t>(len), from, fromlen);
+				}
+			});
+
+			if (result)
+			{
+				return static_cast<int>(result);
+			}
+
+			return recvfrom(s, buf, len, flags, from, fromlen);
+		}
+
+		int select_stub(const int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
+					struct timeval* timeout)
+		{
+			if (exit_server)
+			{
+				return select(nfds, readfds, writefds, exceptfds, timeout);
+			}
+
+			auto result = 0;
+			std::vector<SOCKET> read_sockets;
+			std::vector<SOCKET> write_sockets;
+
+			socket_map.access([&](std::unordered_map<SOCKET, demonware::tcp_server*>& sockets)
+			{
+				for (auto& s : sockets)
+				{
+					if (readfds)
 					{
-						read_sockets.push_back(s.first);
-						FD_CLR(s.first, readfds);
+						if (FD_ISSET(s.first, readfds))
+						{
+							if (s.second->pending_data())
+							{
+								read_sockets.push_back(s.first);
+								FD_CLR(s.first, readfds);
+							}
+						}
+					}
+
+					if (writefds)
+					{
+						if (FD_ISSET(s.first, writefds))
+						{
+							write_sockets.push_back(s.first);
+							FD_CLR(s.first, writefds);
+						}
+					}
+
+					if (exceptfds)
+					{
+						if (FD_ISSET(s.first, exceptfds))
+						{
+							FD_CLR(s.first, exceptfds);
+						}
 					}
 				}
+			});
+
+			if ((!readfds || readfds->fd_count == 0) && (!writefds || writefds->fd_count == 0))
+			{
+				timeout->tv_sec = 0;
+				timeout->tv_usec = 0;
 			}
 
-			if (writefds)
+			result = select(nfds, readfds, writefds, exceptfds, timeout);
+			if (result < 0) result = 0;
+
+			for (const auto& socket : read_sockets)
 			{
-				if (FD_ISSET(s.first, writefds))
+				if (readfds)
 				{
-					write_sockets.push_back(s.first);
-					FD_CLR(s.first, writefds);
+					FD_SET(socket, readfds);
+					result++;
 				}
 			}
 
-			if (exceptfds)
+			for (const auto& socket : write_sockets)
 			{
-				if (FD_ISSET(s.first, exceptfds))
+				if (writefds)
 				{
-					FD_CLR(s.first, exceptfds);
+					FD_SET(socket, writefds);
+					result++;
 				}
 			}
+
+			return result;
 		}
-	});
 
-	if ((!readfds || readfds->fd_count == 0) && (!writefds || writefds->fd_count == 0))
-	{
-		timeout->tv_sec = 0;
-		timeout->tv_usec = 0;
-	}
-
-	result = select(nfds, readfds, writefds, exceptfds, timeout);
-	if (result < 0) result = 0;
-
-	for (const auto& socket : read_sockets)
-	{
-		if (readfds)
+		int ioctlsocket_stub(const SOCKET s, const long cmd, u_long* argp)
 		{
-			FD_SET(socket, readfds);
-			result++;
-		}
-	}
+			if (static_cast<unsigned long>(cmd) == (FIONBIO))
+			{
+				add_blocking_socket(s, *argp == 0);
+			}
 
-	for (const auto& socket : write_sockets)
-	{
-		if (writefds)
+			return ioctlsocket(s, cmd, argp);
+		}
+
+		BOOL internet_get_connected_state_stub(LPDWORD, DWORD)
 		{
-			FD_SET(socket, writefds);
-			result++;
+			// Allow offline play
+			return TRUE;
+		}
+
+		void bd_logger_stub()
+		{
+			//printf("logged\n");
+		}
+
+		void request_start_match_stub()
+		{
+			const auto* args = "StartServer";
+			game::UI_RunMenuScript(0, &args);
 		}
 	}
 
-	return result;
-}
-
-int demonware_component::ioctlsocket_stub(const SOCKET s, const long cmd, u_long* argp)
-{
-	if (static_cast<unsigned long>(cmd) == (FIONBIO))
+	class component final : public component_interface
 	{
-		add_blocking_socket(s, *argp == 0);
-	}
+	public:
+		component()
+		{
+			udp_servers.create<demonware::stun_server>("phoenix.stun.us.demonware.net");
+			udp_servers.create<demonware::stun_server>("phoenix.stun.eu.demonware.net");
+			udp_servers.create<demonware::stun_server>("phoenix.stun.jp.demonware.net");
+			udp_servers.create<demonware::stun_server>("phoenix.stun.au.demonware.net");
 
-	return ioctlsocket(s, cmd, argp);
+			udp_servers.create<demonware::stun_server>("stun.us.demonware.net");
+			udp_servers.create<demonware::stun_server>("stun.eu.demonware.net");
+			udp_servers.create<demonware::stun_server>("stun.jp.demonware.net");
+			udp_servers.create<demonware::stun_server>("stun.au.demonware.net");
+
+			tcp_servers.create<demonware::auth3_server>("mwr-pc-steam-auth3.prod.demonware.net");
+			tcp_servers.create<demonware::lobby_server>("mwr-pc-steam-lobby.prod.demonware.net");
+			tcp_servers.create<demonware::umbrella_server>("prod.umbrella.demonware.net");
+		}
+
+		void post_load() override
+		{
+			if (game::environment::is_sp())
+			{
+				return;
+			}
+
+			server_thread = utils::thread::create_named_thread("Demonware", server_main);
+		}
+
+		void post_unpack() override
+		{
+			if (game::environment::is_sp())
+			{
+				utils::hook::set<uint8_t>(0x14068DDA0, 0xC3); // bdAuthSteam
+				utils::hook::set<uint8_t>(0x140366600, 0xC3); // dwNet
+				return;
+			}
+
+			utils::hook::set<uint8_t>(0x140715039, 0x0);  // CURLOPT_SSL_VERIFYPEER
+			utils::hook::set<uint8_t>(0x140715025, 0xAF); // CURLOPT_SSL_VERIFYHOST
+			utils::hook::set<uint8_t>(0x14095433C, 0x0);  // HTTPS -> HTTP
+
+			utils::hook::inject(0x14006DDA9, "http://prod.umbrella.demonware.net/v1.0/");
+			utils::hook::inject(0x14006E11C, "http://prod.umbrella.demonware.net/v1.0/");
+			utils::hook::inject(0x14006E2FB, "http://prod.umbrella.demonware.net/v1.0/");
+			utils::hook::inject(0x14006E9A9, "http://prod.uno.demonware.net/v1.0/");
+			utils::hook::inject(0x14006ED49, "http://prod.uno.demonware.net/v1.0/");
+			utils::hook::inject(0x140728170, "http://%s:%d/auth/");
+
+			utils::hook::set<uint8_t>(0x14047F290, 0xC3); // SV_SendMatchData
+			utils::hook::set<uint8_t>(0x140598990, 0xC3); // Live_CheckForFullDisconnect
+			utils::hook::set<uint8_t>(0x1404155D0, 0xC3); // LiveStorage_SendMatchRecipeComplete?
+			utils::hook::set<uint8_t>(0x140417630, 0xC3); // causes some weird DDL crash idk what it is
+
+			utils::hook::set(0x140728380, 0xC301B0); // Skip bdAuth::validateResponseSignature
+			utils::hook::set(0x140728E90, 0xC301B0); // Skip bdAuth::processPlatformData
+
+			// Skip update check in Live_SyncOnlineDataFlags
+			utils::hook::set(0x1403A47B0, 0xC301B0);
+			// Remove update failed popup
+			utils::hook::set(0x1403A5390, 0xC301B0);
+
+			// Remove some while loop that freezes the rendering for a few secs while connecting
+			utils::hook::nop(0x14057DBC5, 5);
+
+			// xpartygo -> just start the match
+			utils::hook::jump(0x140279750, request_start_match_stub);
+
+			utils::hook::set(0x1402BC580, 0xC301B0); // DB_IsZoneLoaded("ffotd")
+			utils::hook::set(0x1404083E0, 0xC300B0); // dont use ffotd
+			utils::hook::set(0x140408390, 0xC300B0); // dont dl ffotd
+		}
+
+		void pre_destroy() override
+		{
+			exit_server = true;
+			if (server_thread.joinable())
+			{
+				server_thread.join();
+			}
+		}
+
+		void* load_import(const std::string& library, const std::string& function) override
+		{
+			if (library == "WS2_32.dll")
+			{
+				if (function == "#3") return closesocket_stub;
+				if (function == "#4") return connect_stub;
+				if (function == "#5") return getpeername_stub;
+				if (function == "#6") return getsockname_stub;
+				if (function == "#10") return ioctlsocket_stub;
+				if (function == "#16") return recv_stub;
+				if (function == "#17") return recvfrom_stub;
+				if (function == "#18") return select_stub;
+				if (function == "#19") return send_stub;
+				if (function == "#20") return sendto_stub;
+				if (function == "#52") return gethostbyname_stub;
+				if (function == "getaddrinfo") return getaddrinfo_stub;
+				if (function == "freeaddrinfo") return freeaddrinfo_stub;
+			}
+
+			if (function == "InternetGetConnectedState")
+			{
+				return internet_get_connected_state_stub;
+			}
+
+			return nullptr;
+		}
+	};
 }
 
-BOOL demonware_component::internet_get_connected_state_stub(LPDWORD, DWORD)
-{
-	// Allow offline play
-	return TRUE;
-}
-
-void demonware_component::bd_logger_stub()
-{
-	//printf("logged\n");
-}
-
-void demonware_component::request_start_match_stub()
-{
-	const auto* args = "StartServer";
-	game::UI_RunMenuScript(0, &args);
-}
-
-REGISTER_COMPONENT(demonware_component)
+REGISTER_COMPONENT(demonware::component)

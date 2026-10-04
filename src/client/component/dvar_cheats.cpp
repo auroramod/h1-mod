@@ -1,6 +1,5 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "dvar_cheats.hpp"
 
 #include "console.hpp"
 #include "scheduler.hpp"
@@ -11,154 +10,164 @@
 #include <utils/hook.hpp>
 #include <utils/string.hpp>
 
-void dvar_cheats::post_unpack()
+namespace dvar_cheats
 {
-	if (game::environment::is_sp())
+	namespace
 	{
-		return;
-	}
-
-	utils::hook::nop(0x1404FDA0D, 4); // let our stub handle zero-source sets
-	utils::hook::jump(0x1404FDA14, get_dvar_flag_checks_stub(), true); // check extra dvar flags when setting values
-
-#ifdef _DEBUG
-	constexpr bool sv_cheats_enabled = true;
-#else
-	constexpr bool sv_cheats_enabled = false;
-#endif
-
-	scheduler::once([]
-	{
-		dvars::register_bool("sv_cheats", sv_cheats_enabled, game::DvarFlags::DVAR_CODINFO,
-			"Allow cheat commands and dvars on this server");
-	}, scheduler::pipeline::main);
-}
-
-void dvar_cheats::apply_sv_cheats(const game::dvar_t* dvar, const game::DvarSetSource source, game::dvar_value* value)
-{
-	static const auto sv_cheats_hash = game::generateHashValue("sv_cheats");
-
-	if (dvar && dvar->hash == sv_cheats_hash)
-	{
-		// if dedi, do not allow internal to change value so servers can allow cheats if they want to
-		if (game::environment::is_dedi() && source == game::DvarSetSource::DVAR_SOURCE_INTERNAL)
+		void apply_sv_cheats(const game::dvar_t* dvar, const game::DvarSetSource source, game::dvar_value* value)
 		{
-			value->enabled = dvar->current.enabled;
-		}
+			static const auto sv_cheats_hash = game::generateHashValue("sv_cheats");
 
-		// if sv_cheats was enabled and it changes to disabled, we need to reset all cheat dvars
-		else if (dvar->current.enabled && !value->enabled)
-		{
-			for (auto i = 0; i < *game::dvarCount; ++i)
+			if (dvar && dvar->hash == sv_cheats_hash)
 			{
-				const auto var = &game::dvarPool[i];
-				if (var && (var->flags & game::DvarFlags::DVAR_CHEAT))
+				// if dedi, do not allow internal to change value so servers can allow cheats if they want to
+				if (game::environment::is_dedi() && source == game::DvarSetSource::DVAR_SOURCE_INTERNAL)
 				{
-					game::Dvar_Reset(var, game::DvarSetSource::DVAR_SOURCE_INTERNAL);
+					value->enabled = dvar->current.enabled;
+				}
+
+				// if sv_cheats was enabled and it changes to disabled, we need to reset all cheat dvars
+				else if (dvar->current.enabled && !value->enabled)
+				{
+					for (auto i = 0; i < *game::dvarCount; ++i)
+					{
+						const auto var = &game::dvarPool[i];
+						if (var && (var->flags & game::DvarFlags::DVAR_CHEAT))
+						{
+							game::Dvar_Reset(var, game::DvarSetSource::DVAR_SOURCE_INTERNAL);
+						}
+					}
 				}
 			}
 		}
-	}
-}
 
-bool dvar_cheats::dvar_flag_checks(const game::dvar_t* dvar, const game::DvarSetSource source, const bool silent)
-{
-	const auto info = dvars::get_dvar_info_from_hash(dvar->hash);
-	const auto name = info.has_value()
-		? info.value().name.data()
-		: utils::string::va("0x%lX", dvar->hash);
-
-	if ((dvar->flags & game::DvarFlags::DVAR_ROM))
-	{
-		if (!silent)
+		bool dvar_flag_checks(const game::dvar_t* dvar, const game::DvarSetSource source, const bool silent = false)
 		{
-			console::error("%s is write protected\n", name);
-		}
+			const auto info = dvars::get_dvar_info_from_hash(dvar->hash);
+			const auto name = info.has_value()
+				? info.value().name.data()
+				: utils::string::va("0x%lX", dvar->hash);
 
-		return false;
-	}
-
-	if ((dvar->flags & game::DvarFlags::DVAR_INIT))
-	{
-		if (!silent)
-		{
-			console::error("%s is read only\n", name);
-		}
-
-		return false;
-	}
-
-	// only check cheat/replicated values when the source is external
-	if (source == game::DvarSetSource::DVAR_SOURCE_EXTERNAL)
-	{
-		const auto cl_ingame = game::Dvar_FindVar("cl_ingame");
-		const auto sv_running = game::Dvar_FindVar("sv_running");
-
-		if ((dvar->flags & game::DvarFlags::DVAR_CODINFO) && (cl_ingame && cl_ingame->current.enabled) && (
-			sv_running && !sv_running->current.enabled))
-		{
-			if (!silent)
+			if ((dvar->flags & game::DvarFlags::DVAR_ROM))
 			{
-				console::error("%s can only be changed by the server\n", name);
+				if (!silent)
+				{
+					console::error("%s is write protected\n", name);
+				}
+
+				return false;
 			}
 
-			return false;
-		}
-
-		const auto sv_cheats = game::Dvar_FindVar("sv_cheats");
-		if ((dvar->flags & game::DvarFlags::DVAR_CHEAT) && (sv_cheats && !sv_cheats->current.enabled))
-		{
-			if (!silent)
+			if ((dvar->flags & game::DvarFlags::DVAR_INIT))
 			{
-				console::error("%s is cheat protected\n", name);
+				if (!silent)
+				{
+					console::error("%s is read only\n", name);
+				}
+
+				return false;
 			}
 
-			return false;
+			// only check cheat/replicated values when the source is external
+			if (source == game::DvarSetSource::DVAR_SOURCE_EXTERNAL)
+			{
+				const auto cl_ingame = game::Dvar_FindVar("cl_ingame");
+				const auto sv_running = game::Dvar_FindVar("sv_running");
+
+				if ((dvar->flags & game::DvarFlags::DVAR_CODINFO) && (cl_ingame && cl_ingame->current.enabled) && (
+					sv_running && !sv_running->current.enabled))
+				{
+					if (!silent)
+					{
+						console::error("%s can only be changed by the server\n", name);
+					}
+
+					return false;
+				}
+
+				const auto sv_cheats = game::Dvar_FindVar("sv_cheats");
+				if ((dvar->flags & game::DvarFlags::DVAR_CHEAT) && (sv_cheats && !sv_cheats->current.enabled))
+				{
+					if (!silent)
+					{
+						console::error("%s is cheat protected\n", name);
+					}
+
+					return false;
+				}
+			}
+
+			// pass all the flag checks, allow dvar to be changed
+			return true;
+		}
+
+		void* get_dvar_flag_checks_stub()
+		{
+			return utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				const auto can_set_value = a.newLabel();
+				const auto zero_source = a.newLabel();
+
+				a.pushad64();
+				a.mov(r8, rdi);
+				a.mov(edx, esi);
+				a.mov(rcx, rbx);
+				a.call_aligned(apply_sv_cheats); // check if we are setting sv_cheats
+				a.popad64();
+				a.cmp(esi, 0);
+				a.jz(zero_source); // if the SetSource is 0 (INTERNAL) ignore flag checks
+
+				a.pushad64();
+				a.mov(r8, 0); // silent
+				a.mov(edx, esi); // source
+				a.mov(rcx, rbx); // dvar
+				a.call_aligned(dvar_flag_checks); // protect read/write/cheat/replicated dvars
+				a.cmp(al, 1);
+				a.jz(can_set_value);
+
+				// if we get here, we are non-zero source and CANNOT set values
+				a.popad64(); // if I do this before the jz it won't work. for some reason the popad64 is affecting the ZR flag
+				a.jmp(0x1404FDCAB);
+
+				// if we get here, we are non-zero source and CAN set values
+				a.bind(can_set_value);
+				a.popad64(); // if I do this before the jz it won't work. for some reason the popad64 is affecting the ZR flag
+				a.cmp(esi, 1);
+				a.jmp(0x1404FDA22);
+
+				// if we get here, we are zero source and ignore flags
+				a.bind(zero_source);
+				a.jmp(0x1404FDA62);
+			});
 		}
 	}
 
-	// pass all the flag checks, allow dvar to be changed
-	return true;
-}
-
-void* dvar_cheats::get_dvar_flag_checks_stub()
-{
-	return utils::hook::assemble([](utils::hook::assembler& a)
+	class component final : public component_interface
 	{
-		const auto can_set_value = a.newLabel();
-		const auto zero_source = a.newLabel();
+	public:
+		void post_unpack() override
+		{
+			if (game::environment::is_sp())
+			{
+				return;
+			}
 
-		a.pushad64();
-		a.mov(r8, rdi);
-		a.mov(edx, esi);
-		a.mov(rcx, rbx);
-		a.call_aligned(apply_sv_cheats); // check if we are setting sv_cheats
-		a.popad64();
-		a.cmp(esi, 0);
-		a.jz(zero_source); // if the SetSource is 0 (INTERNAL) ignore flag checks
+			utils::hook::nop(0x1404FDA0D, 4); // let our stub handle zero-source sets
+			utils::hook::jump(0x1404FDA14, get_dvar_flag_checks_stub(), true); // check extra dvar flags when setting values
 
-		a.pushad64();
-		a.mov(r8, 0); // silent
-		a.mov(edx, esi); // source
-		a.mov(rcx, rbx); // dvar
-		a.call_aligned(dvar_flag_checks); // protect read/write/cheat/replicated dvars
-		a.cmp(al, 1);
-		a.jz(can_set_value);
+#ifdef _DEBUG
+			constexpr bool sv_cheats_enabled = true;
+#else
+			constexpr bool sv_cheats_enabled = false;
+#endif
 
-		// if we get here, we are non-zero source and CANNOT set values
-		a.popad64(); // if I do this before the jz it won't work. for some reason the popad64 is affecting the ZR flag
-		a.jmp(0x1404FDCAB);
-
-		// if we get here, we are non-zero source and CAN set values
-		a.bind(can_set_value);
-		a.popad64(); // if I do this before the jz it won't work. for some reason the popad64 is affecting the ZR flag
-		a.cmp(esi, 1);
-		a.jmp(0x1404FDA22);
-
-		// if we get here, we are zero source and ignore flags
-		a.bind(zero_source);
-		a.jmp(0x1404FDA62);
-	});
+			scheduler::once([]
+			{
+				dvars::register_bool("sv_cheats", sv_cheats_enabled, game::DvarFlags::DVAR_CODINFO,
+					"Allow cheat commands and dvars on this server");
+			}, scheduler::pipeline::main);
+		}
+	};
 }
 
-REGISTER_COMPONENT(dvar_cheats)
+REGISTER_COMPONENT(dvar_cheats::component)

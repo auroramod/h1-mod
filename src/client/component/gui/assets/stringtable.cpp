@@ -1,6 +1,7 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
+
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -12,7 +13,6 @@
 #include "component/gsc/script_loading.hpp"
 #include "../gui.hpp"
 #include "../asset_list.hpp"
-#include "stringtable.hpp"
 
 #include "utils/mapents.hpp"
 
@@ -21,112 +21,122 @@
 #include <utils/concurrency.hpp>
 #include <utils/io.hpp>
 
-void asset_stringtable::post_unpack()
+namespace asset_stringtable
 {
-	asset_list::add_asset_view<game::StringTable>(game::ASSET_TYPE_STRINGTABLE, draw_asset, ImVec2(200, 200));
-}
-
-void asset_stringtable::copy_table(game::StringTable* asset)
-{
-	std::string buffer;
-	for (auto row = 0; row < asset->rowCount; row++)
+	namespace
 	{
-		for (auto column = 0; column < asset->columnCount; column++)
+		void copy_table(game::StringTable* asset)
 		{
-			const auto index = (row * asset->columnCount) + column;
-			const auto string_value = asset->values[index].string;
-			const auto last_char = (column == asset->columnCount - 1) ? "\n" : ",";
-
-			if (string_value == nullptr)
+			std::string buffer;
+			for (auto row = 0; row < asset->rowCount; row++)
 			{
-				buffer.append(last_char);
-			}
-			else
-			{
-				std::string str = string_value;
-				auto added_quotes = false;
-				if (str.contains(','))
+				for (auto column = 0; column < asset->columnCount; column++)
 				{
-					added_quotes = true;
-					str.insert(str.begin(), '"');
-					str.insert(str.end(), '"');
-				}
+					const auto index = (row * asset->columnCount) + column;
+					const auto string_value = asset->values[index].string;
+					const auto last_char = (column == asset->columnCount - 1) ? "\n" : ",";
 
-				if (str.contains('\"') && !added_quotes)
-				{
-					str = std::regex_replace(str, std::regex("\""), "\\\"");
-
-					str.insert(str.begin(), '"');
-					str.insert(str.end(), '"');
-				}
-
-				str = std::regex_replace(str, std::regex("\n"), "\\n");
-				buffer.append(utils::string::va("%s%s", str.data(), last_char));
-			}
-		}
-	}
-
-	gui::copy_to_clipboard(buffer);
-}
-
-bool asset_stringtable::draw_asset(game::StringTable* asset)
-{
-	if (asset->columnCount * asset->rowCount == 0)
-	{
-		ImGui::Text("empty table");
-		return true;
-	}
-
-	constexpr auto flags =
-		ImGuiTableFlags_BordersInnerH |
-		ImGuiTableFlags_BordersOuterH |
-		ImGuiTableFlags_BordersInnerV |
-		ImGuiTableFlags_BordersOuterV |
-		ImGuiTableFlags_RowBg |
-		ImGuiTableFlags_ScrollX |
-		ImGuiTableFlags_ScrollY;
-
-	const auto size = ImGui::GetContentRegionAvail();
-
-	if (ImGui::Button("copy all"))
-	{
-		copy_table(asset);
-	}
-
-	if (ImGui::BeginTable(asset->name, asset->columnCount, flags, size))
-	{
-		for (auto row = 0; row < asset->rowCount; row++)
-		{
-			ImGui::TableNextRow();
-
-			for (auto column = 0; column < asset->columnCount; column++)
-			{
-				ImGui::TableSetColumnIndex(column);
-				const auto index = (row * asset->columnCount) + column;
-				const auto string_value = asset->values[index].string;
-				if (string_value == nullptr)
-				{
-					ImGui::Text("");
-				}
-				else
-				{
-					ImGui::PushStyleColor(ImGuiCol_::ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-					ImGui::PushID(index);
-					if (ImGui::Button(string_value))
+					if (string_value == nullptr)
 					{
-						gui::copy_to_clipboard(string_value);
+						buffer.append(last_char);
 					}
-					ImGui::PopID();
-					ImGui::PopStyleColor();
+					else
+					{
+						std::string str = string_value;
+						auto added_quotes = false;
+						if (str.contains(','))
+						{
+							added_quotes = true;
+							str.insert(str.begin(), '"');
+							str.insert(str.end(), '"');
+						}
+
+						if (str.contains('\"') && !added_quotes)
+						{
+							str = std::regex_replace(str, std::regex("\""), "\\\"");
+
+							str.insert(str.begin(), '"');
+							str.insert(str.end(), '"');
+						}
+
+						str = std::regex_replace(str, std::regex("\n"), "\\n");
+						buffer.append(utils::string::va("%s%s", str.data(), last_char));
+					}
 				}
 			}
+
+			gui::copy_to_clipboard(buffer);
 		}
 
-		ImGui::EndTable();
+		bool draw_asset(game::StringTable* asset)
+		{
+			if (asset->columnCount * asset->rowCount == 0)
+			{
+				ImGui::Text("empty table");
+				return true;
+			}
+
+			constexpr auto flags =
+				ImGuiTableFlags_BordersInnerH |
+				ImGuiTableFlags_BordersOuterH |
+				ImGuiTableFlags_BordersInnerV |
+				ImGuiTableFlags_BordersOuterV |
+				ImGuiTableFlags_RowBg |
+				ImGuiTableFlags_ScrollX |
+				ImGuiTableFlags_ScrollY;
+
+			const auto size = ImGui::GetContentRegionAvail();
+
+			if (ImGui::Button("copy all"))
+			{
+				copy_table(asset);
+			}
+
+			if (ImGui::BeginTable(asset->name, asset->columnCount, flags, size))
+			{
+				for (auto row = 0; row < asset->rowCount; row++)
+				{
+					ImGui::TableNextRow();
+
+					for (auto column = 0; column < asset->columnCount; column++)
+					{
+						ImGui::TableSetColumnIndex(column);
+						const auto index = (row * asset->columnCount) + column;
+						const auto string_value = asset->values[index].string;
+						if (string_value == nullptr)
+						{
+							ImGui::Text("");
+						}
+						else
+						{
+							ImGui::PushStyleColor(ImGuiCol_::ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+							ImGui::PushID(index);
+							if (ImGui::Button(string_value))
+							{
+								gui::copy_to_clipboard(string_value);
+							}
+							ImGui::PopID();
+							ImGui::PopStyleColor();
+						}
+					}
+				}
+
+				ImGui::EndTable();
+			}
+
+			return true;
+		}
 	}
 
-	return true;
+	class component final : public component_interface
+	{
+	public:
+		void post_unpack() override
+		{
+			asset_list::add_asset_view<game::StringTable>(game::ASSET_TYPE_STRINGTABLE, draw_asset, ImVec2(200, 200));
+		}
+	};
 }
 
-REGISTER_COMPONENT(asset_stringtable)
+REGISTER_COMPONENT(asset_stringtable::component)
 #endif

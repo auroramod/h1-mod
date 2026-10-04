@@ -1,4 +1,5 @@
 #include <std_include.hpp>
+#include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
 
@@ -20,316 +21,326 @@
 
 #define MOD_FOLDER "mods"
 
-static std::optional<std::string> mod_path;
-
-static utils::hook::detour db_release_xassets_hook;
-static bool release_assets = false;
-
-void mods::post_unpack()
+namespace mods
 {
-	if (!utils::io::directory_exists("mods"))
+	namespace
 	{
-		utils::io::create_directory("mods");
+		std::optional<std::string> mod_path;
+
+		utils::hook::detour db_release_xassets_hook;
+		bool release_assets = false;
+
+		bool can_use_vid_restart()
+		{
+			if (game::environment::is_sp())
+			{
+				return false;
+			}
+
+			if (game::environment::is_mp())
+			{
+				return false; // vid restart causes issues with mods
+			}
+
+			return false;
+		}
+
+		void reload_omnvars()
+		{
+			*reinterpret_cast<int*>(0x1412215B0) = -1;
+			*reinterpret_cast<int*>(0x140FE3884) = -1;
+			utils::hook::invoke<void>(0x1405013E0); // Omnvar_RegisterFromStringTable
+		}
+
+		void reset_fonts()
+		{
+			*reinterpret_cast<int*>(0x14FD61EE8) = 0; // s_fontInstanceCount
+			std::memset(reinterpret_cast<void*>(0x14FD61EF0), 0, 128 * 24);
+		}
+
+		void read_stats()
+		{
+			demonware::set_storage_path(mod_path.value_or(""));
+			utils::hook::invoke<void>(0x14041A740, 0); // read stats
+		}
+
+		void do_vid_restart(const std::optional<game::netadr_s>& server)
+		{
+			reset_fonts();
+			command::execute("vid_restart");
+			scheduler::once([=]
+			{
+				read_stats();
+				reload_omnvars();
+
+				if (server.has_value())
+				{
+					party::connect(server.value());
+				}
+			}, scheduler::main);
+		}
+
+		void do_full_restart(const std::optional<game::netadr_s>& server)
+		{
+			std::string cmd;
+			const auto add_arg = [&](const std::string& arg)
+			{
+				cmd.append(" ");
+				cmd.append(arg);
+			};
+
+			const auto mode = game::environment::is_mp() ? "-multiplayer "s : "-singleplayer "s;
+			add_arg(mode);
+
+			if (mod_path.has_value())
+			{
+				add_arg(utils::string::va("-mod %s", mod_path->data()));
+			}
+
+			if (server.has_value())
+			{
+				const auto connect_cmd = utils::string::va("+connect %s", network::net_adr_to_string(*server));
+				add_arg(connect_cmd);
+			}
+
+			utils::nt::relaunch_self(cmd, true);
+			utils::nt::terminate();
+		}
+
+		void db_release_xassets_stub()
+		{
+			if (release_assets)
+			{
+				fonts::clear();
+			}
+
+			db_release_xassets_hook.invoke<void>();
+		}
+
+		void restart()
+		{
+			scheduler::once([]()
+			{
+				release_assets = true;
+				const auto _0 = gsl::finally([]()
+				{
+					release_assets = false;
+				});
+
+				game::Com_Shutdown("");
+			}, scheduler::pipeline::main);
+		}
+
+		bool mod_requires_restart(const std::string& path)
+		{
+			return utils::io::file_exists(path + "/mod.ff") || utils::io::file_exists(path + "/zone/mod.ff");
+		}
+
+		void set_filesystem_data(const std::string& path, bool change_fs_game)
+		{
+			if (mod_path.has_value())
+			{
+				filesystem::unregister_path(mod_path.value());
+			}
+
+			if (change_fs_game)
+			{
+				game::Dvar_SetFromStringByNameFromSource("fs_game", path.data(), game::DVAR_SOURCE_INTERNAL);
+			}
+
+			if (path != "")
+			{
+				filesystem::register_path(path);
+			}
+		}
+
+		bool mod_exists(const std::string& folder)
+		{
+			return utils::io::directory_exists(utils::string::va("%s\\%s", MOD_FOLDER, folder.data()));
+		}
 	}
 
-	db_release_xassets_hook.create(SELECT_VALUE(0x1401F4DB0, 0x1402BF160), db_release_xassets_stub);
-
-	dvars_component::callback::on_new_value("fs_game", [](game::dvar_value* value)
+	void execute_restart(const std::optional<game::netadr_s>& server)
 	{
-		console::warn("fs_game value changed to '%s'\n", value->string);
-		set_mod(value->string, false);
-	});
-
-	command::add("loadmod", [](const command::params& params)
-	{
-		if (params.size() < 2)
+		if (can_use_vid_restart())
 		{
-			console::info("Usage: loadmod mods/<modname>");
+			do_vid_restart(server);
+		}
+		else
+		{
+			do_full_restart(server);
+		}
+	}
+
+	void set_mod(const std::string& path, bool change_fs_game)
+	{
+		set_filesystem_data(path, change_fs_game);
+
+		if (path != "")
+		{
+			mod_path = path;
+		}
+		else
+		{
+			mod_path.reset();
+		}
+	}
+
+	std::optional<std::string> get_mod()
+	{
+		return mod_path;
+	}
+
+	std::vector<std::string> get_mod_list()
+	{
+		if (!utils::io::directory_exists(MOD_FOLDER))
+		{
+			return {};
+		}
+
+		std::vector<std::string> mod_list;
+
+		const auto files = utils::io::list_files(MOD_FOLDER);
+		for (const auto& file : files)
+		{
+			if (!utils::io::directory_exists(file) || utils::io::directory_is_empty(file))
+			{
+				continue;
+			}
+
+			mod_list.push_back(file);
+		}
+
+		return mod_list;
+	}
+
+	std::optional<nlohmann::json> get_mod_info(const std::string& name)
+	{
+		const auto info_file = name + "/info.json";
+		if (!utils::io::directory_exists(name) || !utils::io::file_exists(info_file))
+		{
+			return {};
+		}
+
+		std::unordered_map<std::string, std::string> info;
+		const auto data = utils::io::read_file(info_file);
+		const auto parsed = nlohmann::json::parse(data, {}, false);
+		if (parsed.is_discarded())
+		{
+			return {};
+		}
+
+		return {parsed};
+	}
+
+	void load(const std::string& path)
+	{
+		if (!utils::io::directory_exists(path))
+		{
+			console::info("Mod %s not found!\n", path.data());
 			return;
 		}
 
-		if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
+		console::info("Loading mod %s\n", path.data());
+		set_mod(path);
+
+		if ((mod_path.has_value() && mod_requires_restart(mod_path.value())) ||
+			mod_requires_restart(path))
 		{
-			console::info("Cannot load mod while in-game!\n");
-			game::CG_GameMessage(0, "^1Cannot load mod while in-game!");
+			console::info("Restarting...\n");
+			execute_restart();
+		}
+		else
+		{
+			restart();
+		}
+	}
+
+	void unload()
+	{
+		if (!mod_path.has_value())
+		{
+			console::info("No mod loaded\n");
 			return;
 		}
 
-		const auto path = params.get(1);
-		load(path);
-	});
+		console::info("Unloading mod %s\n", mod_path.value().data());
 
-	command::add("unloadmod", []()
-	{
-		if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
+		if (mod_requires_restart(mod_path.value()))
 		{
-			console::info("Cannot unload mod while in-game!\n");
-			game::CG_GameMessage(0, "^1Cannot unload mod while in-game!");
-			return;
+			console::info("Restarting...\n");
+			set_mod("");
+			execute_restart();
 		}
-
-		unload();
-	});
-
-	command::add("com_restart", []()
-	{
-		if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
+		else
 		{
-			return;
+			set_mod("");
+			restart();
 		}
-
-		restart();
-	});
-
-	command::add("omnvar_reload", reload_omnvars);
-}
-
-void mods::set_mod(const std::string& path, bool change_fs_game)
-{
-	set_filesystem_data(path, change_fs_game);
-
-	if (path != "")
-	{
-		mod_path = path;
-	}
-	else
-	{
-		mod_path.reset();
-	}
-}
-
-std::optional<std::string> mods::get_mod()
-{
-	return mod_path;
-}
-
-std::vector<std::string> mods::get_mod_list()
-{
-	if (!utils::io::directory_exists(MOD_FOLDER))
-	{
-		return {};
 	}
 
-	std::vector<std::string> mod_list;
-
-	const auto files = utils::io::list_files(MOD_FOLDER);
-	for (const auto& file : files)
+	class component final : public component_interface
 	{
-		if (!utils::io::directory_exists(file) || utils::io::directory_is_empty(file))
+	public:
+		void post_unpack() override
 		{
-			continue;
+			if (!utils::io::directory_exists("mods"))
+			{
+				utils::io::create_directory("mods");
+			}
+
+			db_release_xassets_hook.create(SELECT_VALUE(0x1401F4DB0, 0x1402BF160), db_release_xassets_stub);
+
+			dvars::callback::on_new_value("fs_game", [](game::dvar_value* value)
+			{
+				console::warn("fs_game value changed to '%s'\n", value->string);
+				set_mod(value->string, false);
+			});
+
+			command::add("loadmod", [](const command::params& params)
+			{
+				if (params.size() < 2)
+				{
+					console::info("Usage: loadmod mods/<modname>");
+					return;
+				}
+
+				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
+				{
+					console::info("Cannot load mod while in-game!\n");
+					game::CG_GameMessage(0, "^1Cannot load mod while in-game!");
+					return;
+				}
+
+				const auto path = params.get(1);
+				load(path);
+			});
+
+			command::add("unloadmod", []()
+			{
+				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
+				{
+					console::info("Cannot unload mod while in-game!\n");
+					game::CG_GameMessage(0, "^1Cannot unload mod while in-game!");
+					return;
+				}
+
+				unload();
+			});
+
+			command::add("com_restart", []()
+			{
+				if (!game::Com_InFrontend() && (game::environment::is_mp() && !game::VirtualLobby_Loaded()))
+				{
+					return;
+				}
+
+				restart();
+			});
+
+			command::add("omnvar_reload", reload_omnvars);
 		}
-
-		mod_list.push_back(file);
-	}
-
-	return mod_list;
-}
-
-bool mods::mod_exists(const std::string& folder)
-{
-	return utils::io::directory_exists(utils::string::va("%s\\%s", MOD_FOLDER, folder.data()));
-}
-
-std::optional<nlohmann::json> mods::get_mod_info(const std::string& name)
-{
-	const auto info_file = name + "/info.json";
-	if (!utils::io::directory_exists(name) || !utils::io::file_exists(info_file))
-	{
-		return {};
-	}
-
-	std::unordered_map<std::string, std::string> info;
-	const auto data = utils::io::read_file(info_file);
-	const auto parsed = nlohmann::json::parse(data, {}, false);
-	if (parsed.is_discarded())
-	{
-		return {};
-	}
-
-	return {parsed};
-}
-
-void mods::load(const std::string& path)
-{
-	if (!utils::io::directory_exists(path))
-	{
-		console::info("Mod %s not found!\n", path.data());
-		return;
-	}
-
-	console::info("Loading mod %s\n", path.data());
-	set_mod(path);
-
-	if ((mod_path.has_value() && mod_requires_restart(mod_path.value())) ||
-		mod_requires_restart(path))
-	{
-		console::info("Restarting...\n");
-		execute_restart();
-	}
-	else
-	{
-		restart();
-	}
-}
-
-void mods::unload()
-{
-	if (!mod_path.has_value())
-	{
-		console::info("No mod loaded\n");
-		return;
-	}
-
-	console::info("Unloading mod %s\n", mod_path.value().data());
-
-	if (mod_requires_restart(mod_path.value()))
-	{
-		console::info("Restarting...\n");
-		set_mod("");
-		execute_restart();
-	}
-	else
-	{
-		set_mod("");
-		restart();
-	}
-}
-
-void mods::read_stats()
-{
-	demonware::set_storage_path(mod_path.value_or(""));
-	utils::hook::invoke<void>(0x14041A740, 0); // read stats
-}
-
-void mods::execute_restart(const std::optional<game::netadr_s>& server)
-{
-	if (can_use_vid_restart())
-	{
-		do_vid_restart(server);
-	}
-	else
-	{
-		do_full_restart(server);
-	}
-}
-
-void mods::db_release_xassets_stub()
-{
-	if (release_assets)
-	{
-		fonts::clear();
-	}
-
-	db_release_xassets_hook.invoke<void>();
-}
-
-void mods::restart()
-{
-	scheduler::once([]()
-	{
-		release_assets = true;
-		const auto _0 = gsl::finally([]()
-		{
-			release_assets = false;
-		});
-
-		game::Com_Shutdown("");
-	}, scheduler::pipeline::main);
-}
-
-void mods::reload_omnvars()
-{
-	*reinterpret_cast<int*>(0x1412215B0) = -1;
-	*reinterpret_cast<int*>(0x140FE3884) = -1;
-	utils::hook::invoke<void>(0x1405013E0); // Omnvar_RegisterFromStringTable
-}
-
-void mods::reset_fonts()
-{
-	*reinterpret_cast<int*>(0x14FD61EE8) = 0; // s_fontInstanceCount
-	std::memset(reinterpret_cast<void*>(0x14FD61EF0), 0, 128 * 24);
-}
-
-bool mods::mod_requires_restart(const std::string& path)
-{
-	return utils::io::file_exists(path + "/mod.ff") || utils::io::file_exists(path + "/zone/mod.ff");
-}
-
-void mods::set_filesystem_data(const std::string& path, bool change_fs_game)
-{
-	if (mod_path.has_value())
-	{
-		filesystem::unregister_path(mod_path.value());
-	}
-
-	if (change_fs_game)
-	{
-		game::Dvar_SetFromStringByNameFromSource("fs_game", path.data(), game::DVAR_SOURCE_INTERNAL);
-	}
-
-	if (path != "")
-	{
-		filesystem::register_path(path);
-	}
-}
-
-bool mods::can_use_vid_restart()
-{
-	if (game::environment::is_sp())
-	{
-		return false;
-	}
-
-	if (game::environment::is_mp())
-	{
-		return false; // vid restart causes issues with mods
-	}
-
-	return false;
-}
-
-void mods::do_vid_restart(const std::optional<game::netadr_s>& server)
-{
-	reset_fonts();
-	command::execute("vid_restart");
-	scheduler::once([=]
-	{
-		mods::read_stats();
-		reload_omnvars();
-
-		if (server.has_value())
-		{
-			party::connect(server.value());
-		}
-	}, scheduler::main);
-}
-
-void mods::do_full_restart(const std::optional<game::netadr_s>& server)
-{
-	std::string cmd;
-	const auto add_arg = [&](const std::string& arg)
-	{
-		cmd.append(" ");
-		cmd.append(arg);
 	};
-
-	const auto mode = game::environment::is_mp() ? "-multiplayer "s : "-singleplayer "s;
-	add_arg(mode);
-
-	if (mod_path.has_value())
-	{
-		add_arg(utils::string::va("-mod %s", mod_path->data()));
-	}
-
-	if (server.has_value())
-	{
-		const auto connect_cmd = utils::string::va("+connect %s", network::net_adr_to_string(*server));
-		add_arg(connect_cmd);
-	}
-
-	utils::nt::relaunch_self(cmd, true);
-	utils::nt::terminate();
 }
 
-REGISTER_COMPONENT(mods)
+REGISTER_COMPONENT(mods::component)

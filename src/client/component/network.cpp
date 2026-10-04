@@ -279,10 +279,10 @@ namespace network
 				utils::hook::set<uint8_t>(0x140480E6F, 0xEB);
 
 				// increase cl_maxpackets
-				dvars_component::override::register_int("cl_maxpackets", 1000, 1, 1000, game::DVAR_ARCHIVE);
+				dvars::override::register_int("cl_maxpackets", 1000, 1, 1000, game::DVAR_ARCHIVE);
 
 				// increase snaps
-				dvars_component::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_NOFLAG);
+				dvars::override::register_int("sv_remote_client_snapshot_msec", 33, 33, 100, game::DVAR_NOFLAG);
 
 				// ignore impure client
 				utils::hook::jump(0x140481B58, 0x140481BEE);
