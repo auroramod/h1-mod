@@ -7,6 +7,7 @@
 #include "filesystem.hpp"
 #include "imagefiles.hpp"
 #include "weapon.hpp"
+#include "optimization.hpp"
 #include "fastfiles_material_sites.hpp"
 #include "fastfiles_sorted_material_sites.hpp"
 
@@ -34,7 +35,9 @@ static utils::hook::detour image_file_decrypt_value_hook;
 static utils::hook::detour db_unload_x_zones_hook;
 static utils::hook::detour db_link_xasset_entry_hook;
 static utils::hook::detour db_process_transient_asset_list_hook;
+static utils::hook::detour cl_transient_register_file_hook;
 
+std::uint8_t fastfiles::transient_files[transient_file_count * transient_file_size]{};
 
 static char last_zone_name[256]{};
 static char last_asset_name[256]{};
@@ -78,16 +81,17 @@ struct fastfiles::stream_select_context
 void fastfiles::post_unpack()
 {
 	db_try_load_x_file_internal_hook.create(SELECT_VALUE(0x1401F5700, 0x1402BFFE0), db_try_load_x_file_internal); // DB_TryLoadXFileInternal
-	db_init_load_x_file_hook.create(SELECT_VALUE(0x1401C46E0, 0x14028DE30), db_init_load_x_file_stub); // DB_InitLoadXFile
+	db_init_load_x_file_hook.create(SELECT_VALUE(0x1401C46E0, 0x14028DE30), db_init_load_x_file_stub);
 	db_find_xasset_header_hook.create(game::DB_FindXAssetHeader, db_find_xasset_header_stub);
-	db_unload_x_zones_hook.create(SELECT_VALUE(0x1401F6040, 0x1402C0BC0), db_unload_x_zones_stub); // DB_UnloadXZones
+	db_unload_x_zones_hook.create(SELECT_VALUE(0x1401F6040, 0x1402C0BC0), db_unload_x_zones_stub);
 
 	if (!game::environment::is_sp())
 	{
 		// track the last linked asset for crash dumps
-		db_link_xasset_entry_hook.create(0x1402BC920, db_link_xasset_entry_stub); // DB_LinkXAssetEntry
+		db_link_xasset_entry_hook.create(0x1402BC920, db_link_xasset_entry_stub);
 
-		db_process_transient_asset_list_hook.create(0x1402BEBE0, db_process_transient_asset_list_stub); // DB_ProcessTransientAssetList
+		db_process_transient_asset_list_hook.create(0x1402BEBE0, db_process_transient_asset_list_stub);
+		cl_transient_register_file_hook.create(0x14005D7D0, cl_transient_register_file_stub);
 		utils::hook::call(0x1402B819D, cl_transient_temp_alloc_stub); // DB_AllocXZoneMemoryInternal transient XFILE_BLOCK_TEMP
 	}
 
@@ -246,7 +250,9 @@ void fastfiles::db_try_load_x_file_internal(const char* zone_name, const int fla
 
 	strncpy_s(last_zone_name, zone_name, _TRUNCATE);
 
+	optimization::begin_zone_load(zone_name);
 	db_try_load_x_file_internal_hook.invoke<void>(zone_name, flags);
+	optimization::end_zone_load();
 }
 
 game::XAssetEntry* fastfiles::db_link_xasset_entry_stub(const game::XAssetType type, game::XAssetHeader* header)
@@ -573,7 +579,6 @@ HANDLE fastfiles::sys_create_file_stub(game::Sys_Folder folder, const char* base
 	return sys_create_file(folder, base_filename, false);
 }
 
-
 void* fastfiles::cl_transient_temp_alloc_stub(const std::uint64_t size, [[maybe_unused]] const std::uint32_t alignment)
 {
 	// transient zones put XFILE_BLOCK_TEMP in the 0x1000 byte mp_transient_temp buffer without a size check,
@@ -586,10 +591,6 @@ void* fastfiles::cl_transient_temp_alloc_stub(const std::uint64_t size, [[maybe_
 	{
 		return *game::mp::s_transientTempBuffer;
 	}
-
-#ifdef _DEBUG
-	console::info("[transient] temp block %s: 0x%llX bytes\n", last_zone_name, size);
-#endif
 
 	if (size > buffer_size)
 	{
@@ -614,6 +615,72 @@ void fastfiles::db_process_transient_asset_list_stub(const char* name, int is_pa
 {
 	// 1.04 only dedupes dlc lists, 1.15 also dedupes the _patch lists that re-register base files and assets
 	db_process_transient_asset_list_hook.invoke<void>(name, is_patch, is_patch || is_dlc);
+}
+
+int fastfiles::cl_transient_register_file_stub(const char* name, const std::uint8_t pool, const std::uint32_t unused, const int dedupe)
+{
+	if (dedupe)
+	{
+		if (const auto index = merge_transient_patch_file(name); index >= 0)
+		{
+			return index;
+		}
+	}
+
+	return cl_transient_register_file_hook.invoke<int>(name, pool, unused, dedupe);
+}
+
+int fastfiles::merge_transient_patch_file(const char* name)
+{
+	constexpr std::string_view patch_suffix = "_p_tr";
+	const std::string_view patch_name = name;
+	if (patch_name.size() <= patch_suffix.size() + 1 || !patch_name.ends_with(patch_suffix))
+	{
+		return -1;
+	}
+
+	const auto base_name = std::string(patch_name.substr(0, patch_name.size() - patch_suffix.size())) + "_tr";
+	const auto file = game::mp::CL_TransientMem_FindFileByHash(get_transient_file_hash(base_name.data()));
+	if (!file)
+	{
+		return -1;
+	}
+
+	const auto index = static_cast<std::uint16_t>((file - transient_files) / transient_file_size);
+	const auto hash = get_transient_file_hash(name);
+	if (game::mp::CL_TransientMem_FindFileByHash(hash))
+	{
+		return index;
+	}
+
+	strncpy_s(reinterpret_cast<char*>(file + 9), 0x23, name, _TRUNCATE);
+	*reinterpret_cast<std::uint32_t*>(file) = hash;
+
+	constexpr std::uint16_t invalid_index = 0xFFFF;
+	auto* link = game::mp::s_transientFileHashTable.get() + hash % 0x805;
+	while (*link != invalid_index)
+	{
+		if (*link == index)
+		{
+			return index;
+		}
+
+		link = reinterpret_cast<std::uint16_t*>(transient_files + *link * transient_file_size + 4);
+	}
+
+	*link = index;
+	return index;
+}
+
+std::uint32_t fastfiles::get_transient_file_hash(const char* name)
+{
+	std::uint32_t hash = 0;
+	for (auto c = name; *c; c++)
+	{
+		hash = (hash * 0x1000193) ^ static_cast<std::uint8_t>(*c);
+	}
+
+	return hash;
 }
 
 bool fastfiles::db_file_exists_stub(const char* file, int a2)
@@ -1942,7 +2009,13 @@ void fastfiles::select_stream_reads(stream_select_context* context)
 	const auto position = context->position;
 	auto urgent = context->urgent != 0;
 
-	const auto count = *reinterpret_cast<std::uint32_t*>(0x141CD3580);
+	if (!urgent && optimization::throttle_streaming())
+	{
+		*reinterpret_cast<void**>(stream + 0x20EB08) = nullptr;
+		return;
+	}
+
+	const auto count = *game::mp::streamImageCount;
 	sort_ids(stream_ids, stream_ids + count, 0x1402C8C40);
 
 	if (urgent)
@@ -1953,7 +2026,7 @@ void fastfiles::select_stream_reads(stream_select_context* context)
 			++split;
 		}
 
-		*reinterpret_cast<void**>(0x14534C418) = current_file;
+		*game::mp::streamSortFile = current_file;
 		sort_ids(stream_ids, stream_ids + split, 0x1402C8B70);
 
 		auto end = split;
@@ -2198,11 +2271,7 @@ void fastfiles::reallocate_customization()
 void fastfiles::reallocate_transient_files()
 {
 	// s_transientFiles (1.04 2048, 1.15 7144)
-	constexpr std::uint32_t file_count = 0x2000;
-	constexpr std::uint32_t file_size = 0x30;
-	static char files[file_count * file_size]{};
-
-	const auto files_base = reinterpret_cast<std::uintptr_t>(files);
+	const auto files_base = reinterpret_cast<std::uintptr_t>(transient_files);
 	for (const auto address : {0x14005D6C3, 0x14005D730, 0x14005D81C, 0x14005D859, 0x14005DB00})
 	{
 		utils::hook::set<std::int32_t>(address + 3, static_cast<std::int32_t>(files_base - (address + 7)));
@@ -2211,9 +2280,9 @@ void fastfiles::reallocate_transient_files()
 	utils::hook::set<std::int32_t>(0x14005DD08 + 3, static_cast<std::int32_t>(files_base - 0x140000000));
 	utils::hook::set<std::int32_t>(0x14005DD17 + 4, static_cast<std::int32_t>(files_base + 4 - 0x140000000));
 
-	utils::hook::set<std::uint32_t>(0x14005D737 + 2, file_count * file_size);
-	utils::hook::set<std::uint32_t>(0x14005DB07 + 2, file_count * file_size);
-	utils::hook::set<std::uint32_t>(0x14005D83B + 2, file_count);
+	utils::hook::set<std::uint32_t>(0x14005D737 + 2, transient_file_count * transient_file_size);
+	utils::hook::set<std::uint32_t>(0x14005DB07 + 2, transient_file_count * transient_file_size);
+	utils::hook::set<std::uint32_t>(0x14005D83B + 2, transient_file_count);
 }
 
 void fastfiles::reallocate_transient_assets()

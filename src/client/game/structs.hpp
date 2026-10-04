@@ -308,12 +308,6 @@ namespace game
 
 	static_assert(sizeof(TransientMemPool) == 0x70);
 
-	struct TransientRequestList
-	{
-		std::uint16_t count;
-		std::uint32_t* ids;
-	};
-
 	struct XModelMaterialList
 	{
 		std::uint32_t count;

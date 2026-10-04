@@ -19,7 +19,7 @@ namespace game
 		WEAK symbol<char*(size_t size, size_t alignment)> Hunk_AllocAlignInternal{0x0, 0x1404F5220};
 
 		WEAK symbol<void(const char* name, void* zone, void* memory, bool flag)> DB_LoadXFile{0x0, 0x14028D740};
-		WEAK symbol<void(unsigned char* pos, std::uint64_t size, int imageCopy)> DB_ReadXFile{0x0, 0x14028E050};
+		WEAK symbol<unsigned int(unsigned char* pos, std::uint64_t size, int imageCopy)> DB_ReadXFile{0x0, 0x14028E050};
 		WEAK symbol<void()> DB_WaitXFileStage{0x0, 0x14028E4B0};
 		WEAK symbol<void()> DB_ParseImageFileHeaders{0x0, 0x1402C6060};
 		WEAK symbol<int(const void* src, void* dst, int srcLen, int dstLen)> DB_Block_DecompressZlib{0x0, 0x14028D2F0};
@@ -509,6 +509,8 @@ namespace game
 		WEAK symbol<std::uint32_t> s_transientPoolCount{0x0, 0x1413B88D0};
 		WEAK symbol<std::uint8_t*> s_transientCurrentFile{0x0, 0x1413D2F70};
 		WEAK symbol<void*> s_transientTempBuffer{0x0, 0x1413D2F78};
+		WEAK symbol<std::uint16_t> s_transientFileHashTable{0x0, 0x1413D1F60};
+		WEAK symbol<std::uint8_t*(std::uint32_t hash)> CL_TransientMem_FindFileByHash{0x0, 0x14005DCC0};
 
 		WEAK symbol<playerState_s*> playerState{0x0, 0x14CAAC780};
 	}

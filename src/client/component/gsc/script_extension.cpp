@@ -676,6 +676,22 @@ scripting::value_wrap function_args::get(const int index) const
 
 void script_extension::add_1_15_builtins()
 {
+	functions[0x2FB] = [](const function_args& args) -> scripting::script_value // isweaponsilenced (weapon)
+	{
+		// TODO improve, 1.04 has no isweaponsilenced and doesnt check weapondef like 1.15 does
+		const auto weapon = args[0].as<std::string>();
+		return weapon.find("silence") != std::string::npos ? 1 : 0;
+	};
+
+	for (const auto id : {0x2FC, 0x2FD, 0x2FE, 0x2FF, 0x300, 0x301})
+	{
+		functions[static_cast<std::uint16_t>(id)] = [](const function_args&)
+		{
+			// random nullsubs......
+			return scripting::script_value{};
+		};
+	}
+
 	functions[0x302] = [](const function_args&) -> scripting::script_value // getnumberofclients
 	{
 		return scripting::call_function("getdvarint", {"sv_maxclients"});

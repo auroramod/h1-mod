@@ -33,6 +33,10 @@ public:
 private:
 	struct stream_select_context;
 
+	static constexpr std::uint32_t transient_file_count = 0x2000; // 1.04 has 2048 by default
+	static constexpr std::uint32_t transient_file_size = 0x30;
+	static std::uint8_t transient_files[transient_file_count * transient_file_size];
+
 	static void db_init_load_x_file_stub(game::DBFile* file, std::uint64_t offset);
 	static void db_try_load_x_file_internal(const char* zone_name, int flags);
 	static game::XAssetEntry* db_link_xasset_entry_stub(game::XAssetType type, game::XAssetHeader* header);
@@ -50,6 +54,9 @@ private:
 	static HANDLE sys_create_file(game::Sys_Folder folder, const char* base_filename, bool ignore_usermap);
 	static HANDLE sys_create_file_stub(game::Sys_Folder folder, const char* base_filename);
 	static void db_process_transient_asset_list_stub(const char* name, int is_patch, int is_dlc);
+	static int cl_transient_register_file_stub(const char* name, std::uint8_t pool, std::uint32_t unused, int dedupe);
+	static int merge_transient_patch_file(const char* name);
+	static std::uint32_t get_transient_file_hash(const char* name);
 	static void* cl_transient_temp_alloc_stub(std::uint64_t size, std::uint32_t alignment);
 	static bool db_file_exists_stub(const char* file, int a2);
 
