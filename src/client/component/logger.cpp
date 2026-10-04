@@ -73,6 +73,9 @@ void logger::com_error_stub(const int error, const char* msg, ...)
 	va_end(ap);
 
 	console::error("Error: %s\n", buffer);
+#ifdef _DEBUG
+	console::error("Com_Error called from 0x%p\n", _ReturnAddress());
+#endif
 
 	party::clear_sv_motd(); // clear sv_motd on error if it exists
 

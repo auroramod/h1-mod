@@ -8,7 +8,6 @@
 #include <condition_variable>
 #include <deque>
 
-// MP fastfile load time optimizations, see docs/transient_and_optimizations.md
 class optimization final : public component_interface
 {
 public:
