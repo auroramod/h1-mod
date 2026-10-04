@@ -1432,6 +1432,7 @@ namespace d3d11
 			console::print(print_type, "\ths: %s\n", hs_name.data());
 			console::print(print_type, "\n");
 		}
+
 		HRESULT __stdcall info_queue_add_message_stub(ID3D11InfoQueue* this_, 
 			D3D11_MESSAGE_CATEGORY category, D3D11_MESSAGE_SEVERITY severity,
 			D3D11_MESSAGE_ID id, LPCSTR description)
@@ -1488,7 +1489,8 @@ namespace d3d11
 			}
 
 			return S_OK;
-		}
+		} 
+
 		void hook_debug_info(ID3D11Device* device)
 		{
 			if (!d3d11_debug->current.enabled)
@@ -1554,7 +1556,7 @@ namespace d3d11
 		void create_vertex_shader_stub(game::GfxVertexShaderLoadDef* load_def, game::MaterialVertexShader* shader)
 		{
 			create_vertex_shader_hook.invoke<void>(load_def, shader);
-
+			
 			if (shader->prog.vs != nullptr)
 			{
 				shader->prog.vs->SetPrivateData(guid_shader_bytecode, load_def->programSize, load_def->program);

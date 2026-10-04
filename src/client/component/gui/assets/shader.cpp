@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -20,7 +19,7 @@
 
 #pragma comment(lib, "dxguid.lib")
 
-namespace asset_shader
+namespace gui::asset_list::shader
 {
 	namespace
 	{
@@ -62,7 +61,7 @@ namespace asset_shader
 			}
 
 			buffers[asset->name] = disassemble_shader(*reinterpret_cast<ID3D11DeviceChild**>(&asset->prog));
-
+			
 			return get_disassembled_shader(asset);
 		}
 
@@ -103,5 +102,5 @@ namespace asset_shader
 	};
 }
 
-REGISTER_COMPONENT(asset_shader::component)
+REGISTER_COMPONENT(gui::asset_list::shader::component)
 #endif

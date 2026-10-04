@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -17,21 +16,21 @@
 #include <utils/hook.hpp>
 
 #define DRAW_ASSET_FLOAT_SLIDER(__name__, __property__, __min__, __max__, __step__) \
-	ImGui::DragFloat(__name__, &asset->__property__, __step__, __min__, __max__); \
+		ImGui::DragFloat(__name__, &asset->__property__, __step__, __min__, __max__); \
 
 #define DRAW_ASSET_PROPERTY(__name__, __fmt__) \
-	ImGui::Text(#__name__ ": " __fmt__, asset->__name__); \
+		ImGui::Text(#__name__ ": " __fmt__, asset->__name__); \
 
 #define DRAW_ASSET_PROPERTY_COPY(__name__) \
-	ImGui::Text(#__name__ ": "); \
-	ImGui::SameLine(); \
-	if (ImGui::Button(asset->__name__)) \
-	{ \
-		gui::copy_to_clipboard(asset->__name__); \
-	} \
+		ImGui::Text(#__name__ ": "); \
+		ImGui::SameLine(); \
+		if (ImGui::Button(asset->__name__)) \
+		{ \
+			gui::copy_to_clipboard(asset->__name__); \
+		} \
 
 
-namespace asset_sound
+namespace gui::asset_list::sound
 {
 	namespace
 	{
@@ -287,25 +286,25 @@ namespace asset_sound
 					DRAW_ASSET_FLOAT_SLIDER("distMax", head[i].distMax, -20000.0f, 20000.0f, 10.0f);
 
 					DRAW_ASSET_PROPERTY(head[i].flags, "%i");
-		                    auto* flags = reinterpret_cast<game::SoundAliasFlags*>(&asset->head[i].flags);
-		                    ImGui::Text("probability: %f", asset->head[i].probability);
-		                    ImGui::Text("looping: %i", flags->packed.looping);
-		                    ImGui::Text("isMaster: %i", flags->packed.isMaster);
-		                    ImGui::Text("isSlave: %i", flags->packed.isSlave);
-		                    ImGui::Text("fullDryLevel: %i", flags->packed.fullDryLevel);
-		                    ImGui::Text("noWetLevel: %i", flags->packed.noWetLevel);
-		                    ImGui::Text("randomLooping: %i", flags->packed.randomLooping);
-		                    ImGui::Text("spatializedRangeCheck: %i", flags->packed.spatializedRangeCheck);
-		                    ImGui::Text("spatializedIs3D: %i", flags->packed.spatializedIs3D);
-		                    ImGui::Text("unk9: %i", flags->packed.unk9);
-		                    ImGui::Text("inheritPitch: %i", flags->packed.inheritPitch);
-		                    ImGui::Text("inheritVolume: %i", flags->packed.inheritVolume);
-		                    ImGui::Text("useContextList: %i", flags->packed.useContextList);
-		                    ImGui::Text("useNoPanning2D: %i", flags->packed.useNoPanning2D);
-		                    ImGui::Text("useOldPanning: %i", flags->packed.useOldPanning);
-		                    ImGui::Text("useNoPanning3D: %i", flags->packed.useNoPanning3D);
-		                    ImGui::Text("type: %i", flags->packed.type);
-		                    ImGui::Text("unused: %i", flags->packed.unused);
+                    auto* flags = reinterpret_cast<game::SoundAliasFlags*>(&asset->head[i].flags);
+                    ImGui::Text("probability: %f", asset->head[i].probability);
+                    ImGui::Text("looping: %i", flags->packed.looping);
+                    ImGui::Text("isMaster: %i", flags->packed.isMaster);
+                    ImGui::Text("isSlave: %i", flags->packed.isSlave);
+                    ImGui::Text("fullDryLevel: %i", flags->packed.fullDryLevel);
+                    ImGui::Text("noWetLevel: %i", flags->packed.noWetLevel);
+                    ImGui::Text("randomLooping: %i", flags->packed.randomLooping);
+                    ImGui::Text("spatializedRangeCheck: %i", flags->packed.spatializedRangeCheck);
+                    ImGui::Text("spatializedIs3D: %i", flags->packed.spatializedIs3D);
+                    ImGui::Text("unk9: %i", flags->packed.unk9);
+                    ImGui::Text("inheritPitch: %i", flags->packed.inheritPitch);
+                    ImGui::Text("inheritVolume: %i", flags->packed.inheritVolume);
+                    ImGui::Text("useContextList: %i", flags->packed.useContextList);
+                    ImGui::Text("useNoPanning2D: %i", flags->packed.useNoPanning2D);
+                    ImGui::Text("useOldPanning: %i", flags->packed.useOldPanning);
+                    ImGui::Text("useNoPanning3D: %i", flags->packed.useNoPanning3D);
+                    ImGui::Text("type: %i", flags->packed.type);
+                    ImGui::Text("unused: %i", flags->packed.unused);
 
 					ImGui::Text("dspBus: %s", dsp_buses[asset->head[i].dspBusIndex]);
 					ImGui::Text("volMod: %s", volume_mod_groups[asset->head[i].volModIndex]);
@@ -334,5 +333,5 @@ namespace asset_sound
 	};
 }
 
-REGISTER_COMPONENT(asset_sound::component)
+REGISTER_COMPONENT(gui::asset_list::sound::component)
 #endif

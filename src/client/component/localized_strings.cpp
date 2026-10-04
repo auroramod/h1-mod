@@ -16,9 +16,9 @@ namespace localized_strings
 {
 	namespace
 	{
-			using localized_map = std::unordered_map<std::string, std::string>;
 
 		utils::hook::detour seh_string_ed_get_string_hook;
+		using localized_map = std::unordered_map<std::string, std::string>;
 		utils::concurrency::container<localized_map> localized_overrides;
 
 		const char* seh_string_ed_get_string(const char* reference)

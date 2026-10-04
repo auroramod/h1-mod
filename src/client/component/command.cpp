@@ -1,7 +1,7 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "command.hpp"
 
+#include "command.hpp"
 #include "console.hpp"
 #include "dvars.hpp"
 #include "fastfiles.hpp"
@@ -65,9 +65,7 @@ namespace command
 		}
 
 		// Shamelessly stolen from Quake3
-
 		// https://github.com/id-Software/Quake-III-Arena/blob/dbe4ddb10315479fc00086f08e25d968b4b43c49/code/qcommon/common.c#L364
-
 		void parse_command_line()
 		{
 			static auto parsed = false;
@@ -587,7 +585,7 @@ namespace command
 
 				cmd_kill(0);
 			});
-
+			
 			add("give", [](const params& params)
 			{
 				if (!game::SV_Loaded())
@@ -793,38 +791,6 @@ namespace command
 		}
 	}
 
-	void add(const char* name, const std::function<void(const params&)>& callback)
-	{
-		const auto command = utils::string::to_lower(name);
-
-		if (handlers.find(command) == handlers.end())
-			add_raw(name, main_handler);
-
-		handlers[command] = callback;
-	}
-
-	void add(const char* name, const std::function<void()>& callback)
-	{
-		add(name, [callback](const params&)
-		{
-			callback();
-		});
-	}
-
-	void execute(std::string command, const bool sync)
-	{
-		command += "\n";
-
-		if (sync)
-		{
-			game::Cmd_ExecuteSingleCommand(0, 0, command.data());
-		}
-		else
-		{
-			game::Cbuf_AddText(0, 0, command.data());
-		}
-	}
-
 	params::params() : nesting_(game::cmd_args->nesting)
 	{
 	}
@@ -905,6 +871,38 @@ namespace command
 			params_.push_back(this->get(i));
 		}
 		return params_;
+	}
+
+	void add(const char* name, const std::function<void(const params&)>& callback)
+	{
+		const auto command = utils::string::to_lower(name);
+
+		if (handlers.find(command) == handlers.end())
+			add_raw(name, main_handler);
+
+		handlers[command] = callback;
+	}
+
+	void add(const char* name, const std::function<void()>& callback)
+	{
+		add(name, [callback](const params&)
+		{
+			callback();
+		});
+	}
+
+	void execute(std::string command, const bool sync)
+	{
+		command += "\n";
+
+		if (sync)
+		{
+			game::Cmd_ExecuteSingleCommand(0, 0, command.data());
+		}
+		else
+		{
+			game::Cbuf_AddText(0, 0, command.data());
+		}
 	}
 
 	class component final : public component_interface

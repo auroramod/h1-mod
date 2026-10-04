@@ -1,4 +1,5 @@
 #pragma once
+
 #include <utils/http.hpp>
 
 namespace motd

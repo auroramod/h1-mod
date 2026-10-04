@@ -103,12 +103,12 @@ namespace game_module
 			if (game::environment::is_sp())
 			{
 				// SP is still the 1.15 binary, so we keep global detours there
-				handle_a_hook.create(&GetModuleHandleA, &get_module_handle_a);
-				handle_w_hook.create(&GetModuleHandleW, &get_module_handle_w);
+			handle_a_hook.create(&GetModuleHandleA, &get_module_handle_a);
+			handle_w_hook.create(&GetModuleHandleW, &get_module_handle_w);
 				handle_ex_a_hook.create(&GetModuleHandleExA, &get_module_handle_ex_a);
-				handle_ex_w_hook.create(&GetModuleHandleExW, &get_module_handle_ex_w);
-				file_name_a_hook.create(&GetModuleFileNameA, &get_module_file_name_a);
-				file_name_w_hook.create(&GetModuleFileNameW, &get_module_file_name_w);
+			handle_ex_w_hook.create(&GetModuleHandleExW, &get_module_handle_ex_w);
+			file_name_a_hook.create(&GetModuleFileNameA, &get_module_file_name_a);
+			file_name_w_hook.create(&GetModuleFileNameW, &get_module_file_name_w);
 
 				orig_get_module_handle_a = handle_a_hook.get<std::remove_pointer_t<decltype(orig_get_module_handle_a)>>();
 				orig_get_module_handle_w = handle_w_hook.get<std::remove_pointer_t<decltype(orig_get_module_handle_w)>>();

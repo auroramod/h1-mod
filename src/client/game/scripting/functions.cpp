@@ -13,8 +13,8 @@ namespace scripting
 		int find_function_index(const std::string& name, [[maybe_unused]] const bool prefer_global)
 		{
 			const auto target = utils::string::to_lower(name);
-			auto const& first = script_loading::gsc_ctx->func_map();
-			auto const& second = script_loading::gsc_ctx->meth_map();
+			auto const& first = gsc::gsc_ctx->func_map();
+			auto const& second = gsc::gsc_ctx->meth_map();
 
 			if (!prefer_global)
 			{
@@ -60,17 +60,17 @@ namespace scripting
 
 	std::string find_token(std::uint32_t id)
 	{
-		return script_loading::gsc_ctx->token_name(id);
+		return gsc::gsc_ctx->token_name(id);
 	}
 
 	std::string find_token_single(std::uint32_t id)
 	{
-		return script_loading::gsc_ctx->token_name(id);
+		return gsc::gsc_ctx->token_name(id);
 	}
 
 	unsigned int find_token_id(const std::string& name)
 	{
-		const auto id = script_loading::gsc_ctx->token_id(name);
+		const auto id = gsc::gsc_ctx->token_id(name);
 		if (id)
 		{
 			return id;
@@ -87,8 +87,8 @@ namespace scripting
 
 	script_function get_function_by_index(const std::uint32_t index)
 	{
-		static const auto function_table = &script_extension::func_table;
-		static const auto method_table = &script_extension::meth_table;
+		static const auto function_table = &gsc::func_table;
+		static const auto method_table = &gsc::meth_table;
 
 		if (index < 0x1000)
 		{

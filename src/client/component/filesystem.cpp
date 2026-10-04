@@ -23,6 +23,7 @@ namespace filesystem
 	namespace
 	{
 		utils::hook::detour fs_startup_hook;
+
 		bool initialized = false;
 
 		std::deque<std::filesystem::path>& get_search_paths_internal()

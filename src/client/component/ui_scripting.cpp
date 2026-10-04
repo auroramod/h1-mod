@@ -781,8 +781,8 @@ namespace ui_scripting
 			const auto _0 = gsl::finally(&try_start);
 			if (game::environment::is_sp())
 			{
-				return hks_start_hook.invoke<void*>(a1);
-			}
+			return hks_start_hook.invoke<void*>(a1);
+		}
 
 			return utils::hook::invoke<void*>(0x140176A40, a1); // hks_start
 		}
@@ -793,8 +793,8 @@ namespace ui_scripting
 			globals = {};
 			if (game::environment::is_sp())
 			{
-				return hks_shutdown_hook.invoke<void>();
-			}
+			return hks_shutdown_hook.invoke<void>();
+		}
 
 			return utils::hook::invoke<void>(0x14016CA80); // hks_shutdown
 		}
@@ -806,8 +806,8 @@ namespace ui_scripting
 			globals.in_require_script = root;
 			if (game::environment::is_sp())
 			{
-				return hks_package_require_hook.invoke<void*>(state);
-			}
+			return hks_package_require_hook.invoke<void*>(state);
+		}
 
 			return utils::hook::invoke<void*>(0x140115730, state); // package_require
 		}
@@ -893,10 +893,10 @@ namespace ui_scripting
 			else
 			{
 				if (game::environment::is_sp())
-				{
-					return hks_load_hook.invoke<int>(state, compiler_options, reader,
-						reader_data, chunk_name);
-				}
+			{
+				return hks_load_hook.invoke<int>(state, compiler_options, reader,
+					reader_data, chunk_name);
+			}
 
 				return utils::hook::invoke<int>(0x14012BC20, state, compiler_options, reader,
 					reader_data, chunk_name); // hks_load

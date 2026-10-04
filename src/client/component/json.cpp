@@ -149,13 +149,13 @@ namespace json
 	public:
 		void post_unpack() override
 		{
-			script_extension::add_function("array", [](const gsc::function_args& args)
+			gsc::function::add("array", [](const gsc::function_args& args)
 			{
 				scripting::array array(args.get_raw());
 				return array.get_raw();
 			});
 
-			script_extension::add_function("map", [](const gsc::function_args& args)
+			gsc::function::add("map", [](const gsc::function_args& args)
 			{
 				scripting::array array;
 
@@ -173,14 +173,14 @@ namespace json
 				return array;
 			});
 
-			script_extension::add_function("jsonparse", [](const gsc::function_args& args)
+			gsc::function::add("jsonparse", [](const gsc::function_args& args)
 			{
 				const auto json = args[0].as<std::string>();
 				const auto obj = nlohmann::json::parse(json);
 				return json_to_gsc(obj);
 			});
 
-			script_extension::add_function("jsonserialize", [](const gsc::function_args& args)
+			gsc::function::add("jsonserialize", [](const gsc::function_args& args)
 			{
 				const auto value = args[0];
 				auto indent = -1;
@@ -193,7 +193,7 @@ namespace json
 				return gsc_to_json(value).dump(indent);
 			});
 
-			script_extension::add_function("jsonprint", [](const gsc::function_args& args) -> scripting::script_value
+			gsc::function::add("jsonprint", [](const gsc::function_args& args) -> scripting::script_value
 			{
 				std::string buffer;
 

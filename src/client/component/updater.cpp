@@ -33,9 +33,9 @@ namespace updater
 {
 	namespace
 	{
-		void set_update_check_status(bool done, bool success, const std::string& error = {});
 
-		void set_update_download_status(bool done, bool success, const std::string& error = {});
+		game::dvar_t* cl_auto_update;
+		bool has_tried_update = false;
 
 			struct status
 			{
@@ -60,9 +60,6 @@ namespace updater
 				std::vector<std::string> required_files{};
 				std::vector<std::string> garbage_files{};
 			};
-
-		game::dvar_t* cl_auto_update;
-		bool has_tried_update = false;
 
 		// remove this at some point
 		std::vector<std::string> old_data_files =
@@ -102,6 +99,9 @@ namespace updater
 				ui_scripting::notify(name, {});
 			}, scheduler::pipeline::lui);
 		}
+		void set_update_check_status(bool done, bool success, const std::string& error = {});
+
+		void set_update_download_status(bool done, bool success, const std::string& error = {});
 
 		void set_update_check_status(bool done, bool success, const std::string& error)
 		{

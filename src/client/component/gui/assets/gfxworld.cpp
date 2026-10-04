@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -16,7 +15,7 @@
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 
-namespace asset_gfxworld
+namespace gui::asset_list::gfxworld
 {
 	namespace
 	{
@@ -40,5 +39,5 @@ namespace asset_gfxworld
 	};
 }
 
-REGISTER_COMPONENT(asset_gfxworld::component)
+REGISTER_COMPONENT(gui::asset_list::gfxworld::component)
 #endif

@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -16,23 +15,21 @@
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 
-namespace asset_xmodel
+namespace gui::asset_list::xmodel
 {
 	namespace
 	{
-			struct xmodel_draw_t
-			{
-				game::XModel* asset;
-				game::GfxScaledPlacement placement;
-				unsigned short cached_lighting_handle;
-				float color_lit[3];
-				float color_unlit[3];
-				float color_emissive[3];
-			};
+		struct xmodel_draw_t
+		{
+			game::XModel* asset;
+			game::GfxScaledPlacement placement;
+			unsigned short cached_lighting_handle;
+			float color_lit[3];
+			float color_unlit[3];
+			float color_emissive[3];
+		};
 
 		std::vector<xmodel_draw_t> spawned_xmodels;
-
-		utils::hook::detour r_generate_sorted_draw_surfs_hook;
 
 		ImVec2 project_vertex(game::vec3_t v, bool flip_axis, float scale = 1.f,
 			bool rotate = false, float rotation_speed = 0.f)
@@ -157,6 +154,7 @@ namespace asset_xmodel
 				draw_list->AddLine(points[2], points[0], IM_COL32_WHITE, 1.f);
 			}
 		}
+
 
 		int sum_verts_in_xmodels(game::XModel* asset, game::vec3_t mins, game::vec3_t maxs, game::vec3_t origin)
 		{
@@ -364,6 +362,7 @@ namespace asset_xmodel
 			return true;
 		}
 
+		utils::hook::detour r_generate_sorted_draw_surfs_hook;
 		void r_generate_sorted_draw_surfs_stub(void* a1, void* a2, void* a3, void* a4, void* a5, void* a6)
 		{
 			for (auto& model : spawned_xmodels)
@@ -462,6 +461,7 @@ namespace asset_xmodel
 		spawned_xmodels.emplace_back(xmodel_draw);
 	}
 
+
 	class component final : public component_interface
 	{
 	public:
@@ -499,5 +499,6 @@ namespace asset_xmodel
 	};
 }
 
-REGISTER_COMPONENT(asset_xmodel::component)
+
+REGISTER_COMPONENT(gui::asset_list::xmodel::component)
 #endif

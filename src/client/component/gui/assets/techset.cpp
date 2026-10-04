@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -16,7 +15,7 @@
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 
-namespace asset_techset
+namespace gui::asset_list::techet
 {
 	namespace
 	{
@@ -311,6 +310,7 @@ namespace asset_techset
 					ImGui::Text("null"); \
 				} \
 
+
 				if (ImGui::TreeNode(pass, "pass %i", o))
 				{
 					ADD_SHADER(vertexShader, game::ASSET_TYPE_VERTEXSHADER);
@@ -491,5 +491,5 @@ namespace asset_techset
 	};
 }
 
-REGISTER_COMPONENT(asset_techset::component)
+REGISTER_COMPONENT(gui::asset_list::techet::component)
 #endif

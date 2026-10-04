@@ -1,12 +1,13 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "download.hpp"
 
+#include "download.hpp"
 #include "console.hpp"
 #include "scheduler.hpp"
 #include "party.hpp"
 
 #include "game/ui_scripting/execution.hpp"
+
 #include "utils/hash.hpp"
 
 #include <utils/concurrency.hpp>
@@ -18,15 +19,14 @@ namespace download
 {
 	namespace
 	{
-			struct globals_t
-			{
-				bool abort{};
-				bool active{};
-			};
+		struct globals_t
+		{
+			bool abort{};
+			bool active{};
+		};
 
 		std::atomic_bool kill_downloads = false;
 		utils::concurrency::container<globals_t> globals;
-		auto last_update = std::chrono::high_resolution_clock::now();
 
 		bool download_aborted()
 		{
@@ -65,6 +65,7 @@ namespace download
 			});
 		}
 
+		auto last_update = std::chrono::high_resolution_clock::now();
 		int progress_callback(size_t total, size_t progress)
 		{
 			const auto now = std::chrono::high_resolution_clock::now();

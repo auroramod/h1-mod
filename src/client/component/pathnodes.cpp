@@ -27,48 +27,6 @@ namespace pathnodes
 			{"prone", 15},
 		};
 
-		constexpr const auto node_type_jump = 32;
-		constexpr const auto node_type_jump_attack = 33;
-		constexpr const auto node_type_end = 34;
-
-		const char* node_types[] =
-		{
-			"Error",
-			"Path",
-			"Cover Stand",
-			"Cover Crouch",
-			"Cover Crouch Window",
-			"Cover Prone",
-			"Cover Right",
-			"Cover Left",
-			"Cover Wide Right",
-			"Cover Wide Left",
-			"Cover Multi",
-			"Ambush",
-			"Exposed",
-			"Conceal Stand",
-			"Conceal Crouch",
-			"Conceal Prone",
-			"Door",
-			"Door Interior",
-			"Scripted",
-			"Begin",
-			"End",
-			"Turret",
-			"Guard",
-			"Path 3D",
-			"Cover Up 3D",
-			"Cover Right 3D",
-			"Cover Left 3D",
-			"Exposed 3D",
-			"Scripted 3D",
-			"Begin 3D",
-			"End 3D",
-			"",
-			"Jump",
-			"Jump Attack",
-		};
-
 		scripting::script_value mark_dangerous_nodes(const gsc::function_args& args)
 		{
 			if (args.size() < 3)
@@ -87,11 +45,6 @@ namespace pathnodes
 			const auto dangerous = args[2].as<int>();
 			game::SV_BotMarkNodesAsDangerous(origin, radius, dangerous);
 			return {};
-		}
-
-		float distance(float* a, float* b)
-		{
-			return std::sqrtf((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]));
 		}
 
 		scripting::script_value mark_dangerous_nodes_in_trigger(const gsc::function_args& args)
@@ -178,6 +131,10 @@ namespace pathnodes
 			return {};
 		}
 
+		constexpr const auto node_type_jump = 32;
+		constexpr const auto node_type_jump_attack = 33;
+		constexpr const auto node_type_end = 34;
+
 		bool is_jump_node(const std::uint16_t type)
 		{
 			return type == node_type_jump || type == node_type_jump_attack;
@@ -202,6 +159,44 @@ namespace pathnodes
 		{
 			return is_traverse_end_node(type) || is_jump_node(type);
 		}
+
+		const char* node_types[] =
+		{
+			"Error",
+			"Path",
+			"Cover Stand",
+			"Cover Crouch",
+			"Cover Crouch Window",
+			"Cover Prone",
+			"Cover Right",
+			"Cover Left",
+			"Cover Wide Right",
+			"Cover Wide Left",
+			"Cover Multi",
+			"Ambush",
+			"Exposed",
+			"Conceal Stand",
+			"Conceal Crouch",
+			"Conceal Prone",
+			"Door",
+			"Door Interior",
+			"Scripted",
+			"Begin",
+			"End",
+			"Turret",
+			"Guard",
+			"Path 3D",
+			"Cover Up 3D",
+			"Cover Right 3D",
+			"Cover Left 3D",
+			"Exposed 3D",
+			"Scripted 3D",
+			"Begin 3D",
+			"End 3D",
+			"",
+			"Jump",
+			"Jump Attack",
+		};
 
 		bool check_traverse_node(const game::pathnode_t* a1, const game::pathnode_t* a2)
 		{
@@ -235,6 +230,11 @@ namespace pathnodes
 			a.bind(do_traverse);
 			a.popad64();
 			a.jmp(0x14030E85A);
+		}
+
+		float distance(float* a, float* b)
+		{
+			return std::sqrtf((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]));
 		}
 
 		game::pathnode_tree_t* allocate_tree(game::PathData* asset)
@@ -482,8 +482,8 @@ namespace pathnodes
 
 			utils::hook::jump(0x14030E830, utils::hook::assemble(path_generate_path_stub), true);
 
-			script_extension::add_function("markdangerousnodes", mark_dangerous_nodes);
-			script_extension::add_function("markdangerousnodesintrigger", mark_dangerous_nodes_in_trigger);
+			gsc::function::add("markdangerousnodes", mark_dangerous_nodes);
+			gsc::function::add("markdangerousnodesintrigger", mark_dangerous_nodes_in_trigger);
 
 			// add bot warfare CSV loading on map loading
 			utils::hook::call(0x140343461, path_init_stub); // G_InitGame -> Path_Init

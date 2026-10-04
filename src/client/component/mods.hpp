@@ -6,9 +6,9 @@ namespace mods
 {
 	void set_mod(const std::string& path, bool change_fs_game = true);
 	std::optional<std::string> get_mod();
-	std::vector<std::string> get_mod_list();
-	std::optional<nlohmann::json> get_mod_info(const std::string& mod);
 	void load(const std::string& path);
 	void unload();
+	std::vector<std::string> get_mod_list();
+	std::optional<nlohmann::json> get_mod_info(const std::string& mod);
 	void execute_restart(const std::optional<game::netadr_s>& server = {});
 }

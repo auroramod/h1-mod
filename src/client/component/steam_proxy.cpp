@@ -20,9 +20,7 @@ namespace steam_proxy
 		utils::nt::library steam_overlay_module_{};
 
 		steam::interface client_engine_ {};
-
 		steam::interface client_user_ {};
-
 		steam::interface client_utils_ {};
 
 		void* steam_pipe_ = nullptr;
@@ -115,12 +113,6 @@ namespace steam_proxy
 		}
 	}
 
-	const utils::nt::library& get_overlay_module()
-	{
-		// TODO: Find a better way to do this
-		return steam_overlay_module_;
-	}
-
 	class component final : public component_interface
 	{
 	public:
@@ -166,6 +158,12 @@ namespace steam_proxy
 			}
 		}
 	};
+
+	const utils::nt::library& get_overlay_module()
+	{
+		// TODO: Find a better way to do this
+		return steam_overlay_module_;
+	}
 }
 
 REGISTER_COMPONENT(steam_proxy::component)

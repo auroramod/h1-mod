@@ -2,7 +2,7 @@
 #include "game/game.hpp"
 #include "game/dvars.hpp"
 
-namespace asset_xmodel
+namespace gui::asset_list::xmodel
 {
 	void spawn_xmodel(game::XModel* asset, const float scale = 1.f);
 }

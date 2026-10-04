@@ -14,7 +14,7 @@
 
 using namespace utils::string;
 
-namespace script_error
+namespace gsc
 {
 	namespace
 	{
@@ -55,23 +55,10 @@ namespace script_error
 			"endon list",
 		};
 
-		template <size_t address>
-		void safe_func()
+		void scr_emit_function_stub(std::uint32_t filename, std::uint32_t thread_name, char* code_pos)
 		{
-			static utils::hook::detour hook;
-			static const auto stub = []()
-			{
-				__try
-				{
-					hook.invoke<void>();
-				}
-				__except (EXCEPTION_EXECUTE_HANDLER)
-				{
-					game::Scr_ErrorInternal();
-				}
-			};
-
-			hook.create(reinterpret_cast<void*>(address), stub);
+			current_filename = filename;
+			scr_emit_function_hook.invoke<void>(filename, thread_name, code_pos);
 		}
 
 		void script_link_error()
@@ -88,12 +75,6 @@ namespace script_error
 			{
 				game::Com_Error(game::ERR_SCRIPT_DROP, "script link error\n%s", unknown_function_error.data());
 			});
-		}
-
-		void scr_emit_function_stub(std::uint32_t filename, std::uint32_t thread_name, char* code_pos)
-		{
-			current_filename = filename;
-			scr_emit_function_hook.invoke<void>(filename, thread_name, code_pos);
 		}
 
 		std::string get_filename_name()
@@ -164,10 +145,10 @@ namespace script_error
 					return value->u.pointerValue;
 				}
 
-				script_extension::scr_error(va("Type %s is not an object", var_typename[value->type]));
+				gsc::scr_error(va("Type %s is not an object", var_typename[value->type]));
 			}
 
-			script_extension::scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -185,7 +166,7 @@ namespace script_error
 				game::Scr_ErrorInternal();
 			}
 
-			script_extension::scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -199,10 +180,10 @@ namespace script_error
 					return value->u.stringValue;
 				}
 
-				script_extension::scr_error(va("Type %s is not a localized string", var_typename[value->type]));
+				gsc::scr_error(va("Type %s is not a localized string", var_typename[value->type]));
 			}
 
-			script_extension::scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -220,7 +201,7 @@ namespace script_error
 			{
 				if (!std::isalnum(static_cast<unsigned char>(token[char_iter])) && token[char_iter] != '_')
 				{
-					script_extension::scr_error(va("Illegal localized string reference: %s must contain only alpha-numeric characters and underscores", token));
+					gsc::scr_error(va("Illegal localized string reference: %s must contain only alpha-numeric characters and underscores", token));
 				}
 			}
 		}
@@ -236,10 +217,10 @@ namespace script_error
 					return;
 				}
 
-				script_extension::scr_error(va("Type %s is not a vector", var_typename[value->type]));
+				gsc::scr_error(va("Type %s is not a vector", var_typename[value->type]));
 			}
 
-			script_extension::scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 		}
 
 		int scr_get_int(unsigned int index)
@@ -252,10 +233,10 @@ namespace script_error
 					return value->u.intValue;
 				}
 
-				script_extension::scr_error(va("Type %s is not an int", var_typename[value->type]));
+				gsc::scr_error(va("Type %s is not an int", var_typename[value->type]));
 			}
 
-			script_extension::scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -274,10 +255,10 @@ namespace script_error
 					return static_cast<float>(value->u.intValue);
 				}
 
-				script_extension::scr_error(va("Type %s is not a float", var_typename[value->type]));
+				gsc::scr_error(va("Type %s is not a float", var_typename[value->type]));
 			}
 
-			script_extension::scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0.0f;
 		}
 
@@ -290,10 +271,10 @@ namespace script_error
 					return static_cast<int>(game::GetObjectType((game::scr_VmPub->top - index)->u.uintValue));
 				}
 
-				script_extension::scr_error(va("Type %s is not an object", var_typename[(game::scr_VmPub->top - index)->type]));
+				gsc::scr_error(va("Type %s is not an object", var_typename[(game::scr_VmPub->top - index)->type]));
 			}
 
-			script_extension::scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -304,7 +285,7 @@ namespace script_error
 				return (game::scr_VmPub->top - index)->type;
 			}
 
-			script_extension::scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return 0;
 		}
 
@@ -315,8 +296,27 @@ namespace script_error
 				return var_typename[(game::scr_VmPub->top - index)->type];
 			}
 
-			script_extension::scr_error(va("Parameter %u does not exist", index + 1));
+			gsc::scr_error(va("Parameter %u does not exist", index + 1));
 			return nullptr;
+		}
+
+		template <size_t address>
+		void safe_func()
+		{
+			static utils::hook::detour hook;
+			static const auto stub = []()
+			{
+				__try
+				{
+					hook.invoke<void>();
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					game::Scr_ErrorInternal();
+				}
+			};
+
+			hook.create(reinterpret_cast<void*>(address), stub);
 		}
 	}
 
@@ -337,7 +337,7 @@ namespace script_error
 		return {};
 	}
 
-	class component final : public component_interface
+	class error final : public component_interface
 	{
 	public:
 		void post_unpack() override
@@ -374,4 +374,4 @@ namespace script_error
 	};
 }
 
-REGISTER_COMPONENT(script_error::component)
+REGISTER_COMPONENT(gsc::error)

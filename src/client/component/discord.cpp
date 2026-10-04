@@ -19,6 +19,7 @@
 
 #define DEFAULT_AVATAR "discord_default_avatar"
 #define AVATAR "discord_avatar_%s"
+
 #define DEFAULT_AVATAR_URL "https://cdn.discordapp.com/embed/avatars/0.png"
 #define AVATAR_URL "https://cdn.discordapp.com/avatars/%s/%s.png?size=128"
 
@@ -26,27 +27,28 @@ namespace discord
 {
 	namespace
 	{
-			struct discord_presence_state_t
-			{
-				int start_timestamp;
-				int party_size;
-				int party_max;
-			};
+		struct discord_presence_state_t
+		{
+			int start_timestamp;
+			int party_size;
+			int party_max;
+		};
 
-			struct discord_presence_strings_t
-			{
-				std::string state;
-				std::string details;
-				std::string small_image_key;
-				std::string small_image_text;
-				std::string large_image_key;
-				std::string large_image_text;
-				std::string party_id;
-				std::string join_secret;
-			};
+		struct discord_presence_strings_t
+		{
+			std::string state;
+			std::string details;
+			std::string small_image_key;
+			std::string small_image_text;
+			std::string large_image_key;
+			std::string large_image_text;
+			std::string party_id;
+			std::string join_secret;
+		};
 
 		DiscordRichPresence discord_presence{};
 		discord_presence_strings_t discord_strings;
+
 		std::mutex avatar_map_mutex;
 		std::unordered_map<std::string, game::Material*> avatar_material_map;
 		game::Material* default_avatar_material{};

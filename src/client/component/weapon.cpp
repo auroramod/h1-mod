@@ -17,10 +17,35 @@ namespace weapon
 	namespace
 	{
 		utils::hook::detour g_setup_level_weapon_def_hook;
+		void g_setup_level_weapon_def_stub()
+		{
+			// precache level weapons first
+			g_setup_level_weapon_def_hook.invoke<void>();
+
+			std::vector<game::WeaponDef*> weapons;
+
+			// find all weapons in asset pools
+			fastfiles::enum_assets(game::ASSET_TYPE_WEAPON, [&weapons](game::XAssetHeader header)
+			{
+				weapons.push_back(header.weapon);
+			}, false);
+
+			// sort weapons
+			std::sort(weapons.begin(), weapons.end(), [](game::WeaponDef* weapon1, game::WeaponDef* weapon2)
+			{
+				return std::string_view(weapon1->name) <
+					std::string_view(weapon2->name);
+			});
+
+			// precache items
+			for (std::size_t i = 0; i < weapons.size(); i++)
+			{
+				//console::debug("precaching weapon \"%s\"\n", weapons[i]->name);
+				game::G_GetWeaponForName(weapons[i]->name);
+			}
+		}
 
 		utils::hook::detour xmodel_get_bone_index_hook;
-
-		utils::memory::allocator ddl_allocator;
 
 		/*
 			1.04 - 128 camos, idx 0-7, model variant 8, camo 9-15, reticle 16-21, attachment combo 22-30
@@ -32,7 +57,35 @@ namespace weapon
 
 		std::int8_t camo_flags[max_camos]{};
 		void* camo_materials[max_camos]{};
-		std::unordered_set<void*> modified_enums;
+
+		int xmodel_get_bone_index_stub(game::XModel* model, game::scr_string_t name, unsigned int offset, char* index)
+		{
+			auto result = xmodel_get_bone_index_hook.invoke<int>(model, name, offset, index);
+			if (result)
+			{
+				return result;
+			}
+
+			const auto original_index = *index;
+			const auto original_result = result;
+
+			if (name == game::SL_FindString("tag_weapon_right") ||
+				name == game::SL_FindString("tag_knife_attach"))
+			{
+				const auto tag_weapon = game::SL_FindString("tag_weapon");
+				result = xmodel_get_bone_index_hook.invoke<int>(model, tag_weapon, offset, index);
+				if (result)
+				{
+					console::debug("using tag_weapon instead of %s (%s, %d, %d)\n", game::SL_ConvertToString(name), model->name, offset, *index);
+					return result;
+				}
+			}
+
+			*index = original_index;
+			result = original_result;
+
+			return result;
+		}
 
 		int camo_table_get_id_stub(const char* value)
 		{
@@ -102,63 +155,6 @@ namespace weapon
 				body(a);
 				a.ret();
 			}));
-		}
-
-		void g_setup_level_weapon_def_stub()
-		{
-			// precache level weapons first
-			g_setup_level_weapon_def_hook.invoke<void>();
-
-			std::vector<game::WeaponDef*> weapons;
-
-			// find all weapons in asset pools
-			fastfiles::enum_assets(game::ASSET_TYPE_WEAPON, [&weapons](game::XAssetHeader header)
-			{
-				weapons.push_back(header.weapon);
-			}, false);
-
-			// sort weapons
-			std::sort(weapons.begin(), weapons.end(), [](game::WeaponDef* weapon1, game::WeaponDef* weapon2)
-			{
-				return std::string_view(weapon1->name) <
-					std::string_view(weapon2->name);
-			});
-
-			// precache items
-			for (std::size_t i = 0; i < weapons.size(); i++)
-			{
-				//console::debug("precaching weapon \"%s\"\n", weapons[i]->name);
-				game::G_GetWeaponForName(weapons[i]->name);
-			}
-		}
-
-		int xmodel_get_bone_index_stub(game::XModel* model, game::scr_string_t name, unsigned int offset, char* index)
-		{
-			auto result = xmodel_get_bone_index_hook.invoke<int>(model, name, offset, index);
-			if (result)
-			{
-				return result;
-			}
-
-			const auto original_index = *index;
-			const auto original_result = result;
-
-			if (name == game::SL_FindString("tag_weapon_right") ||
-				name == game::SL_FindString("tag_knife_attach"))
-			{
-				const auto tag_weapon = game::SL_FindString("tag_weapon");
-				result = xmodel_get_bone_index_hook.invoke<int>(model, tag_weapon, offset, index);
-				if (result)
-				{
-					console::debug("using tag_weapon instead of %s (%s, %d, %d)\n", game::SL_ConvertToString(name), model->name, offset, *index);
-					return result;
-				}
-			}
-
-			*index = original_index;
-			result = original_result;
-
-			return result;
 		}
 
 		void cw_mismatch_error_stub(int, const char* msg, ...)
@@ -235,6 +231,9 @@ namespace weapon
 
 			return 0;
 		}
+
+		utils::memory::allocator ddl_allocator;
+		std::unordered_set<void*> modified_enums;
 
 		std::vector<const char*> get_stringtable_entries(const std::string& name)
 		{

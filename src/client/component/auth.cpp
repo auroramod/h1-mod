@@ -1,7 +1,7 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "auth.hpp"
 
+#include "auth.hpp"
 #include "command.hpp"
 #include "console.hpp"
 #include "network.hpp"

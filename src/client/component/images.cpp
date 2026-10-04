@@ -103,13 +103,13 @@ namespace images
 			return setup_texture_hook.invoke<bool>(image, a2, a3);
 		}
 
-		void override_texture(std::string name, std::string data)
+	void override_texture(std::string name, std::string data)
+	{
+		overriden_textures.access([&](std::unordered_map<std::string, std::string>& textures)
 		{
-			overriden_textures.access([&](std::unordered_map<std::string, std::string>& textures)
-			{
-				textures[std::move(name)] = std::move(data);
-			});
-		}
+			textures[std::move(name)] = std::move(data);
+		});
+	}
 	}
 
 	class component final : public component_interface

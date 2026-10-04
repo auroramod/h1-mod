@@ -19,50 +19,13 @@ namespace fonts
 {
 	namespace
 	{
-			struct font_data_t
-			{
-				std::unordered_map<std::string, game::TTFDef*> fonts;
-				std::unordered_map<std::string, std::string> raw_fonts;
-			};
-
-			struct font_style_t
-			{
-				std::int32_t index;
-				game::Font_s* handle;
-			};
-
-			enum font_style_csv
-			{
-				col_index = 0,
-				col_font = 1,
-				col_name = 2,
-				col_count
-			};
-
-		utils::concurrency::container<font_data_t> font_data;
-
-		utils::hook::detour font_init_hook;
-		utils::hook::detour ui_get_font_handle_hook;
-		utils::hook::detour ui_get_font_handle_hook2;
-
-		std::vector<font_style_t> custom_font_styles;
-
-		std::array<const char*, 11> default_hudelem_fonts =
+		struct font_data_t
 		{
-			"default",
-			"bigfixed",
-			"smallfixed",
-			"objective",
-			"big",
-			"small",
-			"hudbig",
-			"hudsmall",
-			"buttonprompt",
-			"subtitle",
-			"timer",
+			std::unordered_map<std::string, game::TTFDef*> fonts;
+			std::unordered_map<std::string, std::string> raw_fonts;
 		};
 
-		std::vector<const char*> custom_hudelem_fonts;
+		utils::concurrency::container<font_data_t> font_data;
 
 		game::TTFDef* create_font(const std::string& name, const std::string& data)
 		{
@@ -150,6 +113,43 @@ namespace fonts
 
 			return utils::hook::invoke<int>(SELECT_VALUE(0x1403CD370, 0x140503FB0), a1, a2); // I_stricmp
 		}
+
+		utils::hook::detour font_init_hook;
+		utils::hook::detour ui_get_font_handle_hook;
+		utils::hook::detour ui_get_font_handle_hook2;
+
+		struct font_style_t
+		{
+			std::int32_t index;
+			game::Font_s* handle;
+		};
+
+		enum font_style_csv
+		{
+			col_index = 0,
+			col_font = 1,
+			col_name = 2,
+			col_count
+		};
+
+		std::vector<font_style_t> custom_font_styles;
+
+		std::array<const char*, 11> default_hudelem_fonts =
+		{
+			"default",
+			"bigfixed",
+			"smallfixed",
+			"objective",
+			"big",
+			"small",
+			"hudbig",
+			"hudsmall",
+			"buttonprompt",
+			"subtitle",
+			"timer",
+		};
+
+		std::vector<const char*> custom_hudelem_fonts;
 
 		void font_init_stub()
 		{
@@ -282,15 +282,15 @@ namespace fonts
 			a.and_(rdx, rax);
 			a.mov(rcx, qword_ptr(rcx, rdx, 3));
 			a.jmp(0x1404420F0); // Scr_AddString
-		}
+	}
 
-		void add(const std::string& name, const std::string& data)
+	void add(const std::string& name, const std::string& data)
+	{
+		font_data.access([&](font_data_t& data_)
 		{
-			font_data.access([&](font_data_t& data_)
-			{
-				data_.raw_fonts[name] = data;
-			});
-		}
+			data_.raw_fonts[name] = data;
+		});
+	}
 	}
 
 	void clear()

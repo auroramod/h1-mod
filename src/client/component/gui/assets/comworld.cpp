@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -16,7 +15,7 @@
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 
-namespace asset_comworld
+namespace gui::asset_list::comworld
 {
 	namespace
 	{
@@ -78,5 +77,5 @@ namespace asset_comworld
 	};
 }
 
-REGISTER_COMPONENT(asset_comworld::component)
+REGISTER_COMPONENT(gui::asset_list::comworld::component)
 #endif

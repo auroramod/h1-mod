@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -13,6 +12,7 @@
 #include <utils/hook.hpp>
 
 #pragma region macros
+
 #define READ_BOOL(__var__, __dvar__) \
 		if (__dvar__ != nullptr) __var__ = &__dvar__->current.enabled; \
 
@@ -39,13 +39,19 @@
 		if (ImGui::ColorEdit3(__name__, __var__)) build_atmos_fog_buffer(); \
 
 #define M_LN2 0.69314718f
+
 #pragma endregion
 
-namespace fog_editor
+namespace gui::fog_editor
 {
 	namespace
 	{
 		bool parse_art_file = true;
+
+		void cg_parse_client_visionset_triggers_stub(const char* buffer)
+		{
+			utils::hook::invoke<void>(0x1400BEB60, parse_art_file ? buffer : nullptr); // CG_ParseClientVisionsetTriggers
+		}
 
 		bool atmos_height_fog = false;
 		float atmos_height_base = 0.0f;
@@ -64,11 +70,6 @@ namespace fog_editor
 		float atmos_sky_falloff_start = 0.0f;
 		float atmos_sky_falloff_range = 90.0f;
 		float atmos_sun_dir[3] = {};
-
-		void cg_parse_client_visionset_triggers_stub(const char* buffer)
-		{
-			utils::hook::invoke<void>(0x1400BEB60, parse_art_file ? buffer : nullptr); // CG_ParseClientVisionsetTriggers
-		}
 
 		void build_atmos_fog_buffer()
 		{
@@ -187,5 +188,5 @@ namespace fog_editor
 	};
 }
 
-REGISTER_COMPONENT(fog_editor::component)
+REGISTER_COMPONENT(gui::fog_editor::component)
 #endif

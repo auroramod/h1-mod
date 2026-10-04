@@ -11,15 +11,15 @@
 namespace splash
 {
 	namespace
-	{
+		{
 		HWND window_{};
 
 		HANDLE image_{};
 
 		void destroy()
-		{
-			if (window_ && IsWindow(window_))
 			{
+			if (window_ && IsWindow(window_))
+				{
 				ShowWindow(window_, SW_HIDE);
 				DestroyWindow(window_);
 				UnregisterClassA("H1 Splash Screen", utils::nt::library{});
@@ -89,9 +89,9 @@ namespace splash
 						}
 					}
 				}
-			}
-		}
-	}
+						}
+					}
+				}
 
 	class component final : public component_interface
 	{
@@ -110,7 +110,7 @@ namespace splash
 			}
 
 			show();
-		}
+			}
 
 		void post_unpack() override
 		{

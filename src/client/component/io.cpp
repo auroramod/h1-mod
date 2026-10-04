@@ -75,13 +75,13 @@ namespace io
 				console::warn("GSC has access to your game folder. Remove the '-allow_root_io' launch parameter to disable this feature.");
 			}
 
-			script_extension::add_function("fileexists", [](const gsc::function_args& args)
+			gsc::function::add("fileexists", [](const gsc::function_args& args)
 			{
 				const auto path = convert_path(args[0].as<std::string>());
 				return utils::io::file_exists(path);
 			});
 
-			script_extension::add_function("writefile", [](const gsc::function_args& args)
+			gsc::function::add("writefile", [](const gsc::function_args& args)
 			{
 				const auto path = convert_path(args[0].as<std::string>());
 				const auto data = args[1].as<std::string>();
@@ -95,37 +95,37 @@ namespace io
 				return utils::io::write_file(path, data, append);
 			});
 
-			script_extension::add_function("readfile", [](const gsc::function_args& args)
+			gsc::function::add("readfile", [](const gsc::function_args& args)
 			{
 				const auto path = convert_path(args[0].as<std::string>());
 				return utils::io::read_file(path);
 			});
-
-			script_extension::add_function("filesize", [](const gsc::function_args& args)
+			
+			gsc::function::add("filesize", [](const gsc::function_args& args)
 			{
 				const auto path = convert_path(args[0].as<std::string>());
 				return static_cast<uint32_t>(utils::io::file_size(path));
 			});
 
-			script_extension::add_function("createdirectory", [](const gsc::function_args& args)
+			gsc::function::add("createdirectory", [](const gsc::function_args& args)
 			{
 				const auto path = convert_path(args[0].as<std::string>());
 				return utils::io::create_directory(path);
 			});
 
-			script_extension::add_function("directoryexists", [](const gsc::function_args& args)
+			gsc::function::add("directoryexists", [](const gsc::function_args& args)
 			{
 				const auto path = convert_path(args[0].as<std::string>());
 				return utils::io::directory_exists(path);
 			});
 
-			script_extension::add_function("directoryisempty", [](const gsc::function_args& args)
+			gsc::function::add("directoryisempty", [](const gsc::function_args& args)
 			{
 				const auto path = convert_path(args[0].as<std::string>());
 				return utils::io::directory_is_empty(path);
 			});
 
-			script_extension::add_function("listfiles", [](const gsc::function_args& args)
+			gsc::function::add("listfiles", [](const gsc::function_args& args)
 			{
 				const auto path = convert_path(args[0].as<std::string>());
 				const auto files = utils::io::list_files(path);
@@ -139,7 +139,7 @@ namespace io
 				return array;
 			});
 
-			script_extension::add_function("copyfolder", [](const gsc::function_args& args)
+			gsc::function::add("copyfolder", [](const gsc::function_args& args)
 			{
 				const auto source = convert_path(args[0].as<std::string>());
 				const auto target = convert_path(args[1].as<std::string>());
@@ -148,13 +148,13 @@ namespace io
 				return scripting::script_value{};
 			});
 
-			script_extension::add_function("removefile", [](const gsc::function_args& args)
+			gsc::function::add("removefile", [](const gsc::function_args& args)
 			{
 				const auto path = convert_path(args[0].as<std::string>());
 				return utils::io::remove_file(path);
 			});
 
-			script_extension::add_function("va", [](const gsc::function_args& args)
+			gsc::function::add("va", [](const gsc::function_args& args)
 			{
 				auto fmt = args[0].as<std::string>();
 

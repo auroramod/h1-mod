@@ -1,5 +1,6 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+
 #include "menus.hpp"
 
 #include "game/game.hpp"
@@ -15,8 +16,6 @@ namespace menus
 	namespace
 	{
 		std::string script_main_menu;
-
-		constexpr auto patch_menu_list_name = "ui_mp/patch_code.txt";
 
 		bool keys_bypass_menu()
 		{
@@ -145,6 +144,8 @@ namespace menus
 			// LUI_ToggleMenu
 			return utils::hook::invoke<void>(0x14016CD30, controller_index, context);
 		}
+
+		constexpr auto patch_menu_list_name = "ui_mp/patch_code.txt";
 
 		void ui_add_menu_list_stub(void* context, void* menu_list, int a3)
 		{

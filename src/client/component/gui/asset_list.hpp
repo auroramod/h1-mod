@@ -3,7 +3,7 @@
 #include "gui.hpp"
 #include "game/game.hpp"
 
-namespace asset_list
+namespace gui::asset_list
 {
 	void add_asset_view_callback(const game::XAssetType, const std::function<void(const std::string&)>& callback);
 	void add_asset_button(const game::XAssetType, const std::string& name, const std::function<void(const game::XAssetHeader)>& callback,
@@ -60,7 +60,7 @@ namespace asset_list
 	}
 
 	template <typename T>
-	void add_asset_button(const game::XAssetType type, const std::string& name, const std::function<void(T*)>& callback,
+	void add_asset_button(const game::XAssetType type, const std::string& name, const std::function<void(T*)>& callback, 
 		const std::optional<std::function<bool()>>& enabled_callback = {})
 	{
 		add_asset_button(type, name, [=](const game::XAssetHeader header)

@@ -278,7 +278,7 @@ namespace reflection_probes
 
 				unk = 1;
 			}
-
+			
 			cg_calc_cubemap_view_values_hook.invoke<void>(refdef, cubemapShot, cubemapSize, unk);
 		}
 
@@ -287,7 +287,7 @@ namespace reflection_probes
 			auto name = utils::string::va("*reflection_probe%i", index);
 			auto image = allocator->allocate<game::GfxImage>();
 			memset(image, 0, sizeof(game::GfxImage));
-
+			
 			image->name = allocator->duplicate_string(name);
 			image->imageFormat = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
 			image->mapType = game::MapType::MAPTYPE_CUBE;

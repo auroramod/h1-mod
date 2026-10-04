@@ -8,8 +8,8 @@
 
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "driver_profile.hpp"
 
+#include "driver_profile.hpp"
 #include "game_module.hpp"
 
 #include "game/game.hpp"
@@ -26,7 +26,9 @@ namespace driver_profile
 		utils::hook::detour get_module_file_name_ex_a_hook;
 		utils::hook::detour get_command_line_a_hook;
 		utils::hook::detour get_command_line_w_hook;
+
 		bool enabled = false;
+
 		std::wstring fake_path_w;
 		std::string fake_path_a;
 		std::wstring fake_name_w;

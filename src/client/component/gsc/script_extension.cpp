@@ -49,7 +49,7 @@ namespace gsc
 	}
 }
 
-namespace script_extension
+namespace gsc
 {
 	builtin_function func_table[0x1000];
 	builtin_method meth_table[0x1000];
@@ -198,7 +198,7 @@ namespace script_extension
 
 			if (func == nullptr)
 			{
-				scr_error(utils::string::va("builtin function \"%s\" doesn't exist", script_loading::gsc_ctx->func_name(function_id).data()), true);
+				scr_error(utils::string::va("builtin function \"%s\" doesn't exist", gsc::gsc_ctx->func_name(function_id).data()), true);
 				return;
 			}
 
@@ -242,7 +242,7 @@ namespace script_extension
 
 			if (meth == nullptr)
 			{
-				scr_error(utils::string::va("builtin method \"%s\" doesn't exist", script_loading::gsc_ctx->meth_name(method_id).data()), true);
+				scr_error(utils::string::va("builtin method \"%s\" doesn't exist", gsc::gsc_ctx->meth_name(method_id).data()), true);
 				return;
 			}
 
@@ -261,11 +261,11 @@ namespace script_extension
 
 			if (function_id > 0x1000)
 			{
-				console::warn("in call to builtin method \"%s\"%s", script_loading::gsc_ctx->meth_name(function_id).data(), error.data());
+				console::warn("in call to builtin method \"%s\"%s", gsc::gsc_ctx->meth_name(function_id).data(), error.data());
 			}
 			else
 			{
-				console::warn("in call to builtin function \"%s\"%s", script_loading::gsc_ctx->func_name(function_id).data(), error.data());
+				console::warn("in call to builtin function \"%s\"%s", gsc::gsc_ctx->func_name(function_id).data(), error.data());
 			}
 		}
 
@@ -273,8 +273,8 @@ namespace script_extension
 		{
 			try
 			{
-				const auto index = script_loading::gsc_ctx->opcode_enum(opcode);
-				return { script_loading::gsc_ctx->opcode_name(index) };
+				const auto index = gsc::gsc_ctx->opcode_enum(opcode);
+				return { gsc::gsc_ctx->opcode_name(index) };
 			}
 			catch (...)
 			{
@@ -287,7 +287,7 @@ namespace script_extension
 			for (auto frame = game::scr_VmPub->function_frame; frame != game::scr_VmPub->function_frame_start; --frame)
 			{
 				const auto pos = frame == game::scr_VmPub->function_frame ? game::scr_function_stack->pos : frame->fs.pos;
-				const auto function = script_error::find_function(frame->fs.pos);
+				const auto function = gsc::find_function(frame->fs.pos);
 
 				const char* location;
 				if (function.has_value())
@@ -584,49 +584,53 @@ namespace script_extension
 		game::Scr_ErrorInternal();
 	}
 
-	void add_function(const std::string& name, script_function function)
+	namespace function
 	{
-		const auto& gsc_ctx = script_loading::gsc_ctx;
-		if (gsc_ctx->func_exists(name))
+		void add(const std::string& name, script_function function)
 		{
-			const auto id = gsc_ctx->func_id(name);
-			functions[id] = function;
-		}
-		else
-		{
-			const auto id = ++function_id_start;
-			gsc_ctx->func_add(name, static_cast<std::uint16_t>(id));
-			functions[id] = function;
+			if (gsc_ctx->func_exists(name))
+			{
+				const auto id = gsc_ctx->func_id(name);
+				functions[id] = function;
+			}
+			else
+			{
+				const auto id = ++function_id_start;
+				gsc_ctx->func_add(name, static_cast<std::uint16_t>(id));
+				functions[id] = function;
+			}
 		}
 	}
 
-	void add_method(const std::string& name, script_method method)
+	namespace method
 	{
-		const auto& gsc_ctx = script_loading::gsc_ctx;
-		if (gsc_ctx->meth_exists(name))
+		void add(const std::string& name, script_method method)
 		{
-			const auto id = gsc_ctx->meth_id(name);
-			methods[id] = method;
-		}
-		else
-		{
-			const auto id = ++method_id_start;
-			gsc_ctx->meth_add(name, static_cast<std::uint16_t>(id));
-			methods[id] = method;
+			if (gsc_ctx->meth_exists(name))
+			{
+				const auto id = gsc_ctx->meth_id(name);
+				methods[id] = method;
+			}
+			else
+			{
+				const auto id = ++method_id_start;
+				gsc_ctx->meth_add(name, static_cast<std::uint16_t>(id));
+				methods[id] = method;
+			}
 		}
 	}
 
-	class component final : public component_interface
+	class extension final : public component_interface
 	{
 	public:
 		void post_unpack() override
-		{
+	{
 			function_id_start = 0x30A;
 
 			developer_script = dvars::register_bool("developer_script", false, 0, "Enable developer script comments");
 
 			if (game::environment::is_sp())
-			{
+		{
 				utils::hook::set<uint32_t>(0x1403BD86C, 0x1000); // change builtin func count
 
 				utils::hook::set<uint32_t>(0x1403BD872 + 4, RVA(&func_table));
@@ -650,7 +654,7 @@ namespace script_extension
 				utils::hook::call(0x1403CC9F3, vm_error_stub); // LargeLocalResetToMark
 			}
 			else
-			{
+		{
 				utils::hook::set<uint32_t>(0x140437CEC, 0x1000); // change builtin func count
 
 				utils::hook::set<uint32_t>(0x140437CF2 + 4, RVA(&func_table)); // Scr_RegisterFunction
@@ -682,26 +686,26 @@ namespace script_extension
 
 			if (game::environment::is_dedi())
 			{
-				add_function("isusingmatchrulesdata", [](const function_args& args)
+				function::add("isusingmatchrulesdata", [](const function_args& args)
 				{
 					// return 0 so the game doesn't override the cfg
 					return 0;
 				});
 			}
 
-			add_function("print", [](const function_args& args)
+			function::add("print", [](const function_args& args)
 			{
 				print(args);
 				return scripting::script_value{};
 			});
 
-			add_function("println", [](const function_args& args)
+			function::add("println", [](const function_args& args)
 			{
 				print(args);
 				return scripting::script_value{};
 			});
 
-			add_function("assert", [](const function_args& args)
+			function::add("assert", [](const function_args& args)
 			{
 				const auto expr = args[0].as<int>();
 				if (!expr)
@@ -712,7 +716,7 @@ namespace script_extension
 				return scripting::script_value{};
 			});
 
-			add_function("assertex", [](const function_args& args)
+			function::add("assertex", [](const function_args& args)
 			{
 				const auto expr = args[0].as<int>();
 				if (!expr)
@@ -724,7 +728,7 @@ namespace script_extension
 				return scripting::script_value{};
 			});
 
-			add_function("getfunction", [](const function_args& args)
+			function::add("getfunction", [](const function_args& args)
 			{
 				const auto filename = args[0].as<std::string>();
 				const auto function = args[1].as<std::string>();
@@ -737,7 +741,7 @@ namespace script_extension
 				return scripting::function{scripting::script_function_table[filename][function]};
 			});
 
-			add_function("replacefunc", [](const function_args& args)
+			function::add("replacefunc", [](const function_args& args)
 			{
 				const auto what = args[0].get_raw();
 				const auto with = args[1].get_raw();
@@ -752,13 +756,13 @@ namespace script_extension
 				return scripting::script_value{};
 			});
 
-			add_function("toupper", [](const function_args& args)
+			function::add("toupper", [](const function_args& args)
 			{
 				const auto string = args[0].as<std::string>();
 				return utils::string::to_upper(string);
 			});
 
-			add_function("logprint", [](const function_args& args)
+			function::add("logprint", [](const function_args& args)
 			{
 				std::string buffer{};
 
@@ -773,19 +777,19 @@ namespace script_extension
 				return scripting::script_value{};
 			});
 
-			add_function("executecommand", [](const function_args& args)
+			function::add("executecommand", [](const function_args& args)
 			{
 				command::execute(args[0].as<std::string>(), false);
 
 				return scripting::script_value{};
 			});
 
-			add_function("typeof", typeof);
-			add_function("type", typeof);
+			function::add("typeof", typeof);
+			function::add("type", typeof);
 
 			if (!game::environment::is_sp())
 			{
-				add_function("say", [](const function_args& args)
+				function::add("say", [](const function_args& args)
 				{
 					const auto message = args[0].as<std::string>();
 					game::SV_GameSendServerCommand(-1, game::SV_CMD_CAN_IGNORE, utils::string::va("%c \"%s\"", 84, message.data()));
@@ -793,7 +797,7 @@ namespace script_extension
 					return scripting::script_value{};
 				});
 
-				add_method("tell", [](const game::scr_entref_t ent, const function_args& args)
+				method::add("tell", [](const game::scr_entref_t ent, const function_args& args)
 				{
 					if (ent.classnum != 0)
 					{
@@ -813,7 +817,7 @@ namespace script_extension
 					return scripting::script_value{};
 				});
 
-				add_function("lookupsoundlength", [](const function_args& args) // sp already has this function, implement for mp
+				function::add("lookupsoundlength", [](const function_args& args) // sp already has this function, implement for mp
 				{
 					if (args.size() == 1)
 					{
@@ -829,4 +833,4 @@ namespace script_extension
 	};
 }
 
-REGISTER_COMPONENT(script_extension::component)
+REGISTER_COMPONENT(gsc::extension)

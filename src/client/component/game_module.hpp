@@ -1,4 +1,5 @@
 #pragma once
+
 #include <utils/nt.hpp>
 
 namespace game_module

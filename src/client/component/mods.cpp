@@ -30,6 +30,72 @@ namespace mods
 		utils::hook::detour db_release_xassets_hook;
 		bool release_assets = false;
 
+		void db_release_xassets_stub()
+		{
+			if (release_assets)
+			{
+				fonts::clear();
+			}
+
+			db_release_xassets_hook.invoke<void>();
+		}
+
+		void restart()
+		{
+			scheduler::once([]()
+			{
+				release_assets = true;
+				const auto _0 = gsl::finally([]()
+				{
+					release_assets = false;
+				});
+
+				game::Com_Shutdown("");
+			}, scheduler::pipeline::main);
+		}
+
+		void reload_omnvars()
+		{
+			*reinterpret_cast<int*>(0x1412215B0) = -1;
+			*reinterpret_cast<int*>(0x140FE3884) = -1;
+			utils::hook::invoke<void>(0x1405013E0); // Omnvar_RegisterFromStringTable
+		}
+
+		void read_stats()
+		{
+			demonware::set_storage_path(mod_path.value_or(""));
+			utils::hook::invoke<void>(0x14041A740, 0); // read stats
+		}
+
+		void reset_fonts()
+		{
+			*reinterpret_cast<int*>(0x14FD61EE8) = 0; // s_fontInstanceCount
+			std::memset(reinterpret_cast<void*>(0x14FD61EF0), 0, 128 * 24);
+		}
+
+		bool mod_requires_restart(const std::string& path)
+		{
+			return utils::io::file_exists(path + "/mod.ff") || utils::io::file_exists(path + "/zone/mod.ff");
+		}
+
+		void set_filesystem_data(const std::string& path, bool change_fs_game)
+		{
+			if (mod_path.has_value())
+			{
+				filesystem::unregister_path(mod_path.value());
+			}
+
+			if (change_fs_game)
+			{
+				game::Dvar_SetFromStringByNameFromSource("fs_game", path.data(), game::DVAR_SOURCE_INTERNAL);
+			}
+
+			if (path != "")
+			{
+				filesystem::register_path(path);
+			}
+		}
+
 		bool can_use_vid_restart()
 		{
 			if (game::environment::is_sp())
@@ -43,25 +109,6 @@ namespace mods
 			}
 
 			return false;
-		}
-
-		void reload_omnvars()
-		{
-			*reinterpret_cast<int*>(0x1412215B0) = -1;
-			*reinterpret_cast<int*>(0x140FE3884) = -1;
-			utils::hook::invoke<void>(0x1405013E0); // Omnvar_RegisterFromStringTable
-		}
-
-		void reset_fonts()
-		{
-			*reinterpret_cast<int*>(0x14FD61EE8) = 0; // s_fontInstanceCount
-			std::memset(reinterpret_cast<void*>(0x14FD61EF0), 0, 128 * 24);
-		}
-
-		void read_stats()
-		{
-			demonware::set_storage_path(mod_path.value_or(""));
-			utils::hook::invoke<void>(0x14041A740, 0); // read stats
 		}
 
 		void do_vid_restart(const std::optional<game::netadr_s>& server)
@@ -107,68 +154,9 @@ namespace mods
 			utils::nt::terminate();
 		}
 
-		void db_release_xassets_stub()
-		{
-			if (release_assets)
-			{
-				fonts::clear();
-			}
-
-			db_release_xassets_hook.invoke<void>();
-		}
-
-		void restart()
-		{
-			scheduler::once([]()
-			{
-				release_assets = true;
-				const auto _0 = gsl::finally([]()
-				{
-					release_assets = false;
-				});
-
-				game::Com_Shutdown("");
-			}, scheduler::pipeline::main);
-		}
-
-		bool mod_requires_restart(const std::string& path)
-		{
-			return utils::io::file_exists(path + "/mod.ff") || utils::io::file_exists(path + "/zone/mod.ff");
-		}
-
-		void set_filesystem_data(const std::string& path, bool change_fs_game)
-		{
-			if (mod_path.has_value())
-			{
-				filesystem::unregister_path(mod_path.value());
-			}
-
-			if (change_fs_game)
-			{
-				game::Dvar_SetFromStringByNameFromSource("fs_game", path.data(), game::DVAR_SOURCE_INTERNAL);
-			}
-
-			if (path != "")
-			{
-				filesystem::register_path(path);
-			}
-		}
-
 		bool mod_exists(const std::string& folder)
 		{
 			return utils::io::directory_exists(utils::string::va("%s\\%s", MOD_FOLDER, folder.data()));
-		}
-	}
-
-	void execute_restart(const std::optional<game::netadr_s>& server)
-	{
-		if (can_use_vid_restart())
-		{
-			do_vid_restart(server);
-		}
-		else
-		{
-			do_full_restart(server);
 		}
 	}
 
@@ -276,6 +264,18 @@ namespace mods
 		{
 			set_mod("");
 			restart();
+		}
+	}
+
+	void execute_restart(const std::optional<game::netadr_s>& server)
+	{
+		if (can_use_vid_restart())
+		{
+			do_vid_restart(server);
+		}
+		else
+		{
+			do_full_restart(server);
 		}
 	}
 

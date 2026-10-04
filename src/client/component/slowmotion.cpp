@@ -36,7 +36,7 @@ namespace slowmotion
 				return;
 			}
 
-			script_extension::add_function("setslowmotion", [](const gsc::function_args& args)
+			gsc::function::add("setslowmotion", [](const gsc::function_args& args)
 			{
 				if (args.size() < 1)
 				{

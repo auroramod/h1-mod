@@ -114,313 +114,313 @@ namespace demonware
 			}
 		}
 
-		int getaddrinfo_stub(const char* name, const char* service,
-					const addrinfo* hints, addrinfo** res)
-		{
+			int getaddrinfo_stub(const char* name, const char* service,
+				const addrinfo* hints, addrinfo** res)
+			{
 #ifdef DW_DEBUG
-			printf("[ network ]: [getaddrinfo]: \"%s\" \"%s\"\n", name, service);
+				printf("[ network ]: [getaddrinfo]: \"%s\" \"%s\"\n", name, service);
 #endif
 
 			demonware::base_server* server = tcp_servers.find(name);
-			if (!server)
-			{
-				server = udp_servers.find(name);
-			}
+				if (!server)
+				{
+					server = udp_servers.find(name);
+				}
 
-			if (!server)
-			{
-				return getaddrinfo(name, service, hints, res);
-			}
+				if (!server)
+				{
+					return getaddrinfo(name, service, hints, res);
+				}
 
-			const auto address = utils::memory::get_allocator()->allocate<sockaddr>();
-			const auto ai = utils::memory::get_allocator()->allocate<addrinfo>();
+				const auto address = utils::memory::get_allocator()->allocate<sockaddr>();
+				const auto ai = utils::memory::get_allocator()->allocate<addrinfo>();
 
-			auto in_addr = reinterpret_cast<sockaddr_in*>(address);
-			in_addr->sin_addr.s_addr = server->get_address();
-			in_addr->sin_family = AF_INET;
-
-			ai->ai_family = AF_INET;
-			ai->ai_socktype = SOCK_STREAM;
-			ai->ai_addr = address;
-			ai->ai_addrlen = sizeof(sockaddr);
-			ai->ai_next = nullptr;
-			ai->ai_flags = 0;
-			ai->ai_protocol = 0;
-			ai->ai_canonname = const_cast<char*>(name);
-
-			*res = ai;
-
-			return 0;
-		}
-
-		void freeaddrinfo_stub(addrinfo* ai)
-		{
-			if (!utils::memory::get_allocator()->find(ai))
-			{
-				return freeaddrinfo(ai);
-			}
-
-			utils::memory::get_allocator()->free(ai->ai_addr);
-			utils::memory::get_allocator()->free(ai);
-		}
-
-		int getpeername_stub(const SOCKET s, sockaddr* addr, socklen_t* addrlen)
-		{
-			auto* server = find_server(s);
-
-			if (server)
-			{
-				auto in_addr = reinterpret_cast<sockaddr_in*>(addr);
+				auto in_addr = reinterpret_cast<sockaddr_in*>(address);
 				in_addr->sin_addr.s_addr = server->get_address();
 				in_addr->sin_family = AF_INET;
-				*addrlen = sizeof(sockaddr);
+
+				ai->ai_family = AF_INET;
+				ai->ai_socktype = SOCK_STREAM;
+				ai->ai_addr = address;
+				ai->ai_addrlen = sizeof(sockaddr);
+				ai->ai_next = nullptr;
+				ai->ai_flags = 0;
+				ai->ai_protocol = 0;
+				ai->ai_canonname = const_cast<char*>(name);
+
+				*res = ai;
 
 				return 0;
 			}
 
-			return getpeername(s, addr, addrlen);
-		}
-
-		int getsockname_stub(const SOCKET s, sockaddr* addr, socklen_t* addrlen)
-		{
-			auto* server = find_server(s);
-
-			if (server)
+			void freeaddrinfo_stub(addrinfo* ai)
 			{
-				auto in_addr = reinterpret_cast<sockaddr_in*>(addr);
-				in_addr->sin_addr.s_addr = server->get_address();
-				in_addr->sin_family = AF_INET;
-				*addrlen = sizeof(sockaddr);
+				if (!utils::memory::get_allocator()->find(ai))
+				{
+					return freeaddrinfo(ai);
+				}
 
-				return 0;
+				utils::memory::get_allocator()->free(ai->ai_addr);
+				utils::memory::get_allocator()->free(ai);
 			}
 
-			return getsockname(s, addr, addrlen);
-		}
+			int getpeername_stub(const SOCKET s, sockaddr* addr, socklen_t* addrlen)
+			{
+				auto* server = find_server(s);
 
-		hostent* gethostbyname_stub(const char* name)
-		{
+				if (server)
+				{
+					auto in_addr = reinterpret_cast<sockaddr_in*>(addr);
+					in_addr->sin_addr.s_addr = server->get_address();
+					in_addr->sin_family = AF_INET;
+					*addrlen = sizeof(sockaddr);
+
+					return 0;
+				}
+
+				return getpeername(s, addr, addrlen);
+			}
+
+			int getsockname_stub(const SOCKET s, sockaddr* addr, socklen_t* addrlen)
+			{
+				auto* server = find_server(s);
+
+				if (server)
+				{
+					auto in_addr = reinterpret_cast<sockaddr_in*>(addr);
+					in_addr->sin_addr.s_addr = server->get_address();
+					in_addr->sin_family = AF_INET;
+					*addrlen = sizeof(sockaddr);
+
+					return 0;
+				}
+
+				return getsockname(s, addr, addrlen);
+			}
+
+			hostent* gethostbyname_stub(const char* name)
+			{
 #ifdef DW_DEBUG
-			printf("[ network ]: [gethostbyname]: \"%s\"\n", name);
+				printf("[ network ]: [gethostbyname]: \"%s\"\n", name);
 #endif
 
 			demonware::base_server* server = tcp_servers.find(name);
-			if (!server)
-			{
-				server = udp_servers.find(name);
-			}
+				if (!server)
+				{
+					server = udp_servers.find(name);
+				}
 
-			if (!server)
-			{
+				if (!server)
+				{
 #pragma warning(push)
 #pragma warning(disable: 4996)
-				return gethostbyname(name);
+					return gethostbyname(name);
 #pragma warning(pop)
-			}
-
-			static thread_local in_addr address{};
-			address.s_addr = server->get_address();
-
-			static thread_local in_addr* addr_list[2]{};
-			addr_list[0] = &address;
-			addr_list[1] = nullptr;
-
-			static thread_local hostent host{};
-			host.h_name = const_cast<char*>(name);
-			host.h_aliases = nullptr;
-			host.h_addrtype = AF_INET;
-			host.h_length = sizeof(in_addr);
-			host.h_addr_list = reinterpret_cast<char**>(addr_list);
-
-			return &host;
-		}
-
-		int connect_stub(const SOCKET s, const struct sockaddr* addr, const int len)
-		{
-			if (len == sizeof(sockaddr_in))
-			{
-				const auto* in_addr = reinterpret_cast<const sockaddr_in*>(addr);
-				if (socket_link(s, in_addr->sin_addr.s_addr)) return 0;
-			}
-
-			return connect(s, addr, len);
-		}
-
-		int closesocket_stub(const SOCKET s)
-		{
-			remove_blocking_socket(s);
-			socket_unlink(s);
-
-			return closesocket(s);
-		}
-
-		int send_stub(const SOCKET s, const char* buf, const int len, const int flags)
-		{
-			auto* server = find_server(s);
-
-			if (server)
-			{
-				server->handle_input(buf, len);
-				return len;
-			}
-
-			return send(s, buf, len, flags);
-		}
-
-		int recv_stub(const SOCKET s, char* buf, const int len, const int flags)
-		{
-			auto* server = find_server(s);
-
-			if (server)
-			{
-				if (server->pending_data())
-				{
-					return static_cast<int>(server->handle_output(buf, len));
 				}
-				else
+
+				static thread_local in_addr address{};
+				address.s_addr = server->get_address();
+
+				static thread_local in_addr* addr_list[2]{};
+				addr_list[0] = &address;
+				addr_list[1] = nullptr;
+
+				static thread_local hostent host{};
+				host.h_name = const_cast<char*>(name);
+				host.h_aliases = nullptr;
+				host.h_addrtype = AF_INET;
+				host.h_length = sizeof(in_addr);
+				host.h_addr_list = reinterpret_cast<char**>(addr_list);
+
+				return &host;
+			}
+
+			int connect_stub(const SOCKET s, const struct sockaddr* addr, const int len)
+			{
+				if (len == sizeof(sockaddr_in))
 				{
-					WSASetLastError(WSAEWOULDBLOCK);
-					return -1;
+					const auto* in_addr = reinterpret_cast<const sockaddr_in*>(addr);
+					if (socket_link(s, in_addr->sin_addr.s_addr)) return 0;
 				}
+
+				return connect(s, addr, len);
 			}
 
-			return recv(s, buf, len, flags);
-		}
-
-		int sendto_stub(const SOCKET s, const char* buf, const int len, const int flags, const sockaddr* to,
-					const int tolen)
-		{
-			const auto* in_addr = reinterpret_cast<const sockaddr_in*>(to);
-			auto* server = udp_servers.find(in_addr->sin_addr.s_addr);
-
-			if (server)
+			int closesocket_stub(const SOCKET s)
 			{
-				server->handle_input(buf, len, { s, to, tolen });
-				return len;
+				remove_blocking_socket(s);
+				socket_unlink(s);
+
+				return closesocket(s);
 			}
 
-			return sendto(s, buf, len, flags, to, tolen);
-		}
-
-		int recvfrom_stub(const SOCKET s, char* buf, const int len, const int flags, struct sockaddr* from,
-					int* fromlen)
-		{
-			// Not supported yet
-			if (is_socket_blocking(s, UDP_BLOCKING))
+			int send_stub(const SOCKET s, const char* buf, const int len, const int flags)
 			{
+				auto* server = find_server(s);
+
+				if (server)
+				{
+					server->handle_input(buf, len);
+					return len;
+				}
+
+				return send(s, buf, len, flags);
+			}
+
+			int recv_stub(const SOCKET s, char* buf, const int len, const int flags)
+			{
+				auto* server = find_server(s);
+
+				if (server)
+				{
+					if (server->pending_data())
+					{
+						return static_cast<int>(server->handle_output(buf, len));
+					}
+					else
+					{
+						WSASetLastError(WSAEWOULDBLOCK);
+						return -1;
+					}
+				}
+
+				return recv(s, buf, len, flags);
+			}
+
+			int sendto_stub(const SOCKET s, const char* buf, const int len, const int flags, const sockaddr* to,
+				const int tolen)
+			{
+				const auto* in_addr = reinterpret_cast<const sockaddr_in*>(to);
+				auto* server = udp_servers.find(in_addr->sin_addr.s_addr);
+
+				if (server)
+				{
+					server->handle_input(buf, len, { s, to, tolen });
+					return len;
+				}
+
+				return sendto(s, buf, len, flags, to, tolen);
+			}
+
+			int recvfrom_stub(const SOCKET s, char* buf, const int len, const int flags, struct sockaddr* from,
+				int* fromlen)
+			{
+				// Not supported yet
+				if (is_socket_blocking(s, UDP_BLOCKING))
+				{
+					return recvfrom(s, buf, len, flags, from, fromlen);
+				}
+
+				size_t result = 0;
+			udp_servers.for_each([&](demonware::udp_server& server)
+				{
+					if (server.pending_data(s))
+					{
+						result = server.handle_output(
+							s, buf, static_cast<size_t>(len), from, fromlen);
+					}
+				});
+
+				if (result)
+				{
+					return static_cast<int>(result);
+				}
+
 				return recvfrom(s, buf, len, flags, from, fromlen);
 			}
 
-			size_t result = 0;
-			udp_servers.for_each([&](demonware::udp_server& server)
+			int select_stub(const int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
+				struct timeval* timeout)
 			{
-				if (server.pending_data(s))
+				if (exit_server)
 				{
-					result = server.handle_output(
-						s, buf, static_cast<size_t>(len), from, fromlen);
+					return select(nfds, readfds, writefds, exceptfds, timeout);
 				}
-			});
 
-			if (result)
-			{
-				return static_cast<int>(result);
-			}
-
-			return recvfrom(s, buf, len, flags, from, fromlen);
-		}
-
-		int select_stub(const int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
-					struct timeval* timeout)
-		{
-			if (exit_server)
-			{
-				return select(nfds, readfds, writefds, exceptfds, timeout);
-			}
-
-			auto result = 0;
-			std::vector<SOCKET> read_sockets;
-			std::vector<SOCKET> write_sockets;
+				auto result = 0;
+				std::vector<SOCKET> read_sockets;
+				std::vector<SOCKET> write_sockets;
 
 			socket_map.access([&](std::unordered_map<SOCKET, demonware::tcp_server*>& sockets)
-			{
-				for (auto& s : sockets)
 				{
-					if (readfds)
+					for (auto& s : sockets)
 					{
-						if (FD_ISSET(s.first, readfds))
+						if (readfds)
 						{
-							if (s.second->pending_data())
+							if (FD_ISSET(s.first, readfds))
 							{
-								read_sockets.push_back(s.first);
-								FD_CLR(s.first, readfds);
+								if (s.second->pending_data())
+								{
+									read_sockets.push_back(s.first);
+									FD_CLR(s.first, readfds);
+								}
+							}
+						}
+
+						if (writefds)
+						{
+							if (FD_ISSET(s.first, writefds))
+							{
+								write_sockets.push_back(s.first);
+								FD_CLR(s.first, writefds);
+							}
+						}
+
+						if (exceptfds)
+						{
+							if (FD_ISSET(s.first, exceptfds))
+							{
+								FD_CLR(s.first, exceptfds);
 							}
 						}
 					}
+				});
 
+				if ((!readfds || readfds->fd_count == 0) && (!writefds || writefds->fd_count == 0))
+				{
+					timeout->tv_sec = 0;
+					timeout->tv_usec = 0;
+				}
+
+				result = select(nfds, readfds, writefds, exceptfds, timeout);
+				if (result < 0) result = 0;
+
+				for (const auto& socket : read_sockets)
+				{
+					if (readfds)
+					{
+						FD_SET(socket, readfds);
+						result++;
+					}
+				}
+
+				for (const auto& socket : write_sockets)
+				{
 					if (writefds)
 					{
-						if (FD_ISSET(s.first, writefds))
-						{
-							write_sockets.push_back(s.first);
-							FD_CLR(s.first, writefds);
-						}
-					}
-
-					if (exceptfds)
-					{
-						if (FD_ISSET(s.first, exceptfds))
-						{
-							FD_CLR(s.first, exceptfds);
-						}
+						FD_SET(socket, writefds);
+						result++;
 					}
 				}
-			});
 
-			if ((!readfds || readfds->fd_count == 0) && (!writefds || writefds->fd_count == 0))
-			{
-				timeout->tv_sec = 0;
-				timeout->tv_usec = 0;
+				return result;
 			}
 
-			result = select(nfds, readfds, writefds, exceptfds, timeout);
-			if (result < 0) result = 0;
-
-			for (const auto& socket : read_sockets)
+			int ioctlsocket_stub(const SOCKET s, const long cmd, u_long* argp)
 			{
-				if (readfds)
+				if (static_cast<unsigned long>(cmd) == (FIONBIO))
 				{
-					FD_SET(socket, readfds);
-					result++;
+					add_blocking_socket(s, *argp == 0);
 				}
+
+				return ioctlsocket(s, cmd, argp);
 			}
 
-			for (const auto& socket : write_sockets)
+			BOOL internet_get_connected_state_stub(LPDWORD, DWORD)
 			{
-				if (writefds)
-				{
-					FD_SET(socket, writefds);
-					result++;
-				}
+				// Allow offline play
+				return TRUE;
 			}
-
-			return result;
-		}
-
-		int ioctlsocket_stub(const SOCKET s, const long cmd, u_long* argp)
-		{
-			if (static_cast<unsigned long>(cmd) == (FIONBIO))
-			{
-				add_blocking_socket(s, *argp == 0);
-			}
-
-			return ioctlsocket(s, cmd, argp);
-		}
-
-		BOOL internet_get_connected_state_stub(LPDWORD, DWORD)
-		{
-			// Allow offline play
-			return TRUE;
-		}
 
 		void bd_logger_stub()
 		{

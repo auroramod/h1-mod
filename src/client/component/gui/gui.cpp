@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -20,6 +19,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 namespace gui
 {
 	std::unordered_map<std::string, bool> enabled_menus;
+
 	ID3D11Device* device;
 	ID3D11DeviceContext* device_context;
 
@@ -33,33 +33,73 @@ namespace gui
 			std::chrono::high_resolution_clock::time_point creation_time{};
 		};
 
-			struct frame_callback
-			{
-				std::function<void()> callback;
-				bool always;
-			};
+		struct frame_callback
+		{
+			std::function<void()> callback;
+			bool always;
+		};
 
-			struct event
-			{
-				HWND hWnd;
-				UINT msg;
-				WPARAM wParam;
-				LPARAM lParam;
-			};
+		struct event
+		{
+			HWND hWnd;
+			UINT msg;
+			WPARAM wParam;
+			LPARAM lParam;
+		};
 
-			struct menu_t
-			{
-				std::string name;
-				std::string title;
-				std::function<void()> render;
-			};
+		struct menu_t
+		{
+			std::string name;
+			std::string title;
+			std::function<void()> render;
+		};
 
 		utils::concurrency::container<std::vector<frame_callback>> on_frame_callbacks;
+		utils::concurrency::container<std::deque<notification_t>> notifications;
 		utils::concurrency::container<std::vector<event>> event_queue;
 		std::vector<menu_t> menus;
 
 		bool initialized = false;
 		bool toggled = false;
+
+		void initialize_gui_context()
+		{
+			ImGui::CreateContext();
+			ImGui::StyleColorsDark();
+
+			ImGui_ImplWin32_Init(*reinterpret_cast<HWND*>(0x14DDFCB80)); // hWnd
+			ImGui_ImplDX11_Init(device, device_context);
+
+			initialized = true;
+		}
+
+		void run_event_queue()
+		{
+			event_queue.access([](std::vector<event>& queue)
+				{
+					for (const auto& event : queue)
+					{
+						ImGui_ImplWin32_WndProcHandler(event.hWnd, event.msg, event.wParam, event.lParam);
+					}
+
+					queue.clear();
+				});
+		}
+
+		void toggle()
+		{
+			if (!toggled)
+			{
+				*reinterpret_cast<std::uint8_t*>(0x14DDF84D5) = 0;
+				*game::keyCatchers |= 0x10;
+			}
+			else
+			{
+				*reinterpret_cast<std::uint8_t*>(0x14DDF84D5) = 1;
+				*game::keyCatchers &= ~0x10;
+			}
+			toggled = !toggled;
+		}
 
 		std::vector<int> imgui_colors =
 		{
@@ -85,49 +125,6 @@ namespace gui
 			ImGuiCol_TextSelectedBg,
 			ImGuiCol_NavHighlight,
 		};
-
-		utils::hook::detour wnd_proc_hook;
-
-		utils::concurrency::container<std::deque<notification_t>> notifications;
-
-		void toggle()
-		{
-			if (!toggled)
-			{
-				*reinterpret_cast<std::uint8_t*>(0x14DDF84D5) = 0;
-				*game::keyCatchers |= 0x10;
-			}
-			else
-			{
-				*reinterpret_cast<std::uint8_t*>(0x14DDF84D5) = 1;
-				*game::keyCatchers &= ~0x10;
-			}
-			toggled = !toggled;
-		}
-
-		void initialize_gui_context()
-		{
-			ImGui::CreateContext();
-			ImGui::StyleColorsDark();
-
-			ImGui_ImplWin32_Init(*reinterpret_cast<HWND*>(0x14DDFCB80)); // hWnd
-			ImGui_ImplDX11_Init(device, device_context);
-
-			initialized = true;
-		}
-
-		void run_event_queue()
-		{
-			event_queue.access([](std::vector<event>& queue)
-				{
-					for (const auto& event : queue)
-					{
-						ImGui_ImplWin32_WndProcHandler(event.hWnd, event.msg, event.wParam, event.lParam);
-					}
-
-					queue.clear();
-				});
-		}
 
 		void update_colors()
 		{
@@ -200,35 +197,35 @@ namespace gui
 				ImGuiWindowFlags_NoMove;
 
 			notifications.access([](std::deque<notification_t>& notifications_)
-			{
-				auto index = 0;
-				for (auto i = notifications_.begin(); i != notifications_.end();)
 				{
-					const auto now = std::chrono::high_resolution_clock::now();
-					if (now - i->creation_time >= i->duration)
+					auto index = 0;
+					for (auto i = notifications_.begin(); i != notifications_.end();)
 					{
-						i = notifications_.erase(i);
-						continue;
+						const auto now = std::chrono::high_resolution_clock::now();
+						if (now - i->creation_time >= i->duration)
+						{
+							i = notifications_.erase(i);
+							continue;
+						}
+
+						const auto title = truncate(i->title, 34, "...");
+						const auto text = truncate(i->text, 34, "...");
+
+						ImGui::SetNextWindowSizeConstraints(ImVec2(250, 50), ImVec2(250, 50));
+						ImGui::SetNextWindowBgAlpha(0.6f);
+						ImGui::Begin(utils::string::va("Notification #%i", index), nullptr, window_flags);
+
+						ImGui::SetWindowPos(ImVec2(10, 30.f + static_cast<float>(index) * 60.f));
+						ImGui::SetWindowSize(ImVec2(250, 0));
+						ImGui::Text(title.data());
+						ImGui::Text(text.data());
+
+						ImGui::End();
+
+						++i;
+						++index;
 					}
-
-					const auto title = truncate(i->title, 34, "...");
-					const auto text = truncate(i->text, 34, "...");
-
-					ImGui::SetNextWindowSizeConstraints(ImVec2(250, 50), ImVec2(250, 50));
-					ImGui::SetNextWindowBgAlpha(0.6f);
-					ImGui::Begin(utils::string::va("Notification #%i", index), nullptr, window_flags);
-
-					ImGui::SetWindowPos(ImVec2(10, 30.f + static_cast<float>(index) * 60.f));
-					ImGui::SetWindowSize(ImVec2(250, 0));
-					ImGui::Text(title.data());
-					ImGui::Text(text.data());
-
-					ImGui::End();
-
-					++i;
-					++index;
-				}
-			});
+				});
 		}
 
 		void menu_checkbox(const std::string& name, const std::string& menu)
@@ -239,15 +236,15 @@ namespace gui
 		void run_frame_callbacks()
 		{
 			on_frame_callbacks.access([](std::vector<frame_callback>& callbacks)
-			{
-				for (const auto& callback : callbacks)
 				{
-					if (callback.always || toggled)
+					for (const auto& callback : callbacks)
 					{
-						callback.callback();
+						if (callback.always || toggled)
+						{
+							callback.callback();
+						}
 					}
-				}
-			});
+				});
 		}
 
 		void draw_main_menu_bar()
@@ -287,6 +284,8 @@ namespace gui
 				end_gui_frame();
 			}
 		}
+
+		utils::hook::detour wnd_proc_hook;
 
 		char gui_frame_stub()
 		{

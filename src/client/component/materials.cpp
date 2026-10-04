@@ -1,7 +1,7 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
-#include "materials.hpp"
 
+#include "materials.hpp"
 #include "console.hpp"
 #include "filesystem.hpp"
 #include "scheduler.hpp"
@@ -45,10 +45,10 @@ namespace materials
 		}
 #endif
 
-		game::MaterialConstantDef constant_table{};
 
 		utils::hook::detour db_material_streaming_fail_hook;
 		utils::hook::detour db_get_material_index_hook;
+		game::MaterialConstantDef constant_table{};
 
 #ifdef _DEBUG
 		utils::hook::detour material_compare_hook;
@@ -77,6 +77,7 @@ namespace materials
 
 			return result;
 		}
+
 		void print_material(const game::Material* material)
 		{
 			if (!debug_materials || !debug_materials->current.enabled)
@@ -86,6 +87,7 @@ namespace materials
 
 			console::debug("current material is \"%s\"\n", material->name);
 		}
+
 		void print_current_material_stub(utils::hook::assembler& a)
 		{
 			const auto loc_6AD59B = a.newLabel();

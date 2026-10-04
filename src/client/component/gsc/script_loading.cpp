@@ -22,7 +22,7 @@
 #include <utils/io.hpp>
 #include <utils/string.hpp>
 
-namespace script_loading
+namespace gsc
 {
 	std::unique_ptr<xsk::gsc::h1::context> gsc_ctx = std::make_unique<xsk::gsc::h1::context>(xsk::gsc::instance::server);
 
@@ -43,8 +43,6 @@ namespace script_loading
 			char* pos = nullptr;
 			const unsigned int size = memory::custom_script_mem_size;
 		} script_memory;
-
-		bool force_load = false;
 
 		char* allocate_buffer(size_t size)
 		{
@@ -77,7 +75,7 @@ namespace script_loading
 			init_handles.clear();
 			loaded_scripts.clear();
 			scriptfile_allocator.clear();
-			script_extension::clear_devmap();
+			gsc::clear_devmap();
 			free_script_memory();
 		}
 
@@ -106,6 +104,8 @@ namespace script_loading
 
 			return false;
 		}
+
+		bool force_load = false;
 
 		game::ScriptFile* load_custom_script(const char* file_name, const std::string& real_name)
 		{
@@ -176,7 +176,7 @@ namespace script_loading
 				const auto devmap = std::get<2>(output_script);
 				if (devmap.size > 0 && (gsc_ctx->build() & xsk::gsc::build::dev_maps) != xsk::gsc::build::prod)
 				{
-					script_extension::add_devmap_entry(reinterpret_cast<std::uint8_t*>(script_file_ptr->bytecode), byte_code_size, real_name, devmap);
+					gsc::add_devmap_entry(reinterpret_cast<std::uint8_t*>(script_file_ptr->bytecode), byte_code_size, real_name, devmap);
 				}
 
 				console::info("Loaded custom gsc '%s.gsc'", real_name.data());
@@ -287,7 +287,7 @@ namespace script_loading
 						load_scripts(path, "scripts/mp/");
 						load_scripts(path, "scripts/");
 					}
-
+	
 					force_load = true;
 					const auto _0 = gsl::finally([&]
 					{
@@ -329,7 +329,7 @@ namespace script_loading
 		void scr_begin_load_scripts_stub()
 		{
 			// s1-mod reimplements this canonically, but for now, let all dev features be used in `developer_script 1`
-			const auto* developer_script = script_extension::developer_script;
+			const auto* developer_script = gsc::developer_script;
 			const bool dev_script = developer_script ? developer_script->current.enabled : false;
 			const auto build = dev_script ?
 				xsk::gsc::build::dev :
@@ -405,7 +405,7 @@ namespace script_loading
 		return game::DB_FindXAssetHeader(type, name, allow_create_default).scriptfile;
 	}
 
-	class component final : public component_interface
+	class loading final : public component_interface
 	{
 	public:
 		void post_unpack() override
@@ -443,4 +443,4 @@ namespace script_loading
 	};
 }
 
-REGISTER_COMPONENT(script_loading::component)
+REGISTER_COMPONENT(gsc::loading)

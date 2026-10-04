@@ -100,12 +100,12 @@ namespace scripting
 				lua::engine::start();
 			}
 
-			script_loading::load_main_handles();
+			gsc::load_main_handles();
 
 			if (game::environment::is_sp())
 			{
-				g_load_structs_hook.invoke<void>();
-			}
+			g_load_structs_hook.invoke<void>();
+		}
 			else
 			{
 				utils::hook::invoke<void>(0x140383C60); // G_LoadStructs
@@ -114,11 +114,11 @@ namespace scripting
 
 		void scr_load_level_stub()
 		{
-			script_loading::load_init_handles();
+			gsc::load_init_handles();
 			if (game::environment::is_sp())
 			{
-				scr_load_level_hook.invoke<void>();
-			}
+			scr_load_level_hook.invoke<void>();
+		}
 			else
 			{
 				utils::hook::invoke<void>(0x1403727C0); // Scr_LoadLevel
@@ -148,7 +148,7 @@ namespace scripting
 
 			if (game::environment::is_sp())
 			{
-				g_shutdown_game_hook.invoke<void>(free_scripts);
+			g_shutdown_game_hook.invoke<void>(free_scripts);
 			}
 			else
 			{
@@ -172,8 +172,8 @@ namespace scripting
 
 			if (game::environment::is_sp())
 			{
-				scr_add_class_field_hook.invoke<void>(classnum, name, canonical_string, offset);
-			}
+			scr_add_class_field_hook.invoke<void>(classnum, name, canonical_string, offset);
+		}
 			else
 			{
 				utils::hook::invoke<void>(0x14043E2C0, classnum, name, canonical_string, offset); // Scr_AddClassField
@@ -198,8 +198,8 @@ namespace scripting
 
 			if (game::environment::is_sp())
 			{
-				process_script_hook.invoke<void>(filename);
-			}
+			process_script_hook.invoke<void>(filename);
+		}
 			else
 			{
 				utils::hook::invoke<void>(0x1404417E0, filename); // ProcessScript
@@ -212,7 +212,7 @@ namespace scripting
 
 			if (!script_function_table_sort.contains(filename))
 			{
-				const auto script = script_loading::find_script(game::ASSET_TYPE_SCRIPTFILE, current_script_file_name, false);
+				const auto script = gsc::find_script(game::ASSET_TYPE_SCRIPTFILE, current_script_file_name, false);
 				if (script)
 				{
 					const auto end = &script->bytecode[script->bytecodeLen];
@@ -240,8 +240,8 @@ namespace scripting
 
 			if (game::environment::is_sp())
 			{
-				scr_set_thread_position_hook.invoke<void>(thread_name, code_pos);
-			}
+			scr_set_thread_position_hook.invoke<void>(thread_name, code_pos);
+		}
 			else
 			{
 				utils::hook::invoke<void>(0x140437D10, thread_name, code_pos); // Scr_SetThreadPosition
@@ -307,7 +307,7 @@ namespace scripting
 
 				scr_set_thread_position_hook.create(0x1403BD890, scr_set_thread_position_stub);
 				process_script_hook.create(0x1403C7200, process_script_stub);
-				sl_get_canonical_string_hook.create(game::SL_GetCanonicalString, sl_get_canonical_string_stub);
+			sl_get_canonical_string_hook.create(game::SL_GetCanonicalString, sl_get_canonical_string_stub);
 
 				g_load_structs_hook.create(0x1402E7970, g_load_structs_stub);
 				scr_load_level_hook.create(0x1402D4CD0, scr_load_level_stub);

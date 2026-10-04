@@ -2,7 +2,7 @@
 #include "game/game.hpp"
 #include <xsk/gsc/engine/h1.hpp>
 
-namespace script_loading
+namespace gsc
 {
 	extern std::unique_ptr<xsk::gsc::h1::context> gsc_ctx;
 

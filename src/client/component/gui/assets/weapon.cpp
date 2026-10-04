@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -17,22 +16,23 @@
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 
-#define DRAW_ASSET_PROPERTY(__name__, __fmt__) \
-	ImGui::Text(#__name__ ": " __fmt__, asset->__name__); \
-
-#define DRAW_ASSET_PROPERTY_COPY(__name__) \
-	ImGui::Text(#__name__ ": "); \
-	ImGui::SameLine(); \
-	if (ImGui::Button(asset->__name__)) \
-	{ \
-		gui::copy_to_clipboard(asset->__name__); \
-	} \
-
-
-namespace asset_weapon
+namespace gui::asset_list::weapon
 {
 	namespace
 	{
+
+#define DRAW_ASSET_PROPERTY(__name__, __fmt__) \
+		ImGui::Text(#__name__ ": " __fmt__, asset->__name__); \
+
+#define DRAW_ASSET_PROPERTY_COPY(__name__) \
+		ImGui::Text(#__name__ ": "); \
+		ImGui::SameLine(); \
+		if (ImGui::Button(asset->__name__)) \
+		{ \
+			gui::copy_to_clipboard(asset->__name__); \
+		} \
+
+
 		bool draw_weapon_window(game::WeaponDef* asset)
 		{
 			ImGui::SetNextItemOpen(true, ImGuiCond_FirstUseEver);
@@ -43,13 +43,13 @@ namespace asset_weapon
 			if (asset->gunModel[0] != nullptr)
 			{
 				ImGui::Text("gun model: %s", asset->gunModel[0]->name);
-				asset_list::add_view_button(0, game::ASSET_TYPE_XMODEL, asset->gunModel[0]->name);
+				add_view_button(0, game::ASSET_TYPE_XMODEL, asset->gunModel[0]->name);
 			}
 
 			if (asset->worldModel[0] != nullptr)
 			{
 				ImGui::Text("world model: %s", asset->gunModel[0]->name);
-				asset_list::add_view_button(1, game::ASSET_TYPE_XMODEL, asset->worldModel[0]->name);
+				add_view_button(1, game::ASSET_TYPE_XMODEL, asset->worldModel[0]->name);
 			}
 
 			ImGui::Text("location multipliers");
@@ -239,7 +239,7 @@ namespace asset_weapon
 		{
 			if (asset->gunModel[0] != nullptr)
 			{
-				asset_xmodel::spawn_xmodel(asset->gunModel[0]);
+				gui::asset_list::xmodel::spawn_xmodel(asset->gunModel[0]);
 			}
 			else
 			{
@@ -253,12 +253,12 @@ namespace asset_weapon
 	public:
 		void post_unpack() override
 		{
-			asset_list::add_asset_view<game::WeaponDef>(game::ASSET_TYPE_WEAPON, draw_weapon_window);
-			asset_list::add_asset_button<game::WeaponDef>(game::ASSET_TYPE_WEAPON, "give", give_weapon, game::CL_IsCgameInitialized);
-			asset_list::add_asset_button<game::WeaponDef>(game::ASSET_TYPE_WEAPON, "spawn model", spawn_model, game::CL_IsCgameInitialized);
+			gui::asset_list::add_asset_view<game::WeaponDef>(game::ASSET_TYPE_WEAPON, draw_weapon_window);
+			gui::asset_list::add_asset_button<game::WeaponDef>(game::ASSET_TYPE_WEAPON, "give", give_weapon, game::CL_IsCgameInitialized);
+			gui::asset_list::add_asset_button<game::WeaponDef>(game::ASSET_TYPE_WEAPON, "spawn model", spawn_model, game::CL_IsCgameInitialized);
 		}
 	};
 }
 
-REGISTER_COMPONENT(asset_weapon::component)
+REGISTER_COMPONENT(gui::asset_list::weapon::component)
 #endif

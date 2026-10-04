@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -16,22 +15,22 @@
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 
-namespace asset_list
+namespace gui::asset_list
 {
 	namespace
 	{
+		bool shown_assets[game::XAssetType::ASSET_TYPE_COUNT]{};
+		std::string asset_type_filter;
+		std::string assets_name_filter[game::XAssetType::ASSET_TYPE_COUNT];
+		std::string assets_value_filter[game::XAssetType::ASSET_TYPE_COUNT];
+		std::string zone_name_filter[game::XAssetType::ASSET_TYPE_COUNT];
+		
 		struct asset_button_t
 		{
 			std::string name;
 			std::optional<std::function<bool()>> enabled;
 			std::function<void(const game::XAssetHeader)> callback;
 		};
-
-		bool shown_assets[game::XAssetType::ASSET_TYPE_COUNT]{};
-		std::string asset_type_filter;
-		std::string assets_name_filter[game::XAssetType::ASSET_TYPE_COUNT];
-		std::string assets_value_filter[game::XAssetType::ASSET_TYPE_COUNT];
-		std::string zone_name_filter[game::XAssetType::ASSET_TYPE_COUNT];
 
 		std::unordered_map<game::XAssetType, std::function<void(const std::string&)>> asset_view_callbacks;
 		std::vector<asset_button_t> asset_buttons[game::XAssetType::ASSET_TYPE_COUNT];
@@ -285,11 +284,6 @@ namespace asset_list
 		}
 	}
 
-	void add_asset_view_callback(game::XAssetType type, const std::function<void(const std::string&)>& callback)
-	{
-		asset_view_callbacks.insert(std::make_pair(type, callback));
-	}
-
 	void add_view_button(int id, game::XAssetType type, const char* name)
 	{
 		if (asset_view_callbacks.contains(type))
@@ -302,6 +296,11 @@ namespace asset_list
 			}
 			ImGui::PopID();
 		}
+	}
+
+	void add_asset_view_callback(game::XAssetType type, const std::function<void(const std::string&)>& callback)
+	{
+		asset_view_callbacks.insert(std::make_pair(type, callback));
 	}
 
 	void add_asset_button(game::XAssetType type, const std::string& name, const std::function<void(const game::XAssetHeader)>& callback,
@@ -329,5 +328,5 @@ namespace asset_list
 	};
 }
 
-REGISTER_COMPONENT(asset_list::component)
+REGISTER_COMPONENT(gui::asset_list::component)
 #endif

@@ -19,7 +19,6 @@ namespace dedicated
 	namespace
 	{
 		const game::dvar_t* sv_lanOnly = nullptr;
-		utils::hook::detour ui_set_active_menu_hook;
 
 		void init_dedicated_server()
 		{
@@ -36,15 +35,6 @@ namespace dedicated
 			game::Com_Shutdown("EXE_SERVERKILLED");
 		}
 
-		void kill_server()
-		{
-			game::SV_GameSendServerCommand(-1, game::SV_CMD_CAN_IGNORE,
-				utils::string::va("r \"%s\"", "EXE_ENDOFGAME"));
-
-			// R_SyncRenderThread
-			utils::hook::invoke<void>(0x1405FF3A0);
-		}
-
 		void send_heartbeat()
 		{
 			if (sv_lanOnly && sv_lanOnly->current.enabled)
@@ -58,6 +48,15 @@ namespace dedicated
 				console::info("Sending heartbeat");
 				network::send(target, "heartbeat", "H1");
 			}
+		}
+
+		void kill_server()
+		{
+			game::SV_GameSendServerCommand(-1, game::SV_CMD_CAN_IGNORE,
+				utils::string::va("r \"%s\"", "EXE_ENDOFGAME"));
+
+			// R_SyncRenderThread
+			utils::hook::invoke<void>(0x1405FF3A0);
 		}
 
 		std::vector<std::string>& get_startup_command_queue()
@@ -126,6 +125,7 @@ namespace dedicated
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(msec));
 		}
+		utils::hook::detour ui_set_active_menu_hook;
 
 		void ui_set_active_menu_stub(void* local_client_num, int menu)
 		{

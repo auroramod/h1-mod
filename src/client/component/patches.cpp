@@ -22,16 +22,12 @@ namespace patches
 {
 	namespace
 	{
-		utils::hook::detour sv_kick_client_num_hook;
-		utils::hook::detour com_register_dvars_hook;
-		utils::hook::detour db_read_raw_file_hook;
-		utils::hook::detour sv_shutdown_hook;
-		utils::hook::detour com_quit_f_hook;
-
 		const char* live_get_local_client_name()
 		{
 			return game::Dvar_FindVar("name")->current.string;
 		}
+
+		utils::hook::detour sv_kick_client_num_hook;
 
 		void sv_kick_client_num(const int client_num, const char* reason)
 		{
@@ -43,13 +39,38 @@ namespace patches
 			return sv_kick_client_num_hook.invoke<void>(client_num, reason);
 		}
 
+		std::string get_login_username()
+		{
+			char username[UNLEN + 1];
+			DWORD username_len = UNLEN + 1;
+			if (!GetUserNameA(username, &username_len))
+			{
+				return "Unknown Soldier";
+			}
+
+			return std::string{username, username_len - 1};
+		}
+
+		utils::hook::detour com_register_dvars_hook;
+
+		void com_register_dvars_stub()
+		{
+			if (game::environment::is_mp())
+			{
+				// Make name save
+				dvars::register_string("name", get_login_username().data(), game::DVAR_ARCHIVE, "Player name.");
+			}
+
+			return com_register_dvars_hook.invoke<void>();
+		}
+
 		void cg_set_client_dvar_from_server_stub(void* client_num, void* cgame_glob, const char* dvar_hash, const char* value)
 		{
 			const auto hash = std::atoi(dvar_hash);
 			auto* dvar = game::Dvar_FindMalleableVar(hash);
 
-			if (hash == game::generateHashValue("cg_fov") ||
-				hash == game::generateHashValue("cg_fovMin") ||
+			if (hash == game::generateHashValue("cg_fov") || 
+				hash == game::generateHashValue("cg_fovMin") || 
 				hash == game::generateHashValue("cg_fovScale"))
 			{
 				return;
@@ -101,6 +122,20 @@ namespace patches
 		{
 			*hash = dvar->hash;
 			return true;
+		}
+
+		utils::hook::detour db_read_raw_file_hook;
+		const char* db_read_raw_file_stub(const char* filename, char* buf, const int size)
+		{
+			std::string buffer{};
+			if (filesystem::read_file(filename, &buffer))
+			{
+				snprintf(buf, size, "%s\n", buffer.data());
+				return buf;
+			}
+
+			// DB_ReadRawFile
+			return db_read_raw_file_hook.invoke<const char*>(filename, buf, size);
 		}
 
 		void bsp_sys_error_stub(const char* error, const char* arg1)
@@ -171,6 +206,12 @@ namespace patches
 			game::AimAssist_AddToTargetList(aa_glob, screen_target);
 		}
 
+		void missing_content_error_stub(int, const char*)
+		{
+			game::Com_Error(game::ERR_DROP, utils::string::va("MISSING FILE\n%s.ff",
+				fastfiles::get_current_fastfile().data()));
+		}
+
 		void init_network_dvars_stub(game::dvar_t* /*dvar*/)
 		{
 			static const auto* r_tonemapHighlightRange = game::Dvar_FindVar("r_tonemapHighlightRange");
@@ -194,19 +235,7 @@ namespace patches
 			{
 				utils::hook::invoke<void>(0x14024A360, local_client_num, controller_index);
 			}
-		}
-
-		void sv_shutdown_stub(const char* finalmsg)
-		{
-			console::info("----- Server Shutdown -----\n");
-			sv_shutdown_hook.invoke<void>(finalmsg);
-		}
-
-		void com_quit_f_stub()
-		{
-			console::info("quitting...\n");
-			com_quit_f_hook.invoke<void>();
-		}
+			}
 
 		void cg_calc_agent_lerp_positions_stub(const int local_client_num, std::uint8_t* cent)
 		{
@@ -216,6 +245,123 @@ namespace patches
 			}
 
 			utils::hook::invoke<void>(0x1400A4E30, local_client_num, cent); // CG_CalcEntityLerpPositions
+		}
+
+		void create_2d_texture_stub_1(const char* fmt, ...)
+		{
+			fmt = "Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
+
+			char buffer[2048];
+
+			{
+				va_list ap;
+				va_start(ap, fmt);
+
+				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+				va_end(ap);
+			}
+
+			game::Sys_Error("%s", buffer);
+		}
+
+		void create_2d_texture_stub_2(game::errorParm code, const char* fmt, ...)
+		{
+			fmt = "Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
+
+			char buffer[2048];
+
+			{
+				va_list ap;
+				va_start(ap, fmt);
+
+				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+				va_end(ap);
+			}
+
+			game::Com_Error(code, "%s", buffer);
+		}
+
+		void swap_chain_stub(game::errorParm code, const char* fmt, ...)
+		{
+			fmt = "IDXGISwapChain::Present failed: %s\n\n"
+				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
+
+			char buffer[2048];
+
+			{
+				va_list ap;
+				va_start(ap, fmt);
+
+				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
+
+				va_end(ap);
+			}
+
+			game::Com_Error(code, "%s", buffer);
+		}
+
+		void dvar_set_bool(game::dvar_t* dvar, const bool value)
+		{
+			game::dvar_value dvar_value{};
+			dvar_value.enabled = value;
+			game::Dvar_SetVariant(dvar, &dvar_value, game::DVAR_SOURCE_INTERNAL);
+		}
+
+		// SP only
+		void sub_157FA0_stub()
+		{
+			const auto dvar_706663C2 = *reinterpret_cast<game::dvar_t**>(0x14B5C5338);
+			const auto dvar_617FB3B4 = *reinterpret_cast<game::dvar_t**>(0x14B5C5340);
+
+			if (!dvar_706663C2->current.enabled || utils::hook::invoke<bool>(0x140385A30))
+			{
+				utils::hook::invoke<void>(0x1403A5E90, 0, 0);
+				dvar_set_bool(dvar_706663C2, true);
+				dvar_set_bool(dvar_617FB3B4, true);
+			}
+
+			if (utils::hook::invoke<bool>(0x140439B50))
+			{
+				utils::hook::invoke<void>(0x1403A5E90, 0, 0);
+				dvar_set_bool(dvar_617FB3B4, true);
+			}
+		}
+
+		utils::hook::detour sv_shutdown_hook;
+		void sv_shutdown_stub(const char* finalmsg)
+		{
+			console::info("----- Server Shutdown -----\n");
+			sv_shutdown_hook.invoke<void>(finalmsg);
+		}
+
+		utils::hook::detour com_quit_f_hook;
+		void com_quit_f_stub()
+		{
+			console::info("quitting...\n");
+			com_quit_f_hook.invoke<void>();
+		}
+
+		// MP only
+		game::dvar_t* register_bool_stub(const int hash, __int64 /*name*/, const bool value, const unsigned int flags)
+		{
+			const auto com_recommended_set = game::Dvar_RegisterBool(hash, "", value, flags);
+
+			if (!com_recommended_set->current.enabled || utils::hook::invoke<bool>(0x1400D8A90))
+			{
+				utils::hook::invoke<void>(0x1400DADA0, 0, 0);
+				dvar_set_bool(com_recommended_set, true);
+			}
+
+			if (utils::hook::invoke<bool>(0x14050C290))
+		{
+				utils::hook::invoke<void>(0x1400DADA0, 0, 0);
+			}
+
+			return com_recommended_set;
 		}
 
 		void patch_mp()
@@ -339,151 +485,6 @@ namespace patches
 
 			// 1.15 sub_12C5B0 (snapshot/omnvar memory size) was hooked to return 0x10 times more. 1.04 has no dynamic sizing function for this
 		}
-
-		std::string get_login_username()
-		{
-			char username[UNLEN + 1];
-			DWORD username_len = UNLEN + 1;
-			if (!GetUserNameA(username, &username_len))
-			{
-				return "Unknown Soldier";
-			}
-
-			return std::string{username, username_len - 1};
-		}
-
-		void com_register_dvars_stub()
-		{
-			if (game::environment::is_mp())
-			{
-				// Make name save
-				dvars::register_string("name", get_login_username().data(), game::DVAR_ARCHIVE, "Player name.");
-			}
-
-			return com_register_dvars_hook.invoke<void>();
-		}
-
-		const char* db_read_raw_file_stub(const char* filename, char* buf, const int size)
-		{
-			std::string buffer{};
-			if (filesystem::read_file(filename, &buffer))
-			{
-				snprintf(buf, size, "%s\n", buffer.data());
-				return buf;
-			}
-
-			// DB_ReadRawFile
-			return db_read_raw_file_hook.invoke<const char*>(filename, buf, size);
-		}
-
-		void missing_content_error_stub(int, const char*)
-		{
-			game::Com_Error(game::ERR_DROP, utils::string::va("MISSING FILE\n%s.ff",
-				fastfiles::get_current_fastfile().data()));
-		}
-
-		void create_2d_texture_stub_1(const char* fmt, ...)
-		{
-			fmt = "Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
-				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
-
-			char buffer[2048];
-
-			{
-				va_list ap;
-				va_start(ap, fmt);
-
-				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
-
-				va_end(ap);
-			}
-
-			game::Sys_Error("%s", buffer);
-		}
-
-		void create_2d_texture_stub_2(game::errorParm code, const char* fmt, ...)
-		{
-			fmt = "Create2DTexture( %s, %i, %i, %i, %i ) failed\n\n"
-				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
-
-			char buffer[2048];
-
-			{
-				va_list ap;
-				va_start(ap, fmt);
-
-				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
-
-				va_end(ap);
-			}
-
-			game::Com_Error(code, "%s", buffer);
-		}
-
-		void swap_chain_stub(game::errorParm code, const char* fmt, ...)
-		{
-			fmt = "IDXGISwapChain::Present failed: %s\n\n"
-				"Disable shader caching, lower graphic settings, free up RAM, or update your GPU drivers.";
-
-			char buffer[2048];
-
-			{
-				va_list ap;
-				va_start(ap, fmt);
-
-				vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, fmt, ap);
-
-				va_end(ap);
-			}
-
-			game::Com_Error(code, "%s", buffer);
-		}
-
-		void dvar_set_bool(game::dvar_t* dvar, const bool value)
-		{
-			game::dvar_value dvar_value{};
-			dvar_value.enabled = value;
-			game::Dvar_SetVariant(dvar, &dvar_value, game::DVAR_SOURCE_INTERNAL);
-		}
-
-		// SP only
-		void sub_157FA0_stub()
-		{
-			const auto dvar_706663C2 = *reinterpret_cast<game::dvar_t**>(0x14B5C5338);
-			const auto dvar_617FB3B4 = *reinterpret_cast<game::dvar_t**>(0x14B5C5340);
-
-			if (!dvar_706663C2->current.enabled || utils::hook::invoke<bool>(0x140385A30))
-			{
-				utils::hook::invoke<void>(0x1403A5E90, 0, 0);
-				dvar_set_bool(dvar_706663C2, true);
-				dvar_set_bool(dvar_617FB3B4, true);
-			}
-
-			if (utils::hook::invoke<bool>(0x140439B50))
-			{
-				utils::hook::invoke<void>(0x1403A5E90, 0, 0);
-				dvar_set_bool(dvar_617FB3B4, true);
-			}
-		}
-
-		// MP only
-		game::dvar_t* register_bool_stub(const int hash, __int64 /*name*/, const bool value, const unsigned int flags)
-		{
-			const auto com_recommended_set = game::Dvar_RegisterBool(hash, "", value, flags);
-
-			if (!com_recommended_set->current.enabled || utils::hook::invoke<bool>(0x1400D8A90))
-			{
-				utils::hook::invoke<void>(0x1400DADA0, 0, 0);
-				dvar_set_bool(com_recommended_set, true);
-			}
-
-			if (utils::hook::invoke<bool>(0x14050C290))
-			{
-				utils::hook::invoke<void>(0x1400DADA0, 0, 0);
-			}
-
-			return com_recommended_set;
-		}
 	}
 
 	class component final : public component_interface
@@ -565,10 +566,10 @@ namespace patches
 			{
 				utils::hook::call(0x1400D9F53, register_bool_stub);
 				utils::hook::jump(0x1400D9F5F, 0x1400D9FC7);
-			}
+		}
 
 			if (!game::environment::is_sp())
-			{
+		{
 				patch_mp();
 			}
 		}

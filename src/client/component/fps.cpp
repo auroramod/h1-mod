@@ -15,6 +15,19 @@ namespace fps
 {
 	namespace
 	{
+		utils::hook::detour sub_5D6810_hook;
+		utils::hook::detour com_frame_hook;
+		utils::hook::detour r_wait_end_time_hook;
+
+		game::dvar_t* cg_drawfps = nullptr;
+		game::dvar_t* cg_drawping = nullptr;
+		game::dvar_t* com_wait_end_frame_mode = nullptr;
+
+		float fps_color_good[4] = {0.6f, 1.0f, 0.0f, 1.0f};
+		float fps_color_ok[4] = {1.0f, 0.7f, 0.3f, 1.0f};
+		float fps_color_bad[4] = {1.0f, 0.3f, 0.3f, 1.0f};
+		float ping_color[4] = {1.0f, 1.0f, 1.0f, 0.65f};
+
 		struct cg_perf_data
 		{
 			std::chrono::time_point<std::chrono::steady_clock> perf_start;
@@ -31,19 +44,6 @@ namespace fps
 			std::int32_t min{};
 			std::int32_t max{};
 		};
-
-		utils::hook::detour sub_5D6810_hook;
-		utils::hook::detour com_frame_hook;
-		utils::hook::detour r_wait_end_time_hook;
-
-		game::dvar_t* cg_drawfps = nullptr;
-		game::dvar_t* cg_drawping = nullptr;
-		game::dvar_t* com_wait_end_frame_mode = nullptr;
-
-		float fps_color_good[4] = {0.6f, 1.0f, 0.0f, 1.0f};
-		float fps_color_ok[4] = {1.0f, 0.7f, 0.3f, 1.0f};
-		float fps_color_bad[4] = {1.0f, 0.3f, 0.3f, 1.0f};
-		float ping_color[4] = {1.0f, 1.0f, 1.0f, 0.65f};
 
 		cg_perf_data cg_perf{};
 
@@ -106,7 +106,7 @@ namespace fps
 				{
 					const auto fps_string = utils::string::va("%i", fps);
 
-					const auto x = (game::ScrPlace_GetViewPlacement()->realViewportSize[0] - 15.0f) -
+					const auto x = (game::ScrPlace_GetViewPlacement()->realViewportSize[0] - 15.0f) - 
 						game::R_TextWidth(fps_string, 0x7FFFFFFF, font);
 					const auto y = font->pixelHeight + 10.f;
 
@@ -164,6 +164,7 @@ namespace fps
 			{
 				max_fps = 1000;
 			}
+
 
 			constexpr auto nano_secs = std::chrono::duration_cast<std::chrono::nanoseconds>(1s);
 			const auto frame_time = nano_secs / max_fps;

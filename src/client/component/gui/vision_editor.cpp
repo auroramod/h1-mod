@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "component/command.hpp"
@@ -19,6 +18,7 @@
 #include <json.hpp>
 
 #pragma region macros
+
 #define ADD_FLOAT(__string__, __dvar__) \
 		ADD_FLOAT_STEP(__string__, __dvar__, 0.01f); \
 
@@ -33,89 +33,92 @@
 
 #define ADD_BOOL(__string__, __dvar__) \
 		if (__dvar__ != nullptr) ImGui::Checkbox(__string__, &__dvar__->current.enabled);
+
 #pragma endregion
 
-namespace vision_editor
+namespace gui::vision_editor
 {
 	namespace
 	{
-		game::dvar_t* sm_sunEnable = nullptr;
-		game::dvar_t* sm_sunShadowScale = nullptr;
-		game::dvar_t* sm_spotLimit = nullptr;
-		game::dvar_t* sm_qualitySpotShadow = nullptr;
-		game::dvar_t* sm_usedSunCascadeCount = nullptr;
-		game::dvar_t* sm_sunSampleSizeNear = nullptr;
-		game::dvar_t* sm_sunFilterRadius = nullptr;
-		game::dvar_t* sm_spotFilterRadius = nullptr;
-		game::dvar_t* r_specularColorScale = nullptr;
-		game::dvar_t* r_diffuseColorScale = nullptr;
-		game::dvar_t* r_veil = nullptr;
-		game::dvar_t* r_veilStrength = nullptr;
-		game::dvar_t* r_veilBackgroundStrength = nullptr;
-		game::dvar_t* r_tonemap = nullptr;
-		game::dvar_t* r_tonemapAuto = nullptr;
-		game::dvar_t* r_tonemapBlend = nullptr;
-		game::dvar_t* r_tonemapLockAutoExposureAdjust = nullptr;
-		game::dvar_t* r_tonemapAutoExposureAdjust = nullptr;
-		game::dvar_t* r_tonemapExposure = nullptr;
-		game::dvar_t* r_tonemapExposureAdjust = nullptr;
-		game::dvar_t* r_tonemapMaxExposure = nullptr;
-		game::dvar_t* r_tonemapAdaptSpeed = nullptr;
-		game::dvar_t* r_tonemapDarkEv = nullptr;
-		game::dvar_t* r_tonemapMidEv = nullptr;
-		game::dvar_t* r_tonemapLightEv = nullptr;
-		game::dvar_t* r_tonemapDarkExposureAdjust = nullptr;
-		game::dvar_t* r_tonemapMidExposureAdjust = nullptr;
-		game::dvar_t* r_tonemapLightExposureAdjust = nullptr;
-		game::dvar_t* r_tonemapMinExposureAdjust = nullptr;
-		game::dvar_t* r_tonemapMaxExposureAdjust = nullptr;
-		game::dvar_t* r_tonemapWhite = nullptr;
-		game::dvar_t* r_tonemapShoulder = nullptr;
-		game::dvar_t* r_tonemapCrossover = nullptr;
-		game::dvar_t* r_tonemapToe = nullptr;
-		game::dvar_t* r_tonemapBlack = nullptr;
-		game::dvar_t* r_aoDiminish = nullptr;
-		game::dvar_t* r_ssao = nullptr;
-		game::dvar_t* r_ssaoStrength = nullptr;
-		game::dvar_t* r_ssaoPower = nullptr;
-		game::dvar_t* r_ssaoMinStrengthDepth = nullptr;
-		game::dvar_t* r_ssaoMaxStrengthDepth = nullptr;
-		game::dvar_t* r_ssaoWidth = nullptr;
-		game::dvar_t* r_ssaoGapFalloff = nullptr;
-		game::dvar_t* r_ssaoGradientFalloff = nullptr;
-		game::dvar_t* r_ssaoFadeDepth = nullptr;
-		game::dvar_t* r_ssaoRejectDepth = nullptr;
-		game::dvar_t* r_sky_fog_min_angle = nullptr;
-		game::dvar_t* r_sky_fog_max_angle = nullptr;
-		game::dvar_t* r_sky_fog_intensity = nullptr;
+#pragma region dvars
+		static game::dvar_t* sm_sunEnable = nullptr;
+		static game::dvar_t* sm_sunShadowScale = nullptr;
+		static game::dvar_t* sm_spotLimit = nullptr;
+		static game::dvar_t* sm_qualitySpotShadow = nullptr;
+		static game::dvar_t* sm_usedSunCascadeCount = nullptr;
+		static game::dvar_t* sm_sunSampleSizeNear = nullptr;
+		static game::dvar_t* sm_sunFilterRadius = nullptr;
+		static game::dvar_t* sm_spotFilterRadius = nullptr;
+		static game::dvar_t* r_specularColorScale = nullptr;
+		static game::dvar_t* r_diffuseColorScale = nullptr;
+		static game::dvar_t* r_veil = nullptr;
+		static game::dvar_t* r_veilStrength = nullptr;
+		static game::dvar_t* r_veilBackgroundStrength = nullptr;
+		static game::dvar_t* r_tonemap = nullptr;
+		static game::dvar_t* r_tonemapAuto = nullptr;
+		static game::dvar_t* r_tonemapBlend = nullptr;
+		static game::dvar_t* r_tonemapLockAutoExposureAdjust = nullptr;
+		static game::dvar_t* r_tonemapAutoExposureAdjust = nullptr;
+		static game::dvar_t* r_tonemapExposure = nullptr;
+		static game::dvar_t* r_tonemapExposureAdjust = nullptr;
+		static game::dvar_t* r_tonemapMaxExposure = nullptr;
+		static game::dvar_t* r_tonemapAdaptSpeed = nullptr;
+		static game::dvar_t* r_tonemapDarkEv = nullptr;
+		static game::dvar_t* r_tonemapMidEv = nullptr;
+		static game::dvar_t* r_tonemapLightEv = nullptr;
+		static game::dvar_t* r_tonemapDarkExposureAdjust = nullptr;
+		static game::dvar_t* r_tonemapMidExposureAdjust = nullptr;
+		static game::dvar_t* r_tonemapLightExposureAdjust = nullptr;
+		static game::dvar_t* r_tonemapMinExposureAdjust = nullptr;
+		static game::dvar_t* r_tonemapMaxExposureAdjust = nullptr;
+		static game::dvar_t* r_tonemapWhite = nullptr;
+		static game::dvar_t* r_tonemapShoulder = nullptr;
+		static game::dvar_t* r_tonemapCrossover = nullptr;
+		static game::dvar_t* r_tonemapToe = nullptr;
+		static game::dvar_t* r_tonemapBlack = nullptr;
+		static game::dvar_t* r_aoDiminish = nullptr;
+		static game::dvar_t* r_ssao = nullptr;
+		static game::dvar_t* r_ssaoStrength = nullptr;
+		static game::dvar_t* r_ssaoPower = nullptr;
+		static game::dvar_t* r_ssaoMinStrengthDepth = nullptr;
+		static game::dvar_t* r_ssaoMaxStrengthDepth = nullptr;
+		static game::dvar_t* r_ssaoWidth = nullptr;
+		static game::dvar_t* r_ssaoGapFalloff = nullptr;
+		static game::dvar_t* r_ssaoGradientFalloff = nullptr;
+		static game::dvar_t* r_ssaoFadeDepth = nullptr;
+		static game::dvar_t* r_ssaoRejectDepth = nullptr;
+		static game::dvar_t* r_sky_fog_min_angle = nullptr;
+		static game::dvar_t* r_sky_fog_max_angle = nullptr;
+		static game::dvar_t* r_sky_fog_intensity = nullptr;
 
-		game::dvar_t* r_filmTweakBrightness = nullptr;
-		game::dvar_t* r_filmTweakContrast = nullptr;
-		game::dvar_t* r_filmTweakDarkTint = nullptr;
-		game::dvar_t* r_filmTweakDesaturation = nullptr;
-		game::dvar_t* r_filmTweakDesaturationDark = nullptr;
-		game::dvar_t* r_filmTweakEnable = nullptr;
-		game::dvar_t* r_filmTweakInvert = nullptr;
-		game::dvar_t* r_filmTweakLightTint = nullptr;
-		game::dvar_t* r_filmTweakMediumTint = nullptr;
-		game::dvar_t* r_primaryLightTweakDiffuseStrength = nullptr;
-		game::dvar_t* r_primaryLightTweakSpecularStrength = nullptr;
-		game::dvar_t* r_viewModelPrimaryLightTweakDiffuseStrength = nullptr;
-		game::dvar_t* r_viewModelPrimaryLightTweakSpecularStrength = nullptr;
+		static game::dvar_t* r_filmTweakBrightness = nullptr;
+		static game::dvar_t* r_filmTweakContrast = nullptr;
+		static game::dvar_t* r_filmTweakDarkTint = nullptr;
+		static game::dvar_t* r_filmTweakDesaturation = nullptr;
+		static game::dvar_t* r_filmTweakDesaturationDark = nullptr;
+		static game::dvar_t* r_filmTweakEnable = nullptr;
+		static game::dvar_t* r_filmTweakInvert = nullptr;
+		static game::dvar_t* r_filmTweakLightTint = nullptr;
+		static game::dvar_t* r_filmTweakMediumTint = nullptr;
+		static game::dvar_t* r_primaryLightTweakDiffuseStrength = nullptr;
+		static game::dvar_t* r_primaryLightTweakSpecularStrength = nullptr;
+		static game::dvar_t* r_viewModelPrimaryLightTweakDiffuseStrength = nullptr;
+		static game::dvar_t* r_viewModelPrimaryLightTweakSpecularStrength = nullptr;
 
-		game::dvar_t* r_aoUseTweaks = nullptr;
-		game::dvar_t* r_colorScaleUseTweaks = nullptr;
-		game::dvar_t* r_filmUseTweaks = nullptr;
-		game::dvar_t* r_primaryLightUseTweaks = nullptr;
-		game::dvar_t* r_skyFogUseTweaks = nullptr;
-		game::dvar_t* r_ssaoUseTweaks = nullptr;
-		game::dvar_t* r_tonemapUseTweaks = nullptr;
-		game::dvar_t* r_veilUseTweaks = nullptr;
-		game::dvar_t* r_viewModelPrimaryLightUseTweaks = nullptr;
-		game::dvar_t* sm_shadowUseTweaks = nullptr;
+		static game::dvar_t* r_aoUseTweaks = nullptr;
+		static game::dvar_t* r_colorScaleUseTweaks = nullptr;
+		static game::dvar_t* r_filmUseTweaks = nullptr;
+		static game::dvar_t* r_primaryLightUseTweaks = nullptr;
+		static game::dvar_t* r_skyFogUseTweaks = nullptr;
+		static game::dvar_t* r_ssaoUseTweaks = nullptr;
+		static game::dvar_t* r_tonemapUseTweaks = nullptr;
+		static game::dvar_t* r_veilUseTweaks = nullptr;
+		static game::dvar_t* r_viewModelPrimaryLightUseTweaks = nullptr;
+		static game::dvar_t* sm_shadowUseTweaks = nullptr;
 
-		game::dvar_t* r_drawSun = nullptr;
-		game::dvar_t* r_lightGridNonCompressed = nullptr;
+		static game::dvar_t* r_drawSun = nullptr;
+		static game::dvar_t* r_lightGridNonCompressed = nullptr;
+#pragma endregion
 
 		void dump_tweaks()
 		{
@@ -132,9 +135,9 @@ namespace vision_editor
 
 #define DUMP_COLOUR(__string__, __dvar__) \
 		if (__dvar__ != nullptr) obj[#__dvar__] = std::to_string(__dvar__->current.vector[0]) + " " + \
-		                                               std::to_string(__dvar__->current.vector[1]) + " " + \
-		                                               std::to_string(__dvar__->current.vector[2]) + " " + \
-		                                               std::to_string(__dvar__->current.vector[3]);
+                                               std::to_string(__dvar__->current.vector[1]) + " " + \
+                                               std::to_string(__dvar__->current.vector[2]) + " " + \
+                                               std::to_string(__dvar__->current.vector[3]);
 
 			DUMP_BOOL("ao (screen-space)", r_ssaoUseTweaks);
 			DUMP_BOOL("ao", r_aoUseTweaks);
@@ -358,14 +361,14 @@ namespace vision_editor
 				ADD_FLOAT_STEP("max angle", r_sky_fog_max_angle, 1.0f);
 				ADD_FLOAT("intensity", r_sky_fog_intensity);
 			}
-
+		
 			if (ImGui::CollapsingHeader("veiling luminance (HDR glow)"))
 			{
 				ADD_BOOL("enable veil", r_veil);
 				ADD_FLOAT("strength", r_veilStrength);
 				ADD_FLOAT("background strength", r_veilBackgroundStrength);
 			}
-
+			
 			ImGui::End();
 		}
 	}
@@ -466,5 +469,5 @@ namespace vision_editor
 	};
 }
 
-REGISTER_COMPONENT(vision_editor::component)
+REGISTER_COMPONENT(gui::vision_editor::component)
 #endif

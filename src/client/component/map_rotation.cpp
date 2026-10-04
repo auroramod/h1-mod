@@ -281,7 +281,7 @@ namespace map_rotation
 			command::add("map_rotate", &perform_map_rotation);
 
 			// override GScr_ExitLevel
-			script_extension::add_function("exitlevel", [](const gsc::function_args&)
+			gsc::function::add("exitlevel", [](const gsc::function_args&)
 			{
 				trigger_map_rotation();
 				return scripting::script_value{};

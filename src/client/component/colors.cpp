@@ -13,12 +13,12 @@ namespace colors
 	{
 		constexpr auto MAX_COLOR_INDEX = 15;
 
-		struct hsv_color
-		{
-			unsigned char h;
-			unsigned char s;
-			unsigned char v;
-		};
+	struct hsv_color
+	{
+		unsigned char h;
+		unsigned char s;
+		unsigned char v;
+	};
 
 		enum color_mode_t
 		{
@@ -208,14 +208,14 @@ namespace colors
 			add(mode_original, 255, 92, 255);	// ^6 pink (original)
 			add(mode_original, 255, 255, 255);	// ^7 white (original)
 
-			add(mode_custom, 0, 0, 0); 			// 0  - Black
-			add(mode_custom, 255, 49, 49); 		// 1  - Red
-			add(mode_custom, 134, 192, 0); 		// 2  - Green
-			add(mode_custom, 255, 173, 34); 	// 3  - Yellow
-			add(mode_custom, 0, 135, 193); 		// 4  - Blue
-			add(mode_custom, 32, 197, 255); 	// 5  - Light Blue
-			add(mode_custom, 151, 80, 221); 	// 6  - Pink
-			add(mode_custom, 255, 255, 255); 	// 7  - White
+			add(mode_custom, 0, 0, 0); // 0  - Black
+			add(mode_custom, 255, 49, 49); // 1  - Red
+			add(mode_custom, 134, 192, 0); // 2  - Green
+			add(mode_custom, 255, 173, 34); // 3  - Yellow
+			add(mode_custom, 0, 135, 193); // 4  - Blue
+			add(mode_custom, 32, 197, 255); // 5  - Light Blue
+			add(mode_custom, 151, 80, 221); // 6  - Pink
+			add(mode_custom, 255, 255, 255); // 7  - White
 
 			// these are all handled in rb_lookup_color_stub
 			add(-1, 0, 0, 0);		// ^8 friendly team color (original)

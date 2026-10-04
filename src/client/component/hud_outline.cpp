@@ -1326,7 +1326,7 @@ namespace hud_outline
             utils::hook::call(0x140353FEA, objective_memset_stub);
 
             // reimplement GSC functions
-            script_extension::add_method("hudoutlineenableforclients", [](const game::scr_entref_t ent, const gsc::function_args& args)
+            gsc::method::add("hudoutlineenableforclients", [](const game::scr_entref_t ent, const gsc::function_args& args)
             {
                 if (args.size() < 3)
                 {
@@ -1343,7 +1343,7 @@ namespace hud_outline
                 return scripting::script_value{};
             });
 
-            script_extension::add_method("hudoutlineenableforclient", [](const game::scr_entref_t ent, const gsc::function_args& args)
+            gsc::method::add("hudoutlineenableforclient", [](const game::scr_entref_t ent, const gsc::function_args& args)
             {
                 if (args.size() < 3)
                 {
@@ -1378,7 +1378,7 @@ namespace hud_outline
                 return scripting::script_value{};
             });
 
-            script_extension::add_method("hudoutlinedisableforclient", [](const game::scr_entref_t ent, const gsc::function_args& args)
+            gsc::method::add("hudoutlinedisableforclient", [](const game::scr_entref_t ent, const gsc::function_args& args)
             {
                 if (args.size() < 1)
                 {
@@ -1405,7 +1405,7 @@ namespace hud_outline
                 return scripting::script_value{};
             });
 
-            script_extension::add_method("hudoutlinedisableforclients", [](const game::scr_entref_t ent, const gsc::function_args& args)
+            gsc::method::add("hudoutlinedisableforclients", [](const game::scr_entref_t ent, const gsc::function_args& args)
             {
                 if (args.size() < 1)
                 {
@@ -1420,7 +1420,7 @@ namespace hud_outline
                 return scripting::script_value{};
             });
 
-            script_extension::add_method("hudoutlineenable", [](const game::scr_entref_t ent, const gsc::function_args& args)
+            gsc::method::add("hudoutlineenable", [](const game::scr_entref_t ent, const gsc::function_args& args)
             {
                 if (args.size() < 1)
                 {
@@ -1441,7 +1441,7 @@ namespace hud_outline
                 return scripting::script_value{};
             });
 
-            script_extension::add_method("hudoutlinedisable", [](const game::scr_entref_t ent, const gsc::function_args& args)
+            gsc::method::add("hudoutlinedisable", [](const game::scr_entref_t ent, const gsc::function_args& args)
             {
                 auto* entity = &game::mp::g_entities[ent.entnum];
 

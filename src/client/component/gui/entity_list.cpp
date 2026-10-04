@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -18,261 +17,30 @@
 #include <utils/hook.hpp>
 #include <utils/concurrency.hpp>
 
-namespace entity_list
+namespace gui::entity_list
 {
 	namespace
 	{
-			enum entity_type
-			{
-				entity,
-				actor,
-				spawner,
-				weapon,
-				vehicle,
-				node,
-				vehicle_node,
-				count,
-			};
+		enum entity_type
+		{
+			entity,
+			actor,
+			spawner,
+			weapon,
+			vehicle,
+			node,
+			vehicle_node,
+			count,
+		};
 
-			enum entity_team
-			{
-				team_any,
-				neutral,
-				allies,
-				axis,
-				team3
-			};
-
-			struct entity_info_t
-			{
-				unsigned int id;
-				game::scr_entref_t entref;
-				std::unordered_map<std::string, std::string> fields;
-			};
-
-			struct filters_t
-			{
-				bool filter_by_range;
-				float range;
-				entity_team team;
-				entity_type type;
-				std::vector<std::pair<std::string, std::string>> fields;
-			};
-
-			struct data_t
-			{
-				bool auto_update;
-				bool force_update;
-				filters_t filters;
-				std::chrono::milliseconds interval;
-				std::chrono::high_resolution_clock::time_point last_call;
-				std::vector<entity_info_t> entity_info;
-				std::vector<std::function<void()>> tasks;
-				std::unordered_map<std::string, bool> selected_fields = 
-				{
-					{"code_classname", false},
-					{"classname", true},
-					{"origin", true},
-					{"model", false},
-					{"spawnflags", false},
-					{"target", false},
-					{"targetname", false},
-					{"count", false},
-					{"health", false},
-					{"dmg", false},
-					{"angles", true},
-					{"script_linkname", false},
-					{"script_noteworthy", false},
-					{"maxhealth", false},
-					{"anglelerprate", false},
-					{"activator", false},
-					{"slidevelocity", false},
-					{"disableplayeradsloscheck", false},
-					{"type", false},
-					{"accuracy", false},
-					{"lookforward", false},
-					{"lookright", false},
-					{"lookup", false},
-					{"fovcosine", false},
-					{"fovcosinebusy", false},
-					{"fovcosinez", false},
-					{"upaimlimit", false},
-					{"downaimlimit", false},
-					{"rightaimlimit", false},
-					{"leftaimlimit", false},
-					{"maxsightdistsqrd", false},
-					{"sightlatency", false},
-					{"defaultsightlatency", false},
-					{"ignoreclosefoliage", false},
-					{"interval", false},
-					{"teammovewaittime", false},
-					{"damagetaken", false},
-					{"damagedir", false},
-					{"damageyaw", false},
-					{"damagelocation", false},
-					{"damageweapon", false},
-					{"damagemod", false},
-					{"proneok", false},
-					{"walkdistfacingmotion", false},
-					{"walkdist", false},
-					{"desiredangle", false},
-					{"pacifist", false},
-					{"pacifistwait", false},
-					{"footstepdetectdist", false},
-					{"footstepdetectdistwalk", false},
-					{"footstepdetectdistsprint", false},
-					{"reactiontargetpos", false},
-					{"newenemyreactiondistsq", false},
-					{"ignoreexplosionevents", false},
-					{"ignoresuppression", false},
-					{"suppressionwait", false},
-					{"suppressionduration", false},
-					{"suppressionstarttime", false},
-					{"suppressionmeter", false},
-					{"ignoreplayersuppression", false},
-					{"name", false},
-					{"weapon", false},
-					{"dontavoidplayer", false},
-					{"grenadeawareness", false},
-					{"grenade", false},
-					{"grenadeweapon", false},
-					{"grenadeammo", false},
-					{"grenadetargetpos", false},
-					{"grenadetargetvalid", false},
-					{"grenadetossvel", false},
-					{"favoriteenemy", false},
-					{"highlyawareradius", false},
-					{"minpaindamage", false},
-					{"allowpain", false},
-					{"allowdeath", false},
-					{"delayeddeath", false},
-					{"diequietly", false},
-					{"forceragdollimmediate", false},
-					{"providecoveringfire", false},
-					{"doingambush", false},
-					{"combatmode", false},
-					{"alertlevel", false},
-					{"alertlevelint", false},
-					{"useable", false},
-					{"ignoretriggers", false},
-					{"pushable", false},
-					{"script_pushable", false},
-					{"dropweapon", false},
-					{"drawoncompass", false},
-					{"groundtype", false},
-					{"anim_pose", false},
-					{"goalradius", false},
-					{"goalheight", false},
-					{"goalpos", false},
-					{"nodeoffsetpos", false},
-					{"ignoreforfixednodesafecheck", false},
-					{"fixednode", false},
-					{"fixednodesaferadius", false},
-					{"pathgoalpos", false},
-					{"pathrandompercent", false},
-					{"usechokepoints", false},
-					{"stopanimdistsq", false},
-					{"lastenemysightpos", false},
-					{"pathenemylookahead", false},
-					{"pathenemyfightdist", false},
-					{"meleeattackdist", false},
-					{"movemode", false},
-					{"script_move_distance_override", false},
-					{"usecombatscriptatcover", false},
-					{"safetochangescript", false},
-					{"keepclaimednode", false},
-					{"keepclaimednodeifvalid", false},
-					{"keepnodeduringscriptedanim", false},
-					{"dodangerreact", false},
-					{"dangerreactduration", false},
-					{"nododgemove", false},
-					{"noteammove", false},
-					{"leanamount", false},
-					{"pitchamount", false},
-					{"turnrate", false},
-					{"turnanimactive", false},
-					{"badplaceawareness", false},
-					{"damageshield", false},
-					{"nogrenadereturnthrow", false},
-					{"noattackeraccuracymod", false},
-					{"frontshieldanglecos", false},
-					{"lookaheaddir", false},
-					{"lookaheaddist", false},
-					{"lookaheadhitsstairs", false},
-					{"velocity", false},
-					{"prevanimdelta", false},
-					{"exposedduration", false},
-					{"requestarrivalnotify", false},
-					{"scriptedarrivalent", false},
-					{"goingtoruntopos", false},
-					{"engagemindist", false},
-					{"engageminfalloffdist", false},
-					{"engagemaxdist", false},
-					{"engagemaxfalloffdist", false},
-					{"usingcovermoveup", false},
-					{"finalaccuracy", false},
-					{"facemotion", false},
-					{"gunblockedbywall", false},
-					{"relativedir", false},
-					{"lockorientation", false},
-					{"maxfaceenemydist", false},
-					{"stairsstate", false},
-					{"script", false},
-					{"prevscript", false},
-					{"headicon", false},
-					{"headiconteam", false},
-					{"coversearchinterval", false},
-					{"threatupdateinterval", false},
-					{"canclimbladders", false},
-					{"swimmer", false},
-					{"space", false},
-					{"doghandler", false},
-					{"sharpturnlookaheaddist", false},
-					{"postsharpturnlookaheaddist", false},
-					{"sharpturntooclosetodestdist", false},
-					{"usepathsmoothingvalues", false},
-					{"pathlookaheaddist", false},
-					{"maxturnspeed", false},
-					{"sharpturn", false},
-					{"disablesightandthreatupdate", false},
-					{"team", false},
-					{"threatbias", false},
-					{"threatbiasgroup", false},
-					{"node", false},
-					{"prevnode", false},
-					{"enemy", false},
-					{"syncedmeleetarget", false},
-					{"lastattacker", false},
-					{"lastpusher", false},
-					{"ignoreme", false},
-					{"ignoreall", false},
-					{"maxvisibledist", false},
-					{"surprisedbymedistsq", false},
-					{"attackeraccuracy", false},
-					{"ignorerandombulletdamage", false},
-					{"dodamagetoall", false},
-					{"turretinvulnerability", false},
-					{"useorcaavoidance", false},
-					{"reciprocality", false},
-					{"avoidanceboundshalfsize", false},
-					{"onlygoodnearestnodes", false},
-					{"playername", false},
-					{"deathinvulnerabletime", false},
-					{"criticalbulletdamagedist", false},
-					{"attackercount", false},
-					{"damagemultiplier", false},
-					{"laststand", false},
-					{"motiontrackerenabled", false},
-					{"veh_speed", false},
-					{"veh_pathspeed", false},
-					{"veh_transmission", false},
-					{"veh_pathdir", false},
-					{"veh_pathtype", false},
-					{"veh_topspeed", false},
-					{"veh_brake", false},
-					{"veh_throttle", false},
-				};
-			};
+		enum entity_team
+		{
+			team_any,
+			neutral,
+			allies,
+			axis,
+			team3
+		};
 
 		std::unordered_map<entity_team, std::string> team_names =
 		{
@@ -280,6 +48,237 @@ namespace entity_list
 			{entity_team::allies, "allies"},
 			{entity_team::axis, "axis"},
 			{entity_team::team3, "team3"},
+		};
+
+		struct entity_info_t
+		{
+			unsigned int id;
+			game::scr_entref_t entref;
+			std::unordered_map<std::string, std::string> fields;
+		};
+
+		struct filters_t
+		{
+			bool filter_by_range;
+			float range;
+			entity_team team;
+			entity_type type;
+			std::vector<std::pair<std::string, std::string>> fields;
+		};
+
+		struct data_t
+		{
+			bool auto_update;
+			bool force_update;
+			filters_t filters;
+			std::chrono::milliseconds interval;
+			std::chrono::high_resolution_clock::time_point last_call;
+			std::vector<entity_info_t> entity_info;
+			std::vector<std::function<void()>> tasks;
+			std::unordered_map<std::string, bool> selected_fields = 
+			{
+				{"code_classname", false},
+				{"classname", true},
+				{"origin", true},
+				{"model", false},
+				{"spawnflags", false},
+				{"target", false},
+				{"targetname", false},
+				{"count", false},
+				{"health", false},
+				{"dmg", false},
+				{"angles", true},
+				{"script_linkname", false},
+				{"script_noteworthy", false},
+				{"maxhealth", false},
+				{"anglelerprate", false},
+				{"activator", false},
+				{"slidevelocity", false},
+				{"disableplayeradsloscheck", false},
+				{"type", false},
+				{"accuracy", false},
+				{"lookforward", false},
+				{"lookright", false},
+				{"lookup", false},
+				{"fovcosine", false},
+				{"fovcosinebusy", false},
+				{"fovcosinez", false},
+				{"upaimlimit", false},
+				{"downaimlimit", false},
+				{"rightaimlimit", false},
+				{"leftaimlimit", false},
+				{"maxsightdistsqrd", false},
+				{"sightlatency", false},
+				{"defaultsightlatency", false},
+				{"ignoreclosefoliage", false},
+				{"interval", false},
+				{"teammovewaittime", false},
+				{"damagetaken", false},
+				{"damagedir", false},
+				{"damageyaw", false},
+				{"damagelocation", false},
+				{"damageweapon", false},
+				{"damagemod", false},
+				{"proneok", false},
+				{"walkdistfacingmotion", false},
+				{"walkdist", false},
+				{"desiredangle", false},
+				{"pacifist", false},
+				{"pacifistwait", false},
+				{"footstepdetectdist", false},
+				{"footstepdetectdistwalk", false},
+				{"footstepdetectdistsprint", false},
+				{"reactiontargetpos", false},
+				{"newenemyreactiondistsq", false},
+				{"ignoreexplosionevents", false},
+				{"ignoresuppression", false},
+				{"suppressionwait", false},
+				{"suppressionduration", false},
+				{"suppressionstarttime", false},
+				{"suppressionmeter", false},
+				{"ignoreplayersuppression", false},
+				{"name", false},
+				{"weapon", false},
+				{"dontavoidplayer", false},
+				{"grenadeawareness", false},
+				{"grenade", false},
+				{"grenadeweapon", false},
+				{"grenadeammo", false},
+				{"grenadetargetpos", false},
+				{"grenadetargetvalid", false},
+				{"grenadetossvel", false},
+				{"favoriteenemy", false},
+				{"highlyawareradius", false},
+				{"minpaindamage", false},
+				{"allowpain", false},
+				{"allowdeath", false},
+				{"delayeddeath", false},
+				{"diequietly", false},
+				{"forceragdollimmediate", false},
+				{"providecoveringfire", false},
+				{"doingambush", false},
+				{"combatmode", false},
+				{"alertlevel", false},
+				{"alertlevelint", false},
+				{"useable", false},
+				{"ignoretriggers", false},
+				{"pushable", false},
+				{"script_pushable", false},
+				{"dropweapon", false},
+				{"drawoncompass", false},
+				{"groundtype", false},
+				{"anim_pose", false},
+				{"goalradius", false},
+				{"goalheight", false},
+				{"goalpos", false},
+				{"nodeoffsetpos", false},
+				{"ignoreforfixednodesafecheck", false},
+				{"fixednode", false},
+				{"fixednodesaferadius", false},
+				{"pathgoalpos", false},
+				{"pathrandompercent", false},
+				{"usechokepoints", false},
+				{"stopanimdistsq", false},
+				{"lastenemysightpos", false},
+				{"pathenemylookahead", false},
+				{"pathenemyfightdist", false},
+				{"meleeattackdist", false},
+				{"movemode", false},
+				{"script_move_distance_override", false},
+				{"usecombatscriptatcover", false},
+				{"safetochangescript", false},
+				{"keepclaimednode", false},
+				{"keepclaimednodeifvalid", false},
+				{"keepnodeduringscriptedanim", false},
+				{"dodangerreact", false},
+				{"dangerreactduration", false},
+				{"nododgemove", false},
+				{"noteammove", false},
+				{"leanamount", false},
+				{"pitchamount", false},
+				{"turnrate", false},
+				{"turnanimactive", false},
+				{"badplaceawareness", false},
+				{"damageshield", false},
+				{"nogrenadereturnthrow", false},
+				{"noattackeraccuracymod", false},
+				{"frontshieldanglecos", false},
+				{"lookaheaddir", false},
+				{"lookaheaddist", false},
+				{"lookaheadhitsstairs", false},
+				{"velocity", false},
+				{"prevanimdelta", false},
+				{"exposedduration", false},
+				{"requestarrivalnotify", false},
+				{"scriptedarrivalent", false},
+				{"goingtoruntopos", false},
+				{"engagemindist", false},
+				{"engageminfalloffdist", false},
+				{"engagemaxdist", false},
+				{"engagemaxfalloffdist", false},
+				{"usingcovermoveup", false},
+				{"finalaccuracy", false},
+				{"facemotion", false},
+				{"gunblockedbywall", false},
+				{"relativedir", false},
+				{"lockorientation", false},
+				{"maxfaceenemydist", false},
+				{"stairsstate", false},
+				{"script", false},
+				{"prevscript", false},
+				{"headicon", false},
+				{"headiconteam", false},
+				{"coversearchinterval", false},
+				{"threatupdateinterval", false},
+				{"canclimbladders", false},
+				{"swimmer", false},
+				{"space", false},
+				{"doghandler", false},
+				{"sharpturnlookaheaddist", false},
+				{"postsharpturnlookaheaddist", false},
+				{"sharpturntooclosetodestdist", false},
+				{"usepathsmoothingvalues", false},
+				{"pathlookaheaddist", false},
+				{"maxturnspeed", false},
+				{"sharpturn", false},
+				{"disablesightandthreatupdate", false},
+				{"team", false},
+				{"threatbias", false},
+				{"threatbiasgroup", false},
+				{"node", false},
+				{"prevnode", false},
+				{"enemy", false},
+				{"syncedmeleetarget", false},
+				{"lastattacker", false},
+				{"lastpusher", false},
+				{"ignoreme", false},
+				{"ignoreall", false},
+				{"maxvisibledist", false},
+				{"surprisedbymedistsq", false},
+				{"attackeraccuracy", false},
+				{"ignorerandombulletdamage", false},
+				{"dodamagetoall", false},
+				{"turretinvulnerability", false},
+				{"useorcaavoidance", false},
+				{"reciprocality", false},
+				{"avoidanceboundshalfsize", false},
+				{"onlygoodnearestnodes", false},
+				{"playername", false},
+				{"deathinvulnerabletime", false},
+				{"criticalbulletdamagedist", false},
+				{"attackercount", false},
+				{"damagemultiplier", false},
+				{"laststand", false},
+				{"motiontrackerenabled", false},
+				{"veh_speed", false},
+				{"veh_pathspeed", false},
+				{"veh_transmission", false},
+				{"veh_pathdir", false},
+				{"veh_pathtype", false},
+				{"veh_topspeed", false},
+				{"veh_brake", false},
+				{"veh_throttle", false},
+			};
 		};
 
 		utils::concurrency::container<data_t> data_{};
@@ -338,7 +337,7 @@ namespace entity_list
 			{
 				return {scripting::call("getallnodes").as<scripting::array>()};
 			}
-
+			
 			if (type == entity_type::vehicle_node)
 			{
 				return {scripting::call("getallvehiclenodes").as<scripting::array>()};
@@ -821,6 +820,7 @@ namespace entity_list
 					data.tasks = {};
 				}
 
+
 				show_entity_list_window(data);
 
 				if (selected_fields_window)
@@ -862,5 +862,5 @@ namespace entity_list
 	};
 }
 
-REGISTER_COMPONENT(entity_list::component)
+REGISTER_COMPONENT(gui::entity_list::component)
 #endif

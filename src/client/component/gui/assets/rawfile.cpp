@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -14,7 +13,7 @@
 #include <utils/string.hpp>
 #include <utils/compression.hpp>
 
-namespace asset_rawfile
+namespace gui::asset_list::rawfile
 {
 	namespace
 	{
@@ -66,5 +65,5 @@ namespace asset_rawfile
 	};
 }
 
-REGISTER_COMPONENT(asset_rawfile::component)
+REGISTER_COMPONENT(gui::asset_list::rawfile::component)
 #endif

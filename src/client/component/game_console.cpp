@@ -22,14 +22,14 @@ namespace game_console
 {
 	namespace
 	{
-			struct console_globals
-			{
-				float x{};
-				float y{};
-				float left_x{};
-				float font_height{};
-				int info_line_count{};
-			};
+		struct console_globals
+		{
+			float x{};
+			float y{};
+			float left_x{};
+			float font_height{};
+			int info_line_count{};
+		};
 
 			struct suggestion_cache
 			{
@@ -41,36 +41,36 @@ namespace game_console
 
 			constexpr std::size_t max_hint_lines = 24;
 
-			using output_queue = std::deque<std::string>;
+		using output_queue = std::deque<std::string>;
 
-			struct ingame_console
-			{
-				char buffer[256]{};
-				int cursor{};
-				int font_height{};
-				int visible_line_count{};
-				int visible_pixel_width{};
-				float screen_min[2]{}; //left & top
-				float screen_max[2]{}; //right & bottom
-				console_globals globals{};
-				bool output_visible{};
-				int display_line_offset{};
-				int line_count{};
-				utils::concurrency::container<output_queue, std::recursive_mutex> output{};
-			};
+		struct ingame_console
+		{
+			char buffer[256]{};
+			int cursor{};
+			int font_height{};
+			int visible_line_count{};
+			int visible_pixel_width{};
+			float screen_min[2]{}; //left & top
+			float screen_max[2]{}; //right & bottom
+			console_globals globals{};
+			bool output_visible{};
+			int display_line_offset{};
+			int line_count{};
+			utils::concurrency::container<output_queue, std::recursive_mutex> output{};
+		};
 
-			ingame_console con{};
+		ingame_console con{};
 
 			std::recursive_mutex input_mutex;
 
-			std::int32_t history_index = -1;
+		std::int32_t history_index = -1;
 
 			suggestion_cache suggestions{};
 
 			std::unordered_set<int> swallowed_keys;
 
-			float color_white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-			float color_title[4] = {0.3f, 0.7f, 0.3f, 1.0f};
+		float color_white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+		float color_title[4] = {0.3f, 0.7f, 0.3f, 1.0f};
 			float color_highlight[4] = {1.0f, 1.0f, 1.0f, 0.12f};
 
 		void clear()
@@ -92,20 +92,20 @@ namespace game_console
 		}
 
 		void execute(const std::string& input)
-		{
-			if (input.find_first_not_of(" \t") == std::string::npos)
 			{
+			if (input.find_first_not_of(" \t") == std::string::npos)
+				{
 				return;
-			}
+				}
 
 			console::info("]%s\n", input.data());
 			autocomplete::add_history(input);
 
 			const auto command = autocomplete::prepare_command(input);
 			if (!command.empty())
-			{
+				{
 				game::Cbuf_AddText(0, 0, utils::string::va("%s \n", command.data()));
-			}
+				}
 		}
 
 		void toggle_console()
@@ -377,9 +377,9 @@ namespace game_console
 		}
 
 		float* get_match_color(const autocomplete::match& match)
-		{
-			switch (match.type)
 			{
+			switch (match.type)
+				{
 			case autocomplete::match_type::dvar:
 				return dvars::con_inputDvarMatchColor->current.vector;
 			case autocomplete::match_type::command:
@@ -387,10 +387,10 @@ namespace game_console
 			default:
 				return color_white;
 			}
-		}
+				}
 
 		float draw_dvar_details(const std::string& name, game::dvar_t* dvar)
-		{
+				{
 			const auto description = dvars::dvar_get_description(name);
 			const auto line_count = description.empty() ? 2 : 3;
 
@@ -407,7 +407,7 @@ namespace game_console
 			if (!description.empty())
 			{
 				draw_hint_text(2, description.data(), color_white);
-			}
+				}
 
 			const auto offset_y = height + 3.f;
 			const auto domain_lines = dvar->type == game::dvar_type::enumeration
@@ -419,10 +419,10 @@ namespace game_console
 				dvars::con_inputCmdMatchColor->current.vector, 0, offset_y);
 
 			return offset_y + domain_height + 3.f;
-		}
+			}
 
 		void draw_match_list(const autocomplete::result& result, const float offset_y = 0.0f)
-		{
+			{
 			const auto& matches = result.matches;
 			const auto visible = std::min(matches.size(), max_hint_lines);
 			const auto hidden = matches.size() - visible;
@@ -438,22 +438,22 @@ namespace game_console
 			const auto offset_value = floor((con.screen_max[0] - con.globals.x) / 4.f);
 
 			for (std::size_t i = 0; i < visible; i++)
-			{
+				{
 				const auto index = first + i;
 				const auto& match = matches[index];
 				const auto line = static_cast<int>(i);
 				const auto selected = static_cast<int>(index) == result.selected;
 
 				if (selected)
-				{
+					{
 					draw_hint_highlight(line, offset_y);
-				}
+					}
 
 				draw_hint_text(line, match.name.data(),
 					selected ? dvars::con_inputSelectedColor->current.vector : get_match_color(match), 0.0f, offset_y);
 
 				if (match.type == autocomplete::match_type::dvar)
-				{
+					{
 					draw_hint_text(line, match.description.data(), dvars::con_inputDvarValueColor->current.vector,
 						offset_value, offset_y);
 				}
@@ -461,8 +461,8 @@ namespace game_console
 				{
 					draw_hint_text(line, match.description.data(), dvars::con_inputDvarInactiveValueColor->current.vector,
 						offset_value, offset_y);
+					}
 				}
-			}
 
 			if (hidden)
 			{
@@ -494,14 +494,14 @@ namespace game_console
 				offset_y = draw_dvar_details(result.command, dvar);
 
 				if (!result.show_list || result.matches.size() <= 2 || dvar->type == game::dvar_type::enumeration)
-				{
-					return;
-				}
-			}
-			else if (!result.show_list)
 			{
 				return;
 			}
+			}
+			else if (!result.show_list)
+				{
+				return;
+				}
 			else if (result.matches.empty())
 			{
 				for (auto* cmd = *game::cmd_functions; cmd; cmd = cmd->next)
@@ -521,10 +521,10 @@ namespace game_console
 			{
 				draw_match_list(result, offset_y);
 			}
-		}
+			}
 
 		void draw_input()
-		{
+			{
 			auto* font = console_font;
 			if (!font) return;
 
@@ -552,7 +552,7 @@ namespace game_console
 
 			const auto generation = autocomplete::get_generation();
 			if (!suggestions.valid || suggestions.input != input || suggestions.generation != generation)
-			{
+				{
 				suggestions.result = autocomplete::query(input);
 				suggestions.input = input;
 				suggestions.generation = generation;
@@ -562,15 +562,15 @@ namespace game_console
 			const auto& result = suggestions.result;
 
 			if (con.cursor == static_cast<int>(input.size()))
-			{
+					{
 				const auto ghost = autocomplete::get_ghost_text(result);
 				if (!ghost.empty())
 				{
 					const auto x = con.globals.x + game::R_TextWidth(con.buffer, 0, font);
 					draw_text(ghost.data(), font, x, con.globals.y + con.globals.font_height,
 						dvars::con_inputGhostColor->current.vector);
+					}
 				}
-			}
 
 			if (result.arg_index == 0)
 			{
@@ -681,25 +681,25 @@ namespace game_console
 					output.pop_front();
 				}
 			});
-		}
+	}
 
-		void print_internal(const char* fmt, ...)
+	void print_internal(const char* fmt, ...)
+	{
+		char va_buffer[0x200] = {0};
+
+		va_list ap;
+		va_start(ap, fmt);
+		vsprintf_s(va_buffer, fmt, ap);
+		va_end(ap);
+
+		const auto formatted = std::string(va_buffer);
+		const auto lines = utils::string::split(formatted, '\n');
+
+		for (const auto& line : lines)
 		{
-			char va_buffer[0x200] = {0};
-
-			va_list ap;
-			va_start(ap, fmt);
-			vsprintf_s(va_buffer, fmt, ap);
-			va_end(ap);
-
-			const auto formatted = std::string(va_buffer);
-			const auto lines = utils::string::split(formatted, '\n');
-
-			for (const auto& line : lines)
-			{
-				print_internal(line);
-			}
+			print_internal(line);
 		}
+	}
 	}
 
 	void print(const int type, const std::string& data)
@@ -725,7 +725,7 @@ namespace game_console
 
 	bool console_char_event(const int local_client_num, const int key)
 	{
-		if (key == game::keyNum_t::K_GRAVE ||
+		if (key == game::keyNum_t::K_GRAVE || 
 			key == game::keyNum_t::K_TILDE ||
 			key == '|' ||
 			key == '\\')
@@ -743,7 +743,7 @@ namespace game_console
 			std::lock_guard _(input_mutex);
 
 			if (key == game::keyNum_t::K_TAB) // tab (auto complete)
-			{
+					{
 				const auto shift_down = game::playerKeys[local_client_num].keys[game::keyNum_t::K_SHIFT].down;
 				set_buffer(autocomplete::complete(con.buffer, shift_down != 0));
 				return false;
@@ -814,13 +814,13 @@ namespace game_console
 	{
 		// a key we swallowed on press must also be swallowed on release, otherwise the game sees a release without a press
 		if (!down && swallowed_keys.erase(key))
-		{
-			return false;
-		}
+					{
+					return false;
+				}
 
 		const auto result = handle_key_event(local_client_num, key, down);
 		if (down && !result)
-		{
+					{
 			swallowed_keys.insert(key);
 		}
 

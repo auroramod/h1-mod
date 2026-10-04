@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -16,89 +15,89 @@
 #include <utils/concurrency.hpp>
 #include <utils/string.hpp>
 
-namespace debug
+namespace gui::debug
 {
 	namespace
 	{
-			struct debug_line
-			{
-				float start[3];
-				float end[3];
-				float color[4];
-				bool deleted;
-			};
+		struct debug_line
+		{
+			float start[3];
+			float end[3];
+			float color[4];
+			bool deleted;
+		};
 
-			struct debug_square
-			{
-				float origin[3];
-				float color[4];
-				bool deleted;
-				std::optional<std::string> text;
-				float thickness;
-			};
-
-			enum object_type
-			{
-				square,
-				circle,
-				circle_fill,
-				cube,
-				cube_mesh
-			};
-
-			struct draw_settings
-			{
-				bool enabled;
-				bool camera_locked;
-				object_type type;
-				float mesh_thickness = 1.f;
-				float range = 500.f;
-				float camera[3] = {};
-			};
-
-			struct : draw_settings
-			{
-				bool draw_node_links;
-				float size = 10.f;
-				float link_thickness = 1.f;
-				float color[4] = { 1.f, 0.f, 0.f, 1.f };
-			} path_node_settings{};
-
-			struct entity_draw_type
-			{
-				std::string name;
-				bool enabled;
-				std::array<float, 4> color;
-				object_type draw_type;
-				std::function<bool(const std::string&)> match_func;
-			};
-
-			struct : draw_settings
-			{
-				std::vector<entity_draw_type> types;
-				entity_draw_type other_types;
-				bool mesh_only = false;
-				int point_count = 30;
-			} entity_bound_settings{};
-
-			struct point
-			{
-				ImVec2 point;
-				bool valid;
-			};
+		struct debug_square
+		{
+			float origin[3];
+			float color[4];
+			bool deleted;
+			std::optional<std::string> text;
+			float thickness;
+		};
 
 		std::vector<debug_line> debug_lines;
 		std::vector<debug_square> debug_squares;
 		std::mutex debug_items_mutex;
-
+		
 		std::vector<size_t> debug_nodes_mapping;
 
 		game::dvar_t* cl_paused = nullptr;
 
 		game::dvar_t* r_drawModelBoundingBoxes = nullptr;
 
+		enum object_type
+		{
+			square,
+			circle,
+			circle_fill,
+			cube,
+			cube_mesh
+		};
+
 		float camera[3] = {};
 		float axis[3][3] = {};
+
+		struct draw_settings
+		{
+			bool enabled;
+			bool camera_locked;
+			object_type type;
+			float mesh_thickness = 1.f;
+			float range = 500.f;
+			float camera[3] = {};
+		};
+
+		struct : draw_settings
+		{
+			bool draw_node_links;
+			float size = 10.f;
+			float link_thickness = 1.f;
+			float color[4] = { 1.f, 0.f, 0.f, 1.f };
+		} path_node_settings{};
+
+		struct entity_draw_type
+		{
+			std::string name;
+			bool enabled;
+			std::array<float, 4> color;
+			object_type draw_type;
+			std::function<bool(const std::string&)> match_func;
+		};
+
+		struct : draw_settings
+		{
+			std::vector<entity_draw_type> types;
+			entity_draw_type other_types;
+			bool mesh_only = false;
+			int point_count = 30;
+		} entity_bound_settings{};
+
+		struct point
+		{
+			ImVec2 point;
+			bool valid;
+		};
 
 		void add_entity_draw(const std::string& name, const std::array<float, 4>& color, 
 			const int draw_type,
@@ -439,38 +438,6 @@ namespace debug
 			draw_square_from_points(vertices[7], vertices[4], vertices[0], vertices[3], color, thickness, mesh_only);
 		}
 
-		float distance_2d(float* a, float* b)
-		{
-			return std::sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]));
-		}
-
-		void get_pathnode_origin(game::pathnode_t* node, float* out)
-		{
-			out[0] = node->constant.vLocalOrigin[0];
-			out[1] = node->constant.vLocalOrigin[1];
-			out[2] = node->constant.vLocalOrigin[2];
-
-			game::WorldifyPosFromParent(node, out);
-		}
-
-		void draw_node_links(game::pathnode_t* node, float* origin)
-		{
-			for (unsigned int i = 0; i < node->constant.totalLinkCount; i++)
-			{
-				float linked_origin[3] = {};
-				const auto num = node->constant.Links[i].nodeNum;
-				auto pathdata = *game::pathdata;
-				const auto linked = &pathdata.nodes[num];
-
-				get_pathnode_origin(linked, linked_origin);
-				if (distance_2d(path_node_settings.camera, linked_origin) < path_node_settings.range)
-				{
-					draw_line(origin, linked_origin, path_node_settings.color,
-						path_node_settings.link_thickness);
-				}
-			}
-		}
-
 		void draw_window()
 		{
 			static auto* enabled = &gui::enabled_menus["debug"];
@@ -560,6 +527,38 @@ namespace debug
 			}
 
 			ImGui::End();
+		}
+
+		float distance_2d(float* a, float* b)
+		{
+			return std::sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]));
+		}
+
+		void get_pathnode_origin(game::pathnode_t* node, float* out)
+		{
+			out[0] = node->constant.vLocalOrigin[0];
+			out[1] = node->constant.vLocalOrigin[1];
+			out[2] = node->constant.vLocalOrigin[2];
+
+			game::WorldifyPosFromParent(node, out);
+		}
+
+		void draw_node_links(game::pathnode_t* node, float* origin)
+		{
+			for (unsigned int i = 0; i < node->constant.totalLinkCount; i++)
+			{
+				float linked_origin[3] = {};
+				const auto num = node->constant.Links[i].nodeNum;
+				auto pathdata = *game::pathdata;
+				const auto linked = &pathdata.nodes[num];
+
+				get_pathnode_origin(linked, linked_origin);
+				if (distance_2d(path_node_settings.camera, linked_origin) < path_node_settings.range)
+				{
+					draw_line(origin, linked_origin, path_node_settings.color,
+						path_node_settings.link_thickness);
+				}
+			}
 		}
 
 		void begin_render_window()
@@ -722,7 +721,7 @@ namespace debug
 				{
 					continue;
 				}
-
+				
 				if (distance_2d(path_node_settings.camera, line.start) >= path_node_settings.range)
 				{
 					continue;
@@ -737,14 +736,14 @@ namespace debug
 				{
 					continue;
 				}
-
+				
 				if (distance_2d(path_node_settings.camera, square.origin) >= path_node_settings.range)
 				{
 					continue;
 				}
 
 				draw_cube(square.origin, square.thickness, square.color, 0.25f, false);
-
+				
 				if (square.text.has_value())
 				{
 					float screen_pos[2] = {};
@@ -802,86 +801,86 @@ namespace debug
 			}
 		}
 
-		size_t add_debug_line(const float* start, const float* end, const float* color)
-		{
-			debug_line line{};
-			std::memcpy(line.start, start, sizeof(float[3]));
-			std::memcpy(line.end, end, sizeof(float[3]));
-			std::memcpy(line.color, color, sizeof(float[4]));
+	size_t add_debug_line(const float* start, const float* end, const float* color)
+	{
+		debug_line line{};
+		std::memcpy(line.start, start, sizeof(float[3]));
+		std::memcpy(line.end, end, sizeof(float[3]));
+		std::memcpy(line.color, color, sizeof(float[4]));
 
-			std::lock_guard _0(debug_items_mutex);
-			const auto index = debug_lines.size();
-			debug_lines.emplace_back(line);
-			return index;
+		std::lock_guard _0(debug_items_mutex);
+		const auto index = debug_lines.size();
+		debug_lines.emplace_back(line);
+		return index;
+	}
+
+	void remove_debug_line(const size_t line)
+	{
+		std::lock_guard _0(debug_items_mutex);
+		if (line >= debug_lines.size())
+		{
+			return;
 		}
 
-		void remove_debug_line(const size_t line)
-		{
-			std::lock_guard _0(debug_items_mutex);
-			if (line >= debug_lines.size())
-			{
-				return;
-			}
+		debug_lines[line].deleted = true;
+	}
 
-			debug_lines[line].deleted = true;
+	void set_debug_line_color(size_t line, const float* color)
+	{
+		std::lock_guard _0(debug_items_mutex);
+		if (line >= debug_lines.size())
+		{
+			return;
 		}
 
-		void set_debug_line_color(size_t line, const float* color)
-		{
-			std::lock_guard _0(debug_items_mutex);
-			if (line >= debug_lines.size())
-			{
-				return;
-			}
+		auto& line_ = debug_lines.at(line);
+		std::memcpy(line_.color, color, sizeof(float[4]));
+	}
 
-			auto& line_ = debug_lines.at(line);
-			std::memcpy(line_.color, color, sizeof(float[4]));
+	size_t add_debug_square(const float* origin, const float* color, const std::string& text, const float thickness)
+	{
+		debug_square line{};
+		std::memcpy(line.origin, origin, sizeof(float[3]));
+		std::memcpy(line.color, color, sizeof(float[4]));
+		line.text = text;
+		line.thickness = thickness;
+
+		std::lock_guard _0(debug_items_mutex);
+		const auto index = debug_squares.size();
+		debug_squares.emplace_back(line);
+		return index;
+	}
+
+	void remove_debug_square(const size_t square)
+	{
+		std::lock_guard _0(debug_items_mutex);
+		if (square >= debug_squares.size())
+		{
+			return;
 		}
 
-		size_t add_debug_square(const float* origin, const float* color, const std::string& text, const float thickness)
-		{
-			debug_square line{};
-			std::memcpy(line.origin, origin, sizeof(float[3]));
-			std::memcpy(line.color, color, sizeof(float[4]));
-			line.text = text;
-			line.thickness = thickness;
+		debug_squares[square].deleted = true;
+	}
 
-			std::lock_guard _0(debug_items_mutex);
-			const auto index = debug_squares.size();
-			debug_squares.emplace_back(line);
-			return index;
+	void set_debug_square_color(size_t square, const float* color)
+	{
+		std::lock_guard _0(debug_items_mutex);
+		if (square >= debug_squares.size())
+		{
+			return;
 		}
 
-		void remove_debug_square(const size_t square)
-		{
-			std::lock_guard _0(debug_items_mutex);
-			if (square >= debug_squares.size())
-			{
-				return;
-			}
+		auto& square_ = debug_squares.at(square);
+		std::memcpy(square_.color, color, sizeof(float[4]));
+	}
 
-			debug_squares[square].deleted = true;
-		}
-
-		void set_debug_square_color(size_t square, const float* color)
-		{
-			std::lock_guard _0(debug_items_mutex);
-			if (square >= debug_squares.size())
-			{
-				return;
-			}
-
-			auto& square_ = debug_squares.at(square);
-			std::memcpy(square_.color, color, sizeof(float[4]));
-		}
-
-		void reset_debug_items()
-		{
-			std::lock_guard _0(debug_items_mutex);
-			debug_lines.clear();
-			debug_squares.clear();
-			debug_nodes_mapping.clear();
-		}
+	void reset_debug_items()
+	{
+		std::lock_guard _0(debug_items_mutex);
+		debug_lines.clear();
+		debug_squares.clear();
+		debug_nodes_mapping.clear();
+	}
 	}
 
 	class component final : public component_interface
@@ -950,7 +949,7 @@ namespace debug
 				draw_debug_items();
 				end_render_window();
 			}, true);
-
+			
 			scripting::on_shutdown([](bool, const bool post_shutdown)
 			{
 				if (!post_shutdown)
@@ -978,9 +977,9 @@ namespace debug
 
 				update_camera();
 			}, scheduler::pipeline::renderer);
-
+			
 			// GSC functions for quick node/line debugging
-			script_extension::add_function("add_debug_node", [](const gsc::function_args& args)
+			gsc::function::add("add_debug_node", [](const gsc::function_args& args)
 			{
 #ifdef _DEBUG
 				const auto origin = args[0].as<scripting::vector>();
@@ -1005,7 +1004,7 @@ namespace debug
 #endif
 			});
 
-			script_extension::add_function("add_debug_line", [](const gsc::function_args& args)
+			gsc::function::add("add_debug_line", [](const gsc::function_args& args)
 			{
 #ifdef _DEBUG
 				const auto origin = args[0].as<scripting::vector>();
@@ -1029,7 +1028,7 @@ namespace debug
 #endif
 			});
 
-			script_extension::add_function("remove_debug_node", [](const gsc::function_args& args)
+			gsc::function::add("remove_debug_node", [](const gsc::function_args& args)
 			{
 #ifdef _DEBUG
 				remove_debug_square(static_cast<size_t>(args[0].as<int>()));
@@ -1037,7 +1036,7 @@ namespace debug
 				return scripting::script_value{};
 			});
 
-			script_extension::add_function("remove_debug_line", [](const gsc::function_args& args)
+			gsc::function::add("remove_debug_line", [](const gsc::function_args& args)
 			{
 #ifdef _DEBUG
 				remove_debug_line(static_cast<size_t>(args[0].as<int>()));
@@ -1045,7 +1044,7 @@ namespace debug
 				return scripting::script_value{};
 			});
 
-			script_extension::add_function("reset_debug_items", [](const gsc::function_args& args)
+			gsc::function::add("reset_debug_items", [](const gsc::function_args& args)
 			{
 #ifdef _DEBUG
 				reset_debug_items();
@@ -1056,5 +1055,5 @@ namespace debug
 	};
 }
 
-REGISTER_COMPONENT(debug::component)
+REGISTER_COMPONENT(gui::debug::component)
 #endif

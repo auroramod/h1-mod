@@ -226,17 +226,17 @@ namespace scheduler
 			if (game::environment::is_sp())
 			{
 				utils::hook::jump(0x140581FB0, utils::hook::assemble([](utils::hook::assembler& a)
-				{
-					a.pushad64();
-					a.call_aligned(r_end_frame_stub);
-					a.popad64();
+			{
+				a.pushad64();
+				a.call_aligned(r_end_frame_stub);
+				a.popad64();
 
-					a.sub(rsp, 0x28);
+				a.sub(rsp, 0x28);
 					a.call(0x140581840);
 					a.mov(rax, 0x15182A680);
-					a.mov(rax, qword_ptr(rax));
+				a.mov(rax, qword_ptr(rax));
 					a.jmp(0x140581FC0);
-				}), true);
+			}), true);
 
 				g_run_frame_hook.create(0x1402992E0, scheduler::server_frame_stub);
 				main_frame_hook.create(0x1401B1DF0, scheduler::main_frame_stub);

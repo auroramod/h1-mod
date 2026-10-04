@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -21,7 +20,7 @@
 #include <utils/concurrency.hpp>
 #include <utils/io.hpp>
 
-namespace asset_stringtable
+namespace gui::asset_list::stringtable
 {
 	namespace
 	{
@@ -138,5 +137,5 @@ namespace asset_stringtable
 	};
 }
 
-REGISTER_COMPONENT(asset_stringtable::component)
+REGISTER_COMPONENT(gui::asset_list::stringtable::component)
 #endif

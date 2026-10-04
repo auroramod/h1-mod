@@ -16,7 +16,7 @@
 #include <utils/string.hpp>
 #include <utils/hook.hpp>
 
-namespace asset_material
+namespace gui::asset_list::material
 {
 	namespace
 	{
@@ -220,5 +220,5 @@ namespace asset_material
 	};
 }
 
-REGISTER_COMPONENT(asset_material::component)
+REGISTER_COMPONENT(gui::asset_list::material::component)
 #endif

@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "dvars.hpp"
@@ -16,8 +15,6 @@ namespace experimental
 {
 	namespace
 	{
-		constexpr auto EPSILON = std::numeric_limits<float>::epsilon();
-
 		game::dvar_t* cg_draw_material = nullptr;
 
 		float distance_2d(float* a, float* b)
@@ -29,6 +26,8 @@ namespace experimental
 		{
 			return sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]));
 		}
+
+		constexpr auto EPSILON = std::numeric_limits<float>::epsilon();
 
 		// Calculates the cross product of two 3D vectors
 		void crossProduct3D(float v1[3], float v2[3], float result[3])

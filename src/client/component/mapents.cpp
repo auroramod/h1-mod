@@ -14,10 +14,6 @@ namespace mapents
 {
 	namespace
 	{
-		std::string raw_ents;
-
-		std::string entity_string;
-
 		std::optional<std::string> parse_mapents(const std::string& source)
 		{
 			std::string out_buffer{};
@@ -128,7 +124,7 @@ namespace mapents
 				}
 
 				const auto key_ = key.substr(1, key.size() - 2);
-				const auto id = script_loading::gsc_ctx->token_id(key_);
+				const auto id = gsc::gsc_ctx->token_id(key_);
 				if (id == 0)
 				{
 					console::warn("[map_ents parser] Key '%s' not found, on line %i (%s)\n", key_.data(), line_num, line.data());
@@ -140,6 +136,7 @@ namespace mapents
 
 			return {out_buffer};
 		}
+		std::string raw_ents;
 
 		bool load_raw_mapents()
 		{
@@ -163,6 +160,7 @@ namespace mapents
 			return false;
 		}
 
+		std::string entity_string;
 		const char* cm_entity_string_stub()
 		{
 			const char* ents = nullptr;

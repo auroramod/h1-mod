@@ -15,7 +15,7 @@ namespace wmi
 			{
 				return E_FAIL;
 			}
-
+			
 			return CoInitializeEx(pvReserved, dwCoInit);
 		}
 	}

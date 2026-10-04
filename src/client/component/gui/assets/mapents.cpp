@@ -1,7 +1,6 @@
 #include <std_include.hpp>
 
 #ifdef _DEBUG
-
 #include "loader/component_loader.hpp"
 
 #include "game/game.hpp"
@@ -21,20 +20,20 @@
 #include <utils/concurrency.hpp>
 #include <utils/io.hpp>
 
-namespace asset_mapents
+namespace gui::asset_list::mapents
 {
 	namespace
 	{
-			using entity_t = std::vector<std::pair<std::string, std::string>>;
+		using entity_t = std::vector<std::pair<std::string, std::string>>;
 
-			struct mapents_t
-			{
-				game::MapEnts* asset;
-				std::string converted_mapents;
-				std::thread parse_thread;
-				std::atomic_bool is_parsing = false;
-				std::atomic_bool done_parsing = false;
-			};
+		struct mapents_t
+		{
+			game::MapEnts* asset;
+			std::string converted_mapents;
+			std::thread parse_thread;
+			std::atomic_bool is_parsing = false;
+			std::atomic_bool done_parsing = false;
+		};
 
 		utils::concurrency::container<mapents_t, std::recursive_mutex> mapents_data;
 
@@ -47,7 +46,7 @@ namespace asset_mapents
 			{
 				const auto new_data = ::mapents::parse(str_data, [](const std::uint16_t id)
 				{
-					return script_loading::gsc_ctx->token_name(id);
+					return gsc::gsc_ctx->token_name(id);
 				});
 
 				std::string converted_mapents;
@@ -140,5 +139,5 @@ namespace asset_mapents
 	};
 }
 
-REGISTER_COMPONENT(asset_mapents::component)
+REGISTER_COMPONENT(gui::asset_list::mapents::component)
 #endif

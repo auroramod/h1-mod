@@ -17,12 +17,12 @@ namespace logfile
 {
 	namespace
 	{
-			struct gsc_hook_t
-			{
-				bool is_lua_hook{};
-				const char* target_pos{};
-				sol::protected_function lua_function;
-			};
+		struct gsc_hook_t
+		{
+			bool is_lua_hook{};
+			const char* target_pos{};
+			sol::protected_function lua_function;
+		};
 
 		bool hook_enabled = true;
 
@@ -399,7 +399,7 @@ namespace logfile
 			}, scheduler::pipeline::main);
 			g_log_printf_hook.create(game::G_LogPrintf, g_log_printf_stub);
 
-			script_extension::add_function("onplayersay", [](const gsc::function_args& args)
+			gsc::function::add("onplayersay", [](const gsc::function_args& args)
 			{
 				const auto function = args[0].as<scripting::function>();
 				say_callbacks.push_back(function);

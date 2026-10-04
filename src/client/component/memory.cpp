@@ -1,5 +1,6 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
+
 #include "memory.hpp"
 
 #include "game/game.hpp"
@@ -98,7 +99,7 @@ namespace memory
 
 			constexpr auto script_mem_size = script_mem_low_size + script_mem_high_size;
 			utils::hook::set<uint32_t>(SELECT_VALUE(0x140420252, 0x1405020B2), static_cast<uint32_t>(script_mem_size));
-		}
+	}
 
 		int out_of_memory_text_stub(char* dest, int size, const char* fmt, ...)
 		{
