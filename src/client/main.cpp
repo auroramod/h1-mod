@@ -68,7 +68,9 @@ void get_aslr_patched_binary(std::string* binary, std::string* data)
 	try
 	{
 		apply_aslr_patch(data);
-		if (!utils::io::file_exists(patched_binary) && !utils::io::write_file(patched_binary, *data, false))
+		std::string cached_data{};
+		if ((!utils::io::read_file(patched_binary, &cached_data) || cached_data != *data)
+			&& !utils::io::write_file(patched_binary, *data, false))
 		{
 			throw std::runtime_error("Could not write file");
 		}
