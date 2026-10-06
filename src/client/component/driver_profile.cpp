@@ -26,6 +26,8 @@ namespace driver_profile
 		utils::hook::detour get_module_file_name_ex_a_hook;
 		utils::hook::detour get_command_line_a_hook;
 		utils::hook::detour get_command_line_w_hook;
+		utils::hook::detour get_module_file_name_a_hook;
+		utils::hook::detour get_module_file_name_w_hook;
 
 		bool enabled = false;
 
@@ -153,6 +155,26 @@ namespace driver_profile
 			return get_command_line_w_hook.invoke<LPWSTR>();
 		}
 
+		DWORD WINAPI get_module_file_name_a_stub(const HMODULE module, const LPSTR filename, const DWORD size)
+		{
+			if (is_main_module(module) && is_driver_caller(_ReturnAddress()))
+			{
+				return copy_string(fake_path_a, filename, size);
+			}
+
+			return get_module_file_name_a_hook.invoke<DWORD>(module, filename, size);
+		}
+
+		DWORD WINAPI get_module_file_name_w_stub(const HMODULE module, const LPWSTR filename, const DWORD size)
+		{
+			if (is_main_module(module) && is_driver_caller(_ReturnAddress()))
+			{
+				return copy_string(fake_path_w, filename, size);
+			}
+
+			return get_module_file_name_w_hook.invoke<DWORD>(module, filename, size);
+		}
+
 		std::wstring build_fake_command_line(const std::wstring& command_line)
 		{
 			size_t args_start{};
@@ -225,6 +247,12 @@ namespace driver_profile
 			get_module_file_name_ex_a_hook.create(&K32GetModuleFileNameExA, &get_module_file_name_ex_a_stub);
 			get_command_line_a_hook.create(&GetCommandLineA, &get_command_line_a_stub);
 			get_command_line_w_hook.create(&GetCommandLineW, &get_command_line_w_stub);
+
+			if (game::environment::is_mp())
+			{
+				get_module_file_name_a_hook.create(&GetModuleFileNameA, &get_module_file_name_a_stub);
+				get_module_file_name_w_hook.create(&GetModuleFileNameW, &get_module_file_name_w_stub);
+			}
 
 			enabled = true;
 		}
