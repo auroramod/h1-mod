@@ -148,7 +148,7 @@ namespace renderer
 			static float dynEntModelsColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
 			static float sceneModelsColor[4] = { 1.0f, 1.0f, 0.0f, 1.0f };
 			static float dobjsColor[4] = { 0.0f, 1.0f, 1.0f, 1.0f };
-			auto scene = *game::scene;
+			auto& scene = *game::scene;
 
 			switch (r_drawModelNames->current.integer)
 			{
