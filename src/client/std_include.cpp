@@ -16,7 +16,9 @@
 
 #ifndef INJECT_HOST_AS_LIB
 #pragma bss_seg(".payload")
+extern "C" char payload_data[BINARY_PAYLOAD_SIZE];
 char payload_data[BINARY_PAYLOAD_SIZE];
+#pragma comment(linker, "/include:payload_data")
 #endif
 
 extern "C"

@@ -220,11 +220,9 @@ namespace sorted_material_sites
 		{0x1405A75A8, 2, 4, 0x1FFFull, 0x3FFFull}, // and ecx, 1FFFh
 		{0x1405A766F, 2, 4, 0x1FFFull, 0x3FFFull}, // and ecx, 1FFFh
 		{0x1405A7737, 2, 4, 0x1FFFull, 0x3FFFull}, // and ecx, 1FFFh
-		{0x1405A7C04, 2, 1, 0x18ull, 0x19ull}, // add ecx, 18h
 		{0x1405A7C1D, 2, 8, 0x78000000000ull, 0xF0000000000ull}, // mov r9, 78000000000h
 		{0x1405A7C3D, 3, 1, 0x27ull, 0x28ull}, // shl rcx, 27h
 		{0x1405A7D7C, 2, 4, 0x1FFFull, 0x3FFFull}, // and ecx, 1FFFh
-		{0x1405A8145, 2, 1, 0x1Full, 0x20ull}, // add ecx, 1Fh
 		{0x1405A8156, 2, 8, 0x78000000000ull, 0xF0000000000ull}, // mov r9, 78000000000h
 		{0x1405A8170, 3, 1, 0x27ull, 0x28ull}, // shl rcx, 27h
 		{0x1405A82D6, 2, 4, 0x1FFFull, 0x3FFFull}, // and ecx, 1FFFh
@@ -237,7 +235,6 @@ namespace sorted_material_sites
 		{0x1405A8C39, 2, 4, 0x1FFFull, 0x3FFFull}, // and ecx, 1FFFh
 		{0x1405A8D02, 2, 4, 0x1FFFull, 0x3FFFull}, // and ecx, 1FFFh
 		{0x1405A90C6, 2, 8, 0x78000000000ull, 0xF0000000000ull}, // mov r9, 78000000000h
-		{0x1405A90DF, 2, 1, 0x27ull, 0x28ull}, // add ecx, 27h
 		{0x1405A90FD, 3, 1, 0x27ull, 0x28ull}, // shl rcx, 27h
 		{0x1405A9564, 2, 8, 0x7FFC000000ull, 0xFFFC000000ull}, // mov r8, 7FFC000000h
 		{0x1405A9588, 3, 1, 0x2Bull, 0x2Cull}, // shr rax, 2Bh
