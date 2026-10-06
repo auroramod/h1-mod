@@ -80,6 +80,11 @@ namespace game
 
 	WEAK symbol<int(game::playerState_s* ps)> BG_GetMaxSprintTime{0x0, 0x1401DB1F0};
 	WEAK symbol<int(Weapon weapon, bool isAlternate)> BG_SegmentedReload{0x0, 0x140201490};
+	WEAK symbol<bool(Weapon weapon)> BG_HasUnderbarrelAmmo{0x0, 0x1401FEED0};
+	WEAK symbol<XModel*(Weapon weapon, bool isAlternate)> BG_GetKnifeModel{0x0, 0x1401FFAE0};
+	WEAK symbol<XModel*(Weapon weapon, bool isAlternate, int modelIndex)> BG_GetGunModel{0x0, 0x1401FE7E0};
+	WEAK symbol<bool(Weapon weapon)> BG_HasAttachmentCombo{0x0, 0x1401FA510};
+	WEAK symbol<Weapon(const char* name)> BG_FindWeaponForName{0x0, 0x1401F7C50};
 	WEAK symbol<int(playerState_s* ps, int hand)> PM_Weapon_AllowReload{0x0, 0x1401EFB30};
 
 	WEAK symbol<void(unsigned int weapon, bool isAlternate, 
@@ -282,6 +287,8 @@ namespace game
 	WEAK symbol<float()> ScrPlace_HiResGetScaleY{0x0, 0x140288640};
 
 	WEAK symbol<char*(StringTable*, int, int)> StringTable_GetColumnValueForRow{0x0, 0x1404F8830};
+	WEAK symbol<void(const char* filename, StringTable** table)> StringTable_GetAsset{0x0, 0x1404F87F0};
+	WEAK symbol<int(const StringTable* table)> StringTable_GetRowCount{0x0, 0x1404F8870};
 
 	WEAK symbol<bool(int localClient, ScreenPlacement* scrPlace, vec3_t& WorldLocation, vec2_t& Screen)> CG_WorldPosToScreenPosReal{0x0, 0x14021CE50};
 
@@ -406,6 +413,8 @@ namespace game
 
 	WEAK symbol<int> connectionState{0x0, 0x142D0BA9C};
 	WEAK symbol<snapshot_s*> next_snap{0x0, 0x1429398E8};
+	WEAK symbol<cg_s> cgameGlob{0x0, 0x142935000};
+	WEAK symbol<ViewModelInfo> viewModelInfo{0x0, 0x142A1F5D8};
 
 	WEAK symbol<GfxCmdBufState> gfxCmdBufState{0x0, 0x1525C0320};
 	WEAK symbol<GfxCmdBufSourceState> gfxCmdBufSourceState{0x0, 0x1525C23D0};

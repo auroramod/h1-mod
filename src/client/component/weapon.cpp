@@ -482,6 +482,451 @@ namespace weapon
 			// patch BG_PlayerSetWeaponModelVariant (sub_140202340) to never write bit 8
 			utils::hook::nop(0x14020235A, 2);
 		}
+
+		std::uint8_t get_weapon_index(const game::Weapon weapon)
+		{
+			return static_cast<std::uint8_t>(weapon.data);
+		}
+
+		game::WeaponDef* get_weapon_def(const game::Weapon weapon)
+		{
+			const auto weapon_defs = utils::hook::extract<game::WeaponDef**>(reinterpret_cast<void*>(0x1400A8450 + 3));
+			return weapon_defs[get_weapon_index(weapon)];
+		}
+
+		bool is_melee_weapon(const game::Weapon weapon)
+		{
+			return get_weapon_def(weapon)->inventoryType == game::WEAPINVENTORY_MELEE;
+		}
+
+		// 1.15 sub_2E67D0
+		game::Weapon get_melee_weapon(const game::playerState_s& ps)
+		{
+			for (const auto& weapon : ps.weaponsEquipped)
+			{
+				if (get_weapon_index(weapon) && is_melee_weapon(weapon))
+				{
+					return weapon;
+				}
+			}
+
+			return {};
+		}
+
+		// 1.15 sub_2E8DA0
+		game::XModel* get_melee_knife_model(const game::Weapon weapon, const game::Weapon melee)
+		{
+			if (get_weapon_index(melee) && get_weapon_index(melee) != get_weapon_index(weapon))
+			{
+				if (game::BG_HasAttachmentCombo(melee))
+				{
+					const char* models[2]{};
+					if (utils::hook::invoke<int>(0x140051070, melee, models, 2) > 0) // returns view model count
+					{
+						return game::DB_FindXAssetHeader(game::ASSET_TYPE_XMODEL, models[0], 1).model;
+					}
+				}
+				else
+				{
+					return game::BG_GetGunModel(melee, false, 0);
+				}
+			}
+
+			return game::BG_GetKnifeModel(weapon, false);
+		}
+
+		// 1.15 sub_1E9280 + sub_2E8DA0
+		game::XModel* get_view_knife_model(const game::Weapon weapon, const int hand)
+		{
+			if (!game::BG_GetKnifeModel(weapon, false))
+			{
+				return nullptr;
+			}
+
+			const auto& ps = game::cgameGlob->predictedPlayerState;
+			if (!get_weapon_def(weapon)->knifeAlwaysAttached)
+			{
+				const auto state = ps.weaponState[hand].weaponState & ~0x800;
+				if (state < 10 || state > 16 || is_melee_weapon(weapon))
+				{
+					return nullptr;
+				}
+			}
+
+			return get_melee_knife_model(weapon, get_melee_weapon(ps));
+		}
+
+		game::Weapon view_melee_weapon{};
+		bool view_anims_alt = false;
+
+		// 1.15 sub_2E92E0
+		bool apply_melee_weapon_anims(const bool alt, game::XAnimParts* (*anims)[game::NUM_WEAP_ANIMS])
+		{
+			view_anims_alt = alt;
+
+			const auto& ps = game::cgameGlob->predictedPlayerState;
+			const auto melee = get_melee_weapon(ps);
+			if (!get_weapon_index(melee) || get_weapon_index(melee) == get_weapon_index(ps.weapCommon.weapon))
+			{
+				return alt;
+			}
+
+			// view anim <- melee weapon anim
+			constexpr std::pair<game::weapAnimFiles_t, game::weapAnimFiles_t> melee_anims[] =
+			{
+				{game::WEAP_ANIM_MELEE_SWIPE, game::WEAP_ANIM_MELEE_ALT_STANDING},
+				{game::WEAP_ANIM_MELEE_FATAL, game::WEAP_ANIM_MELEE_ALT_CROUCHING},
+			};
+
+			const auto melee_xanims = get_weapon_def(melee)->szXAnims;
+			auto applied = false;
+
+			for (const auto& [slot, source] : melee_anims)
+			{
+				if (!melee_xanims[source])
+				{
+					continue;
+				}
+
+				for (auto set = 0; set < 4; set++)
+				{
+					if (anims[set][slot])
+					{
+						anims[set][slot] = melee_xanims[source];
+					}
+				}
+
+				applied = true;
+			}
+
+			return alt || applied;
+		}
+
+		bool has_underbarrel_ammo_stub(const game::Weapon weapon)
+		{
+			return game::BG_HasUnderbarrelAmmo(weapon) || !view_anims_alt;
+		}
+
+		// 1.15 sub_119960
+		void update_view_weapon_info(const int local_client_num, game::playerState_s* ps, const int flags,
+			const game::Weapon weapon, game::ViewModelInfo* info, const bool force)
+		{
+			if (!get_weapon_index(weapon))
+			{
+				return;
+			}
+
+			const auto melee = get_melee_weapon(*ps);
+			const auto keep = !force && melee.data == view_melee_weapon.data &&
+				(info->weapon.data == weapon.data || utils::hook::invoke<bool>(0x140203AC0, ps, flags, info->weapon, weapon)); // same viewmodel weapon
+
+			if (!keep)
+			{
+				utils::hook::invoke<void>(0x1400A8430, local_client_num, weapon, info); // load weapon viewmodel info
+			}
+
+			if (!keep || (!info->handModel && !info->numExtraModels))
+			{
+				info->handModel = get_weapon_def(weapon)->handModel;
+			}
+
+			info->weapon = weapon;
+			view_melee_weapon = melee;
+		}
+
+		bool hide_view_weapon_stub(const bool hide)
+		{
+			return hide || (game::viewModelInfo->knifeModel && get_weapon_index(get_melee_weapon(game::cgameGlob->predictedPlayerState)));
+		}
+
+		// 1.15 CL_ExecuteKey case 109
+		void weapmelee(const int local_client_num)
+		{
+			const auto weapon = game::cgameGlob->predictedPlayerState.weapCommon.weapon;
+			utils::hook::invoke<void>(0x1400A8A10, local_client_num, 1, !is_melee_weapon(weapon)); // CG_CycleWeapon
+		}
+
+		// 1.15 PM_Weapon_FinishWeaponChange
+		void finish_weapon_change_melee(const game::playerState_s* ps, int* change_type)
+		{
+			if (*change_type == 4 && is_melee_weapon(ps->weapCommon.weapon))
+			{
+				*change_type = 3; // switching away from the melee weapon uses the regular raise
+			}
+		}
+
+		/*
+			1.15 per weapon melee sounds and surface fx (mp/meleeWeaponData.csv)
+			1.04 only has the default layout of 12 sound aliases and 53 surface entries
+		*/
+		constexpr auto max_melee_sets = 32;
+		constexpr auto melee_set_size = 0x41;
+		constexpr auto melee_surface_offset = 0xC;
+		constexpr auto melee_surface_count = 0x35;
+
+		game::snd_alias_list_t* melee_sets[max_melee_sets][melee_set_size]{};
+		int melee_set_map[256]{};
+		bool melee_event_local = false;
+
+		game::snd_alias_list_t* find_sound_alias(const char* name)
+		{
+			return utils::hook::invoke<game::snd_alias_list_t*>(0x1404F7660, name); // Com_FindSoundAlias
+		}
+
+		void load_melee_surface_table(const char* name, game::snd_alias_list_t** dest)
+		{
+			utils::hook::invoke<void>(0x14023D880, name, dest, true); // loads a surface type sound table
+		}
+
+		void load_default_melee_set()
+		{
+			auto& set = melee_sets[0];
+			set[0] = find_sound_alias("melee_knife_swipe_start_plr");
+			set[1] = find_sound_alias("melee_knife_swipe_start_npc");
+			set[2] = find_sound_alias("melee_knife_stab_upper_start_plr");
+			set[3] = find_sound_alias("melee_knife_stab_upper_start_npc");
+			set[4] = find_sound_alias("wpn_combatknife_stab_plr");
+			set[5] = find_sound_alias("wpn_combatknife_stab_npc");
+			set[6] = find_sound_alias("melee_knife_stab_upper_hit_plr");
+			set[7] = find_sound_alias("melee_knife_stab_upper_hit_npc");
+			set[8] = find_sound_alias("wpn_combatknife_plr");
+			set[9] = find_sound_alias("wpn_combatknife_npc");
+			set[10] = find_sound_alias("melee_knife_hit_other");
+			set[11] = find_sound_alias("melee_knife_hit_shield");
+			load_melee_surface_table("melee_knife_hit", &set[melee_surface_offset]);
+		}
+
+		// 1.15 sub_332DC0
+		void load_melee_weapon_data()
+		{
+			std::memset(melee_sets, 0, sizeof(melee_sets));
+			std::memset(melee_set_map, 0, sizeof(melee_set_map));
+
+			game::StringTable* table = nullptr;
+			game::StringTable_GetAsset("mp/meleeWeaponData.csv", &table);
+			const auto rows = table ? game::StringTable_GetRowCount(table) : 0;
+			if (rows <= 0)
+			{
+				load_default_melee_set();
+				return;
+			}
+
+			const auto get_column = [&](const int row, const int column)
+			{
+				return game::StringTable_GetColumnValueForRow(table, row, column);
+			};
+
+			// set slot -> table column
+			static const std::pair<int, int> alias_columns[] =
+			{
+				{4, 10}, {5, 11}, {10, 9}, {8, 7}, {9, 8}, {3, 5}, {2, 4}, {0, 2}, {1, 3}, {7, 13}, {6, 12},
+			};
+
+			for (auto row = 0; row < rows; row++)
+			{
+				const auto id_string = get_column(row, 0);
+				if (*id_string < '0' || *id_string > '9')
+				{
+					continue;
+				}
+
+				const auto id = std::atoi(id_string);
+				if (id >= max_melee_sets)
+				{
+					continue;
+				}
+
+				const auto weapon_name = get_column(row, 1);
+				if (_stricmp(weapon_name, "default"))
+				{
+					const auto weapon = game::BG_FindWeaponForName(weapon_name);
+					melee_set_map[get_weapon_index(weapon)] = id;
+				}
+
+				auto& set = melee_sets[id];
+				for (const auto& [slot, column] : alias_columns)
+				{
+					set[slot] = find_sound_alias(get_column(row, column));
+				}
+
+				set[11] = find_sound_alias("melee_knife_hit_shield");
+				load_melee_surface_table(get_column(row, 6), &set[melee_surface_offset]);
+			}
+		}
+
+		game::snd_alias_list_t* get_melee_sound_alias(const game::Weapon weapon, const int slot)
+		{
+			return melee_sets[melee_set_map[get_weapon_index(weapon)]][slot];
+		}
+
+		game::snd_alias_list_t* get_melee_surface_alias(const game::Weapon weapon, const int type, const int surface)
+		{
+			return melee_sets[melee_set_map[get_weapon_index(weapon)]][melee_surface_offset + type * melee_surface_count + surface];
+		}
+
+		// 1.15 sub_F9400
+		game::snd_alias_list_t* get_melee_event_sound_alias(const game::Weapon weapon, const int slot)
+		{
+			if (melee_event_local)
+			{
+				if (const auto melee = get_melee_weapon(game::cgameGlob->predictedPlayerState); get_weapon_index(melee))
+				{
+					return get_melee_sound_alias(melee, slot);
+				}
+			}
+
+			return get_melee_sound_alias(weapon, slot);
+		}
+
+		void patch_melee_weapon()
+		{
+			// show the equipped melee weapon instead of the gun's knife model
+			utils::hook::jump(0x1400F8DD8, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.mov(ecx, ebx); // weapon
+				a.mov(edx, r12d); // view index
+				a.call_aligned(get_view_knife_model);
+				a.mov(rsi, rax);
+				a.jmp(0x1400F8E21);
+			}), true);
+
+			// melee viewanims from the melee weapon, rebuilt when it changes
+			utils::hook::jump(0x1400C5760, update_view_weapon_info);
+			utils::hook::call(0x1400A86C8, has_underbarrel_ammo_stub);
+			utils::hook::call(0x1400A8713, has_underbarrel_ammo_stub);
+
+			// hide our actual weapon when we knife
+			utils::hook::nop(0x1400D390E, 9);
+			utils::hook::jump(0x1400D390E, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				const auto unchanged = a.newLabel();
+
+				a.movzx(ecx, r12b);
+				a.call_aligned(hide_view_weapon_stub);
+				a.mov(r12b, al);
+				a.mov(rax, reinterpret_cast<std::size_t>(&game::viewModelInfo->hideWeapon));
+				a.cmp(r12b, byte_ptr(rax));
+				a.jz(unchanged);
+				a.mov(byte_ptr(rax), r12b);
+				a.jmp(0x1400D396B);
+
+				a.bind(unchanged);
+				a.jmp(0x1400D3967);
+			}));
+
+			utils::hook::nop(0x1400A8683, 8);
+			utils::hook::jump(0x1400A8683, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				const auto copy_alt_only = a.newLabel();
+
+				a.movzx(ecx, al);
+				a.mov(rdx, r13); // anims
+				a.call_aligned(apply_melee_weapon_anims);
+				a.test(al, al);
+				a.jz(copy_alt_only);
+				a.jmp(0x1400A868B);
+
+				a.bind(copy_alt_only);
+				a.jmp(0x1400A871C);
+			}));
+
+			// CL_ExecuteKey, add weapmelee id 109 (1.4 stops at 107)
+			utils::hook::nop(0x14024AD4F, 6);
+			utils::hook::jump(0x14024AD4F, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				const auto out_of_table = a.newLabel();
+				const auto default_case = a.newLabel();
+
+				a.ja(out_of_table);
+				a.jmp(0x14024AD55);
+
+				a.bind(out_of_table);
+				a.cmp(ebp, 0x6C);
+				a.jne(default_case);
+
+				a.mov(ecx, ebx);
+				a.call_aligned(weapmelee);
+
+				a.bind(default_case);
+				a.jmp(0x14024BC45);
+			}));
+
+			// CycleWeapPrimary, 5th arg is cycle to the melee weapon
+			utils::hook::nop(0x1400DC995, 9);
+			utils::hook::jump(0x1400DC995, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				const auto melee = a.newLabel();
+
+				a.cmp(dword_ptr(rsp, 0x80), edi);
+				a.jnz(melee);
+				a.jmp(0x1400DC99E);
+
+				a.bind(melee);
+				a.mov(r12d, game::WEAPINVENTORY_MELEE);
+				a.jmp(0x1400DC9FA);
+			}));
+
+			// PM_Weapon_FinishWeaponChange
+			utils::hook::nop(0x1401F182C, 7);
+			utils::hook::jump(0x1401F182C, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.pushad64();
+				a.mov(rcx, rbp); // ps
+				a.lea(rdx, qword_ptr(rsp, 0x80 + 0xB8)); // change type (arg 2)
+				a.call_aligned(finish_weapon_change_melee);
+				a.popad64();
+
+				a.cmp(dword_ptr(rbp, 0x1DD0), 1);
+				a.jmp(0x1401F1833);
+			}));
+
+			// melee weapon data table
+			utils::hook::jump(0x14023C080, load_melee_weapon_data);
+			utils::hook::jump(0x14023BB50, get_melee_sound_alias);
+			utils::hook::jump(0x14023BB20, get_melee_surface_alias);
+
+			// CG_EntityEvent
+			utils::hook::nop(0x1400ACBE2, 6);
+			utils::hook::jump(0x1400ACBE2, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.mov(rax, reinterpret_cast<std::size_t>(&melee_event_local));
+				a.mov(byte_ptr(rax), 1);
+				a.mov(rax, 0x142935398);
+				a.mov(edi, dword_ptr(rax));
+				a.jmp(0x1400ACBE8);
+			}));
+
+			utils::hook::jump(0x1400ACC12, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.mov(rax, reinterpret_cast<std::size_t>(&melee_event_local));
+				a.mov(byte_ptr(rax), 0);
+				a.cmp(byte_ptr(r15, 6), bl);
+				a.mov(esi, dword_ptr(r15, 0x4C));
+				a.jmp(0x1400ACC1A);
+			}));
+
+			// melee swing / hit events
+			utils::hook::nop(0x1400AD7AB, 14);
+			utils::hook::jump(0x1400AD7AB, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.movzx(edx, r12b);
+				a.xor_(edx, 1);
+				a.mov(ecx, esi);
+				a.call_aligned(get_melee_event_sound_alias);
+				a.jmp(0x1400AD7CA);
+			}));
+
+			utils::hook::nop(0x1400AD821, 15);
+			utils::hook::jump(0x1400AD821, utils::hook::assemble([](utils::hook::assembler& a)
+			{
+				a.neg(r12b);
+				a.sbb(edx, edx);
+				a.add(edx, 3);
+				a.mov(ecx, esi);
+				a.call_aligned(get_melee_event_sound_alias);
+				a.jmp(0x1400AD830);
+			}));
+		}
 	}
 
 	void clear_modifed_enums()
@@ -513,8 +958,9 @@ namespace weapon
 				dvars::register_bool("sv_disableCustomClasses", 
 					false, game::DVAR_CODINFO, "Disable custom classes on server");
 
-				patch_camo_bits();			// use the 1.15 weapon camo layout (9 bit)
+				patch_camo_bits();			// use 1.15 weapon camo layout (9 bit)
 				patch_num_weapons_reg();	// change register used for BG_GetNumWeapons loops to 32 bits
+				patch_melee_weapon();		// add and use 1.15 melee weapon slot
 			}
 
 #ifdef _DEBUG

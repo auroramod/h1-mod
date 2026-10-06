@@ -2629,6 +2629,23 @@ namespace game
 
 	static_assert(offsetof(centity_s, nextState.number) == 316);
 
+	// 1.15 cg_s +0xE9A18
+	struct ViewModelInfo
+	{
+		XModel* handModel;
+		XModel* unk08;
+		XModel* knifeModel;
+		Weapon weapon;
+		int unk1C;
+		int numExtraModels;
+		char __pad0[0x68];
+		bool hideWeapon; // drops gun models from the viewmodel
+	};
+	static_assert(offsetof(ViewModelInfo, knifeModel) == 0x10);
+	static_assert(offsetof(ViewModelInfo, weapon) == 0x18);
+	static_assert(offsetof(ViewModelInfo, numExtraModels) == 0x20);
+	static_assert(offsetof(ViewModelInfo, hideWeapon) == 0x8C);
+
 	struct cg_s
 	{
 		playerState_s predictedPlayerState;

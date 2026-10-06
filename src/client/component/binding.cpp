@@ -16,7 +16,7 @@ namespace binding
 
 		int get_num_keys()
 		{
-			return SELECT_VALUE(110, 103);
+			return 110;
 		}
 
 		int key_write_bindings_to_buffer_stub(int /*localClientNum*/, char* buffer, const int buffer_size)
