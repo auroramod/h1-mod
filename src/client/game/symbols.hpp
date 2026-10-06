@@ -113,7 +113,6 @@ namespace game
 		const char* dvar, const char* value)> CG_SetClientDvarFromServer{0x0, 0x0};
 	WEAK symbol<char*(const unsigned int weapon, 
 		bool isAlternate, char* outputBuffer, int bufferLen)> CG_GetWeaponDisplayName{0x140192B80, 0x1400B5840};
-	WEAK symbol<cg_s* ()> CG_GetLocalClientGlobals{0x0, 0x140214280};
 	WEAK symbol<int(int localClientNum, int serverTime, int demoType, int cubemapShot, int cubemapSize, int renderScreen, 
 		unsigned int a7)> CG_DrawActiveFrame{0x0, 0x1400A96D0};
 

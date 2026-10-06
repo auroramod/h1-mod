@@ -313,7 +313,7 @@ namespace reflection_probes
 
 			disableDvars();
 
-			auto cg = game::CG_GetLocalClientGlobals();
+			game::cg_s* cg = game::cgameGlob;
 			[[maybe_unused]] auto ent = &game::mp::g_entities[0];
 			assert(ent->client);
 

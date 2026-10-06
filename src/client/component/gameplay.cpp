@@ -616,11 +616,10 @@ namespace gameplay
 				anim == (game::WEAP_FORCE_IDLE | ANIM_TOGGLEBIT) || anim == (game::WEAP_SPRINT_IN | ANIM_TOGGLEBIT));
 		}
 
-		void start_weapon_anim_stub(uint64_t local_client_num, game::Weapon weapon_idx, game::PlayerHandIndex player_hand_idx,
+		void start_weapon_anim_stub([[maybe_unused]] uint64_t local_client_num, game::Weapon weapon_idx, game::PlayerHandIndex player_hand_idx,
 			game::weapAnimFiles_t blend_in_anim_index, game::weapAnimFiles_t blend_out_anim_index, float transition_time)
 		{
-			auto* cg_array = game::CG_GetLocalClientGlobals();
-			auto* playerstate = &cg_array[local_client_num].predictedPlayerState;
+			auto* playerstate = &game::cgameGlob->predictedPlayerState;
 
 			auto should_sprint = (playerstate->sprintState.lastSprintStart < playerstate->sprintState.lastSprintEnd);
 
