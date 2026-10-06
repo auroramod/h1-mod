@@ -228,7 +228,7 @@ namespace autocomplete
 			std::vector<match> maps;
 			std::error_code ec;
 
-			for (auto* map = &game::maps[0]; map->unk; ++map)
+			for (auto* map = fastfiles::get_maps(); map->unk; ++map)
 			{
 				maps.emplace_back(map->name, "", match_type::argument);
 			}

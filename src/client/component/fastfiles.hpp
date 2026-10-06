@@ -15,5 +15,6 @@ namespace fastfiles
 	void clear_usermap();
 	bool usermap_exists(const std::string& name);
 	bool is_stock_map(const std::string& name);
+	game::map_t* get_maps();
 	void enum_asset_entries(game::XAssetType type, const std::function<void(game::XAssetEntry*)>& callback, bool include_override);
 }

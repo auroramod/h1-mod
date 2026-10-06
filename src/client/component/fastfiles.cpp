@@ -25,7 +25,6 @@ namespace fastfiles
 	{
 		constexpr std::uint32_t transient_file_count = 0x2000;
 
-		 // 1.04 has 2048 by default
 		constexpr std::uint32_t transient_file_size = 0x30;
 
 		struct buffer_info
@@ -599,9 +598,56 @@ namespace fastfiles
 			game::DB_LoadXAssets(data.data(), static_cast<std::uint32_t>(data.size()), sync_mode);
 		}
 
+		// 1.15 mapRichPresenceInfo
+		game::map_t mp_maps[] =
+		{
+			{"mp_vlobby_room", 1, 1},
+			{"mp_backlot", 2, 1},
+			{"mp_bloc", 3, 1},
+			{"mp_bog", 4, 1},
+			{"mp_cargoship", 5, 1},
+			{"mp_citystreets", 6, 1},
+			{"mp_convoy", 7, 1},
+			{"mp_countdown", 8, 1},
+			{"mp_crash", 9, 1},
+			{"mp_crossfire", 10, 1},
+			{"mp_farm", 11, 1},
+			{"mp_overgrown", 12, 1},
+			{"mp_pipeline", 13, 1},
+			{"mp_shipment", 14, 1},
+			{"mp_showdown", 15, 1},
+			{"mp_strike", 16, 1},
+			{"mp_vacant", 17, 1},
+			{"mp_crash_snow", 18, 1},
+			{"mp_broadcast", 19, 1},
+			{"mp_carentan", 20, 1},
+			{"mp_creek", 21, 1},
+			{"mp_killhouse", 22, 1},
+			{"mp_farm_spring", 23, 1},
+			{"mp_bog_summer", 24, 1},
+			{"", -1, 0},
+		};
+
+		void reallocate_maps()
+		{
+			const std::uintptr_t sites[] =
+			{
+				0x1404F7064, // Live_GetFirstMapForSource
+				0x1404F70D4, 0x1404F70E4, // Live_GetMapIndex
+				0x140510832, 0x140510851, // set map rich presence
+			};
+
+			for (const auto address : sites)
+			{
+				utils::hook::inject(address + 3, mp_maps);
+			}
+
+			utils::hook::inject(0x1404F714D + 3, &mp_maps[0].unk); // Live_GetMapSource
+		}
+
 		bool is_builtin_map(const char* name)
 		{
-			for (auto map = &game::maps[0]; map->unk; ++map)
+			for (auto map = get_maps(); map->unk; ++map)
 			{
 				if (!std::strcmp(map->name, name))
 				{
@@ -2329,6 +2375,11 @@ namespace fastfiles
 		return exists(name, true);
 	}
 
+	game::map_t* get_maps()
+	{
+		return game::environment::is_sp() ? &game::maps[0] : mp_maps;
+	}
+
 	class component final : public component_interface
 	{
 	public:
@@ -2411,6 +2462,7 @@ namespace fastfiles
 
 				// dont load localized zone for custom maps
 				utils::hook::call(0x1402BA667, db_level_load_add_zone_stub);
+				reallocate_maps();
 
 				// handle custom vlobby maps
 				utils::hook::call(0x1400DBFA7, db_load_xassets_vlobby_stub);
