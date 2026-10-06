@@ -1191,7 +1191,7 @@ namespace game
 	// made up
 	struct client_state_t
 	{
-		char __pad0[0x4A50];
+		char __pad0[0x4A40];
 		int ping;
 		char __pad1[0x8];
 		int num_players;
@@ -1199,9 +1199,9 @@ namespace game
 		int serverTime;
 	};
 
-	static_assert(offsetof(client_state_t, ping) == 0x4A50);
-	static_assert(offsetof(client_state_t, num_players) == 0x4A5C);
-	static_assert(offsetof(client_state_t, serverTime) == 19088);
+	static_assert(offsetof(client_state_t, ping) == 0x4A40);
+	static_assert(offsetof(client_state_t, num_players) == 0x4A4C);
+	static_assert(offsetof(client_state_t, serverTime) == 0x4A80);
 
 	// made up
 	struct connect_state_t

@@ -62,9 +62,9 @@ namespace rcon
 				return;
 			}
 
-			if (*game::mp::connect_state != nullptr && *game::connectionState >= game::CA_CONNECTED)
+			if (*game::connectionState >= game::CA_CONNECTED)
 			{
-				const auto target = (*game::mp::connect_state)->address;
+				const auto target = game::mp::connect_state->address;
 				const auto buffer = password + " " + data;
 				network::send(target, "rcon", buffer);
 			}

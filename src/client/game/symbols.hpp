@@ -496,8 +496,8 @@ namespace game
 		WEAK symbol<bool> virtualLobby_loaded{0x0, 0x142D077FD};
 
 
-		WEAK symbol<client_state_t*> client_state{0x0, 0x142D0BCB0};
-		WEAK symbol<connect_state_t*> connect_state{0x0, 0x14318C650};
+		WEAK symbol<client_state_t> client_state{0x0, 0x142D0BCB0};
+		WEAK symbol<connect_state_t> connect_state{0x0, 0x14318C650};
 
 		WEAK symbol<XZone> g_zones{0x0, 0x1450F56D0};
 		WEAK symbol<unsigned int> g_zoneCount{0x0, 0x143498F0C};

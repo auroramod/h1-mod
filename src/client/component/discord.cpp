@@ -99,10 +99,9 @@ namespace discord
 
 				discord_strings.details = std::format("{} on {}", gametype, mapname);
 
-				const auto client_state = *game::mp::client_state;
-				if (client_state != nullptr)
+				if (game::CL_IsCgameInitialized())
 				{
-					discord_presence.partySize = client_state->num_players;
+					discord_presence.partySize = game::mp::client_state->num_players;
 				}
 
 				if (game::SV_Loaded())

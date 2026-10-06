@@ -341,7 +341,7 @@ namespace reflection_probes
 					{
 						game::R_BeginFrame();
 
-						if (!game::CG_DrawActiveFrame(0, game::mp::client_state[0]->serverTime, 0, shot, size, 1, 3))
+						if (!game::CG_DrawActiveFrame(0, game::mp::client_state->serverTime, 0, shot, size, 1, 3))
 						{
 							__debugbreak();
 						}
@@ -411,12 +411,7 @@ namespace reflection_probes
 
 			if (dvars::r_reflectionProbeGenerate->current.enabled && do_render)
 			{
-				const auto client_state = game::mp::client_state[0];
-				if (!client_state)
-				{
-					return;
-				}
-				auto serverTime = game::mp::client_state[0]->serverTime;
+				const auto serverTime = game::mp::client_state->serverTime;
 				if (game::CL_IsCgameInitialized() && !game::VirtualLobby_Loaded() && serverTime > 1000)
 				{
 					const auto* gfxworld = *game::s_world;

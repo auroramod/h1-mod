@@ -283,12 +283,12 @@ namespace ui_scripting
 			{
 				game_type["getping"] = [](const game&)
 				{
-					if ((*::game::mp::client_state) == nullptr)
+					if (!::game::CL_IsCgameInitialized())
 					{
 						return 0;
 					}
 
-					return (*::game::mp::client_state)->ping;
+					return ::game::mp::client_state->ping;
 				};
 			}
 
