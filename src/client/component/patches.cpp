@@ -66,6 +66,14 @@ namespace patches
 
 		utils::hook::detour cg_set_client_dvar_from_server_hook;
 
+		// Cheat-protected dvars a server may still change with setclientdvar while sv_cheats is off.
+		// They only change how the map looks for that player (no gameplay advantage), and let servers
+		// hide broken effects on custom maps, e.g. a sun that renders as a huge block on some MW2 ports.
+		bool is_server_settable_cheat_dvar(const int hash)
+		{
+			return hash == game::generateHashValue("r_drawSun");
+		}
+
 		void cg_set_client_dvar_from_server_stub(void* clientNum, void* cgameGlob, const char* dvar_hash, const char* value)
 		{
 			const auto hash = std::atoi(dvar_hash);
@@ -90,8 +98,13 @@ namespace patches
 				return;
 			}
 
+			if (is_server_settable_cheat_dvar(hash))
+			{
+				// internal source: not blocked by the sv_cheats check in dvar_cheats
+				game::Dvar_SetFromStringFromSource(dvar, value, game::DvarSetSource::DVAR_SOURCE_INTERNAL);
+			}
 			// only set if dvar has no flags or has cheat flag or has external flag
-			if (dvar->flags == game::DVAR_FLAG_NONE || 
+			else if (dvar->flags == game::DVAR_FLAG_NONE ||
 				(dvar->flags & game::DVAR_FLAG_CHEAT) != 0 || 
 				(dvar->flags & game::DVAR_FLAG_EXTERNAL) != 0)
 			{
