@@ -316,20 +316,24 @@ namespace updater
 		{
 			const auto url = base_url + endpoint;
 			console::debug("[HTTP] GET file \"%s\"\n", url.data());
-			const auto result = utils::http::get_data(url);
+			const auto result = utils::http::get_data(url, {}, {}, [](size_t, size_t)
+			{
+				return is_update_cancelled() ? -1 : 0;
+			});
 			return result;
 		};
 
+		std::optional<utils::http::result> last_result{};
 		for (const auto& url : server_urls)
 		{
-			const auto result = try_url(url);
-			if (result.has_value())
+			last_result = try_url(url);
+			if (last_result.has_value() && last_result->code == CURLE_OK)
 			{
-				return result;
+				break;
 			}
 		}
 
-		return {};
+		return last_result;
 	}
 
 	void relaunch()

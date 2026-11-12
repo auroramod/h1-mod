@@ -77,7 +77,12 @@ namespace utils::http
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
 
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+		curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+		curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 30L);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, static_cast<long>(timeout));
+
+		curl_easy_setopt(curl, CURLOPT_SSL_OPTIONS, static_cast<long>(CURLSSLOPT_NO_REVOKE));
 
 		if (!fields.empty())
 		{
