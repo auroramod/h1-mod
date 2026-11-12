@@ -159,6 +159,56 @@ stub(Engine, "GetPlayerDataExtendedEx", function(controller, group, classes, slo
 	return Engine.GetPlayerData(controller, group, classes, 0, ...)
 end)
 
+local get_player_data = Engine.GetPlayerData
+local private_classes_checked = {}
+
+local function validate_private_classes(controller)
+	if private_classes_checked[controller] then
+		return
+	end
+
+	local primary = get_player_data(controller, CoD.StatsGroup.Private, "privateMatchCustomClasses", 0, "weaponSetups", 0, "weapon")
+	if primary == nil then
+		return
+	end
+
+	private_classes_checked[controller] = true
+
+	local invalid = false
+	for class = 0, Cac.Settings.DataLoc.privateMatchCustomClasses.baseClassSlots - 1 do
+		local loc = {controller, CoD.StatsGroup.Private, "privateMatchCustomClasses", class}
+		if get_player_data(loc[1], loc[2], loc[3], loc[4], "weaponSetups", 0, "weapon") == ""
+			or get_player_data(loc[1], loc[2], loc[3], loc[4], "weaponSetups", 1, "weapon") == ""
+			or get_player_data(loc[1], loc[2], loc[3], loc[4], "equipment", 0) == ""
+			or get_player_data(loc[1], loc[2], loc[3], loc[4], "equipment", 1) == ""
+			or get_player_data(loc[1], loc[2], loc[3], loc[4], "meleeWeapon") == "" then
+			invalid = true
+			break
+		end
+	end
+
+	if not invalid then
+		return
+	end
+
+	print("[compat_mp] private match classes are invalid, running mp/stats_init_privatematch.cfg")
+	Engine.ExecNow("exec mp/stats_init_privatematch.cfg", controller)
+
+	for class = 0, Cac.Settings.DataLoc.privateMatchCustomClasses.baseClassSlots - 1 do
+		if get_player_data(controller, CoD.StatsGroup.Private, "privateMatchCustomClasses", class, "meleeWeapon") == "" then
+			Engine.SetPlayerData(controller, CoD.StatsGroup.Private, "privateMatchCustomClasses", class, "meleeWeapon", "none")
+		end
+	end
+end
+
+Engine.GetPlayerData = function(controller, group, ...)
+	if group == CoD.StatsGroup.Private and Cac and Cac.Settings and type(controller) == "number" then
+		validate_private_classes(controller)
+	end
+
+	return get_player_data(controller, group, ...)
+end
+
 local supply_drops_table = "mp/supplydrops.csv"
 
 function compat_mp.get_supply_drop_guid(supply_drop_type)
