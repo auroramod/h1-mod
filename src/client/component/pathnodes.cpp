@@ -17,7 +17,8 @@ namespace pathnodes
 	namespace
 	{
 		game::dvar_t* scr_enable_jump_nodes = nullptr;
-		
+		game::dvar_t* scr_load_csv_paths = nullptr;
+
 		utils::memory::allocator path_allocator;
 
 		static const std::unordered_map<std::string, unsigned short> waypoint_types =
@@ -349,7 +350,7 @@ namespace pathnodes
 			// Path_Init
 			utils::hook::invoke<void>(0x3F8370_b);
 
-			if (game::VirtualLobby_Loaded())
+			if (game::VirtualLobby_Loaded() || !scr_load_csv_paths->current.enabled)
 			{
 				return;
 			}
@@ -361,7 +362,7 @@ namespace pathnodes
 			
 			if (const auto file_path = std::format("maps/mp/{}_wp.csv", mapname->current.string); filesystem::read_file(file_path, &buffer))
 			{
-				console::debug("Loading paths '%s' from disk", file_path.data());
+				console::info("Loading paths '%s' from disk\n", file_path.data());
 				
 				auto table = utils::csv::parser(buffer);
 
@@ -486,6 +487,8 @@ namespace pathnodes
 			gsc::function::add("markdangerousnodesintrigger", mark_dangerous_nodes_in_trigger);
 			
 			// add bot warfare CSV loading on map loading
+			scr_load_csv_paths = dvars::register_bool("scr_loadCsvPaths", false, game::DVAR_FLAG_NONE,
+				"Replace the map's path nodes with maps/mp/<mapname>_wp.csv when it exists");
 			utils::hook::call(0x420911_b, path_init_stub);
 		}
 	};
